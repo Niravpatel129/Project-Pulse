@@ -8,7 +8,7 @@ import { newRequest } from '@/utils/newRequest';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FileText, Info, Send, Sparkles } from 'lucide-react';
+import { FileText, Info, Mail, Paperclip, Send, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
 import { AIContextDialog } from './AIContextDialog';
@@ -83,6 +83,8 @@ export default function RightSidebar({
   ]);
   const [input, setInput] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [selectedEmails, setSelectedEmails] = useState<any[]>([]);
+  const [isEmailPickerOpen, setIsEmailPickerOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isContextDialogOpen, setIsContextDialogOpen] = useState(false);
@@ -148,6 +150,11 @@ export default function RightSidebar({
           const blob = new Blob([ab], { type: mimeString });
           formData.append('images', blob, `image-${index}.${mimeString.split('/')[1]}`);
         });
+      }
+
+      // Append selected emails if any
+      if (selectedEmails.length > 0) {
+        formData.append('emails', JSON.stringify(selectedEmails));
       }
 
       const response = await newRequest.post('/ai/smart-response', formData, {
@@ -311,6 +318,33 @@ export default function RightSidebar({
           reader.readAsDataURL(file);
         }
       }
+    }
+  };
+
+  // Handle selecting emails from Gmail
+  const handleSelectEmails = async () => {
+    // This will be connected to backend implementation later
+    setIsEmailPickerOpen(true);
+
+    // Mock implementation for now - will be replaced with actual Gmail API integration
+    // When backend is implemented, this will call the Gmail API to fetch emails
+    try {
+      // Mock data for development
+      const mockEmail = {
+        id: 'email-' + Date.now(),
+        subject: 'Sample Gmail Email',
+        sender: 'example@gmail.com',
+        snippet: 'This is a sample email preview...',
+        date: new Date().toISOString(),
+      };
+
+      setSelectedEmails((prev) => {
+        return [...prev, mockEmail];
+      });
+      setIsEmailPickerOpen(false);
+    } catch (error) {
+      console.error('Error selecting emails:', error);
+      setIsEmailPickerOpen(false);
     }
   };
 
@@ -698,6 +732,7 @@ export default function RightSidebar({
       {/* Input Area */}
       <div className='p-4 flex-shrink-0'>
         <div className='relative'>
+          {/* Display attached images */}
           {images.length > 0 && (
             <div className='flex gap-2 mb-2'>
               {images.map((img, idx) => {
@@ -750,6 +785,57 @@ export default function RightSidebar({
               })}
             </div>
           )}
+
+          {/* Display selected emails */}
+          {selectedEmails.length > 0 && (
+            <div className='flex flex-wrap gap-2 mb-2'>
+              {selectedEmails.map((email, idx) => {
+                return (
+                  <div
+                    key={idx}
+                    className='relative flex items-center gap-2 p-2 bg-[#F4F4F5] dark:bg-[#232428] rounded text-sm'
+                  >
+                    <Mail className='w-4 h-4 text-[#8b5df8]' />
+                    <div className='max-w-[200px] truncate'>{email.subject}</div>
+                    <button
+                      type='button'
+                      className='w-4 h-4 flex items-center justify-center text-[#3F3F46] dark:text-[#fafafa] hover:text-[#E4E4E7] dark:hover:text-[#2A2A2F] transition'
+                      onClick={() => {
+                        return setSelectedEmails(
+                          selectedEmails.filter((_, i) => {
+                            return i !== idx;
+                          }),
+                        );
+                      }}
+                      aria-label='Remove email'
+                    >
+                      <svg
+                        width='10'
+                        height='10'
+                        viewBox='0 0 16 16'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          d='M4 4L12 12'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                        />
+                        <path
+                          d='M12 4L4 12'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className='relative'>
             <textarea
               ref={inputRef}
@@ -763,11 +849,73 @@ export default function RightSidebar({
               onPaste={handlePaste}
               placeholder='Type your message...'
               disabled={chatMutation.isPending}
-              className='w-full px-4 py-3 text-sm border border-[#E4E4E7] dark:border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa]'
+              className='w-full pl-[12px] pr-12 py-3 text-sm border border-[#E4E4E7] dark:border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa]'
             />
+
+            {/* Attachment buttons */}
+            <div className='absolute bottom-3 left-3 flex gap-2'>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleSelectEmails}
+                      disabled={chatMutation.isPending}
+                      variant='ghost'
+                      size='icon'
+                      className='h-6 w-6 text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#8b5df8] hover:bg-transparent'
+                    >
+                      <Mail className='w-4 h-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
+                    <p className='text-xs'>Add Email from Gmail</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <label htmlFor='file-upload' className='cursor-pointer'>
+                      <div className='h-6 w-6 flex items-center justify-center text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#8b5df8]'>
+                        <Paperclip className='w-4 h-4' />
+                      </div>
+                      <input
+                        id='file-upload'
+                        type='file'
+                        className='hidden'
+                        accept='image/*'
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setImages((prev) => {
+                                return [...prev, event.target?.result as string];
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                          // Reset input value so the same file can be selected again
+                          e.target.value = '';
+                        }}
+                        disabled={chatMutation.isPending}
+                      />
+                    </label>
+                  </TooltipTrigger>
+                  <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
+                    <p className='text-xs'>Attach File</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
             <Button
               onClick={handleSend}
-              disabled={chatMutation.isPending || (!input.trim() && images.length === 0)}
+              disabled={
+                chatMutation.isPending ||
+                (!input.trim() && images.length === 0 && selectedEmails.length === 0)
+              }
               className='absolute bottom-4 right-2 bg-[#8b5df8] hover:bg-[#7c3aed] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
               size='icon'
             >
@@ -838,6 +986,37 @@ export default function RightSidebar({
 
       {/* Add the AIContextDialog */}
       <AIContextDialog open={isContextDialogOpen} onOpenChange={setIsContextDialogOpen} />
+
+      {/* Email Picker Dialog (placeholder for Gmail integration) */}
+      <Dialog open={isEmailPickerOpen} onOpenChange={setIsEmailPickerOpen}>
+        <DialogContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
+          <DialogTitle>Select Email from Gmail</DialogTitle>
+          <div className='py-4'>
+            <p className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-4'>
+              This feature requires backend integration with Gmail API. For now, a mock email will
+              be added when you click the button below.
+            </p>
+            <Button
+              className='w-full bg-[#8b5df8] hover:bg-[#7c3aed]'
+              onClick={() => {
+                const mockEmail = {
+                  id: 'email-' + Date.now(),
+                  subject: 'Sample Gmail Email',
+                  sender: 'example@gmail.com',
+                  snippet: 'This is a sample email preview...',
+                  date: new Date().toISOString(),
+                };
+                setSelectedEmails((prev) => {
+                  return [...prev, mockEmail];
+                });
+                setIsEmailPickerOpen(false);
+              }}
+            >
+              Add Sample Email
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
