@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
-import { Calendar, Check, Mail, Search, User } from 'lucide-react';
+import { Calendar, Check, ChevronLeft, ChevronRight, Mail, Search, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 // Interface for email objects
@@ -13,6 +13,78 @@ export interface EmailItem {
   snippet: string;
   date: string;
 }
+
+// Gmail API response interface
+interface GmailApiEmail {
+  id: string;
+  threadId: string;
+  labelIds: string[];
+  snippet: string;
+  payload: {
+    headers: {
+      name: string;
+      value: string;
+    }[];
+    body: {
+      size: number;
+      data?: string;
+    };
+    parts?: {
+      mimeType: string;
+      body: {
+        size: number;
+        data?: string;
+      };
+    }[];
+  };
+  sizeEstimate: number;
+  historyId: string;
+  internalDate: string;
+}
+
+// Gmail API pagination response interface
+interface GmailApiResponse {
+  success: boolean;
+  data: {
+    emails: GmailApiEmail[];
+    nextPageToken: string | null;
+    resultSizeEstimate: number;
+    page: number;
+    pageSize: number;
+    query: string;
+  };
+}
+
+// Parse Gmail API response to EmailItem format
+const parseGmailApiResponse = (emails: GmailApiEmail[]): EmailItem[] => {
+  return emails.map((email) => {
+    // Extract subject from headers
+    const subjectHeader = email.payload.headers.find((header) => {
+      return header.name.toLowerCase() === 'subject';
+    });
+    const subject = subjectHeader?.value || 'No Subject';
+
+    // Extract sender from headers
+    const fromHeader = email.payload.headers.find((header) => {
+      return header.name.toLowerCase() === 'from';
+    });
+    const sender = fromHeader?.value || 'Unknown Sender';
+
+    // Extract date from headers or use internalDate
+    const dateHeader = email.payload.headers.find((header) => {
+      return header.name.toLowerCase() === 'date';
+    });
+    const date = dateHeader?.value || new Date(parseInt(email.internalDate)).toISOString();
+
+    return {
+      id: email.id,
+      subject,
+      sender,
+      snippet: email.snippet,
+      date,
+    };
+  });
+};
 
 interface EmailPickerDialogProps {
   open: boolean;
@@ -34,93 +106,13 @@ export function EmailPickerDialog({
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emails, setEmails] = useState<EmailItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [prevPageTokens, setPrevPageTokens] = useState<string[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Mock emails data for development
-  const MOCK_EMAILS: EmailItem[] =
-    mockEmails.length > 0
-      ? mockEmails
-      : [
-          {
-            id: 'email-1',
-            subject: 'Project proposal for Q3',
-            sender: 'alice@example.com',
-            snippet:
-              'I wanted to follow up on our conversation about the Q3 project plan. As discussed...',
-            date: '2023-09-15T10:30:00Z',
-          },
-          {
-            id: 'email-2',
-            subject: 'Invoice #3892 - Payment confirmation',
-            sender: 'billing@acmecorp.com',
-            snippet: 'This is a confirmation that payment for invoice #3892 has been received...',
-            date: '2023-09-14T08:15:00Z',
-          },
-          {
-            id: 'email-3',
-            subject: 'Meeting notes from product review',
-            sender: 'product-team@example.com',
-            snippet:
-              "Attached are the notes from yesterday's product review meeting. Key points discussed were...",
-            date: '2023-09-13T16:45:00Z',
-          },
-          {
-            id: 'email-4',
-            subject: 'New client onboarding - XYZ Corp',
-            sender: 'sales@example.com',
-            snippet:
-              "We've successfully signed XYZ Corp as a new client. Please find their requirements attached...",
-            date: '2023-09-12T14:20:00Z',
-          },
-          {
-            id: 'email-5',
-            subject: 'Quarterly budget review',
-            sender: 'finance@example.com',
-            snippet:
-              'Please review the attached quarterly budget report before our meeting on Thursday...',
-            date: '2023-09-11T11:00:00Z',
-          },
-          {
-            id: 'email-6',
-            subject: 'Website redesign feedback',
-            sender: 'design@example.com',
-            snippet:
-              "Based on user testing, we've made the following adjustments to the website redesign...",
-            date: '2023-09-10T09:30:00Z',
-          },
-          {
-            id: 'email-7',
-            subject: 'Contract renewal - Urgent',
-            sender: 'legal@example.com',
-            snippet:
-              'The contract with ABC Inc is up for renewal next week. We need to finalize the terms...',
-            date: '2023-09-09T15:45:00Z',
-          },
-          {
-            id: 'email-8',
-            subject: 'Team lunch - Friday',
-            sender: 'office-admin@example.com',
-            snippet:
-              "We're organizing a team lunch this Friday at 12:30. Please let me know your food preferences...",
-            date: '2023-09-08T10:15:00Z',
-          },
-          {
-            id: 'email-9',
-            subject: 'API integration issue resolution',
-            sender: 'tech-support@example.com',
-            snippet: "We've identified the issue with the API integration. The root cause was...",
-            date: '2023-09-07T17:00:00Z',
-          },
-          {
-            id: 'email-10',
-            subject: 'Performance review - Scheduling',
-            sender: 'hr@example.com',
-            snippet:
-              "It's time for the annual performance reviews. Please select a time slot from the calendar...",
-            date: '2023-09-06T13:20:00Z',
-          },
-        ];
-
-  // Check Gmail connection status when dialog opens
   useEffect(() => {
     if (open) {
       checkGmailStatus();
@@ -129,30 +121,106 @@ export function EmailPickerDialog({
 
   // Fetch Gmail connection status
   const checkGmailStatus = async () => {
+    setIsLoading(true);
     try {
       const response = await newRequest.get('/gmail/status');
-      setIsGmailConnected(response.data.connected);
+      const isConnected = response.data?.connected === true;
+      setIsGmailConnected(isConnected);
 
-      if (response.data.connected) {
-        fetchEmails();
+      if (isConnected) {
+        await fetchEmails();
+      } else {
+        // Not connected, use mock emails
       }
     } catch (error) {
       console.error('Failed to check Gmail status:', error);
       setIsGmailConnected(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Handle search input changes with debounce
+  useEffect(() => {
+    if (isGmailConnected) {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+
+      const timeout = setTimeout(() => {
+        // Reset pagination when search changes
+        setCurrentPage(1);
+        setPrevPageTokens([]);
+        setNextPageToken(null);
+        fetchEmails();
+      }, 500);
+
+      setSearchTimeout(timeout);
+    }
+
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [emailSearchQuery, isGmailConnected]);
+
   // Fetch emails from Gmail
-  const fetchEmails = async () => {
+  const fetchEmails = async (pageToken?: string) => {
+    setIsLoading(true);
     try {
-      const response = await newRequest.get('/gmail/emails');
-      if (response.data.emails) {
-        setEmails(response.data.emails);
+      // Build query params
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
+      });
+
+      // Add search query if present
+      if (emailSearchQuery) {
+        params.append('query', emailSearchQuery);
+      }
+
+      // Add page token if present
+      if (pageToken) {
+        params.append('pageToken', pageToken);
+      }
+
+      const response = await newRequest.get(`/gmail/emails?${params.toString()}`);
+
+      if (response.data?.success && response.data?.data?.emails) {
+        const apiResponse = response.data as GmailApiResponse;
+        const parsedEmails = parseGmailApiResponse(apiResponse.data.emails);
+        setEmails(parsedEmails);
+        setNextPageToken(apiResponse.data.nextPageToken);
+        setTotalResults(apiResponse.data.resultSizeEstimate);
+      } else {
+        console.warn('Unexpected email response format:', response.data);
       }
     } catch (error) {
       console.error('Failed to fetch emails:', error);
       // Fall back to mock emails if API fails
-      setEmails(MOCK_EMAILS);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle pagination - next page
+  const handleNextPage = () => {
+    if (nextPageToken) {
+      setPrevPageTokens([...prevPageTokens, nextPageToken]);
+      setCurrentPage(currentPage + 1);
+      fetchEmails(nextPageToken);
+    }
+  };
+
+  // Handle pagination - previous page
+  const handlePrevPage = () => {
+    if (prevPageTokens.length > 0) {
+      const newPrevTokens = [...prevPageTokens];
+      const prevToken = newPrevTokens.pop();
+      setPrevPageTokens(newPrevTokens);
+      setCurrentPage(currentPage - 1);
+      fetchEmails(prevToken);
     }
   };
 
@@ -231,21 +299,34 @@ export function EmailPickerDialog({
     }
   };
 
-  // Filter emails based on search query
-  const filteredEmails = (emails.length > 0 ? emails : MOCK_EMAILS).filter((email) => {
-    if (!emailSearchQuery) return true;
-
-    const search = emailSearchQuery.toLowerCase();
-    return (
-      email.subject.toLowerCase().includes(search) ||
-      email.sender.toLowerCase().includes(search) ||
-      email.snippet.toLowerCase().includes(search)
-    );
-  });
-
   // Format date to readable string
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    try {
+      // Handle Gmail API date formats which can be ISO strings or various other formats
+      const date = new Date(dateString);
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        // If invalid, try parsing as Unix timestamp (Gmail internalDate is in milliseconds)
+        const timestamp = parseInt(dateString);
+        if (!isNaN(timestamp)) {
+          const timestampDate = new Date(timestamp);
+          if (!isNaN(timestampDate.getTime())) {
+            return formatDateDisplay(timestampDate);
+          }
+        }
+        return 'Unknown date';
+      }
+
+      return formatDateDisplay(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Unknown date';
+    }
+  };
+
+  // Helper to format the date for display
+  const formatDateDisplay = (date: Date) => {
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -267,6 +348,9 @@ export function EmailPickerDialog({
     if (!openState) {
       // Clear search query when closing
       setEmailSearchQuery('');
+      setCurrentPage(1);
+      setPrevPageTokens([]);
+      setNextPageToken(null);
     }
   };
 
@@ -324,13 +408,20 @@ export function EmailPickerDialog({
                 {isLoading ? 'Connecting...' : 'Connect Gmail Account'}
               </Button>
             </div>
-          ) : filteredEmails.length === 0 ? (
+          ) : isLoading ? (
+            <div className='p-8 flex flex-col items-center justify-center'>
+              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-[#8b5df8] mb-4'></div>
+              <h3 className='text-base font-medium text-[#3F3F46] dark:text-[#fafafa]'>
+                Loading Emails...
+              </h3>
+            </div>
+          ) : emails.length === 0 ? (
             <div className='p-4 text-center text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm'>
               No emails found.
             </div>
           ) : (
             <div className='divide-y divide-[#E4E4E7] dark:divide-[#232428]'>
-              {filteredEmails.map((email) => {
+              {emails.map((email) => {
                 const isSelected = selectedEmails.some((e) => {
                   return e.id === email.id;
                 });
@@ -374,6 +465,31 @@ export function EmailPickerDialog({
             </div>
           )}
         </div>
+        {isGmailConnected && emails.length > 0 && (
+          <div className='px-3 py-2 border-t border-[#E4E4E7] dark:border-[#232428] flex justify-center items-center gap-4'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handlePrevPage}
+              disabled={prevPageTokens.length === 0 || isLoading}
+              className='p-1 h-8 w-8'
+            >
+              <ChevronLeft className='h-4 w-4' />
+            </Button>
+            <span className='text-xs text-[#3F3F46]/80 dark:text-[#ABABAB]'>
+              Page {currentPage}
+            </span>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleNextPage}
+              disabled={!nextPageToken || isLoading}
+              className='p-1 h-8 w-8'
+            >
+              <ChevronRight className='h-4 w-4' />
+            </Button>
+          </div>
+        )}
         <div className='p-3 border-t border-[#E4E4E7] dark:border-[#232428] flex justify-between'>
           <Button
             variant='outline'
