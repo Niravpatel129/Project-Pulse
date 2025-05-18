@@ -187,6 +187,7 @@ export function EmailPickerDialog({
 
       const response = await newRequest.get(`/gmail/emails?${params.toString()}`);
 
+      console.log('🚀 response:', response);
       if (response.data?.success && response.data?.data?.emails) {
         const apiResponse = response.data as GmailApiResponse;
         const parsedEmails = parseGmailApiResponse(apiResponse.data.emails);
