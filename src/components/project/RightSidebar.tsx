@@ -322,15 +322,22 @@ export default function RightSidebar({
     }
   };
 
-  // Handle selecting emails from Gmail
+  // Handle selecting and unselecting emails from Gmail
   const handleSelectEmail = (email: EmailItem) => {
     // Check if email is already selected
     const isAlreadySelected = selectedEmails.some((e) => {
-      // unselect the email if it is already selected
       return e.id === email.id;
     });
 
-    if (!isAlreadySelected) {
+    if (isAlreadySelected) {
+      // Remove the email if already selected (unselect)
+      setSelectedEmails((prev) => {
+        return prev.filter((e) => {
+          return e.id !== email.id;
+        });
+      });
+    } else {
+      // Add the email if not already selected
       setSelectedEmails((prev) => {
         return [...prev, email];
       });
