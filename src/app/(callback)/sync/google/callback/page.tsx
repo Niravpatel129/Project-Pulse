@@ -34,7 +34,7 @@ export default function GoogleCallbackPage() {
         const response = await newRequest.post('/gmail/connect', {
           code,
           scope,
-          redirectUri: `${window.location.origin}/sync/google/callback`,
+          redirectUri: `www.hourblock.com/sync/google/callback`,
         });
 
         const data = response.data;
