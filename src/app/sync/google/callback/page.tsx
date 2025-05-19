@@ -20,6 +20,7 @@ function GoogleCallbackContent() {
         const code = searchParams.get('code');
         const scope = searchParams.get('scope');
         const state = searchParams.get('state');
+        const workspaceId = searchParams.get('workspaceId');
         const service = state?.includes('gmail') ? 'gmail' : 'calendar';
 
         if (!code) {
@@ -35,6 +36,7 @@ function GoogleCallbackContent() {
           code,
           scope,
           redirectUri: `www.hourblock.com/sync/google/callback`,
+          workspaceId,
         });
 
         const data = response.data;
