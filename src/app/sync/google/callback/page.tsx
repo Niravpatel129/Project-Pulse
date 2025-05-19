@@ -20,7 +20,17 @@ function GoogleCallbackContent() {
         const code = searchParams.get('code');
         const scope = searchParams.get('scope');
         const state = searchParams.get('state');
-        const workspaceId = searchParams.get('workspaceId');
+        let workspaceId;
+
+        try {
+          if (state) {
+            const stateObj = JSON.parse(decodeURIComponent(state));
+            workspaceId = stateObj.workspaceId;
+          }
+        } catch (error) {
+          console.error('Error parsing state parameter:', error);
+        }
+
         const service = state?.includes('gmail') ? 'gmail' : 'calendar';
 
         if (!code) {
