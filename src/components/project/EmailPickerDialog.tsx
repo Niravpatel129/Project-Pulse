@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { Calendar, Check, ChevronLeft, ChevronRight, Mail, Search, User } from 'lucide-react';
@@ -112,6 +113,8 @@ export function EmailPickerDialog({
   const [prevPageTokens, setPrevPageTokens] = useState<string[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const googleCalendar = useGoogleCalendar();
+  console.log('🚀 googleCalendar:', googleCalendar);
 
   useEffect(() => {
     if (open) {

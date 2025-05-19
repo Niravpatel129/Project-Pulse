@@ -1,3 +1,4 @@
+import { useWorkspace } from '@/contexts';
 import { newRequest } from '@/utils/newRequest';
 import { useEffect, useState } from 'react';
 
@@ -24,6 +25,9 @@ export function useGoogleCalendar() {
     error: null,
     events: [],
   });
+
+  const workspace = useWorkspace();
+  console.log('🚀 workspace in useGoogleCalendar:', workspace);
 
   // Check if user is already connected on mount
   useEffect(() => {
@@ -80,8 +84,7 @@ export function useGoogleCalendar() {
       });
 
       const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-
-      const REDIRECT_URI = `${window.location.origin}/sync/google/callback`;
+      const REDIRECT_URI = `www.hourblock.com/sync/google/callback`;
 
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.append('client_id', GOOGLE_CLIENT_ID || '');
@@ -90,6 +93,7 @@ export function useGoogleCalendar() {
       authUrl.searchParams.append('scope', 'https://www.googleapis.com/auth/calendar');
       authUrl.searchParams.append('access_type', 'offline');
       authUrl.searchParams.append('prompt', 'consent');
+      authUrl.searchParams.append('workspaceId', workspace?.workspace?._id || '');
 
       // Redirect to Google OAuth
       window.location.href = authUrl.toString();

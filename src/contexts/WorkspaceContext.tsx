@@ -4,6 +4,7 @@ import { newRequest } from '@/utils/newRequest';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface Workspace {
+  _id?: string;
   name: string;
   slug: string;
   stripeConnected?: boolean;
@@ -31,28 +32,40 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        if (hostname !== 'localhost') {
-          const subdomain = hostname.split('.')[0];
-          setWorkspace({
-            name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1),
-            slug: subdomain,
-            stripeConnected: false, // This would be fetched from your API in a real app
-          });
-        } else {
-          // For localhost development, extract from URL path
-          const pathParts = window.location.pathname.split('/');
-          if (pathParts.length > 1 && pathParts[1]) {
-            const workspaceSlug = pathParts[1];
-            setWorkspace({
-              name: workspaceSlug.charAt(0).toUpperCase() + workspaceSlug.slice(1),
-              slug: workspaceSlug,
-              stripeConnected: false, // This would be fetched from your API in a real app
-            });
+      const fetchWorkspace = async () => {
+        try {
+          const response = await newRequest.get('/workspaces/current');
+          setWorkspace(response.data.data);
+          console.log('🚀 workspace in WorkspaceContext:', response.data.data);
+        } catch (err) {
+          console.error('Error fetching workspace:', err);
+          if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname !== 'localhost') {
+              const subdomain = hostname.split('.')[0];
+              setWorkspace({
+                name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1),
+                slug: subdomain,
+                stripeConnected: false, // This would be fetched from your API in a real app
+              });
+            } else {
+              // For localhost development, extract from URL path
+              const pathParts = window.location.pathname.split('/');
+              if (pathParts.length > 1 && pathParts[1]) {
+                const workspaceSlug = pathParts[1];
+                setWorkspace({
+                  name: workspaceSlug.charAt(0).toUpperCase() + workspaceSlug.slice(1),
+                  slug: workspaceSlug,
+                });
+              }
+            }
           }
+        } finally {
+          setIsLoading(false);
         }
-      }
+      };
+
+      fetchWorkspace();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to get workspace'));
     } finally {
