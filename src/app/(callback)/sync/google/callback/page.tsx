@@ -5,9 +5,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { newRequest } from '@/utils/newRequest';
 import { Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing Google authentication...');
   const router = useRouter();
@@ -142,5 +142,29 @@ export default function GoogleCallbackPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='w-full flex items-center justify-center min-h-screen p-4 bg-background'>
+          <Card className='w-full max-w-md border-0 shadow-none bg-background'>
+            <CardHeader>
+              <CardTitle className='text-center'>Connecting to Google Services</CardTitle>
+            </CardHeader>
+            <CardContent className='text-center bg-background'>
+              <div className='flex flex-col items-center gap-4'>
+                <Loader2 className='h-8 w-8 animate-spin text-primary' />
+                <p className='text-muted-foreground'>Loading...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }
