@@ -45,7 +45,7 @@ function GoogleCallbackContent() {
         const response = await newRequest.post('/gmail/connect', {
           code,
           scope,
-          redirectUri: `www.hourblock.com/sync/google/callback`,
+          redirectUri: `https://www.hourblock.com/sync/google/callback`,
           workspaceId,
         });
 
