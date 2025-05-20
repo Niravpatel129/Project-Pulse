@@ -789,6 +789,10 @@ function AttachmentsPopoverContent({
     return '📎';
   };
 
+  const isImageType = (type: string) => {
+    return type.startsWith('image/');
+  };
+
   return (
     <div className='flex flex-col h-[400px]'>
       {/* Header */}
@@ -814,7 +818,21 @@ function AttachmentsPopoverContent({
             return (
               <div key={attachment._id} className='bg-secondary rounded-lg p-3 mb-3'>
                 <div className='flex items-center gap-3'>
-                  <span className='text-2xl'>{getFileIcon(attachment.type)}</span>
+                  {isImageType(attachment.type) ? (
+                    <div className='w-12 h-12 rounded overflow-hidden flex-shrink-0'>
+                      <img
+                        src={attachment.url}
+                        alt={attachment.name}
+                        className='w-full h-full object-cover'
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItaW1hZ2UiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiPjwvY2lyY2xlPjxwb2x5bGluZSBwb2ludHM9IjIxIDE1IDEzLjUgNi41IDQgMTYiPjwvcG9seWxpbmU+PC9zdmc+';
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <span className='text-2xl'>{getFileIcon(attachment.type)}</span>
+                  )}
                   <div className='flex-1 min-w-0'>
                     <div className='font-medium text-sm truncate'>{attachment.name}</div>
                     <div className='text-xs text-muted-foreground'>{attachment.size}</div>
