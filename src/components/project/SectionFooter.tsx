@@ -177,7 +177,6 @@ export default function SectionFooter({
             {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
           </Button>
         </span>
-        {isDisabled && <p>{disabledTooltip}</p>}
       </div>
     </div>
   );
