@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 import { ChevronDown, MessageSquare } from 'lucide-react';
@@ -166,32 +165,19 @@ export default function SectionFooter({
             Chat
           </Button>
         )}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button
-                  onClick={onContinue}
-                  disabled={isDisabled}
-                  className={cn(
-                    isDisabled ? 'opacity-50 cursor-not-allowed' : '',
-                    'w-full mb-2 bg-blue-600 hover:bg-blue-700 text-white ',
-                  )}
-                >
-                  {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
-                </Button>
-              </span>
-            </TooltipTrigger>
-            {isDisabled && (
-              <TooltipContent
-                side='top'
-                className='bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa] border-[#E4E4E7] dark:border-[#232428]'
-              >
-                <p>{disabledTooltip}</p>
-              </TooltipContent>
+        <span>
+          <Button
+            onClick={onContinue}
+            disabled={isDisabled}
+            className={cn(
+              isDisabled ? 'opacity-50 cursor-not-allowed' : '',
+              'w-full mb-2 bg-blue-600 hover:bg-blue-700 text-white ',
             )}
-          </Tooltip>
-        </TooltipProvider>
+          >
+            {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
+          </Button>
+        </span>
+        {isDisabled && <p>{disabledTooltip}</p>}
       </div>
     </div>
   );
