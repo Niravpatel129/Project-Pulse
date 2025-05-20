@@ -103,8 +103,40 @@ export default function ItemsSection({
     const matchingTaxRate = taxRates.find((tax) => {
       return tax.rate === item.taxRate;
     });
-    const taxRateId = matchingTaxRate ? matchingTaxRate.id : 'standard';
-    setSelectedTaxRateId(taxRateId);
+
+    // If no matching tax rate is found but the item has a taxRate, add a custom tax rate
+    if (!matchingTaxRate && item.taxRate !== undefined && item.taxRate > 0) {
+      // Create a custom tax ID using the rate value
+      const customTaxId = `custom-${item.taxRate}`;
+      const customTaxName = item.taxName || `Custom (${item.taxRate}%)`;
+
+      // Add to query cache
+      queryClient.setQueryData(['taxRates', projectId], (oldData: any) => {
+        // Check if this tax rate already exists in the data
+        if (oldData && Array.isArray(oldData)) {
+          const exists = oldData.some((tax) => {
+            return tax.rate === item.taxRate;
+          });
+          if (!exists) {
+            console.log(`Adding custom tax rate: ${customTaxName} (${item.taxRate}%)`);
+            return [
+              ...oldData,
+              {
+                id: customTaxId,
+                name: customTaxName,
+                rate: item.taxRate,
+              },
+            ];
+          }
+        }
+        return oldData;
+      });
+
+      setSelectedTaxRateId(customTaxId);
+    } else {
+      const taxRateId = matchingTaxRate ? matchingTaxRate.id : 'standard';
+      setSelectedTaxRateId(taxRateId);
+    }
 
     setNewItem({
       name: item.name,
@@ -282,6 +314,47 @@ export default function ItemsSection({
       });
     }
   }, [taxRates, selectedTaxRateId]);
+
+  // New function to update tax rates when items with custom taxes are added
+  useEffect(() => {
+    // This effect will run when 'items' changes, to check for any newly added items with custom tax rates
+    if (items.length === 0) return;
+
+    // Look at the most recently added item (last in the array)
+    const latestItem = items[items.length - 1];
+
+    // If the item has a tax rate that's not in our current tax rates, add it
+    if (latestItem.taxRate !== undefined && latestItem.taxRate > 0) {
+      const existingTaxRate = taxRates.find((tax) => {
+        return tax.rate === latestItem.taxRate;
+      });
+
+      if (!existingTaxRate) {
+        // Create a custom ID for this tax rate
+        const customTaxId = `custom-${latestItem.taxRate}`;
+        const customTaxName = latestItem.taxName || `Custom (${latestItem.taxRate}%)`;
+
+        console.log(
+          `Adding custom tax rate from newly added item: ${customTaxName} (${latestItem.taxRate}%)`,
+        );
+
+        // Add to query cache without triggering additional renders
+        queryClient.setQueryData(['taxRates', projectId], (oldData: any) => {
+          if (oldData && Array.isArray(oldData)) {
+            return [
+              ...oldData,
+              {
+                id: customTaxId,
+                name: customTaxName,
+                rate: latestItem.taxRate,
+              },
+            ];
+          }
+          return oldData;
+        });
+      }
+    }
+  }, [items, taxRates, projectId, queryClient]);
 
   // New helper function to reset form state
   const resetFormState = () => {
