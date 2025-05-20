@@ -284,9 +284,9 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               const subtotal = item.price * item.quantity;
               const discountAmount = (subtotal * (item.discount || 0)) / 100;
               const discountedAmount = subtotal - discountAmount;
-              // Calculate tax amount based on the discounted amount
-              const taxAmount = (discountedAmount * (item.tax || 0)) / 100;
-              const itemTotal = discountedAmount + taxAmount;
+
+              const itemTotal = discountedAmount;
+
               return (
                 <tr key={item._id} className='border-t border-border bg-background'>
                   <td className='py-3 px-4 text-foreground'>{item.name}</td>
