@@ -50,6 +50,28 @@ interface Payment {
   createdBy?: { _id: string; name: string };
 }
 
+interface TimelineEvent {
+  _id: string;
+  type: string;
+  description: string;
+  timestamp: string;
+  metadata?: {
+    paymentId?: string;
+    amount?: number;
+    currency?: string;
+    isDeposit?: boolean;
+    clientIp?: string;
+    userAgent?: string;
+    [key: string]: any;
+  };
+}
+
+interface TimelineResponse {
+  invoiceId: string;
+  invoiceNumber: string;
+  timeline: TimelineEvent[];
+}
+
 interface InvoiceItem {
   _id: string;
   name: string;
@@ -212,6 +234,22 @@ export default function InvoicePreview({
     placeholderData: (previousData) => {
       return previousData;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true,
+  });
+
+  const {
+    data: timelineData,
+    isLoading: timelineLoading,
+    isError: timelineError,
+  } = useQuery<TimelineResponse>({
+    queryKey: ['invoice-timeline', invoiceId || selectedInvoice?._id],
+    queryFn: async () => {
+      const res = await newRequest.get(`/invoices/${invoiceId || selectedInvoice?._id}/timeline`);
+      return res.data.data;
+    },
+    enabled: !!(invoiceId || selectedInvoice?._id),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: true,
@@ -1060,7 +1098,7 @@ export default function InvoicePreview({
             <h3 className='text-[14px] font-semibold text-foreground mb-5'>
               Additional Information
             </h3>
-            <div className='grid grid-cols-2 gap-6'>
+            <div className='grid grid-cols-2 gap-6 mb-6'>
               <div>
                 <div className='text-sm text-muted-foreground mb-2'>Invoice Date</div>
                 <div className='text-[14px] text-foreground'>
@@ -1077,6 +1115,48 @@ export default function InvoicePreview({
                 <div className='text-sm text-muted-foreground mb-2'>Notes</div>
                 <div className='text-[14px] text-foreground'>{invoice.notes || ''}</div>
               </div>
+            </div>
+
+            {/* Timeline Section */}
+            <div>
+              <div className='text-sm text-muted-foreground mb-3'>Invoice Timeline</div>
+              {timelineLoading ? (
+                <div className='text-[14px] text-muted-foreground'>Loading timeline...</div>
+              ) : timelineError ? (
+                <div className='text-[14px] text-destructive'>Failed to load timeline.</div>
+              ) : timelineData?.timeline && timelineData.timeline.length > 0 ? (
+                <div className='space-y-4'>
+                  {timelineData.timeline.map((event) => {
+                    return (
+                      <div key={event._id} className='flex gap-3 items-start'>
+                        <div className='w-2 h-2 bg-purple-500 rounded-full mt-1.5'></div>
+                        <div>
+                          <div className='text-[14px] text-foreground font-medium'>
+                            {event.type.replace(/_/g, ' ').replace(/\b\w/g, (l) => {
+                              return l.toUpperCase();
+                            })}
+                          </div>
+                          <div className='text-[13px] text-muted-foreground'>
+                            {event.description}
+                          </div>
+                          <div className='text-[12px] text-muted-foreground mt-1'>
+                            {new Date(event.timestamp).toLocaleString()}
+                            {event.metadata?.amount && (
+                              <span className='ml-1 font-medium'>
+                                ({event.metadata.amount} {event.metadata.currency})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className='text-[14px] text-muted-foreground'>
+                  No timeline events available.
+                </div>
+              )}
             </div>
           </div>
 
