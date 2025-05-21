@@ -2,6 +2,12 @@ import { BusinessSettings } from '@/app/[workspace]/invoicesOld/[id]/components/
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import ProjectManagement from '@/components/project/ProjectManagement';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -1125,26 +1131,64 @@ export default function InvoicePreview({
               ) : timelineError ? (
                 <div className='text-[14px] text-destructive'>Failed to load timeline.</div>
               ) : timelineData?.timeline && timelineData.timeline.length > 0 ? (
-                <div className='space-y-4'>
-                  {timelineData.timeline.map((event) => {
+                <div className='space-y-4 relative'>
+                  {/* Timeline connecting line */}
+                  <div className='absolute left-[5px] top-5 bottom-0 w-0.5 bg-purple-500/20 z-0'></div>
+
+                  {/* Reversed timeline items (newest first) */}
+                  {[...timelineData.timeline].reverse().map((event, index) => {
                     return (
-                      <div key={event._id} className='flex gap-3 items-start'>
-                        <div className='w-2 h-2 bg-purple-500 rounded-full mt-1.5'></div>
-                        <div>
-                          <div className='text-[14px] text-foreground font-medium'>
-                            {event.type.replace(/_/g, ' ').replace(/\b\w/g, (l) => {
-                              return l.toUpperCase();
-                            })}
-                          </div>
-                          <div className='text-[13px] text-muted-foreground'>
-                            {event.description}
-                          </div>
-                          <div className='text-[12px] text-muted-foreground mt-1'>
-                            {new Date(event.timestamp).toLocaleString()}
-                            {event.metadata?.amount && (
-                              <span className='ml-1 font-medium'>
-                                ({event.metadata.amount} {event.metadata.currency})
-                              </span>
+                      <div key={event._id} className='flex gap-3 items-start relative z-10'>
+                        <div className='w-2.5 h-2.5 bg-purple-500 rounded-full mt-2 shrink-0'></div>
+                        <div className='w-full'>
+                          <div className='flex flex-col'>
+                            <div className='text-[14px] text-foreground font-medium'>
+                              {event.type.replace(/_/g, ' ').replace(/\b\w/g, (l) => {
+                                return l.toUpperCase();
+                              })}
+                            </div>
+                            <div className='text-[13px] text-muted-foreground'>
+                              {event.description}
+                            </div>
+                            <div className='text-[12px] text-muted-foreground mt-1'>
+                              {new Date(event.timestamp).toLocaleString()}
+                              {event.metadata?.amount && (
+                                <span className='ml-1 font-medium'>
+                                  ({event.metadata.amount} {event.metadata.currency})
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Accordion for metadata */}
+                            {event.metadata && Object.keys(event.metadata).length > 0 && (
+                              <Accordion type='single' collapsible className='mt-1 w-full'>
+                                <AccordionItem value='metadata' className='border-none'>
+                                  <AccordionTrigger className='py-1 text-[12px] text-purple-500 hover:text-purple-600 hover:no-underline'>
+                                    View details
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className='bg-purple-500/5 rounded-md p-3 mt-1 text-[12px]'>
+                                      {Object.entries(event.metadata).map(([key, value]) => {
+                                        return (
+                                          <div
+                                            key={key}
+                                            className='grid grid-cols-3 gap-2 mb-1 last:mb-0'
+                                          >
+                                            <span className='text-muted-foreground font-medium capitalize'>
+                                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                                            </span>
+                                            <span className='col-span-2 text-foreground break-all'>
+                                              {typeof value === 'object'
+                                                ? JSON.stringify(value)
+                                                : String(value)}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              </Accordion>
                             )}
                           </div>
                         </div>
