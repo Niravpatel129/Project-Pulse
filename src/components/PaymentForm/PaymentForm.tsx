@@ -110,7 +110,7 @@ export function PaymentForm({
           <div>
             <PaymentElement
               options={{
-                layout: 'tabs',
+                layout: 'accordion',
                 defaultValues: {
                   billingDetails: {
                     name: invoice?.client?.user?.name,
