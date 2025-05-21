@@ -1,6 +1,7 @@
 import { BusinessSettings } from '@/app/[workspace]/invoicesOld/[id]/components/BusinessSettings';
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
+import { CustomerSheet } from '@/components/Main/Invoices/CustomerSheet';
 import ProjectManagement from '@/components/project/ProjectManagement';
 import {
   Accordion,
@@ -30,13 +31,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -44,16 +38,7 @@ import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import {
-  CalendarIcon,
-  CheckCircle2,
-  Download,
-  LinkIcon,
-  Mail,
-  MapPin,
-  Phone,
-  User,
-} from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Download, LinkIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import InvoiceActionBar from './InvoiceActionBar';
@@ -685,19 +670,6 @@ export default function InvoicePreview({
       printWindow.close();
     }, 1000);
   };
-
-  // Customer data fetch
-  const { data: customerData, isLoading: customerLoading } = useQuery({
-    queryKey: ['customer', invoice?.client?._id],
-    queryFn: async () => {
-      if (!invoice?.client?._id) return null;
-      const response = await newRequest.get(`/clients/${invoice.client._id}`);
-      return response.data.data;
-    },
-    enabled: !!invoice?.client?._id && isCustomerSheetOpen,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
 
   if (!invoiceId && !selectedInvoice) {
     return (
@@ -1639,127 +1611,13 @@ export default function InvoicePreview({
       </Dialog>
 
       {/* Customer Sheet */}
-      <Sheet open={isCustomerSheetOpen} onOpenChange={setIsCustomerSheetOpen}>
-        <SheetContent className='overflow-auto'>
-          <SheetHeader>
-            <SheetTitle>Customer Details</SheetTitle>
-            <SheetDescription>
-              Information about {invoice?.client?.user.name || 'customer'}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className='mt-6 space-y-6'>
-            {customerLoading ? (
-              <div className='text-center py-4'>Loading customer information...</div>
-            ) : customerData ? (
-              <>
-                <div className='border border-border rounded-lg p-4 space-y-4'>
-                  <div className='flex items-center space-x-3'>
-                    <div className='h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center'>
-                      <User className='h-5 w-5 text-purple-600 dark:text-purple-400' />
-                    </div>
-                    <div>
-                      <h3 className='text-foreground font-medium'>{customerData.user?.name}</h3>
-                      <p className='text-muted-foreground text-sm'>Primary Contact</p>
-                    </div>
-                  </div>
-
-                  <Separator className='my-4' />
-
-                  <div className='space-y-3'>
-                    <div className='flex items-start space-x-3'>
-                      <Mail className='h-4 w-4 text-muted-foreground mt-0.5' />
-                      <div>
-                        <p className='text-sm font-medium text-foreground'>
-                          {customerData.user?.email}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>Email Address</p>
-                      </div>
-                    </div>
-
-                    {customerData.phone && (
-                      <div className='flex items-start space-x-3'>
-                        <Phone className='h-4 w-4 text-muted-foreground mt-0.5' />
-                        <div>
-                          <p className='text-sm font-medium text-foreground'>
-                            {customerData.phone}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>Phone Number</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {customerData.address && (
-                      <div className='flex items-start space-x-3'>
-                        <MapPin className='h-4 w-4 text-muted-foreground mt-0.5' />
-                        <div>
-                          <p className='text-sm font-medium text-foreground'>
-                            {customerData.address.street && `${customerData.address.street}, `}
-                            {customerData.address.city && `${customerData.address.city}, `}
-                            {customerData.address.state && `${customerData.address.state}, `}
-                            {customerData.address.country && `${customerData.address.country} `}
-                            {customerData.address.zip && customerData.address.zip}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>Billing Address</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Invoice Summary for this customer */}
-                <div className='border border-border rounded-lg p-4'>
-                  <h3 className='text-sm font-medium mb-4'>Invoice Summary</h3>
-                  <div className='space-y-2'>
-                    <div className='flex justify-between'>
-                      <span className='text-muted-foreground text-sm'>Total Invoices</span>
-                      <span className='text-foreground text-sm font-medium'>
-                        {customerData.invoiceStats?.totalInvoices || 0}
-                      </span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span className='text-muted-foreground text-sm'>Outstanding</span>
-                      <span className='text-foreground text-sm font-medium'>
-                        {customerData.invoiceStats?.outstandingAmount?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}{' '}
-                        {invoice?.currency || 'USD'}
-                      </span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span className='text-muted-foreground text-sm'>Total Paid</span>
-                      <span className='text-foreground text-sm font-medium'>
-                        {customerData.invoiceStats?.paidAmount?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || 0}{' '}
-                        {invoice?.currency || 'USD'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className='flex justify-end'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      return setIsCustomerSheetOpen(false);
-                    }}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className='text-center py-4 text-muted-foreground'>
-                No customer information available
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <CustomerSheet
+        open={isCustomerSheetOpen}
+        onOpenChange={setIsCustomerSheetOpen}
+        customerId={invoice?.client?._id || ''}
+        customerName={invoice?.client?.user?.name || ''}
+        currency={invoice?.currency || 'USD'}
+      />
 
       {/* Business Settings Dialog */}
       <BusinessSettings open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen} />

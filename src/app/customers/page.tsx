@@ -184,38 +184,6 @@ export default function CustomersPage() {
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
-  const handleEditClient = (client: any) => {
-    setNewCustomer({
-      name: client.user.name,
-      contactName: `${client.contact?.firstName || ''} ${client.contact?.lastName || ''}`.trim(),
-      contactEmail: client.user.email || '',
-      contactPhone: client.phone || '',
-      industry: client.industry || '',
-      type: client.type || 'Individual',
-      totalSpent: client.totalSpent || 0,
-      projects: client.projects || 0,
-      rating: client.rating || 0,
-      status: client.status || 'Active',
-      address: {
-        street: client.address?.street || '',
-        city: client.address?.city || '',
-        state: client.address?.state || '',
-        country: client.address?.country || '',
-        zip: client.address?.zip || '',
-      },
-      shippingAddress: {
-        street: client.shippingAddress?.street || '',
-        city: client.shippingAddress?.city || '',
-        state: client.shippingAddress?.state || '',
-        country: client.shippingAddress?.country || '',
-        zip: client.shippingAddress?.zip || '',
-      },
-      website: client.website || '',
-      internalNotes: client.internalNotes || '',
-    });
-    setCustomerModalOpen(true);
-  };
-
   const deleteClientMutation = useMutation({
     mutationFn: async (clientId: string) => {
       const response = await newRequest.delete(`/clients/${clientId}`);
