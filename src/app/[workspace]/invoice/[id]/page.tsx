@@ -261,7 +261,7 @@ export default function InvoicePage() {
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>From</span>
             <span className='text-[13px] text-[#3F3F46] dark:text-[#fafafa]'>
-              {invoice.createdBy.name}
+              {invoiceSettings?.businessName || invoice?.createdBy?.name}
             </span>
           </div>
           <div className='flex justify-between items-center'>
