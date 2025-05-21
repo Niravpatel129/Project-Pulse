@@ -55,14 +55,16 @@ export default function InvoicePage() {
       return (
         <div className='text-center py-6'>
           <CheckCircle className='text-green-500 w-12 h-12 mx-auto mb-4' />
-          <h2 className='text-xl font-semibold text-[#fafafa] mb-2'>Payment Complete</h2>
-          <p className='text-[#8C8C8C] mb-4'>
+          <h2 className='text-xl font-semibold text-[#3F3F46] dark:text-[#fafafa] mb-2'>
+            Payment Complete
+          </h2>
+          <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-4'>
             This invoice has been paid on {new Date(invoice.paidAt || '').toLocaleDateString()}
           </p>
-          <div className='bg-[#232323] p-4 rounded-lg text-left mb-4'>
+          <div className='bg-[#F4F4F5] dark:bg-[#232323] p-4 rounded-lg text-left mb-4'>
             <div className='flex justify-between'>
-              <span className='text-[#8C8C8C]'>Amount:</span>
-              <span className='font-medium text-[#fafafa]'>
+              <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Amount:</span>
+              <span className='font-medium text-[#3F3F46] dark:text-[#fafafa]'>
                 {invoice.currency || 'USD'}{' '}
                 {invoice.total.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -79,10 +81,10 @@ export default function InvoicePage() {
     if (isLoading) {
       return (
         <div className='space-y-6'>
-          <div className='bg-[#232323] p-4 rounded-xl'>
+          <div className='bg-[#F4F4F5] dark:bg-[#232323] p-4 rounded-xl'>
             <div className='py-12 flex flex-col items-center justify-center'>
               <div className='w-10 h-10 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin mb-4'></div>
-              <p className='text-[#8C8C8C]'>Preparing payment form...</p>
+              <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Preparing payment form...</p>
             </div>
           </div>
         </div>
@@ -109,11 +111,15 @@ export default function InvoicePage() {
           options={{
             clientSecret,
             appearance: {
-              theme: 'night',
+              theme: document?.documentElement?.classList?.contains('dark') ? 'night' : 'flat',
               variables: {
                 colorPrimary: '#0066FF',
-                colorBackground: '#232323',
-                colorText: '#fafafa',
+                colorBackground: document?.documentElement?.classList?.contains('dark')
+                  ? '#232323'
+                  : '#F4F4F5',
+                colorText: document?.documentElement?.classList?.contains('dark')
+                  ? '#fafafa'
+                  : '#3F3F46',
                 colorDanger: '#ef4444',
                 fontFamily: 'system-ui, sans-serif',
                 spacingUnit: '4px',
@@ -121,7 +127,9 @@ export default function InvoicePage() {
               },
               rules: {
                 '.Tab': {
-                  border: '1px solid #333',
+                  border: document?.documentElement?.classList?.contains('dark')
+                    ? '1px solid #333'
+                    : '1px solid #E4E4E7',
                   borderRadius: '8px',
                 },
                 '.Tab:hover': {
@@ -159,25 +167,25 @@ export default function InvoicePage() {
 
   if (queryLoading) {
     return (
-      <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark w-full'>
+      <div className='min-h-screen bg-white dark:bg-[#141414] flex flex-col items-center py-16 px-4 antialiased w-full'>
         <div className='mb-16'>
           <div className='flex items-center gap-3'>
-            <div className='h-5 w-32 bg-[#232323] rounded animate-pulse' />
+            <div className='h-5 w-32 bg-[#F4F4F5] dark:bg-[#232323] rounded animate-pulse' />
           </div>
         </div>
-        <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
+        <div className='w-full max-w-[440px] bg-white dark:bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
           <div className='flex justify-between items-start mb-10'>
             <div>
-              <div className='h-8 w-48 bg-[#232323] rounded animate-pulse mb-2' />
-              <div className='h-4 w-32 bg-[#232323] rounded animate-pulse' />
+              <div className='h-8 w-48 bg-[#F4F4F5] dark:bg-[#232323] rounded animate-pulse mb-2' />
+              <div className='h-4 w-32 bg-[#F4F4F5] dark:bg-[#232323] rounded animate-pulse' />
             </div>
           </div>
           <div className='space-y-5 mb-7'>
             {[1, 2, 3].map((i) => {
               return (
                 <div key={i} className='flex justify-between items-center'>
-                  <div className='h-4 w-16 bg-[#232323] rounded animate-pulse' />
-                  <div className='h-4 w-32 bg-[#232323] rounded animate-pulse' />
+                  <div className='h-4 w-16 bg-[#F4F4F5] dark:bg-[#232323] rounded animate-pulse' />
+                  <div className='h-4 w-32 bg-[#F4F4F5] dark:bg-[#232323] rounded animate-pulse' />
                 </div>
               );
             })}
@@ -189,10 +197,10 @@ export default function InvoicePage() {
 
   if (!invoice) {
     return (
-      <div className='min-h-screen bg-[#141414] flex flex-col items-center justify-center py-16 px-4 antialiased dark w-full'>
-        <div className='text-[#fafafa] text-center'>
+      <div className='min-h-screen bg-white dark:bg-[#141414] flex flex-col items-center justify-center py-16 px-4 antialiased w-full'>
+        <div className='text-[#3F3F46] dark:text-[#fafafa] text-center'>
           <h1 className='text-2xl font-semibold mb-2'>Invoice Not Found</h1>
-          <p className='text-[#8C8C8C]'>
+          <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
             The invoice you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission
             to view it.
           </p>
@@ -202,11 +210,11 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark w-full min-w-screen'>
+    <div className='min-h-screen bg-white dark:bg-[#141414] flex flex-col items-center py-16 px-4 antialiased w-full min-w-screen'>
       {/* Company Logo */}
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
-          <span className='text-[15px] font-medium text-[#fafafa] tracking-tight'>
+          <span className='text-[15px] font-medium text-[#3F3F46] dark:text-[#fafafa] tracking-tight'>
             {/* Brand logo */}
             <Image
               unoptimized
@@ -221,17 +229,17 @@ export default function InvoicePage() {
       </div>
 
       {/* Invoice Card */}
-      <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
+      <div className='w-full max-w-[440px] bg-white dark:bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
         <div className='flex justify-between items-start mb-10'>
           <div>
-            <h1 className='text-[32px] font-semibold text-[#fafafa] mb-1 tracking-tight'>
-              {invoice.currency || 'USD'}{' '}
+            <h1 className='text-[32px] font-semibold text-[#3F3F46] dark:text-[#fafafa] mb-1 tracking-tight'>
               {invoice.total.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-              })}
+              })}{' '}
+              {invoice.currency || 'USD'}
             </h1>
-            <p className='text-[13px] text-[#8C8C8C]'>
+            <p className='text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
               {invoice.status === 'paid'
                 ? `Paid on ${new Date(invoice.paidAt || '').toLocaleDateString()}`
                 : `Due ${new Date(invoice.dueDate).toLocaleDateString()}`}
@@ -241,20 +249,26 @@ export default function InvoicePage() {
 
         <div className='space-y-5 mb-7'>
           <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-[#8C8C8C]'>To</span>
-            <span className='text-[13px] text-[#fafafa]'>{invoice?.client?.user?.name}</span>
+            <span className='text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>To</span>
+            <span className='text-[13px] text-[#3F3F46] dark:text-[#fafafa]'>
+              {invoice?.client?.user?.name}
+            </span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-[#8C8C8C]'>From</span>
-            <span className='text-[13px] text-[#fafafa]'>{invoice.createdBy.name}</span>
+            <span className='text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>From</span>
+            <span className='text-[13px] text-[#3F3F46] dark:text-[#fafafa]'>
+              {invoice.createdBy.name}
+            </span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-[#8C8C8C]'>Invoice</span>
-            <span className='text-[13px] text-[#fafafa] font-mono'>{invoice.invoiceNumber}</span>
+            <span className='text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Invoice</span>
+            <span className='text-[13px] text-[#3F3F46] dark:text-[#fafafa] font-mono'>
+              {invoice.invoiceNumber}
+            </span>
           </div>
           {invoice.status === 'paid' && (
             <div className='flex justify-between items-center'>
-              <span className='text-[13px] text-[#8C8C8C]'>Status</span>
+              <span className='text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Status</span>
               <span className='text-[13px] text-green-500 font-medium flex items-center gap-1'>
                 <CheckCircle className='w-3.5 h-3.5' /> Paid
               </span>
@@ -264,14 +278,18 @@ export default function InvoicePage() {
       </div>
 
       {/* Payment Methods */}
-      <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
+      <div className='w-full max-w-[440px] bg-white dark:bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
         {renderPaymentSection()}
 
         {/* Footer */}
-        <div className='mt-10 flex items-center justify-center gap-6 text-[13px] text-[#8C8C8C]'>
+        <div className='mt-10 flex items-center justify-center gap-6 text-[13px] text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
           <span>Powered by Stripe</span>
-          <span className='hover:text-[#fafafa] transition-colors cursor-pointer'>Terms</span>
-          <span className='hover:text-[#fafafa] transition-colors cursor-pointer'>Privacy</span>
+          <span className='hover:text-[#3F3F46] dark:hover:text-[#fafafa] transition-colors cursor-pointer'>
+            Terms
+          </span>
+          <span className='hover:text-[#3F3F46] dark:hover:text-[#fafafa] transition-colors cursor-pointer'>
+            Privacy
+          </span>
         </div>
       </div>
 

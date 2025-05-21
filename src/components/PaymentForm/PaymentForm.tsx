@@ -73,10 +73,10 @@ export function PaymentForm({
   if (!isElementsReady) {
     return (
       <div className='space-y-6'>
-        <div className='bg-[#232323] p-4 rounded-xl'>
+        <div className='bg-[#F4F4F5] dark:bg-[#232323] p-4 rounded-xl'>
           <div className='py-12 flex flex-col items-center justify-center'>
             <div className='w-10 h-10 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin mb-4'></div>
-            <p className='text-[#8C8C8C]'>Loading payment form...</p>
+            <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Loading payment form...</p>
           </div>
         </div>
       </div>
@@ -85,10 +85,12 @@ export function PaymentForm({
 
   return (
     <div className='space-y-6'>
-      <div className='flex items-center justify-between p-4 bg-[#232323] rounded-xl'>
+      <div className='flex items-center justify-between p-4 bg-[#F4F4F5] dark:bg-[#232323] rounded-xl'>
         <div className='space-y-1'>
-          <div className='text-sm font-medium text-[#8C8C8C]'>Selected Payment</div>
-          <div className='text-lg font-semibold text-[#fafafa]'>
+          <div className='text-sm font-medium text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+            Selected Payment
+          </div>
+          <div className='text-lg font-semibold text-[#3F3F46] dark:text-[#fafafa]'>
             {mapCurrency(invoice.currency)}
             {paymentAmount.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -98,7 +100,7 @@ export function PaymentForm({
         </div>
         <button
           onClick={onBack}
-          className='text-sm text-[#8C8C8C] hover:text-[#fafafa] transition-colors'
+          className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#3F3F46] dark:hover:text-[#fafafa] transition-colors'
         >
           Change
         </button>
@@ -106,7 +108,9 @@ export function PaymentForm({
 
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className='space-y-4'>
-          <div className='text-sm font-medium text-[#8C8C8C]'>Payment Details</div>
+          <div className='text-sm font-medium text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+            Payment Details
+          </div>
           <div>
             <PaymentElement
               options={{
