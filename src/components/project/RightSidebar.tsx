@@ -836,14 +836,14 @@ export default function RightSidebar({
 
             {/* Attachment buttons */}
             <div className='absolute bottom-3 left-3 flex gap-2'>
-              {/* {process.env.NODE_ENV === 'development' && ( */}
-              <EmailPickerDialog
-                open={isEmailPickerOpen}
-                onOpenChange={handleEmailPickerOpenChange}
-                onSelectEmail={handleSelectEmail}
-                selectedEmails={selectedEmails}
-              />
-              {/* )} */}
+              {process.env.NODE_ENV === 'development' && (
+                <EmailPickerDialog
+                  open={isEmailPickerOpen}
+                  onOpenChange={handleEmailPickerOpenChange}
+                  onSelectEmail={handleSelectEmail}
+                  selectedEmails={selectedEmails}
+                />
+              )}
 
               <Button
                 disabled={chatMutation.isPending}
