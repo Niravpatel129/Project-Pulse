@@ -84,6 +84,7 @@ export default function ItemsSection({
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const lastAppliedTaxRateRef = useRef<{ id: string; rate: number | null }>({ id: '', rate: null });
 
   // Fetch tax rates from API
   const {
@@ -271,49 +272,69 @@ export default function ItemsSection({
       return;
     }
 
-    // If we already have a selected tax rate ID and it's not the initial render
-    if (selectedTaxRateId) {
-      const selectedRate = taxRates.find((tax) => {
-        return tax.id === selectedTaxRateId;
+    // Only initialize selectedTaxRateId if it's empty
+    if (!selectedTaxRateId) {
+      // Initial selection
+      const standardRate = taxRates.find((tax) => {
+        return tax.id === 'standard';
       });
-
-      if (selectedRate) {
-        console.log(`Found matching rate for ${selectedTaxRateId}:`, selectedRate);
+      if (standardRate) {
+        console.log('Using standard tax rate as default:', standardRate);
+        setSelectedTaxRateId('standard');
         setNewItem((prev) => {
           return {
             ...prev,
-            taxRate: selectedRate.rate,
+            taxRate: standardRate.rate,
           };
         });
-        return;
+      } else if (taxRates.length > 0) {
+        // If no standard rate, use the first available rate
+        console.log('No standard rate found, using first tax rate:', taxRates[0]);
+        setSelectedTaxRateId(taxRates[0].id);
+        setNewItem((prev) => {
+          return {
+            ...prev,
+            taxRate: taxRates[0].rate,
+          };
+        });
       }
     }
+  }, [taxRates]);
 
-    // Initial selection or fallback if selected ID not found
-    const standardRate = taxRates.find((tax) => {
-      return tax.id === 'standard';
+  // Separate useEffect to update the tax rate when selectedTaxRateId changes
+  useEffect(() => {
+    if (!selectedTaxRateId || taxRates.length === 0) return;
+
+    // Skip if we've already applied this tax rate
+    if (lastAppliedTaxRateRef.current.id === selectedTaxRateId) return;
+
+    const selectedRate = taxRates.find((tax) => {
+      return tax.id === selectedTaxRateId;
     });
-    if (standardRate) {
-      console.log('Using standard tax rate as default:', standardRate);
-      setSelectedTaxRateId('standard');
+
+    if (selectedRate) {
+      console.log(`Found matching rate for ${selectedTaxRateId}:`, selectedRate);
+
+      // Skip if the rate is the same as what's already applied
+      if (lastAppliedTaxRateRef.current.rate === selectedRate.rate) return;
+
+      // Update our ref to track what we're applying
+      lastAppliedTaxRateRef.current = {
+        id: selectedTaxRateId,
+        rate: selectedRate.rate,
+      };
+
       setNewItem((prev) => {
+        // Only update if the rate is different
+        if (prev.taxRate === selectedRate.rate) return prev;
+
         return {
           ...prev,
-          taxRate: standardRate.rate,
-        };
-      });
-    } else if (taxRates.length > 0) {
-      // If no standard rate, use the first available rate
-      console.log('No standard rate found, using first tax rate:', taxRates[0]);
-      setSelectedTaxRateId(taxRates[0].id);
-      setNewItem((prev) => {
-        return {
-          ...prev,
-          taxRate: taxRates[0].rate,
+          taxRate: selectedRate.rate,
         };
       });
     }
-  }, [taxRates, selectedTaxRateId]);
+  }, [selectedTaxRateId, taxRates]);
 
   // New function to update tax rates when items with custom taxes are added
   useEffect(() => {

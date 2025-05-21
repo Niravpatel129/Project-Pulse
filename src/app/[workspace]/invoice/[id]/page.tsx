@@ -216,14 +216,18 @@ export default function InvoicePage() {
         <div className='flex items-center gap-3'>
           <span className='text-[15px] font-medium text-[#3F3F46] dark:text-[#fafafa] tracking-tight'>
             {/* Brand logo */}
-            <Image
-              unoptimized
-              width={100}
-              height={100}
-              src={invoiceSettings.logo}
-              alt='Company Logo'
-              className='h-16 w-auto object-contain'
-            />
+            {invoiceSettings?.logo ? (
+              <Image
+                unoptimized
+                width={100}
+                height={100}
+                src={invoiceSettings?.logo}
+                alt='Company Logo'
+                className='h-16 w-auto object-contain'
+              />
+            ) : (
+              <></>
+            )}
           </span>
         </div>
       </div>
