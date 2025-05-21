@@ -2,18 +2,21 @@
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import { PaymentForm } from '@/components/PaymentForm/PaymentForm';
 import { PaymentSelector } from '@/components/PaymentForm/PaymentSelector';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { Invoice } from '@/types/invoice';
 import { newRequest } from '@/utils/newRequest';
 import { Elements } from '@stripe/react-stripe-js';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 
 export default function InvoicePage() {
   const params = useParams();
   const invoiceId = params?.id as string;
   const workspace = params?.workspace as string;
+  const { data: invoiceSettings } = useInvoiceSettings();
 
   const { data: invoice, isLoading: queryLoading } = useQuery<Invoice>({
     queryKey: ['invoice', workspace, invoiceId],
@@ -204,7 +207,15 @@ export default function InvoicePage() {
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
           <span className='text-[15px] font-medium text-[#fafafa] tracking-tight'>
-            {invoice?.client?.user?.name}
+            {/* Brand logo */}
+            <Image
+              unoptimized
+              width={100}
+              height={100}
+              src={invoiceSettings.logo}
+              alt='Company Logo'
+              className='h-16 w-auto object-contain'
+            />
           </span>
         </div>
       </div>
