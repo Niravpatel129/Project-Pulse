@@ -270,6 +270,8 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
     attachmentId: string,
     filename: string,
   ) => {
+    console.log('Downloading attachment:', { messageId, attachmentId, filename });
+
     setIsDownloading(attachmentId);
     try {
       const response = await newRequest.get(
