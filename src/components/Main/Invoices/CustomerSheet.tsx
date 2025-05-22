@@ -11,10 +11,10 @@ import {
 } from '@/components/ui/sheet';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import DOMPurify from 'dompurify';
 import { Mail, MapPin, Paperclip, PencilIcon, Phone, User } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
+import { Letter } from 'react-letter';
 import { toast } from 'sonner';
 
 // Interface for email objects
@@ -298,98 +298,6 @@ export function CustomerSheet({
     const { theme } = useTheme();
     if (!thread) return null;
 
-    // Transform and sanitize email HTML
-    const transformEmailHtml = (html: string) => {
-      // First, create a temporary div to parse the HTML
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
-
-      // Fix common HTML issues
-      const fixHtmlStructure = (element: Element) => {
-        // Fix lists inside paragraphs
-        const paragraphs = element.getElementsByTagName('p');
-        for (let i = paragraphs.length - 1; i >= 0; i--) {
-          const p = paragraphs[i];
-          const lists = p.getElementsByTagName('ul');
-          if (lists.length > 0) {
-            // Move lists after the paragraph
-            while (lists.length > 0) {
-              const list = lists[0];
-              p.parentNode?.insertBefore(list, p.nextSibling);
-            }
-          }
-        }
-
-        // Fix nested paragraphs
-        const nestedParagraphs = element.querySelectorAll('p p');
-        for (let i = nestedParagraphs.length - 1; i >= 0; i--) {
-          const nestedP = nestedParagraphs[i];
-          const parentP = nestedP.parentElement;
-          if (parentP && parentP.tagName === 'P') {
-            // Move content to parent paragraph
-            while (nestedP.firstChild) {
-              parentP.insertBefore(nestedP.firstChild, nestedP);
-            }
-            parentP.removeChild(nestedP);
-          }
-        }
-
-        // Fix empty paragraphs
-        const emptyParagraphs = element.querySelectorAll('p:empty');
-        for (let i = emptyParagraphs.length - 1; i >= 0; i--) {
-          emptyParagraphs[i].parentNode?.removeChild(emptyParagraphs[i]);
-        }
-      };
-
-      // Apply fixes
-      fixHtmlStructure(tempDiv);
-
-      // Get the cleaned HTML
-      let cleanedHtml = tempDiv.innerHTML;
-
-      // Remove problematic attributes and styles
-      cleanedHtml = cleanedHtml
-        .replace(/style="[^"]*"/g, '')
-        .replace(/class="[^"]*"/g, '')
-        .replace(/id="[^"]*"/g, '')
-        .replace(/on\w+="[^"]*"/g, '')
-        .replace(/data-[^=]*="[^"]*"/g, '');
-
-      // Sanitize the HTML
-      return DOMPurify.sanitize(cleanedHtml, {
-        ALLOWED_TAGS: [
-          'p',
-          'br',
-          'strong',
-          'em',
-          'u',
-          'h1',
-          'h2',
-          'h3',
-          'h4',
-          'h5',
-          'h6',
-          'ul',
-          'ol',
-          'li',
-          'blockquote',
-          'pre',
-          'code',
-          'a',
-          'img',
-          'table',
-          'thead',
-          'tbody',
-          'tr',
-          'th',
-          'td',
-          'div',
-          'span',
-        ],
-        ALLOWED_ATTR: ['href', 'src', 'alt', 'target'],
-      });
-    };
-
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto bg-background text-foreground p-0'>
@@ -413,9 +321,17 @@ export function CustomerSheet({
                   </div>
                   <div className='prose dark:prose-invert max-w-none'>
                     {message.body ? (
-                      <div
-                        className='email-content [&_*]:text-foreground [&_a]:text-blue-600 dark:[&_a]:text-blue-400 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-muted [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_pre]:bg-muted/50 [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto [&_table]:border-collapse [&_table]:w-full [&_th]:border-b [&_th]:border-border [&_th]:p-2 [&_td]:border-b [&_td]:border-border [&_td]:p-2 [&_img]:max-w-full [&_img]:h-auto [&_hr]:border-border [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h4]:text-base [&_h5]:text-sm [&_h6]:text-sm [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-bold [&_h5]:font-bold [&_h6]:font-bold [&_h1]:my-2 [&_h2]:my-2 [&_h3]:my-2 [&_h4]:my-2 [&_h5]:my-2 [&_h6]:my-2'
-                        dangerouslySetInnerHTML={{ __html: transformEmailHtml(message.body) }}
+                      <Letter
+                        html={message.body}
+                        text={message.snippet}
+                        className='email-content'
+                        rewriteExternalResources={(url) => {
+                          return url;
+                        }}
+                        rewriteExternalLinks={(url) => {
+                          return url;
+                        }}
+                        allowedSchemas={['http', 'https', 'mailto']}
                       />
                     ) : (
                       <div className='whitespace-pre-wrap text-foreground'>{message.snippet}</div>
