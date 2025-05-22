@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
-import { Letter } from 'react-letter';
 import { toast } from 'sonner';
 
 // Interface for email objects
@@ -486,18 +485,89 @@ export function CustomerSheet({
 
                   <div className='prose dark:prose-invert max-w-none'>
                     {message.body ? (
-                      <Letter
-                        html={message.body}
-                        text={message.snippet}
-                        className='email-content'
-                        rewriteExternalResources={(url) => {
-                          return url;
-                        }}
-                        rewriteExternalLinks={(url) => {
-                          return url;
-                        }}
-                        allowedSchemas={['http', 'https', 'mailto']}
-                      />
+                      <div className='grid overflow-hidden transition-all duration-200 grid-rows-[1fr]'>
+                        <div className='min-h-0 overflow-hidden'>
+                          <div className='h-fit w-full p-0'>
+                            <iframe
+                              height='1464'
+                              className='!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200'
+                              title='Email Content'
+                              sandbox='allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts'
+                              style={{ width: '100%', overflow: 'hidden' }}
+                              src={`data:text/html;charset=utf-8,${encodeURIComponent(
+                                message.body,
+                              )}`}
+                            />
+                            <div className='mb-2 mt-2 flex gap-2 px-4'>
+                              <Button variant='outline' size='sm' className='h-7'>
+                                <svg
+                                  width='12'
+                                  height='12'
+                                  viewBox='0 0 12 12'
+                                  fill='none'
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='fill-[#6D6D6D] dark:fill-[#9B9B9B] mr-1'
+                                >
+                                  <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M10.5 7.75C10.5 6.23122 9.26878 5 7.75 5H2.56066L4.78033 7.21967C5.07322 7.51256 5.07322 7.98744 4.78033 8.28033C4.48744 8.57322 4.01256 8.57322 3.71967 8.28033L0.21967 4.78033C-0.0732234 4.48744 -0.0732233 4.01256 0.21967 3.71967L3.71967 0.21967C4.01256 -0.0732233 4.48744 -0.0732233 4.78033 0.21967C5.07322 0.512563 5.07322 0.987437 4.78033 1.28033L2.56066 3.5L7.75 3.5C10.0972 3.5 12 5.40279 12 7.75C12 10.0972 10.0972 12 7.75 12H6.75C6.33579 12 6 11.6642 6 11.25C6 10.8358 6.33579 10.5 6.75 10.5H7.75C9.26878 10.5 10.5 9.26878 10.5 7.75Z'
+                                  />
+                                </svg>
+                                <span className='text-sm'>Reply</span>
+                                <kbd className='border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6 -me-1 ms-auto hidden max-h-full items-center md:inline-flex'>
+                                  r
+                                </kbd>
+                              </Button>
+                              <Button variant='outline' size='sm' className='h-7'>
+                                <svg
+                                  width='17'
+                                  height='17'
+                                  viewBox='0 0 16 16'
+                                  fill='none'
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='fill-[#6D6D6D] dark:fill-[#9B9B9B] mr-1'
+                                >
+                                  <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M14 9.75C14 8.23122 12.7688 7 11.25 7H7.56066L9.78033 9.21967C10.0732 9.51256 10.0732 9.98744 9.78033 10.2803C9.48744 10.5732 9.01256 10.5732 8.71967 10.2803L5.21967 6.78033C4.92678 6.48744 4.92678 6.01256 5.21967 5.71967L8.71967 2.21967C9.01256 1.92678 9.48744 1.92678 9.78033 2.21967C10.0732 2.51256 10.0732 2.98744 9.78033 3.28033L7.56066 5.5H11.25C13.5972 5.5 15.5 7.40279 15.5 9.75C15.5 12.0972 13.5972 14 11.25 14H10.25C9.83579 14 9.5 13.6642 9.5 13.25C9.5 12.8358 9.83579 12.5 10.25 12.5H11.25C12.7688 12.5 14 11.2688 14 9.75Z'
+                                  />
+                                  <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M1.21967 6.78033C0.926777 6.48744 0.926777 6.01256 1.21967 5.71967L4.71967 2.21967C5.01256 1.92678 5.48744 1.92678 5.78033 2.21967C6.07322 2.51256 6.07322 2.98744 5.78033 3.28033L3.06066 6L5.78033 8.71967C6.07322 9.01256 6.07322 9.48744 5.78033 9.78033C5.48744 10.0732 5.01256 10.0732 4.71967 9.78033L1.21967 6.78033Z'
+                                  />
+                                </svg>
+                                <span className='text-sm'>Reply All</span>
+                                <kbd className='border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6 -me-1 ms-auto hidden max-h-full items-center md:inline-flex'>
+                                  a
+                                </kbd>
+                              </Button>
+                              <Button variant='outline' size='sm' className='h-7'>
+                                <svg
+                                  width='12'
+                                  height='12'
+                                  viewBox='0 0 12 12'
+                                  fill='none'
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='fill-[#6D6D6D] dark:fill-[#9B9B9B] mr-1'
+                                >
+                                  <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M0 6C-1.81059e-08 5.58579 0.335786 5.25 0.75 5.25L9.43934 5.25L6.21967 2.03033C5.92678 1.73744 5.92678 1.26256 6.21967 0.96967C6.51256 0.676777 6.98744 0.676777 7.28033 0.96967L11.7803 5.46967C12.0732 5.76256 12.0732 6.23744 11.7803 6.53033L7.28033 11.0303C6.98744 11.3232 6.51256 11.3232 6.21967 11.0303C5.92678 10.7374 5.92678 10.2626 6.21967 9.96967L9.43934 6.75L0.75 6.75C0.335786 6.75 1.81059e-08 6.41421 0 6Z'
+                                  />
+                                </svg>
+                                <span className='text-sm'>Forward</span>
+                                <kbd className='border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6 -me-1 ms-auto hidden max-h-full items-center md:inline-flex'>
+                                  f
+                                </kbd>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <div className='whitespace-pre-wrap text-foreground'>{message.snippet}</div>
                     )}
