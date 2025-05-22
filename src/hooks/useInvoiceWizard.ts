@@ -174,7 +174,7 @@ export const useInvoiceWizard = () => {
       const response = await newRequest.post(`/invoices/generate/${projectId}`);
       return response.data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
       return null;
     } finally {
       setIsGenerating(false);
