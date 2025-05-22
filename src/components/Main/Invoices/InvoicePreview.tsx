@@ -264,7 +264,6 @@ export default function InvoicePreview({
   });
 
   const invoice = selectedInvoice || response;
-  console.log('🚀 invoice:', invoice);
 
   const payments = paymentData?.paymentHistory || [];
 
@@ -718,8 +717,6 @@ export default function InvoicePreview({
       </div>
     );
   }
-
-  console.log('🚀 invoice.status:', invoice?.status);
 
   if (!invoice) {
     return null;

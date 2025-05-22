@@ -2,6 +2,7 @@
 
 import { newRequest } from '@/utils/newRequest';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 interface Workspace {
   _id?: string;
@@ -29,14 +30,17 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    // dont fetch if not logged in
+    if (!isAuthenticated) return;
+
     try {
       const fetchWorkspace = async () => {
         try {
           const response = await newRequest.get('/workspaces/current');
           setWorkspace(response.data.data);
-          console.log('🚀 workspace in WorkspaceContext:', response.data.data);
         } catch (err) {
           console.error('Error fetching workspace:', err);
           if (typeof window !== 'undefined') {

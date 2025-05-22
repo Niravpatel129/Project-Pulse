@@ -184,7 +184,6 @@ export const useInvoiceWizard = () => {
   useEffect(() => {
     const handleFetchInvoiceDetails = async () => {
       const invoiceDetails = await fetchInvoiceDetails();
-      console.log('🚀 invoiceDetails:', invoiceDetails);
 
       if (invoiceDetails?.items?.length) {
         setSelectedItems(invoiceDetails.items);
