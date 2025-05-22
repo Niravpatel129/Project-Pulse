@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/sheet';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
 import { Mail, MapPin, Paperclip, PencilIcon, Phone, User } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -94,6 +96,7 @@ export function CustomerSheet({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { theme } = useTheme();
 
   // Add useEffect to fetch emails when sheet opens
   useEffect(() => {
@@ -292,27 +295,115 @@ export function CustomerSheet({
     onOpenChange: (open: boolean) => void;
     thread: EmailThread | null;
   }) {
+    const { theme } = useTheme();
     if (!thread) return null;
+
+    // Transform and sanitize email HTML
+    const transformEmailHtml = (html: string) => {
+      // First, create a temporary div to parse the HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+
+      // Fix common HTML issues
+      const fixHtmlStructure = (element: Element) => {
+        // Fix lists inside paragraphs
+        const paragraphs = element.getElementsByTagName('p');
+        for (let i = paragraphs.length - 1; i >= 0; i--) {
+          const p = paragraphs[i];
+          const lists = p.getElementsByTagName('ul');
+          if (lists.length > 0) {
+            // Move lists after the paragraph
+            while (lists.length > 0) {
+              const list = lists[0];
+              p.parentNode?.insertBefore(list, p.nextSibling);
+            }
+          }
+        }
+
+        // Fix nested paragraphs
+        const nestedParagraphs = element.querySelectorAll('p p');
+        for (let i = nestedParagraphs.length - 1; i >= 0; i--) {
+          const nestedP = nestedParagraphs[i];
+          const parentP = nestedP.parentElement;
+          if (parentP && parentP.tagName === 'P') {
+            // Move content to parent paragraph
+            while (nestedP.firstChild) {
+              parentP.insertBefore(nestedP.firstChild, nestedP);
+            }
+            parentP.removeChild(nestedP);
+          }
+        }
+
+        // Fix empty paragraphs
+        const emptyParagraphs = element.querySelectorAll('p:empty');
+        for (let i = emptyParagraphs.length - 1; i >= 0; i--) {
+          emptyParagraphs[i].parentNode?.removeChild(emptyParagraphs[i]);
+        }
+      };
+
+      // Apply fixes
+      fixHtmlStructure(tempDiv);
+
+      // Get the cleaned HTML
+      let cleanedHtml = tempDiv.innerHTML;
+
+      // Remove problematic attributes and styles
+      cleanedHtml = cleanedHtml
+        .replace(/style="[^"]*"/g, '')
+        .replace(/class="[^"]*"/g, '')
+        .replace(/id="[^"]*"/g, '')
+        .replace(/on\w+="[^"]*"/g, '')
+        .replace(/data-[^=]*="[^"]*"/g, '');
+
+      // Sanitize the HTML
+      return DOMPurify.sanitize(cleanedHtml, {
+        ALLOWED_TAGS: [
+          'p',
+          'br',
+          'strong',
+          'em',
+          'u',
+          'h1',
+          'h2',
+          'h3',
+          'h4',
+          'h5',
+          'h6',
+          'ul',
+          'ol',
+          'li',
+          'blockquote',
+          'pre',
+          'code',
+          'a',
+          'img',
+          'table',
+          'thead',
+          'tbody',
+          'tr',
+          'th',
+          'td',
+          'div',
+          'span',
+        ],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'target'],
+      });
+    };
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto bg-background text-foreground'>
-          <DialogHeader>
-            <DialogTitle>{thread.subject}</DialogTitle>
+        <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto bg-background text-foreground p-0'>
+          <DialogHeader className='px-6 py-4 border-b border-border'>
+            <DialogTitle className='text-lg'>{thread.subject}</DialogTitle>
           </DialogHeader>
 
-          <div className='space-y-6'>
+          <div className='divide-y divide-border'>
             {thread.messages.map((message, index) => {
               return (
-                <div
-                  key={message.id}
-                  className={`border-b border-border pb-4 last:border-b-0 ${
-                    index > 0 ? 'pl-4 border-l-2 border-muted' : ''
-                  }`}
-                >
-                  <div className='flex justify-between items-start mb-2'>
+                <div key={message.id} className={`px-6 py-4 ${index > 0 ? 'bg-muted/30' : ''}`}>
+                  <div className='flex justify-between items-start mb-3'>
                     <div>
-                      <p className='font-medium'>{getEmailName(message.from)}</p>
+                      <p className='font-medium text-foreground'>{getEmailName(message.from)}</p>
                       <p className='text-sm text-muted-foreground'>
                         To: {message.to}
                         {message.cc && `, CC: ${message.cc}`}
@@ -323,38 +414,28 @@ export function CustomerSheet({
                   <div className='prose dark:prose-invert max-w-none'>
                     {message.body ? (
                       <div
-                        className='email-body'
-                        dangerouslySetInnerHTML={{
-                          __html: message.body
-                            .replace(/\r\n/g, '<br>')
-                            .replace(/\n/g, '<br>')
-                            .replace(/\r/g, '<br>'),
-                        }}
-                        style={{
-                          whiteSpace: 'pre-wrap',
-                          wordBreak: 'break-word',
-                          overflowWrap: 'break-word',
-                        }}
+                        className='email-content [&_*]:text-foreground [&_a]:text-blue-600 dark:[&_a]:text-blue-400 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-muted [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_pre]:bg-muted/50 [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto [&_table]:border-collapse [&_table]:w-full [&_th]:border-b [&_th]:border-border [&_th]:p-2 [&_td]:border-b [&_td]:border-border [&_td]:p-2 [&_img]:max-w-full [&_img]:h-auto [&_hr]:border-border [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h4]:text-base [&_h5]:text-sm [&_h6]:text-sm [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-bold [&_h5]:font-bold [&_h6]:font-bold [&_h1]:my-2 [&_h2]:my-2 [&_h3]:my-2 [&_h4]:my-2 [&_h5]:my-2 [&_h6]:my-2'
+                        dangerouslySetInnerHTML={{ __html: transformEmailHtml(message.body) }}
                       />
                     ) : (
-                      <div className='whitespace-pre-wrap'>{message.snippet}</div>
+                      <div className='whitespace-pre-wrap text-foreground'>{message.snippet}</div>
                     )}
                   </div>
                 </div>
               );
             })}
+          </div>
 
-            <div className='flex justify-end gap-2 pt-4'>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  return onOpenChange(false);
-                }}
-              >
-                Close
-              </Button>
-              <Button className='bg-purple-600 hover:bg-purple-700'>Reply</Button>
-            </div>
+          <div className='flex justify-end gap-2 p-4 border-t border-border'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return onOpenChange(false);
+              }}
+            >
+              Close
+            </Button>
+            <Button className='bg-purple-600 hover:bg-purple-700'>Reply</Button>
           </div>
         </DialogContent>
       </Dialog>
