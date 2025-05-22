@@ -123,7 +123,8 @@ function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }
               padding: 0;
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
               line-height: 1.5;
-              color: inherit;
+              color: ${resolvedTheme === 'dark' ? '#fafafa' : '#3F3F46'};
+              background-color: ${resolvedTheme === 'dark' ? '#141414' : '#ffffff'};
             }
             img {
               max-width: 100%;
@@ -134,8 +135,28 @@ function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }
               width: 100%;
             }
             td, th {
-              border: 1px solid #ddd;
+              border: 1px solid ${resolvedTheme === 'dark' ? '#232428' : '#E4E4E7'};
               padding: 8px;
+            }
+            a {
+              color: ${resolvedTheme === 'dark' ? '#3B82F6' : '#2563EB'};
+            }
+            blockquote {
+              border-left: 4px solid ${resolvedTheme === 'dark' ? '#232428' : '#E4E4E7'};
+              margin: 0;
+              padding-left: 1rem;
+              color: ${resolvedTheme === 'dark' ? '#fafafa' : '#3F3F46'};
+            }
+            pre {
+              background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#fafafa'};
+              padding: 1rem;
+              border-radius: 0.375rem;
+              overflow-x: auto;
+            }
+            code {
+              background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#fafafa'};
+              padding: 0.2rem 0.4rem;
+              border-radius: 0.25rem;
             }
           </style>
         </head>
@@ -160,15 +181,7 @@ function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [calculateAndSetHeight, html]);
-
-  useEffect(() => {
-    if (iframeRef.current?.contentWindow?.document.body) {
-      const body = iframeRef.current.contentWindow.document.body;
-      body.style.backgroundColor =
-        resolvedTheme === 'dark' ? 'rgb(10, 10, 10)' : 'rgb(245, 245, 245)';
-    }
-  }, [resolvedTheme]);
+  }, [calculateAndSetHeight, html, resolvedTheme]);
 
   return (
     <iframe
@@ -221,6 +234,17 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
   const { theme } = useTheme();
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Return null during server-side rendering or before mounting
+  if (!mounted) {
+    return null;
+  }
 
   if (!thread) return null;
 
@@ -276,22 +300,27 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto bg-background text-foreground p-0'>
-        <DialogHeader className='px-6 py-4 border-b border-border'>
-          <DialogTitle className='text-lg'>{thread.subject}</DialogTitle>
+      <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa] p-0'>
+        <DialogHeader className='px-6 py-4 border-b border-[#E4E4E7] dark:border-[#232428]'>
+          <DialogTitle className='text-lg text-[#3F3F46] dark:text-[#fafafa]'>
+            {thread.subject}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className='divide-y divide-border'>
+        <div className='divide-y divide-[#E4E4E7] dark:divide-[#232428]'>
           {sortedMessages.map((message, index) => {
             const isExpanded = expandedMessages.has(message.id);
             const isLatest = index === 0;
 
             if (!isLatest && !isExpanded) {
               return (
-                <div key={message.id} className='px-6 py-3 bg-muted/30 border-b border-border'>
+                <div
+                  key={message.id}
+                  className='px-6 py-3 bg-[#fafafa] dark:bg-[#1a1a1a] border-b border-[#E4E4E7] dark:border-[#232428]'
+                >
                   <Button
                     variant='ghost'
-                    className='w-full justify-between text-muted-foreground hover:text-foreground'
+                    className='w-full justify-between text-[#3F3F46]/60 dark:text-[#fafafa]/60 hover:text-[#3F3F46] dark:hover:text-[#fafafa]'
                     onClick={() => {
                       return toggleMessage(message.id);
                     }}
@@ -308,22 +337,29 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
             }
 
             return (
-              <div key={message.id} className={`px-6 py-4 ${!isLatest ? 'bg-muted/30' : ''}`}>
+              <div
+                key={message.id}
+                className={`px-6 py-4 ${!isLatest ? 'bg-[#fafafa] dark:bg-[#1a1a1a]' : ''}`}
+              >
                 <div className='flex justify-between items-start mb-3'>
                   <div>
-                    <p className='text-sm text-muted-foreground'>From: {message.from}</p>
-                    <p className='text-sm text-muted-foreground'>
+                    <p className='text-sm text-[#3F3F46]/60 dark:text-[#fafafa]/60'>
+                      From: {message.from}
+                    </p>
+                    <p className='text-sm text-[#3F3F46]/60 dark:text-[#fafafa]/60'>
                       To: {message.to}
                       {message.cc && `, CC: ${message.cc}`}
                     </p>
                   </div>
                   <div className='flex items-center gap-2'>
-                    <p className='text-sm text-muted-foreground'>{formatDate(message.date)}</p>
+                    <p className='text-sm text-[#3F3F46]/60 dark:text-[#fafafa]/60'>
+                      {formatDate(message.date)}
+                    </p>
                     {!isLatest && (
                       <Button
                         variant='ghost'
                         size='sm'
-                        className='h-6 w-6 p-0'
+                        className='h-6 w-6 p-0 text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#eaeaea] dark:hover:bg-white/10'
                         onClick={() => {
                           return toggleMessage(message.id);
                         }}
@@ -337,8 +373,10 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
                 {message.attachments && message.attachments.length > 0 && (
                   <div className='mb-4'>
                     <div className='flex items-center gap-2 mb-2'>
-                      <Paperclip className='w-4 h-4 text-muted-foreground' />
-                      <span className='text-sm font-medium'>Attachments</span>
+                      <Paperclip className='w-4 h-4 text-[#3F3F46]/60 dark:text-[#fafafa]/60' />
+                      <span className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'>
+                        Attachments
+                      </span>
                     </div>
                     <div className='flex flex-wrap gap-2'>
                       {message.attachments.map((attachment) => {
@@ -347,7 +385,7 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
                             key={attachment.id}
                             variant='outline'
                             size='sm'
-                            className='flex items-center gap-2'
+                            className='flex items-center gap-2 border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#eaeaea] dark:hover:bg-white/10'
                             onClick={() => {
                               return handleDownloadAttachment(
                                 message.id,
@@ -359,7 +397,7 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
                           >
                             {isDownloading === attachment.id ? (
                               <>
-                                <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-primary'></div>
+                                <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-[#3F3F46] dark:border-[#fafafa]'></div>
                                 <span>Downloading...</span>
                               </>
                             ) : (
@@ -368,7 +406,7 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
                                 <span className='truncate max-w-[200px]'>
                                   {attachment.filename}
                                 </span>
-                                <span className='text-xs text-muted-foreground'>
+                                <span className='text-xs text-[#3F3F46]/60 dark:text-[#fafafa]/60'>
                                   {formatFileSize(attachment.size)}
                                 </span>
                               </>
@@ -390,7 +428,9 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
                       </div>
                     </div>
                   ) : (
-                    <div className='whitespace-pre-wrap text-foreground'>{message.snippet}</div>
+                    <div className='whitespace-pre-wrap text-[#3F3F46] dark:text-[#fafafa]'>
+                      {message.snippet}
+                    </div>
                   )}
                 </div>
               </div>
@@ -398,9 +438,10 @@ export function EmailDialog({ open, onOpenChange, thread }: EmailDialogProps) {
           })}
         </div>
 
-        <div className='flex justify-end gap-2 p-4 border-t border-border'>
+        <div className='flex justify-end gap-2 p-4 border-t border-[#E4E4E7] dark:border-[#232428]'>
           <Button
             variant='outline'
+            className='text-[#3F3F46] dark:text-[#fafafa] border-[#E4E4E7] dark:border-[#232428] hover:bg-[#eaeaea] dark:hover:bg-white/10'
             onClick={() => {
               return onOpenChange(false);
             }}
