@@ -10,11 +10,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronDown,
   ChevronUp,
+  FileText,
   Mail,
   MapPin,
   Paperclip,
@@ -23,7 +25,7 @@ import {
   User,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // Interface for email objects
@@ -93,6 +95,130 @@ function getEmailName(email: string): string {
 // Add helper function to check if email is from the customer
 function isFromCustomer(email: string, customerEmail: string): boolean {
   return email.toLowerCase().includes(customerEmail.toLowerCase());
+}
+
+// Add formatFileSize utility function
+const formatFileSize = (size: number) => {
+  const sizeInMB = (size / (1024 * 1024)).toFixed(2);
+  return sizeInMB === '0.00' ? '' : `${sizeInMB} MB`;
+};
+
+// Add getFileIcon utility function
+const getFileIcon = (filename: string) => {
+  const extension = filename.split('.').pop()?.toLowerCase();
+
+  switch (extension) {
+    case 'pdf':
+      return <FileText className='h-4 w-4 text-[#F43F5E]' />;
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'webp':
+      return <FileText className='h-4 w-4 text-[#8B5CF6]' />;
+    case 'docx':
+      return <FileText className='h-4 w-4 text-[#3B82F6]' />;
+    default:
+      return <FileText className='h-4 w-4 text-[#8B5CF6]' />;
+  }
+};
+
+// Add MailIframe component
+function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [height, setHeight] = useState(0);
+  const { resolvedTheme } = useTheme();
+
+  const calculateAndSetHeight = useCallback(() => {
+    if (!iframeRef.current?.contentWindow?.document.body) return;
+
+    const body = iframeRef.current.contentWindow.document.body;
+    const boundingRectHeight = body.getBoundingClientRect().height;
+    const scrollHeight = body.scrollHeight;
+
+    // Use the larger of the two values to ensure all content is visible
+    setHeight(Math.max(boundingRectHeight, scrollHeight));
+    if (body.innerText.trim() === '') {
+      setHeight(0);
+    }
+  }, [iframeRef, setHeight]);
+
+  useEffect(() => {
+    if (!iframeRef.current) return;
+
+    // Create a basic HTML document with the email content
+    const htmlDoc = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              line-height: 1.5;
+              color: inherit;
+            }
+            img {
+              max-width: 100%;
+              height: auto;
+            }
+            table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            td, th {
+              border: 1px solid #ddd;
+              padding: 8px;
+            }
+          </style>
+        </head>
+        <body>
+          ${html}
+        </body>
+      </html>
+    `;
+
+    const url = URL.createObjectURL(new Blob([htmlDoc], { type: 'text/html' }));
+    iframeRef.current.src = url;
+
+    const handler = () => {
+      if (iframeRef.current?.contentWindow?.document.body) {
+        calculateAndSetHeight();
+      }
+      // Recalculate after a slight delay to catch any late-loading content
+      setTimeout(calculateAndSetHeight, 500);
+    };
+    iframeRef.current.onload = handler;
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [calculateAndSetHeight, html]);
+
+  useEffect(() => {
+    if (iframeRef.current?.contentWindow?.document.body) {
+      const body = iframeRef.current.contentWindow.document.body;
+      body.style.backgroundColor =
+        resolvedTheme === 'dark' ? 'rgb(10, 10, 10)' : 'rgb(245, 245, 245)';
+    }
+  }, [resolvedTheme]);
+
+  return (
+    <iframe
+      height={height}
+      ref={iframeRef}
+      className={cn('!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200')}
+      title='Email Content'
+      sandbox='allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts'
+      style={{
+        width: '100%',
+        overflow: 'hidden',
+      }}
+    />
+  );
 }
 
 export function CustomerSheet({
@@ -212,13 +338,14 @@ export function CustomerSheet({
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
+      const now = new Date();
 
       if (isNaN(date.getTime())) {
         return 'Unknown date';
       }
 
-      const now = new Date();
       const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+      const isCurrentYear = date.getFullYear() === now.getFullYear();
 
       if (diffDays === 0) {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -226,7 +353,11 @@ export function CustomerSheet({
         const options: Intl.DateTimeFormatOptions = { weekday: 'short' };
         return date.toLocaleDateString(undefined, options);
       } else {
-        const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+        const options: Intl.DateTimeFormatOptions = {
+          month: 'short',
+          day: 'numeric',
+          year: isCurrentYear ? undefined : 'numeric',
+        };
         return date.toLocaleDateString(undefined, options);
       }
     } catch (error) {
@@ -301,7 +432,7 @@ export function CustomerSheet({
     };
   };
 
-  // Add EmailViewModal component
+  // Update the EmailViewModal component
   function EmailViewModal({
     open,
     onOpenChange,
@@ -348,23 +479,14 @@ export function CustomerSheet({
           },
         );
 
-        // Create a blob from the response data
         const blob = new Blob([response.data], { type: response.headers['content-type'] });
-
-        // Create a temporary URL for the blob
         const url = window.URL.createObjectURL(blob);
-
-        // Create a temporary link element
         const link = document.createElement('a');
         link.href = url;
         link.download = filename;
-
-        // Append to body, click, and remove
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        // Clean up the URL
         window.URL.revokeObjectURL(url);
 
         toast.success('Attachment downloaded successfully');
@@ -388,7 +510,6 @@ export function CustomerSheet({
               const isExpanded = expandedMessages.has(message.id);
               const isLatest = index === 0;
 
-              // Always show the latest message, collapse others by default
               if (!isLatest && !isExpanded) {
                 return (
                   <div key={message.id} className='px-6 py-3 bg-muted/30 border-b border-border'>
@@ -437,7 +558,6 @@ export function CustomerSheet({
                     </div>
                   </div>
 
-                  {/* Attachments section */}
                   {message.attachments && message.attachments.length > 0 && (
                     <div className='mb-4'>
                       <div className='flex items-center gap-2 mb-2'>
@@ -468,11 +588,12 @@ export function CustomerSheet({
                                 </>
                               ) : (
                                 <>
+                                  {getFileIcon(attachment.filename)}
                                   <span className='truncate max-w-[200px]'>
                                     {attachment.filename}
                                   </span>
                                   <span className='text-xs text-muted-foreground'>
-                                    ({(attachment.size / 1024).toFixed(1)} KB)
+                                    {formatFileSize(attachment.size)}
                                   </span>
                                 </>
                               )}
@@ -488,83 +609,7 @@ export function CustomerSheet({
                       <div className='grid overflow-hidden transition-all duration-200 grid-rows-[1fr]'>
                         <div className='min-h-0 overflow-hidden'>
                           <div className='h-fit w-full p-0'>
-                            <iframe
-                              height='1464'
-                              className='!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200'
-                              title='Email Content'
-                              sandbox='allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts'
-                              style={{ width: '100%', overflow: 'hidden' }}
-                              src={`data:text/html;charset=utf-8,${encodeURIComponent(
-                                message.body,
-                              )}`}
-                            />
-                            <div className='mb-2 mt-2 flex gap-2 px-4'>
-                              <Button variant='outline' size='sm' className='h-7'>
-                                <svg
-                                  width='12'
-                                  height='12'
-                                  viewBox='0 0 12 12'
-                                  fill='none'
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  className='fill-[#6D6D6D] dark:fill-[#9B9B9B] mr-1'
-                                >
-                                  <path
-                                    fillRule='evenodd'
-                                    clipRule='evenodd'
-                                    d='M10.5 7.75C10.5 6.23122 9.26878 5 7.75 5H2.56066L4.78033 7.21967C5.07322 7.51256 5.07322 7.98744 4.78033 8.28033C4.48744 8.57322 4.01256 8.57322 3.71967 8.28033L0.21967 4.78033C-0.0732234 4.48744 -0.0732233 4.01256 0.21967 3.71967L3.71967 0.21967C4.01256 -0.0732233 4.48744 -0.0732233 4.78033 0.21967C5.07322 0.512563 5.07322 0.987437 4.78033 1.28033L2.56066 3.5L7.75 3.5C10.0972 3.5 12 5.40279 12 7.75C12 10.0972 10.0972 12 7.75 12H6.75C6.33579 12 6 11.6642 6 11.25C6 10.8358 6.33579 10.5 6.75 10.5H7.75C9.26878 10.5 10.5 9.26878 10.5 7.75Z'
-                                  />
-                                </svg>
-                                <span className='text-sm'>Reply</span>
-                                <kbd className='border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6 -me-1 ms-auto hidden max-h-full items-center md:inline-flex'>
-                                  r
-                                </kbd>
-                              </Button>
-                              <Button variant='outline' size='sm' className='h-7'>
-                                <svg
-                                  width='17'
-                                  height='17'
-                                  viewBox='0 0 16 16'
-                                  fill='none'
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  className='fill-[#6D6D6D] dark:fill-[#9B9B9B] mr-1'
-                                >
-                                  <path
-                                    fillRule='evenodd'
-                                    clipRule='evenodd'
-                                    d='M14 9.75C14 8.23122 12.7688 7 11.25 7H7.56066L9.78033 9.21967C10.0732 9.51256 10.0732 9.98744 9.78033 10.2803C9.48744 10.5732 9.01256 10.5732 8.71967 10.2803L5.21967 6.78033C4.92678 6.48744 4.92678 6.01256 5.21967 5.71967L8.71967 2.21967C9.01256 1.92678 9.48744 1.92678 9.78033 2.21967C10.0732 2.51256 10.0732 2.98744 9.78033 3.28033L7.56066 5.5H11.25C13.5972 5.5 15.5 7.40279 15.5 9.75C15.5 12.0972 13.5972 14 11.25 14H10.25C9.83579 14 9.5 13.6642 9.5 13.25C9.5 12.8358 9.83579 12.5 10.25 12.5H11.25C12.7688 12.5 14 11.2688 14 9.75Z'
-                                  />
-                                  <path
-                                    fillRule='evenodd'
-                                    clipRule='evenodd'
-                                    d='M1.21967 6.78033C0.926777 6.48744 0.926777 6.01256 1.21967 5.71967L4.71967 2.21967C5.01256 1.92678 5.48744 1.92678 5.78033 2.21967C6.07322 2.51256 6.07322 2.98744 5.78033 3.28033L3.06066 6L5.78033 8.71967C6.07322 9.01256 6.07322 9.48744 5.78033 9.78033C5.48744 10.0732 5.01256 10.0732 4.71967 9.78033L1.21967 6.78033Z'
-                                  />
-                                </svg>
-                                <span className='text-sm'>Reply All</span>
-                                <kbd className='border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6 -me-1 ms-auto hidden max-h-full items-center md:inline-flex'>
-                                  a
-                                </kbd>
-                              </Button>
-                              <Button variant='outline' size='sm' className='h-7'>
-                                <svg
-                                  width='12'
-                                  height='12'
-                                  viewBox='0 0 12 12'
-                                  fill='none'
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  className='fill-[#6D6D6D] dark:fill-[#9B9B9B] mr-1'
-                                >
-                                  <path
-                                    fillRule='evenodd'
-                                    clipRule='evenodd'
-                                    d='M0 6C-1.81059e-08 5.58579 0.335786 5.25 0.75 5.25L9.43934 5.25L6.21967 2.03033C5.92678 1.73744 5.92678 1.26256 6.21967 0.96967C6.51256 0.676777 6.98744 0.676777 7.28033 0.96967L11.7803 5.46967C12.0732 5.76256 12.0732 6.23744 11.7803 6.53033L7.28033 11.0303C6.98744 11.3232 6.51256 11.3232 6.21967 11.0303C5.92678 10.7374 5.92678 10.2626 6.21967 9.96967L9.43934 6.75L0.75 6.75C0.335786 6.75 1.81059e-08 6.41421 0 6Z'
-                                  />
-                                </svg>
-                                <span className='text-sm'>Forward</span>
-                                <kbd className='border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6 -me-1 ms-auto hidden max-h-full items-center md:inline-flex'>
-                                  f
-                                </kbd>
-                              </Button>
-                            </div>
+                            <MailIframe html={message.body} senderEmail={message.from} />
                           </div>
                         </div>
                       </div>
