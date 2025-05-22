@@ -351,7 +351,6 @@ export function CustomerSheet({
             >
               Close
             </Button>
-            <Button className='bg-purple-600 hover:bg-purple-700'>Reply</Button>
           </div>
         </DialogContent>
       </Dialog>
