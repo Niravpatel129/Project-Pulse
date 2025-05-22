@@ -12,7 +12,16 @@ import {
 } from '@/components/ui/sheet';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Mail, MapPin, Paperclip, PencilIcon, Phone, User } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Mail,
+  MapPin,
+  Paperclip,
+  PencilIcon,
+  Phone,
+  User,
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 import { Letter } from 'react-letter';
@@ -305,8 +314,26 @@ export function CustomerSheet({
   }) {
     const { theme } = useTheme();
     const [isDownloading, setIsDownloading] = useState<string | null>(null);
+    const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
 
     if (!thread) return null;
+
+    // Sort messages by date, newest first
+    const sortedMessages = [...thread.messages].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    const toggleMessage = (messageId: string) => {
+      setExpandedMessages((prev) => {
+        const next = new Set(prev);
+        if (next.has(messageId)) {
+          next.delete(messageId);
+        } else {
+          next.add(messageId);
+        }
+        return next;
+      });
+    };
 
     const handleDownloadAttachment = async (
       messageId: string,
@@ -358,9 +385,34 @@ export function CustomerSheet({
           </DialogHeader>
 
           <div className='divide-y divide-border'>
-            {thread.messages.map((message, index) => {
+            {sortedMessages.map((message, index) => {
+              const isExpanded = expandedMessages.has(message.id);
+              const isLatest = index === 0;
+
+              // Always show the latest message, collapse others by default
+              if (!isLatest && !isExpanded) {
+                return (
+                  <div key={message.id} className='px-6 py-3 bg-muted/30 border-b border-border'>
+                    <Button
+                      variant='ghost'
+                      className='w-full justify-between text-muted-foreground hover:text-foreground'
+                      onClick={() => {
+                        return toggleMessage(message.id);
+                      }}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <span className='text-sm'>From: {message.from}</span>
+                        <span className='text-xs'>•</span>
+                        <span className='text-sm'>{formatDate(message.date)}</span>
+                      </div>
+                      <ChevronDown className='h-4 w-4' />
+                    </Button>
+                  </div>
+                );
+              }
+
               return (
-                <div key={message.id} className={`px-6 py-4 ${index > 0 ? 'bg-muted/30' : ''}`}>
+                <div key={message.id} className={`px-6 py-4 ${!isLatest ? 'bg-muted/30' : ''}`}>
                   <div className='flex justify-between items-start mb-3'>
                     <div>
                       <p className='text-sm text-muted-foreground'>From: {message.from}</p>
@@ -369,7 +421,21 @@ export function CustomerSheet({
                         {message.cc && `, CC: ${message.cc}`}
                       </p>
                     </div>
-                    <p className='text-sm text-muted-foreground'>{formatDate(message.date)}</p>
+                    <div className='flex items-center gap-2'>
+                      <p className='text-sm text-muted-foreground'>{formatDate(message.date)}</p>
+                      {!isLatest && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-6 w-6 p-0'
+                          onClick={() => {
+                            return toggleMessage(message.id);
+                          }}
+                        >
+                          <ChevronUp className='h-4 w-4' />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Attachments section */}
