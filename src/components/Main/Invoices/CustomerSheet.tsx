@@ -1,4 +1,5 @@
 import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -311,7 +312,7 @@ export function CustomerSheet({
                 <div key={message.id} className={`px-6 py-4 ${index > 0 ? 'bg-muted/30' : ''}`}>
                   <div className='flex justify-between items-start mb-3'>
                     <div>
-                      <p className='font-medium text-foreground'>{getEmailName(message.from)}</p>
+                      <p className='text-sm text-muted-foreground'>From: {message.from}</p>
                       <p className='text-sm text-muted-foreground'>
                         To: {message.to}
                         {message.cc && `, CC: ${message.cc}`}
@@ -510,9 +511,9 @@ export function CustomerSheet({
                               <span className='mr-3 min-w-[120px] truncate font-medium'>
                                 {getEmailName(thread.participants[0])}
                                 {thread.messageCount > 1 && (
-                                  <span className='ml-1 text-xs text-gray-500 dark:text-gray-400 align-top'>
+                                  <Badge variant='secondary' className='ml-1 rounded-sm'>
                                     {thread.messageCount}
-                                  </span>
+                                  </Badge>
                                 )}
                               </span>
                               {/* Subject and snippet */}
