@@ -34,6 +34,13 @@ interface EmailMessage {
   references: string;
   hasAttachment: boolean;
   body?: string;
+  attachments?: {
+    id: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+    isInline: boolean;
+  }[];
 }
 
 interface EmailThread {
@@ -297,7 +304,51 @@ export function CustomerSheet({
     thread: EmailThread | null;
   }) {
     const { theme } = useTheme();
+    const [isDownloading, setIsDownloading] = useState<string | null>(null);
+
     if (!thread) return null;
+
+    const handleDownloadAttachment = async (
+      messageId: string,
+      attachmentId: string,
+      filename: string,
+    ) => {
+      setIsDownloading(attachmentId);
+      try {
+        const response = await newRequest.get(
+          `/gmail/messages/${messageId}/attachments/${attachmentId}`,
+          {
+            responseType: 'blob',
+          },
+        );
+
+        // Create a blob from the response data
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+        // Create a temporary URL for the blob
+        const url = window.URL.createObjectURL(blob);
+
+        // Create a temporary link element
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+
+        // Append to body, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the URL
+        window.URL.revokeObjectURL(url);
+
+        toast.success('Attachment downloaded successfully');
+      } catch (error) {
+        console.error('Failed to download attachment:', error);
+        toast.error('Failed to download attachment');
+      } finally {
+        setIsDownloading(null);
+      }
+    };
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -320,6 +371,53 @@ export function CustomerSheet({
                     </div>
                     <p className='text-sm text-muted-foreground'>{formatDate(message.date)}</p>
                   </div>
+
+                  {/* Attachments section */}
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className='mb-4'>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <Paperclip className='w-4 h-4 text-muted-foreground' />
+                        <span className='text-sm font-medium'>Attachments</span>
+                      </div>
+                      <div className='flex flex-wrap gap-2'>
+                        {message.attachments.map((attachment) => {
+                          return (
+                            <Button
+                              key={attachment.id}
+                              variant='outline'
+                              size='sm'
+                              className='flex items-center gap-2'
+                              onClick={() => {
+                                return handleDownloadAttachment(
+                                  message.id,
+                                  attachment.id,
+                                  attachment.filename,
+                                );
+                              }}
+                              disabled={isDownloading === attachment.id}
+                            >
+                              {isDownloading === attachment.id ? (
+                                <>
+                                  <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-primary'></div>
+                                  <span>Downloading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className='truncate max-w-[200px]'>
+                                    {attachment.filename}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    ({(attachment.size / 1024).toFixed(1)} KB)
+                                  </span>
+                                </>
+                              )}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className='prose dark:prose-invert max-w-none'>
                     {message.body ? (
                       <Letter
