@@ -94,6 +94,7 @@ const InvoiceSheet = ({
     },
   ]);
   const [taxRate, setTaxRate] = useState<number>(13);
+  const [vatRate, setVatRate] = useState<number>(20);
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
     dateFormat: 'MM/DD/YYYY',
     invoiceSize: 'A4',
@@ -162,17 +163,23 @@ const InvoiceSheet = ({
     }, 0);
 
     const taxAmount = invoiceSettings.salesTax === 'enable' ? (subtotal * taxRate) / 100 : 0;
-    const total = subtotal + taxAmount;
+    const vatAmount = invoiceSettings.vat === 'enable' ? (subtotal * vatRate) / 100 : 0;
+    const total = subtotal + taxAmount + vatAmount;
 
     return {
       subtotal,
       taxAmount,
+      vatAmount,
       total,
     };
-  }, [items, taxRate, invoiceSettings.salesTax]);
+  }, [items, taxRate, vatRate, invoiceSettings.salesTax, invoiceSettings.vat]);
 
   const handleTaxRateChange = (newTaxRate: number) => {
     setTaxRate(newTaxRate);
+  };
+
+  const handleVatRateChange = (newVatRate: number) => {
+    setVatRate(newVatRate);
   };
 
   return (
@@ -238,10 +245,13 @@ const InvoiceSheet = ({
             total={totals.total}
             taxRate={taxRate}
             onTaxRateChange={handleTaxRateChange}
+            vatRate={vatRate}
+            onVatRateChange={handleVatRateChange}
             currency={invoiceSettings.currency}
             formatNumber={formatNumber}
             decimals={invoiceSettings.decimals}
             salesTax={invoiceSettings.salesTax}
+            vat={invoiceSettings.vat}
           />
           <InvoiceNotes />
         </div>
