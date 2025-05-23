@@ -9,7 +9,22 @@ const InvoiceItemsRow = () => {
   const [price, setPrice] = useState('33');
   const [isFocused, setIsFocused] = useState(false);
   const [isPriceFocused, setIsPriceFocused] = useState(false);
+  const [isQuantityFocused, setIsQuantityFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const quantityRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (quantityRef.current && !quantityRef.current.contains(event.target as Node)) {
+        setIsQuantityFocused(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((q) => {
@@ -48,7 +63,7 @@ const InvoiceItemsRow = () => {
             ref={textareaRef}
             className={`p-0 !text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               !isFocused && !description
-                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)]'
+                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-!'
                 : ''
             }`}
             placeholder=''
@@ -66,28 +81,52 @@ const InvoiceItemsRow = () => {
           />
         </div>
         {/* Quantity */}
-        <div className='w-[60px] flex items-center justify-center'>
-          <button
-            type='button'
-            className='px-1 text-xl text-muted-foreground hover:text-primary flex items-center'
-            onClick={() => {
-              return handleQuantityChange(-1);
-            }}
-          >
-            <Minus className='w-3 h-3' />
-          </button>
-          <span className='mx-1 text-[12px] font-mono leading-none flex items-center'>
-            {quantity}
-          </span>
-          <button
-            type='button'
-            className='px-1 text-xl text-muted-foreground hover:text-primary flex items-center'
-            onClick={() => {
-              return handleQuantityChange(1);
-            }}
-          >
-            <Plus className='w-3 h-3' />
-          </button>
+        <div
+          ref={quantityRef}
+          className='w-[60px] flex items-center justify-center'
+          onClick={() => {
+            return setIsQuantityFocused(true);
+          }}
+        >
+          {!isQuantityFocused && !quantity ? (
+            <div className='w-full bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[40px]'></div>
+          ) : (
+            <>
+              {' '}
+              <button
+                type='button'
+                className='px-1 text-xl text-muted-foreground hover:text-primary flex items-center'
+                onClick={() => {
+                  return handleQuantityChange(-1);
+                }}
+              >
+                <Minus className='w-3 h-3' />
+              </button>
+              <SeamlessInput
+                className={`p-0 !text-[11px] font-mono w-full relative rounded-none text-center ${!isQuantityFocused}`}
+                value={quantity}
+                onFocus={() => {
+                  return setIsQuantityFocused(true);
+                }}
+                onBlur={() => {
+                  return setIsQuantityFocused(false);
+                }}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d]/g, '');
+                  setQuantity(value ? parseInt(value) : 0);
+                }}
+              />
+              <button
+                type='button'
+                className='px-1 text-xl text-muted-foreground hover:text-primary flex items-center'
+                onClick={() => {
+                  return handleQuantityChange(1);
+                }}
+              >
+                <Plus className='w-3 h-3' />
+              </button>
+            </>
+          )}
         </div>
         {/* Price */}
         <div className='w-[80px] flex items-center'>
