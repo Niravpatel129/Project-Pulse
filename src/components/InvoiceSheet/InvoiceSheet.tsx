@@ -194,7 +194,7 @@ const InvoiceSheet = ({
             </DndContext>
             {/* Add Item Button */}
             <div
-              className='flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer hover:text-primary'
+              className='mt-1 py-1 flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer hover:text-primary'
               onClick={handleAddItem}
             >
               <FiPlus /> Add Item
