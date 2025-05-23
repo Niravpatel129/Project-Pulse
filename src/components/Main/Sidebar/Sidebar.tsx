@@ -74,7 +74,9 @@ export default function AppSidebar() {
   const [mounted, setMounted] = useState(false);
   const { user } = useAuth();
   const [isChatView, setIsChatView] = useState(false);
-  const { sessions, currentSession, setCurrentSession, deleteSession } = useChat();
+  const { sessions, currentSession, setCurrentSession, deleteSession, isLoadingSessions } =
+    useChat();
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
 
   // Set mounted state after hydration
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function AppSidebar() {
 
   // Update chat view state based on pathname
   useEffect(() => {
-    setIsChatView(pathname === '/dashboard/chat');
+    setIsChatView(pathname.startsWith('/dashboard/chat'));
   }, [pathname]);
 
   // Close sidebar when screen size is tablet
@@ -164,13 +166,21 @@ export default function AppSidebar() {
     setIsChatView(false);
   };
 
-  const handleChatClick = (sessionId: string) => {
-    const session = sessions.find((s) => {
-      return s.id === sessionId;
-    });
-    if (session) {
-      setCurrentSession(session);
-      router.push('/dashboard/chat');
+  const handleChatClick = async (sessionId: string) => {
+    try {
+      setIsLoadingChat(true);
+      const session = sessions.find((s) => {
+        return s.id === sessionId;
+      });
+      if (session) {
+        await setCurrentSession(session);
+        router.push(`/dashboard/chat/${sessionId}`);
+      }
+    } catch (error) {
+      console.error('Error loading chat:', error);
+      // You might want to show a toast notification here
+    } finally {
+      setIsLoadingChat(false);
     }
   };
 
@@ -213,7 +223,11 @@ export default function AppSidebar() {
                   <h3 className='text-xs font-semibold text-[#3F3F46] dark:text-[#898989] text-[13px] uppercase tracking-wider mb-2 group-data-[state=collapsed]:hidden'>
                     Previous Chats
                   </h3>
-                  {sessions.length > 0 ? (
+                  {isLoadingSessions ? (
+                    <div className='text-sm text-[#3F3F46] dark:text-[#898989]'>
+                      Loading conversations...
+                    </div>
+                  ) : sessions.length > 0 ? (
                     <div className='space-y-2'>
                       {sessions.map((session) => {
                         return (
@@ -229,7 +243,7 @@ export default function AppSidebar() {
                                 {session.title}
                               </p>
                               <p className='text-xs text-[#3F3F46]/60 dark:text-[#f7f7f7]/60 truncate'>
-                                {session.lastMessage}
+                                {new Date(session.timestamp).toLocaleString()}
                               </p>
                             </div>
                             <Button
@@ -240,6 +254,7 @@ export default function AppSidebar() {
                                 e.stopPropagation();
                                 deleteSession(session.id);
                               }}
+                              disabled={isLoadingChat}
                             >
                               <Trash2 className='h-4 w-4 text-[#3F3F46] dark:text-[#f7f7f7]' />
                             </Button>

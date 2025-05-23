@@ -25,7 +25,7 @@ export type ChatSession = {
   messages: Message[];
 };
 
-type ChatContextType = {
+export type ChatContextType = {
   // Session state
   sessions: ChatSession[];
   currentSession: ChatSession | null;
@@ -35,6 +35,8 @@ type ChatContextType = {
   deleteSession: (sessionId: string) => void;
   sessionId: string | null;
   setSessionId: (sessionId: string | null) => void;
+  isLoadingSessions: boolean;
+  loadChatHistory: (sessionId: string) => Promise<void>;
 
   // Chat state
   messages: Message[];
@@ -53,6 +55,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // Session state
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -62,6 +65,33 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
   const router = useRouter();
+
+  // Fetch conversations from the API
+  const fetchConversations = async () => {
+    try {
+      setIsLoadingSessions(true);
+      const response = await newRequest.get('/new-ai/chat/conversations');
+      const conversations = response.data.conversations.map((conv: any) => {
+        return {
+          id: conv._id,
+          title: conv.title || 'New Conversation',
+          lastMessage: '', // We don't have lastMessage in the response
+          timestamp: new Date(conv.lastActive),
+          messages: [], // We don't have messages in the response
+        };
+      });
+      setSessions(conversations);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  // Load sessions from API on mount
+  useEffect(() => {
+    fetchConversations();
+  }, []);
 
   // Load sessions from localStorage on mount
   useEffect(() => {
@@ -326,18 +356,62 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Load chat history for a session
+  const loadChatHistory = async (sessionId: string) => {
+    try {
+      const response = await newRequest.get(`/new-ai/chat/history/${sessionId}`);
+      const { conversation } = response.data;
+
+      // Map the messages to our Message type
+      const history = conversation.messages.map((msg: any) => {
+        return {
+          id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID since we don't have one in the response
+          content: msg.content,
+          role: msg.role,
+          timestamp: new Date(conversation.lastActive), // Using lastActive as timestamp since we don't have per-message timestamps
+        };
+      });
+
+      // Update the current session with the conversation title
+      if (currentSession?.id === sessionId) {
+        updateSession(sessionId, {
+          title: conversation.title,
+          lastMessage: history[history.length - 1]?.content || '',
+          timestamp: new Date(conversation.lastActive),
+        });
+      }
+
+      setMessages(history);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      setMessages([]);
+    }
+  };
+
+  // Modify setCurrentSession to load history
+  const setCurrentSessionWithHistory = async (session: ChatSession | null) => {
+    setCurrentSession(session);
+    if (session) {
+      await loadChatHistory(session.id);
+    } else {
+      setMessages([]);
+    }
+  };
+
   return (
     <ChatContext.Provider
       value={{
         // Session state
         sessions,
         currentSession,
-        setCurrentSession,
+        setCurrentSession: setCurrentSessionWithHistory,
         addSession,
         updateSession,
         deleteSession,
         sessionId,
         setSessionId,
+        isLoadingSessions,
+        loadChatHistory,
 
         // Chat state
         messages,
