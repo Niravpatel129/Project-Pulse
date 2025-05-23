@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useChat } from '@/contexts/ChatContext';
 import { PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
 import { ArrowUp, MessageCircle, Settings, Trash2, X } from 'lucide-react';
@@ -45,6 +46,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     setWiggle,
   } = useChatWidget(pageContext);
 
+  const { currentSession, addSession, updateSession } = useChat();
+
   // Settings state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
@@ -68,6 +71,31 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       setMounted(true);
     }
   }, []);
+
+  // Update chat session when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      const title = messages[0]?.content.slice(0, 30) + '...' || 'New Chat';
+
+      if (currentSession) {
+        updateSession(currentSession.id, {
+          title,
+          lastMessage: lastMessage.content,
+          messages,
+          timestamp: new Date(),
+        });
+      } else {
+        addSession({
+          id: Date.now().toString(),
+          title,
+          lastMessage: lastMessage.content,
+          messages,
+          timestamp: new Date(),
+        });
+      }
+    }
+  }, [messages, currentSession, addSession, updateSession]);
 
   // Block body scrolling when chat is open
   useEffect(() => {

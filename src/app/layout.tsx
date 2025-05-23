@@ -1,5 +1,10 @@
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ChatProvider } from '@/contexts/ChatContext';
+import { cn } from '@/lib/utils';
 import { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { ThemeProvider } from 'next-themes';
+import { Geist, Geist_Mono, IBM_Plex_Sans, Inter } from 'next/font/google';
 import { headers } from 'next/headers';
 import Script from 'next/script';
 import ClientLayout from './ClientLayout';
@@ -20,6 +25,8 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 });
+
+const inter = Inter({ subsets: ['latin'] });
 
 // Workspace-specific colors
 const workspaceColors = {
@@ -63,7 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
-    : '#0066FF';
+    : '#0070f3';
   const appName = isSubdomain ? `${subdomain}` : 'Pulse';
 
   return {
@@ -162,7 +169,7 @@ export default function RootLayout({
         <meta name='apple-mobile-web-app-title' content='Pulse' />
         <meta name='format-detection' content='telephone=no' />
         <meta name='mobile-web-app-capable' content='yes' />
-        <meta name='theme-color' content='#0066FF' />
+        <meta name='theme-color' content='#0070f3' />
 
         {/* Service Worker Registration */}
         <Script id='register-service-worker' strategy='afterInteractive'>
@@ -203,11 +210,27 @@ export default function RootLayout({
             }
           `}
         </Script>
+        <Script id='workspace-colors' strategy='beforeInteractive'>
+          {`
+            :root {
+              --workspace-primary: ${workspaceColors.default};
+              --workspace-secondary: ${workspaceColors.default};
+              --workspace-accent: ${workspaceColors.default};
+            }
+          `}
+        </Script>
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.className} antialiased scrollbar-hide`}
-      >
-        <ClientLayout>{children}</ClientLayout>
+      <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
+        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+          <AuthProvider>
+            <ChatProvider>
+              <ClientLayout>
+                {children}
+                <Toaster />
+              </ClientLayout>
+            </ChatProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
