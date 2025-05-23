@@ -10,6 +10,10 @@ interface InvoiceItem {
   price: string;
 }
 
+// Safe maximum limits
+const MAX_QUANTITY = 999999;
+const MAX_PRICE = 999999.99;
+
 interface InvoiceItemsRowProps {
   item: InvoiceItem;
   onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
@@ -45,7 +49,7 @@ const InvoiceItemsRow = ({
   }, []);
 
   const handleQuantityChange = (delta: number) => {
-    const newQuantity = Math.max(1, item.quantity + delta);
+    const newQuantity = Math.max(1, Math.min(MAX_QUANTITY, item.quantity + delta));
     onUpdate(item.id, 'quantity', newQuantity);
   };
 
@@ -135,7 +139,8 @@ const InvoiceItemsRow = ({
               }}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^\d]/g, '');
-                onUpdate(item.id, 'quantity', value ? parseInt(value) : 0);
+                const numValue = value ? parseInt(value) : 0;
+                onUpdate(item.id, 'quantity', Math.min(MAX_QUANTITY, numValue));
               }}
             />
             <button
@@ -167,7 +172,13 @@ const InvoiceItemsRow = ({
             return setIsPriceFocused(false);
           }}
           onChange={(e) => {
-            onUpdate(item.id, 'price', e.target.value.replace(/[^\d.]/g, ''));
+            const value = e.target.value.replace(/[^\d.]/g, '');
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+              onUpdate(item.id, 'price', Math.min(MAX_PRICE, numValue).toString());
+            } else {
+              onUpdate(item.id, 'price', value);
+            }
           }}
         />
       </div>

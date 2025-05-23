@@ -84,6 +84,7 @@ const InvoiceSheet = ({
       price: '',
     },
   ]);
+  const [taxRate, setTaxRate] = useState<number>(13);
 
   const handleUpdateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
     setItems((prevItems) => {
@@ -132,11 +133,19 @@ const InvoiceSheet = ({
       return sum + quantity * price;
     }, 0);
 
+    const taxAmount = (subtotal * taxRate) / 100;
+    const total = subtotal + taxAmount;
+
     return {
       subtotal,
-      total: subtotal,
+      taxAmount,
+      total,
     };
-  }, [items]);
+  }, [items, taxRate]);
+
+  const handleTaxRateChange = (newTaxRate: number) => {
+    setTaxRate(newTaxRate);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -216,7 +225,12 @@ const InvoiceSheet = ({
               <FiPlus /> Add Item
             </div>
           </div>
-          <InvoiceTotal subtotal={totals.subtotal} total={totals.total} />
+          <InvoiceTotal
+            subtotal={totals.subtotal}
+            total={totals.total}
+            taxRate={taxRate}
+            onTaxRateChange={handleTaxRateChange}
+          />
           <InvoiceNotes />
         </div>
         <InvoiceSheetFooter />

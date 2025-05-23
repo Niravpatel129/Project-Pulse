@@ -1,15 +1,19 @@
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { Input } from '@/components/ui/input';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+
+// Safe maximum limits
+const MAX_TAX_RATE = 100;
 
 interface InvoiceTotalProps {
   subtotal: number;
   total: number;
+  taxRate: number;
+  onTaxRateChange: (taxRate: number) => void;
 }
 
-const InvoiceTotal = ({ subtotal, total }: InvoiceTotalProps) => {
-  const [taxRate, setTaxRate] = useState<number | ''>(0);
-  const taxAmount = (subtotal * (typeof taxRate === 'number' ? taxRate : 0)) / 100;
+const InvoiceTotal = ({ subtotal, total, taxRate, onTaxRateChange }: InvoiceTotalProps) => {
+  const taxAmount = (subtotal * taxRate) / 100;
 
   // Dynamic width logic
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -24,17 +28,17 @@ const InvoiceTotal = ({ subtotal, total }: InvoiceTotalProps) => {
     const value = e.target.value;
 
     if (value === '') {
-      setTaxRate('');
+      onTaxRateChange(0);
     } else {
       // Remove leading zeros first
       const cleanValue = value.replace(/^0+/, '') || '0';
 
       const numValue = Number(cleanValue);
 
-      if (!isNaN(numValue) && numValue <= 100) {
+      if (!isNaN(numValue) && numValue <= MAX_TAX_RATE) {
         // Force the input to show the cleaned value
         e.target.value = cleanValue;
-        setTaxRate(numValue);
+        onTaxRateChange(numValue);
       }
     }
   };
@@ -44,7 +48,13 @@ const InvoiceTotal = ({ subtotal, total }: InvoiceTotalProps) => {
       <div className='w-[300px] font-mono text-[#878787]'>
         <div className='flex justify-between mb-3'>
           <span className='text-[11px]'>Subtotal</span>
-          <span className='text-[11px]'>${subtotal.toLocaleString()}</span>
+          <span className='text-[11px]'>
+            $
+            {subtotal.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
         <div className='flex justify-between items-center'>
           <div className='flex items-center'>
@@ -54,7 +64,7 @@ const InvoiceTotal = ({ subtotal, total }: InvoiceTotalProps) => {
               className='invisible absolute font-mono text-[10px] px-0'
               style={{ whiteSpace: 'pre' }}
             >
-              {taxRate === '' ? '0' : taxRate}
+              {taxRate}
             </span>
             <Input
               ref={inputRef}
@@ -63,17 +73,23 @@ const InvoiceTotal = ({ subtotal, total }: InvoiceTotalProps) => {
               onChange={handleTaxChange}
               className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
               min='0'
-              max='100'
+              max={MAX_TAX_RATE}
               style={{ width: 'auto' }}
             />
             <span className='text-[11px]'>%)</span>
           </div>
-          <span className='text-[11px]'>${taxAmount.toLocaleString()}</span>
+          <span className='text-[11px]'>
+            $
+            {taxAmount.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
         <div className='h-[1px] bg-[#e0e0e0] my-3'></div>
         <div className='flex justify-between items-center'>
           <span className='text-[11px]'>Total</span>
-          <span className='text-[21px] text-[#111] font-medium'>
+          <span className='text-[21px] text-[#111] dark:text-[#fff] font-medium'>
             <AnimatedNumber value={total} currency='USD' />
           </span>
         </div>
