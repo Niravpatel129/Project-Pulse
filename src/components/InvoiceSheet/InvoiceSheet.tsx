@@ -1,4 +1,7 @@
 import { Hash, MoreVertical, Printer } from 'lucide-react';
+import { useState } from 'react';
+import { FiPlus } from 'react-icons/fi';
+import { v4 as uuidv4 } from 'uuid';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -14,6 +17,13 @@ import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 import InvoiceItemsRow from './sections/InvoiceItemsRow';
 
+interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  price: string;
+}
+
 const InvoiceSheet = ({
   open,
   onOpenChange,
@@ -21,6 +31,37 @@ const InvoiceSheet = ({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {
+  const [items, setItems] = useState<InvoiceItem[]>([
+    {
+      id: uuidv4(),
+      description: '',
+      quantity: 1,
+      price: '',
+    },
+  ]);
+
+  const handleUpdateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
+    setItems((prevItems) => {
+      return prevItems.map((item) => {
+        return item.id === id ? { ...item, [field]: value } : item;
+      });
+    });
+  };
+
+  const handleAddItem = () => {
+    setItems((prevItems) => {
+      return [
+        ...prevItems,
+        {
+          id: uuidv4(),
+          description: '',
+          quantity: 1,
+          price: '',
+        },
+      ];
+    });
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -56,7 +97,26 @@ const InvoiceSheet = ({
         <div className='mt-4'>
           <InvoiceHeader />
           <InvoiceFromTo />
-          <InvoiceItemsRow />
+          <div className='flex flex-col gap-2 mt-2'>
+            {/* Labels */}
+            <div className='flex items-center gap-6 h-6'>
+              <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
+              <div className='w-[60px] text-center text-[11px] text-muted-foreground'>Quantity</div>
+              <div className='w-[80px] text-[11px] text-muted-foreground'>Price</div>
+              <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
+            </div>
+            {/* Items */}
+            {items.map((item) => {
+              return <InvoiceItemsRow key={item.id} item={item} onUpdate={handleUpdateItem} />;
+            })}
+            {/* Add Item Button */}
+            <div
+              className='flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer hover:text-primary'
+              onClick={handleAddItem}
+            >
+              <FiPlus /> Add Item
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
