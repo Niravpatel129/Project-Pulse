@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest, streamRequest } from '@/utils/newRequest';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
@@ -65,33 +66,55 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  // Fetch conversations from the API
-  const fetchConversations = async () => {
-    try {
-      setIsLoadingSessions(true);
+  // Fetch conversations using React Query
+  const { data: conversations = [], isLoading: isLoadingConversations } = useQuery({
+    queryKey: ['chat-conversations'],
+    queryFn: async () => {
       const response = await newRequest.get('/new-ai/chat/conversations');
-      const conversations = response.data.conversations.map((conv: any) => {
+      return response.data.conversations.map((conv: any) => {
         return {
           id: conv._id,
           title: conv.title || 'New Conversation',
-          lastMessage: '', // We don't have lastMessage in the response
+          lastMessage: '',
           timestamp: new Date(conv.lastActive),
-          messages: [], // We don't have messages in the response
+          messages: [],
         };
       });
-      setSessions(conversations);
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  };
+    },
+  });
 
-  // Load sessions from API on mount
+  // Load chat history using React Query
+  const { data: chatHistory, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['chat-history', sessionId],
+    queryFn: async () => {
+      if (!sessionId) return [];
+      const response = await newRequest.get(`/new-ai/chat/history/${sessionId}`);
+      return response.data.conversation.messages.map((msg: any) => {
+        return {
+          id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          content: msg.content,
+          role: msg.role,
+          timestamp: new Date(response.data.conversation.lastActive),
+        };
+      });
+    },
+    enabled: !!sessionId,
+  });
+
+  // Update sessions when conversations data changes
   useEffect(() => {
-    fetchConversations();
-  }, []);
+    setSessions(conversations);
+    setIsLoadingSessions(isLoadingConversations);
+  }, [conversations, isLoadingConversations]);
+
+  // Update messages when chat history changes
+  useEffect(() => {
+    if (chatHistory) {
+      setMessages(chatHistory);
+    }
+  }, [chatHistory]);
 
   // Load sessions from localStorage on mount
   useEffect(() => {
@@ -223,7 +246,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           message: content,
           sessionId: sessionId || undefined,
         },
-        onStart: (data) => {
+        onStart: () => {
           // Remove session handling from onStart since it's now in onEnd
         },
         onChunk: (data) => {
@@ -256,11 +279,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             url.pathname = `${basePath}/${data.sessionId}`;
             window.history.pushState({}, '', url.toString());
 
-            // If this is a new conversation, we might want to update the title
-            if (data.isNewConversation) {
-              // You can add logic here to update the conversation title if needed
-              console.log('New conversation started:', data.sessionId);
-            }
+            // Invalidate queries when a new conversation starts
+            queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+            queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
           }
 
           setMessages((prev) => {
@@ -350,6 +371,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       contentAccumulatorRef.current = {};
       setSessionId(null);
       localStorage.removeItem('chatSessionId');
+
+      // Invalidate queries when clearing conversation
+      queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 
       router.push('/dashboard/chat');
     } catch (error) {

@@ -223,12 +223,12 @@ export default function RootLayout({
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           <AuthProvider>
-            <ChatProvider>
-              <ClientLayout>
+            <ClientLayout>
+              <ChatProvider>
                 {children}
                 <Toaster />
-              </ClientLayout>
-            </ChatProvider>
+              </ChatProvider>
+            </ClientLayout>
           </AuthProvider>
         </ThemeProvider>
       </body>
