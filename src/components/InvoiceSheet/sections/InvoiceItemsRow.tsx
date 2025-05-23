@@ -67,7 +67,7 @@ const InvoiceItemsRow = () => {
         <div className='flex-[4] flex items-center'>
           <Textarea
             ref={textareaRef}
-            className={`p-0 !text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[24px] ${
+            className={`p-0 pt-5 !text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[24px] ${
               !isFocused && !description
                 ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'
                 : ''
