@@ -156,7 +156,7 @@ function ChatMessage({ message }: ChatMessageProps) {
           className={`px-4 py-3 rounded-lg text-sm ${
             isUser
               ? 'bg-black text-white dark:bg-white dark:text-black'
-              : 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100'
+              : 'bg-gray-100 dark:bg-[#141414] text-gray-900 dark:text-gray-100'
           }`}
         >
           {message.content}
@@ -416,7 +416,7 @@ export default function Home() {
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 max-w-2xl mx-auto'>
                     <ActionCard
                       icon='📝'
-                      iconBg='bg-amber-50 dark:bg-amber-950'
+                      iconBg='bg-amber-50 dark:bg-[#232323]'
                       title='Write copy'
                       onClick={() => {
                         return handleActionCardClick('Write copy');
@@ -424,7 +424,7 @@ export default function Home() {
                     />
                     <ActionCard
                       icon='🔮'
-                      iconBg='bg-blue-50 dark:bg-blue-950'
+                      iconBg='bg-blue-50 dark:bg-[#232323]'
                       title='Image generation'
                       onClick={() => {
                         return handleActionCardClick('Image generation');
@@ -432,7 +432,7 @@ export default function Home() {
                     />
                     <ActionCard
                       icon='👤'
-                      iconBg='bg-green-50 dark:bg-green-950'
+                      iconBg='bg-green-50 dark:bg-[#232323]'
                       title='Create avatar'
                       onClick={() => {
                         return handleActionCardClick('Create avatar');
@@ -440,7 +440,7 @@ export default function Home() {
                     />
                     <ActionCard
                       icon='💻'
-                      iconBg='bg-pink-50 dark:bg-pink-950'
+                      iconBg='bg-pink-50 dark:bg-[#232323]'
                       title='Write code'
                       onClick={() => {
                         return handleActionCardClick('Write code');
@@ -476,7 +476,7 @@ export default function Home() {
                 value={input}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                className='border-0 shadow-none text-sm py-5 px-4 bg-white dark:bg-[#141414] resize-none min-h-[56px] focus-visible:ring-0 focus-visible:ring-offset-0'
+                className='border-0 shadow-none text-sm py-5 px-4 bg-white dark:bg-[#141414] resize-none min-h-[56px] focus-visible:ring-0 focus-visible:ring-offset-0 text-black dark:text-white'
                 placeholder='Summarize the latest'
               />
               <div className='flex items-center justify-between border-t border-gray-100 dark:border-[#232428] px-4 py-2 bg-gray-50 dark:bg-[#232323]'>
