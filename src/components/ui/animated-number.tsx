@@ -8,6 +8,7 @@ type Props = {
   minimumFractionDigits?: number;
   maximumFractionDigits?: number;
   locale?: string;
+  decimals?: 'yes' | 'no';
 };
 
 export function AnimatedNumber({
@@ -16,6 +17,7 @@ export function AnimatedNumber({
   minimumFractionDigits,
   maximumFractionDigits,
   locale,
+  decimals,
 }: Props) {
   const localeToUse = locale || 'en-US';
 
@@ -25,8 +27,10 @@ export function AnimatedNumber({
       format={{
         style: 'currency',
         currency: currency ?? 'USD',
-        minimumFractionDigits,
-        maximumFractionDigits,
+        minimumFractionDigits: decimals === 'yes' ? 2 : 0,
+        maximumFractionDigits: decimals === 'yes' ? 2 : 0,
+        useGrouping: true,
+        currencyDisplay: 'symbol',
       }}
       willChange
       locales={localeToUse}

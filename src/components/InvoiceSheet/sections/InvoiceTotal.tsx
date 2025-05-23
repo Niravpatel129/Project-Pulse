@@ -38,6 +38,8 @@ interface InvoiceTotalProps {
   taxRate: number;
   onTaxRateChange: (taxRate: number) => void;
   currency: string;
+  formatNumber: (value: number) => string;
+  decimals: 'yes' | 'no';
 }
 
 const InvoiceTotal = ({
@@ -46,6 +48,8 @@ const InvoiceTotal = ({
   taxRate,
   onTaxRateChange,
   currency,
+  formatNumber,
+  decimals,
 }: InvoiceTotalProps) => {
   const taxAmount = (subtotal * taxRate) / 100;
   const currencySymbol = getCurrencySymbol(currency);
@@ -85,10 +89,7 @@ const InvoiceTotal = ({
           <span className='text-[11px]'>Subtotal</span>
           <span className='text-[11px]'>
             {currencySymbol}
-            {subtotal.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatNumber(subtotal)}
           </span>
         </div>
         <div className='flex justify-between items-center'>
@@ -115,17 +116,14 @@ const InvoiceTotal = ({
           </div>
           <span className='text-[11px]'>
             {currencySymbol}
-            {taxAmount.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatNumber(taxAmount)}
           </span>
         </div>
         <div className='h-[1px] bg-[#e0e0e0] my-3'></div>
         <div className='flex justify-between items-center'>
           <span className='text-[11px]'>Total</span>
           <span className='text-[21px] text-[#111] dark:text-[#fff] font-medium'>
-            <AnimatedNumber value={total} currency={currency} />
+            <AnimatedNumber value={total} currency={currency} decimals={decimals} />
           </span>
         </div>
       </div>

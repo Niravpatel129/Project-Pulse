@@ -48,6 +48,7 @@ interface InvoiceItemsRowProps {
   onDelete?: (id: string) => void;
   dragHandleProps?: any;
   currency: string;
+  formatNumber: (value: number) => string;
 }
 
 const InvoiceItemsRow = ({
@@ -57,6 +58,7 @@ const InvoiceItemsRow = ({
   onDelete,
   dragHandleProps,
   currency,
+  formatNumber,
 }: InvoiceItemsRowProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPriceFocused, setIsPriceFocused] = useState(false);
@@ -213,20 +215,22 @@ const InvoiceItemsRow = ({
         />
       </div>
       {/* Total */}
-      <div className='w-[80px] text-right font-mono text-[11px] flex items-center justify-end'>
-        {currencySymbol}
-        {total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      <div className='w-[80px] flex items-center justify-end'>
+        <span className='text-[11px]'>
+          {currencySymbol}
+          {formatNumber(total)}
+        </span>
       </div>
       {/* Delete Button */}
       {!isFirstRow && onDelete && (
         <button
           type='button'
+          className='absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity'
           onClick={() => {
             return onDelete(item.id);
           }}
-          className='absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive'
         >
-          <X className='w-4 h-4' />
+          <X className='w-4 h-4 text-muted-foreground' />
         </button>
       )}
     </div>

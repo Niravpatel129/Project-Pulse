@@ -30,7 +30,7 @@ interface InvoiceSettings {
   discount: string;
   attachPdf: string;
   units: string;
-  decimals: string;
+  decimals: 'yes' | 'no';
   qrCode: string;
 }
 
@@ -41,10 +41,17 @@ interface InvoiceSheetMenuProps {
 
 const InvoiceSheetMenu = ({ settings, onSettingsChange }: InvoiceSheetMenuProps) => {
   const handleSettingChange = (key: keyof InvoiceSettings, value: string) => {
-    onSettingsChange({
-      ...settings,
-      [key]: value,
-    });
+    if (key === 'decimals') {
+      onSettingsChange({
+        ...settings,
+        [key]: value as 'yes' | 'no',
+      });
+    } else {
+      onSettingsChange({
+        ...settings,
+        [key]: value,
+      });
+    }
   };
 
   return (

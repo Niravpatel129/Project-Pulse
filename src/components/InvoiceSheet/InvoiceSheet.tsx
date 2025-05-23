@@ -34,7 +34,7 @@ interface InvoiceSettings {
   discount: string;
   attachPdf: string;
   units: string;
-  decimals: string;
+  decimals: 'yes' | 'no';
   qrCode: string;
 }
 
@@ -44,12 +44,14 @@ const SortableInvoiceItem = ({
   onUpdate,
   onDelete,
   currency,
+  formatNumber,
 }: {
   item: InvoiceItem;
   index: number;
   onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
   onDelete: (id: string) => void;
   currency: string;
+  formatNumber: (value: number) => string;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -70,6 +72,7 @@ const SortableInvoiceItem = ({
         onDelete={onDelete}
         dragHandleProps={index === 0 ? undefined : listeners}
         currency={currency}
+        formatNumber={formatNumber}
       />
     </div>
   );
@@ -103,6 +106,13 @@ const InvoiceSheet = ({
     decimals: 'no',
     qrCode: 'enable',
   });
+
+  const formatNumber = (value: number) => {
+    if (invoiceSettings.decimals === 'yes') {
+      return value.toFixed(2);
+    }
+    return Math.round(value).toString();
+  };
 
   const handleUpdateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
     setItems((prevItems) => {
@@ -207,6 +217,7 @@ const InvoiceSheet = ({
                         );
                       }}
                       currency={invoiceSettings.currency}
+                      formatNumber={formatNumber}
                     />
                   );
                 })}
@@ -226,6 +237,8 @@ const InvoiceSheet = ({
             taxRate={taxRate}
             onTaxRateChange={handleTaxRateChange}
             currency={invoiceSettings.currency}
+            formatNumber={formatNumber}
+            decimals={invoiceSettings.decimals}
           />
           <InvoiceNotes />
         </div>
