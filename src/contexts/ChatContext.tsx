@@ -16,6 +16,13 @@ export type Message = {
   role: 'user' | 'assistant';
   timestamp: Date;
   isStreaming?: boolean;
+  attachments?: {
+    id: string;
+    name: string;
+    type: string;
+    size: number;
+    url: string;
+  }[];
 };
 
 export type ChatSession = {
@@ -43,7 +50,7 @@ export type ChatContextType = {
   messages: Message[];
   isTyping: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  handleSend: (content: string) => void;
+  handleSend: (content: string, attachments?: File[]) => void;
   handleActionCardClick: (title: string) => void;
   handleAttach: () => void;
   handleVoiceMessage: () => void;
@@ -197,8 +204,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     await newRequest.delete(`/new-ai/chat/history/${sessionId}`);
   };
 
-  const handleSend = async (content: string) => {
-    if (!content.trim()) return;
+  const handleSend = async (content: string, attachments?: File[]) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
 
     // Create user message
     const userMessage: Message = {
@@ -207,6 +214,30 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       role: 'user',
       timestamp: new Date(),
     };
+
+    // Handle attachments if any
+    if (attachments && attachments.length > 0) {
+      const formData = new FormData();
+      attachments.forEach((file) => {
+        formData.append('files', file);
+      });
+
+      try {
+        const response = await newRequest.post('/new-ai/chat/upload', formData);
+        userMessage.attachments = response.data.files.map((file: any) => {
+          return {
+            id: file.id,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: file.url,
+          };
+        });
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        // Continue with message even if file upload fails
+      }
+    }
 
     setMessages((prev) => {
       return [...prev, userMessage];
@@ -245,6 +276,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         data: {
           message: content,
           sessionId: sessionId || undefined,
+          attachments: userMessage.attachments,
         },
         onStart: () => {
           // Remove session handling from onStart since it's now in onEnd

@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, Paperclip, Search, Send } from 'lucide-react';
+import { File, Mic, Paperclip, Search, Send, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { PromptList } from './PromptList';
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, attachments?: File[]) => void;
   isTyping: boolean;
   onAttach?: () => void;
   onVoiceMessage?: () => void;
@@ -27,7 +27,9 @@ export function ChatInput({
   const [charCount, setCharCount] = useState(0);
   const [promptsOpen, setPromptsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -63,10 +65,11 @@ export function ChatInput({
   };
 
   const handleSend = () => {
-    if (!input.trim()) return;
-    onSend(input.trim());
+    if (!input.trim() && attachments.length === 0) return;
+    onSend(input.trim(), attachments);
     setInput('');
     setCharCount(0);
+    setAttachments([]);
     setIsExpanded(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = '56px';
@@ -77,6 +80,37 @@ export function ChatInput({
     setInput(prompt);
     setCharCount(prompt.length);
     setPromptsOpen(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    setAttachments((prev) => {
+      return [...prev, ...newFiles];
+    });
+
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => {
+      return prev.filter((_, i) => {
+        return i !== index;
+      });
+    });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -96,7 +130,7 @@ export function ChatInput({
             <Button
               size='icon'
               onClick={handleSend}
-              disabled={!input.trim() || isTyping}
+              disabled={(!input.trim() && attachments.length === 0) || isTyping}
               className={`absolute right-3 rounded-full h-7 w-7 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-[#232323] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 isExpanded ? 'bottom-3' : 'top-1/2 -translate-y-1/2'
               }`}
@@ -104,12 +138,53 @@ export function ChatInput({
               <Send className='h-3.5 w-3.5 text-white dark:text-black' />
             </Button>
           </div>
+
+          {attachments.length > 0 && (
+            <div className='px-4 py-2 border-t border-gray-100 dark:border-[#232428] bg-gray-50 dark:bg-[#232323]'>
+              <div className='space-y-2'>
+                {attachments.map((file, index) => {
+                  return (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className='flex items-center justify-between bg-white dark:bg-[#141414] p-2 rounded'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <File className='h-4 w-4 text-gray-500' />
+                        <span className='text-sm truncate max-w-[200px]'>{file.name}</span>
+                        <span className='text-xs text-gray-500'>({formatFileSize(file.size)})</span>
+                      </div>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => {
+                          return removeAttachment(index);
+                        }}
+                        className='h-6 w-6 p-0'
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className='flex items-center justify-between border-t border-gray-100 dark:border-[#232428] px-4 py-2 bg-gray-50 dark:bg-[#232323]'>
             <div className='flex items-center gap-3'>
+              <input
+                type='file'
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className='hidden'
+                multiple
+              />
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={onAttach}
+                onClick={() => {
+                  return fileInputRef.current?.click();
+                }}
                 className='text-xs text-gray-500 dark:text-[#8b8b8b] h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-[#313131]'
               >
                 <Paperclip className='h-3.5 w-3.5 mr-1.5' />
