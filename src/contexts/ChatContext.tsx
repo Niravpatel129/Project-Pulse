@@ -164,7 +164,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const streamController = streamRequest({
-        endpoint: '/ai-2/chat/stream',
+        endpoint: '/new-ai/chat/stream',
         method: 'POST',
         data: {
           message: content,
