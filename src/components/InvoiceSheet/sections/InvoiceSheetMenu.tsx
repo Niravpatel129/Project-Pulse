@@ -9,7 +9,6 @@ import {
   Ruler,
   Ticket,
 } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '../../ui/button';
 import {
   DropdownMenu,
@@ -22,18 +21,31 @@ import {
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
 
-const InvoiceSheetMenu = () => {
-  // State for each menu group
-  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
-  const [invoiceSize, setInvoiceSize] = useState('A4');
-  const [salesTax, setSalesTax] = useState('enable');
-  const [vat, setVat] = useState('enable');
-  const [currency, setCurrency] = useState('USD');
-  const [discount, setDiscount] = useState('disable');
-  const [attachPdf, setAttachPdf] = useState('disable');
-  const [units, setUnits] = useState('disable');
-  const [decimals, setDecimals] = useState('no');
-  const [qrCode, setQrCode] = useState('enable');
+interface InvoiceSettings {
+  dateFormat: string;
+  invoiceSize: string;
+  salesTax: string;
+  vat: string;
+  currency: string;
+  discount: string;
+  attachPdf: string;
+  units: string;
+  decimals: string;
+  qrCode: string;
+}
+
+interface InvoiceSheetMenuProps {
+  settings: InvoiceSettings;
+  onSettingsChange: (settings: InvoiceSettings) => void;
+}
+
+const InvoiceSheetMenu = ({ settings, onSettingsChange }: InvoiceSheetMenuProps) => {
+  const handleSettingChange = (key: keyof InvoiceSettings, value: string) => {
+    onSettingsChange({
+      ...settings,
+      [key]: value,
+    });
+  };
 
   return (
     <div className='flex justify-end absolute top-4 right-4'>
@@ -50,12 +62,17 @@ const InvoiceSheetMenu = () => {
               Date format
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={dateFormat} onValueChange={setDateFormat}>
+              <DropdownMenuRadioGroup
+                value={settings.dateFormat}
+                onValueChange={(value) => {
+                  return handleSettingChange('dateFormat', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='MM/DD/YYYY'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setDateFormat('MM/DD/YYYY');
+                    handleSettingChange('dateFormat', 'MM/DD/YYYY');
                   }}
                 >
                   MM/DD/YYYY
@@ -64,7 +81,7 @@ const InvoiceSheetMenu = () => {
                   value='DD/MM/YYYY'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setDateFormat('DD/MM/YYYY');
+                    handleSettingChange('dateFormat', 'DD/MM/YYYY');
                   }}
                 >
                   DD/MM/YYYY
@@ -78,12 +95,17 @@ const InvoiceSheetMenu = () => {
               Invoice size
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={invoiceSize} onValueChange={setInvoiceSize}>
+              <DropdownMenuRadioGroup
+                value={settings.invoiceSize}
+                onValueChange={(value) => {
+                  return handleSettingChange('invoiceSize', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='A4'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setInvoiceSize('A4');
+                    handleSettingChange('invoiceSize', 'A4');
                   }}
                 >
                   A4
@@ -92,7 +114,7 @@ const InvoiceSheetMenu = () => {
                   value='Letter'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setInvoiceSize('Letter');
+                    handleSettingChange('invoiceSize', 'Letter');
                   }}
                 >
                   Letter
@@ -106,12 +128,17 @@ const InvoiceSheetMenu = () => {
               Add sales tax
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={salesTax} onValueChange={setSalesTax}>
+              <DropdownMenuRadioGroup
+                value={settings.salesTax}
+                onValueChange={(value) => {
+                  return handleSettingChange('salesTax', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='enable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setSalesTax('enable');
+                    handleSettingChange('salesTax', 'enable');
                   }}
                 >
                   Enable
@@ -120,7 +147,7 @@ const InvoiceSheetMenu = () => {
                   value='disable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setSalesTax('disable');
+                    handleSettingChange('salesTax', 'disable');
                   }}
                 >
                   Disable
@@ -134,12 +161,17 @@ const InvoiceSheetMenu = () => {
               Add VAT
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={vat} onValueChange={setVat}>
+              <DropdownMenuRadioGroup
+                value={settings.vat}
+                onValueChange={(value) => {
+                  return handleSettingChange('vat', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='enable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setVat('enable');
+                    handleSettingChange('vat', 'enable');
                   }}
                 >
                   Enable
@@ -148,7 +180,7 @@ const InvoiceSheetMenu = () => {
                   value='disable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setVat('disable');
+                    handleSettingChange('vat', 'disable');
                   }}
                 >
                   Disable
@@ -162,12 +194,17 @@ const InvoiceSheetMenu = () => {
               Currency
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={currency} onValueChange={setCurrency}>
+              <DropdownMenuRadioGroup
+                value={settings.currency}
+                onValueChange={(value) => {
+                  return handleSettingChange('currency', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='USD'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setCurrency('USD');
+                    handleSettingChange('currency', 'USD');
                   }}
                 >
                   USD
@@ -176,7 +213,7 @@ const InvoiceSheetMenu = () => {
                   value='EUR'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setCurrency('EUR');
+                    handleSettingChange('currency', 'EUR');
                   }}
                 >
                   EUR
@@ -185,7 +222,7 @@ const InvoiceSheetMenu = () => {
                   value='CAD'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setCurrency('CAD');
+                    handleSettingChange('currency', 'CAD');
                   }}
                 >
                   CAD
@@ -199,12 +236,17 @@ const InvoiceSheetMenu = () => {
               Add discount
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={discount} onValueChange={setDiscount}>
+              <DropdownMenuRadioGroup
+                value={settings.discount}
+                onValueChange={(value) => {
+                  return handleSettingChange('discount', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='enable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setDiscount('enable');
+                    handleSettingChange('discount', 'enable');
                   }}
                 >
                   Enable
@@ -213,7 +255,7 @@ const InvoiceSheetMenu = () => {
                   value='disable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setDiscount('disable');
+                    handleSettingChange('discount', 'disable');
                   }}
                 >
                   Disable
@@ -223,12 +265,17 @@ const InvoiceSheetMenu = () => {
           </DropdownMenuSub>
           <DropdownMenuSub>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={attachPdf} onValueChange={setAttachPdf}>
+              <DropdownMenuRadioGroup
+                value={settings.attachPdf}
+                onValueChange={(value) => {
+                  return handleSettingChange('attachPdf', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='enable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setAttachPdf('enable');
+                    handleSettingChange('attachPdf', 'enable');
                   }}
                 >
                   Enable
@@ -237,7 +284,7 @@ const InvoiceSheetMenu = () => {
                   value='disable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setAttachPdf('disable');
+                    handleSettingChange('attachPdf', 'disable');
                   }}
                 >
                   Disable
@@ -251,12 +298,17 @@ const InvoiceSheetMenu = () => {
               Add units
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={units} onValueChange={setUnits}>
+              <DropdownMenuRadioGroup
+                value={settings.units}
+                onValueChange={(value) => {
+                  return handleSettingChange('units', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='enable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setUnits('enable');
+                    handleSettingChange('units', 'enable');
                   }}
                 >
                   Enable
@@ -265,7 +317,7 @@ const InvoiceSheetMenu = () => {
                   value='disable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setUnits('disable');
+                    handleSettingChange('units', 'disable');
                   }}
                 >
                   Disable
@@ -279,12 +331,17 @@ const InvoiceSheetMenu = () => {
               Decimals
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={decimals} onValueChange={setDecimals}>
+              <DropdownMenuRadioGroup
+                value={settings.decimals}
+                onValueChange={(value) => {
+                  return handleSettingChange('decimals', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='yes'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setDecimals('yes');
+                    handleSettingChange('decimals', 'yes');
                   }}
                 >
                   Yes
@@ -293,7 +350,7 @@ const InvoiceSheetMenu = () => {
                   value='no'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setDecimals('no');
+                    handleSettingChange('decimals', 'no');
                   }}
                 >
                   No
@@ -303,12 +360,17 @@ const InvoiceSheetMenu = () => {
           </DropdownMenuSub>
           <DropdownMenuSub>
             <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={qrCode} onValueChange={setQrCode}>
+              <DropdownMenuRadioGroup
+                value={settings.qrCode}
+                onValueChange={(value) => {
+                  return handleSettingChange('qrCode', value);
+                }}
+              >
                 <DropdownMenuRadioItem
                   value='enable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setQrCode('enable');
+                    handleSettingChange('qrCode', 'enable');
                   }}
                 >
                   Enable
@@ -317,7 +379,7 @@ const InvoiceSheetMenu = () => {
                   value='disable'
                   onSelect={(e) => {
                     e.preventDefault();
-                    setQrCode('disable');
+                    handleSettingChange('qrCode', 'disable');
                   }}
                 >
                   Disable

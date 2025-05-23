@@ -25,6 +25,19 @@ interface InvoiceItem {
   price: string;
 }
 
+interface InvoiceSettings {
+  dateFormat: string;
+  invoiceSize: string;
+  salesTax: string;
+  vat: string;
+  currency: string;
+  discount: string;
+  attachPdf: string;
+  units: string;
+  decimals: string;
+  qrCode: string;
+}
+
 const SortableInvoiceItem = ({
   item,
   index,
@@ -75,6 +88,18 @@ const InvoiceSheet = ({
     },
   ]);
   const [taxRate, setTaxRate] = useState<number>(13);
+  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
+    dateFormat: 'MM/DD/YYYY',
+    invoiceSize: 'A4',
+    salesTax: 'enable',
+    vat: 'enable',
+    currency: 'USD',
+    discount: 'disable',
+    attachPdf: 'disable',
+    units: 'disable',
+    decimals: 'no',
+    qrCode: 'enable',
+  });
 
   const handleUpdateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
     setItems((prevItems) => {
@@ -144,7 +169,7 @@ const InvoiceSheet = ({
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide'
       >
         <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
-        <InvoiceSheetMenu />
+        <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
         <div className='mt-4'>
           <InvoiceHeader />
           <InvoiceFromTo />
