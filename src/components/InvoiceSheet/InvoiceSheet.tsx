@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
 import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 import InvoiceItemsRow from './sections/InvoiceItemsRow';
+import InvoiceTotal from './sections/InvoiceTotal';
 
 interface InvoiceItem {
   id: string;
@@ -97,7 +98,7 @@ const InvoiceSheet = ({
         <div className='mt-4'>
           <InvoiceHeader />
           <InvoiceFromTo />
-          <div className='flex flex-col gap-2 mt-2'>
+          <div className='flex flex-col gap-2 mt-8'>
             {/* Labels */}
             <div className='flex items-center gap-6 h-6'>
               <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
@@ -117,6 +118,7 @@ const InvoiceSheet = ({
               <FiPlus /> Add Item
             </div>
           </div>
+          <InvoiceTotal />
         </div>
       </SheetContent>
     </Sheet>
