@@ -34,21 +34,21 @@ const InvoiceItemsRow = () => {
   return (
     <div className='flex flex-col gap-2 mt-8'>
       {/* Labels */}
-      <div className='flex items-center gap-4'>
+      <div className='flex items-center gap-4 h-6'>
         <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
         <div className='w-[60px] text-center text-[11px] text-muted-foreground'>Quantity</div>
         <div className='w-[80px] text-[11px] text-muted-foreground'>Price</div>
         <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
       </div>
       {/* Content */}
-      <div className='flex gap-4'>
+      <div className='flex gap-4 h-6'>
         {/* Description */}
-        <div className='flex-[4] flex items-start'>
+        <div className='flex-[4] flex items-center'>
           <Textarea
             ref={textareaRef}
             className={`p-0 !text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               !isFocused && !description
-                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] !h-6'
+                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)]'
                 : ''
             }`}
             placeholder=''
@@ -66,20 +66,22 @@ const InvoiceItemsRow = () => {
           />
         </div>
         {/* Quantity */}
-        <div className='w-[60px] flex items-center justify-center !h-6'>
+        <div className='w-[60px] flex items-center justify-center'>
           <button
             type='button'
-            className='px-1 text-xl text-muted-foreground hover:text-primary'
+            className='px-1 text-xl text-muted-foreground hover:text-primary flex items-center'
             onClick={() => {
               return handleQuantityChange(-1);
             }}
           >
             <Minus className='w-3 h-3' />
           </button>
-          <span className='mx-1 text-[11px] font-mono'>{quantity}</span>
+          <span className='mx-1 text-[11px] font-mono leading-none flex items-center'>
+            ${quantity}
+          </span>
           <button
             type='button'
-            className='px-1 text-xl text-muted-foreground hover:text-primary'
+            className='px-1 text-xl text-muted-foreground hover:text-primary flex items-center'
             onClick={() => {
               return handleQuantityChange(1);
             }}
@@ -88,11 +90,11 @@ const InvoiceItemsRow = () => {
           </button>
         </div>
         {/* Price */}
-        <div className='w-[80px] flex items-center !h-6'>
+        <div className='w-[80px] flex items-center'>
           <SeamlessInput
-            className={`p-0 !text-[12px] font-mono w-full relative rounded-none border-b-2 border-transparent focus:border-[#dadad8] focus-visible:border-[#dadad8] active:border-[#dadad8] ${
+            className={`p-0 !text-[11px] font-mono w-full relative rounded-none border-b-2 border-transparent focus:border-[#dadad8] focus-visible:border-[#dadad8] active:border-[#dadad8] ${
               !isPriceFocused && !price
-                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] !h-6'
+                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)]'
                 : ''
             }`}
             placeholder=''
@@ -109,7 +111,9 @@ const InvoiceItemsRow = () => {
           />
         </div>
         {/* Total */}
-        <div className='w-[80px] text-right font-mono text-[12px]'>${total}</div>
+        <div className='w-[80px] text-right font-mono text-[11px] flex items-center justify-end'>
+          ${total}
+        </div>
       </div>
     </div>
   );
