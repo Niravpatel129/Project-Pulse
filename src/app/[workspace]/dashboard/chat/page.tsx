@@ -361,13 +361,13 @@ export default function Home() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className='flex flex-col h-screen bg-white dark:bg-gray-950 w-full'>
-      <header className='border-b border-gray-100 dark:border-gray-900 px-6 py-4 flex items-center justify-between shrink-0'>
-        <h1 className='text-base font-medium text-gray-900 dark:text-gray-100'>AI Chat</h1>
+    <div className='flex flex-col h-screen bg-white dark:bg-[#141414] w-full'>
+      <header className='border-b border-gray-100 dark:border-[#232428] px-6 py-4 flex items-center justify-between shrink-0'>
+        <h1 className='text-base font-medium text-gray-900 dark:text-white'>AI Chat</h1>
         <div className='flex items-center gap-4'>
           <Button
             variant='default'
-            className='rounded-full h-8 px-4 text-xs font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-colors'
+            className='rounded-full h-8 px-4 text-xs font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-[#232323] transition-colors'
           >
             <Zap className='mr-1.5 h-3.5 w-3.5' />
             Upgrade
@@ -376,7 +376,7 @@ export default function Home() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant='ghost' size='icon' className='rounded-full h-8 w-8'>
-                  <HelpCircle className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+                  <HelpCircle className='h-4 w-4 text-gray-500 dark:text-[#8b8b8b]' />
                 </Button>
               </TooltipTrigger>
               <TooltipContent className='text-xs'>Help</TooltipContent>
@@ -386,7 +386,7 @@ export default function Home() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant='ghost' size='icon' className='rounded-full h-8 w-8'>
-                  <Gift className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+                  <Gift className='h-4 w-4 text-gray-500 dark:text-[#8b8b8b]' />
                 </Button>
               </TooltipTrigger>
               <TooltipContent className='text-xs'>Gifts</TooltipContent>
@@ -404,10 +404,10 @@ export default function Home() {
               <div className='flex-1 flex items-center justify-center'>
                 <div className='max-w-3xl px-6 text-center'>
                   <div className='mb-12'>
-                    <h2 className='text-4xl font-medium mb-4 text-gray-900 dark:text-gray-100'>
+                    <h2 className='text-4xl font-medium mb-4 text-gray-900 dark:text-white'>
                       Welcome to Script
                     </h2>
-                    <p className='text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg mx-auto'>
+                    <p className='text-base text-gray-500 dark:text-[#8b8b8b] leading-relaxed max-w-lg mx-auto'>
                       Get started by Script a task and Chat can do the rest. Not sure where to
                       start?
                     </p>
@@ -448,7 +448,7 @@ export default function Home() {
                     />
                   </div>
 
-                  <div className='text-xs text-gray-400 dark:text-gray-500 mb-8'>
+                  <div className='text-xs text-gray-400 dark:text-[#8b8b8b] mb-8'>
                     Script may generate inaccurate information about people, places, or facts.
                     Model: Script AI v1.3
                   </div>
@@ -469,23 +469,23 @@ export default function Home() {
         </div>
 
         {/* Chat input fixed at bottom - always visible */}
-        <div className='border-t border-gray-100 dark:border-gray-900 bg-white dark:bg-gray-950 px-6 py-4 shrink-0'>
+        <div className='border-t border-gray-100 dark:border-[#232428] bg-white dark:bg-[#141414] px-6 py-4 shrink-0'>
           <div className='mx-auto max-w-3xl relative'>
-            <div className='border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden'>
+            <div className='border border-gray-200 dark:border-[#313131] rounded-lg overflow-hidden'>
               <Input
                 value={input}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                className='border-0 shadow-none text-sm py-5 px-4 bg-white dark:bg-gray-950 resize-none min-h-[56px] focus-visible:ring-0 focus-visible:ring-offset-0'
+                className='border-0 shadow-none text-sm py-5 px-4 bg-white dark:bg-[#141414] resize-none min-h-[56px] focus-visible:ring-0 focus-visible:ring-offset-0'
                 placeholder='Summarize the latest'
               />
-              <div className='flex items-center justify-between border-t border-gray-100 dark:border-gray-900 px-4 py-2 bg-gray-50 dark:bg-gray-900/50'>
+              <div className='flex items-center justify-between border-t border-gray-100 dark:border-[#232428] px-4 py-2 bg-gray-50 dark:bg-[#232323]'>
                 <div className='flex items-center gap-3'>
                   <Button
                     variant='ghost'
                     size='sm'
                     onClick={handleAttach}
-                    className='text-xs text-gray-500 dark:text-gray-400 h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
+                    className='text-xs text-gray-500 dark:text-[#8b8b8b] h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-[#313131]'
                   >
                     <Paperclip className='h-3.5 w-3.5 mr-1.5' />
                     Attach
@@ -494,7 +494,7 @@ export default function Home() {
                     variant='ghost'
                     size='sm'
                     onClick={handleVoiceMessage}
-                    className='text-xs text-gray-500 dark:text-gray-400 h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
+                    className='text-xs text-gray-500 dark:text-[#8b8b8b] h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-[#313131]'
                   >
                     <Mic className='h-3.5 w-3.5 mr-1.5' />
                     Voice Message
@@ -504,7 +504,7 @@ export default function Home() {
                       <Button
                         variant='ghost'
                         size='sm'
-                        className='text-xs text-gray-500 dark:text-gray-400 h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className='text-xs text-gray-500 dark:text-[#8b8b8b] h-7 px-2 rounded hover:bg-gray-100 dark:hover:bg-[#313131]'
                       >
                         <Search className='h-3.5 w-3.5 mr-1.5' />
                         Browse Prompts
@@ -513,20 +513,20 @@ export default function Home() {
                     <PopoverContent
                       align='start'
                       sideOffset={8}
-                      className='w-80 p-0 border border-gray-200 dark:border-gray-800 shadow-lg rounded-lg overflow-hidden'
+                      className='w-80 p-0 border border-gray-200 dark:border-[#313131] shadow-lg rounded-lg overflow-hidden'
                     >
                       <PromptList categories={samplePrompts} onSelectPrompt={handleSelectPrompt} />
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className='text-xs text-gray-400 dark:text-gray-500'>{charCount} / 3,000</div>
+                <div className='text-xs text-gray-400 dark:text-[#8b8b8b]'>{charCount} / 3,000</div>
               </div>
             </div>
             <Button
               size='icon'
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className='absolute right-3 top-3 rounded-full h-7 w-7 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              className='absolute right-3 top-3 rounded-full h-7 w-7 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-[#232323] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <Send className='h-3.5 w-3.5 text-white dark:text-black' />
             </Button>
