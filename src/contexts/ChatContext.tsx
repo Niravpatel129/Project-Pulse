@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest, streamRequest } from '@/utils/newRequest';
+import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 type StreamEndData = {
@@ -60,6 +61,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
+  const router = useRouter();
 
   // Load sessions from localStorage on mount
   useEffect(() => {
@@ -317,6 +319,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       contentAccumulatorRef.current = {};
       setSessionId(null);
       localStorage.removeItem('chatSessionId');
+
+      router.push('/dashboard/chat');
     } catch (error) {
       console.error('Error clearing conversation:', error);
     }
