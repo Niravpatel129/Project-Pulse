@@ -215,8 +215,10 @@ export default function AppSidebar() {
                     onClick={handleBackToDashboard}
                     className='text-[#3F3F46] dark:text-[#f7f7f7] hover:bg-[#eaeaea] dark:hover:bg-white/10'
                   >
-                    <ArrowLeft className='h-4 w-4 mr-2' />
-                    <span className='group-data-[state=collapsed]:hidden'>Back to Dashboard</span>
+                    <ArrowLeft className='h-4 w-4' />
+                    <span className='group-data-[state=collapsed]:hidden ml-2'>
+                      Back to Dashboard
+                    </span>
                   </Button>
                 </div>
                 <div className='px-2'>
