@@ -66,7 +66,7 @@ const InvoiceItemsRow = () => {
           />
         </div>
         {/* Quantity */}
-        <div className=''>
+        <div className='w-[60px] flex items-center justify-center !h-6'>
           <button
             type='button'
             className='px-1 text-xl text-muted-foreground hover:text-primary'
@@ -90,7 +90,7 @@ const InvoiceItemsRow = () => {
         {/* Price */}
         <div className='w-[80px] flex items-center !h-6'>
           <SeamlessInput
-            className={`p-0 pt-1 !text-[12px] font-mono w-full relative rounded-none border-b-2 border-transparent focus:border-[#dadad8] focus-visible:border-[#dadad8] active:border-[#dadad8] ${
+            className={`p-0 !text-[12px] font-mono w-full relative rounded-none border-b-2 border-transparent focus:border-[#dadad8] focus-visible:border-[#dadad8] active:border-[#dadad8] ${
               !isPriceFocused && !price
                 ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] !h-6'
                 : ''
