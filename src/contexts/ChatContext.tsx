@@ -3,6 +3,11 @@
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
+type StreamEndData = {
+  sessionId?: string;
+  isNewConversation?: boolean;
+};
+
 export type Message = {
   id: string;
   content: string;
@@ -27,6 +32,8 @@ type ChatContextType = {
   addSession: (session: ChatSession) => void;
   updateSession: (sessionId: string, updates: Partial<ChatSession>) => void;
   deleteSession: (sessionId: string) => void;
+  sessionId: string | null;
+  setSessionId: (sessionId: string | null) => void;
 
   // Chat state
   messages: Message[];
@@ -81,9 +88,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Load session ID from localStorage on component mount
   useEffect(() => {
-    const savedSessionId = localStorage.getItem('chatSessionId');
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
+    // First try to get session ID from URL
+    const pathParts = window.location.pathname.split('/');
+    const urlSessionId = pathParts.find((part) => {
+      return part.match(/^[0-9a-f]{24}$/);
+    });
+
+    if (urlSessionId) {
+      setSessionId(urlSessionId);
+      localStorage.setItem('chatSessionId', urlSessionId);
+    } else {
+      // Fall back to localStorage if no session ID in URL
+      const savedSessionId = localStorage.getItem('chatSessionId');
+      if (savedSessionId) {
+        setSessionId(savedSessionId);
+      }
     }
   }, []);
 
@@ -168,13 +187,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         data: {
           message: content,
-          sessionId: sessionId,
+          sessionId: sessionId || undefined,
         },
         onStart: (data) => {
-          if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-            setSessionId(data.sessionId);
-            localStorage.setItem('chatSessionId', data.sessionId);
-          }
+          // Remove session handling from onStart since it's now in onEnd
         },
         onChunk: (data) => {
           if (data.content) {
@@ -188,7 +204,31 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             });
           }
         },
-        onEnd: () => {
+        onEnd: (data) => {
+          if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+            setSessionId(data.sessionId);
+            localStorage.setItem('chatSessionId', data.sessionId);
+
+            // Update URL with session ID as a path parameter
+            const url = new URL(window.location.href);
+            const pathParts = url.pathname.split('/');
+            // Remove any existing session ID from the path
+            const basePath = pathParts
+              .filter((part) => {
+                return !part.match(/^[0-9a-f]{24}$/);
+              })
+              .join('/');
+            // Add the new session ID
+            url.pathname = `${basePath}/${data.sessionId}`;
+            window.history.pushState({}, '', url.toString());
+
+            // If this is a new conversation, we might want to update the title
+            if (data.isNewConversation) {
+              // You can add logic here to update the conversation title if needed
+              console.log('New conversation started:', data.sessionId);
+            }
+          }
+
           setMessages((prev) => {
             return prev.map((msg) => {
               return msg.id === streamMessageId
@@ -292,6 +332,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         addSession,
         updateSession,
         deleteSession,
+        sessionId,
+        setSessionId,
 
         // Chat state
         messages,

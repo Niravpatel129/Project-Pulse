@@ -82,7 +82,7 @@ export const streamRequest = ({
   data?: any;
   onChunk?: (chunk: any) => void;
   onStart?: (data: any) => void;
-  onEnd?: () => void;
+  onEnd?: (data: any) => void;
   onError?: (error: any) => void;
 }) => {
   // Create a reference to store the reader outside the promise chain
@@ -140,7 +140,7 @@ export const streamRequest = ({
             .read()
             .then(({ done, value }) => {
               if (done) {
-                onEnd?.();
+                onEnd?.({});
                 return;
               }
 
@@ -164,7 +164,8 @@ export const streamRequest = ({
                     } else if (data.type === 'chunk' || data.type === 'text') {
                       onChunk?.(data);
                     } else if (data.type === 'end') {
-                      // Will be handled by done === true
+                      onEnd?.(data);
+                      return;
                     } else if (data.type === 'error') {
                       onError?.(data);
                       reader.cancel();

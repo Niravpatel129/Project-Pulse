@@ -5,7 +5,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { WelcomeScreen } from '@/components/chat/WelcomeScreen';
 import { useChat } from '@/contexts/ChatContext';
-import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 const samplePrompts = [
@@ -47,8 +47,9 @@ const samplePrompts = [
   },
 ];
 
-export default function Home() {
-  const router = useRouter();
+export default function ChatSession() {
+  const params = useParams();
+  const sessionId = params.sessionId as string;
   const {
     messages,
     isTyping,
@@ -57,15 +58,15 @@ export default function Home() {
     handleActionCardClick,
     handleAttach,
     handleVoiceMessage,
-    sessionId,
+    setSessionId,
   } = useChat();
 
-  // Redirect to session page if we have a session ID
+  // Set the session ID from the URL when the component mounts
   useEffect(() => {
     if (sessionId) {
-      router.push(`/dashboard/chat/${sessionId}`);
+      setSessionId(sessionId);
     }
-  }, [sessionId, router]);
+  }, [sessionId, setSessionId]);
 
   const hasMessages = messages.length > 0;
 
