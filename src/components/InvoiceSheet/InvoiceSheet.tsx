@@ -6,26 +6,16 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Hash, MoreVertical, Printer } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
-import { Button } from '../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
 import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 import InvoiceItemsRow from './sections/InvoiceItemsRow';
 import InvoiceNotes from './sections/InvoiceNotes';
 import InvoiceSheetFooter from './sections/InvoiceSheetFooter';
+import InvoiceSheetMenu from './sections/InvoiceSheetMenu';
 import InvoiceTotal from './sections/InvoiceTotal';
 
 interface InvoiceItem {
@@ -154,31 +144,7 @@ const InvoiceSheet = ({
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide'
       >
         <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
-        <div className='flex justify-end absolute top-4 right-4'>
-          <DropdownMenu modal>
-            <DropdownMenuTrigger asChild>
-              <Button variant='ghost' size='icon'>
-                <MoreVertical className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' sideOffset={5} className='z-[100]'>
-              <DropdownMenuItem>
-                <Printer className='mr-2 h-4 w-4' />
-                Print
-              </DropdownMenuItem>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Hash className='mr-2 h-4 w-4' />
-                  Decimals
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem>Yes</DropdownMenuItem>
-                  <DropdownMenuItem>No</DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <InvoiceSheetMenu />
         <div className='mt-4'>
           <InvoiceHeader />
           <InvoiceFromTo />
