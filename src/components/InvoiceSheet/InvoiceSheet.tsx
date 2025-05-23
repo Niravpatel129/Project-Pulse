@@ -184,7 +184,7 @@ const InvoiceSheet = ({
         <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
         <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
         <div className='mt-4'>
-          <InvoiceHeader />
+          <InvoiceHeader dateFormat={invoiceSettings.dateFormat} />
           <InvoiceFromTo />
           <div className='flex flex-col gap-2 mt-8'>
             {/* Labels */}

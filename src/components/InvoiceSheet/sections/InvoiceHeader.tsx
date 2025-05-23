@@ -3,8 +3,22 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SeamlessInput } from '@/components/ui/seamless-input';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
-export default function InvoiceHeader() {
+interface InvoiceHeaderProps {
+  dateFormat?: string;
+}
+
+export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHeaderProps) {
+  const formatDate = (date: Date) => {
+    // Convert from MM/DD/YYYY or DD/MM/YYYY to date-fns format
+    const formatMap: Record<string, string> = {
+      'MM/DD/YYYY': 'MM/dd/yyyy',
+      'DD/MM/YYYY': 'dd/MM/yyyy',
+    };
+    return format(date, formatMap[dateFormat] || 'MM/dd/yyyy');
+  };
+
   return (
     <div>
       <div className='flex justify-between mt-12'>
@@ -59,7 +73,7 @@ export default function InvoiceHeader() {
                           )}
                         >
                           <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
-                            23/05/2025
+                            {formatDate(new Date('2025-05-23'))}
                           </span>
                         </Button>
                       </PopoverTrigger>
@@ -95,7 +109,7 @@ export default function InvoiceHeader() {
                         )}
                       >
                         <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
-                          23/06/2025
+                          {formatDate(new Date('2025-06-23'))}
                         </span>
                       </Button>
                     </PopoverTrigger>
