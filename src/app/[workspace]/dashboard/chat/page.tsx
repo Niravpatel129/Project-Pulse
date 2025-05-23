@@ -4,7 +4,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { WelcomeScreen } from '@/components/chat/WelcomeScreen';
-import { useChat } from '@/hooks/useChat';
+import { useChat } from '@/contexts/ChatContext';
 
 const samplePrompts = [
   {
