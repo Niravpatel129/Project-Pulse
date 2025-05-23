@@ -24,7 +24,7 @@ const InvoiceFromTo = () => {
   const [toContent, setToContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const { clients, isLoading } = useClients();
+  const { clients } = useClients();
 
   const adjustHeight = (ref: React.RefObject<HTMLTextAreaElement>) => {
     const textarea = ref.current;
