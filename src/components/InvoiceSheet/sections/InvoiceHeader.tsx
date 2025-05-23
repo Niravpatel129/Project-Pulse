@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SeamlessInput } from '@/components/ui/seamless-input';
 import { cn } from '@/lib/utils';
 
 export default function InvoiceHeader() {
@@ -10,13 +10,13 @@ export default function InvoiceHeader() {
       <div className='flex justify-between mt-8'>
         <>
           <div>
-            <div className='relative'>
-              <Input
-                className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[21px] font-medium border-none'
+            <div className='relative mb-1'>
+              <SeamlessInput
+                className='!text-[21px] font-medium'
                 defaultValue='INV-0002'
                 name='invoice_number'
               />
-            </div>{' '}
+            </div>
             <div className='flex flex-col gap-0.5'>
               <div className=''>
                 <div className='flex space-x-1 items-center'>
@@ -30,8 +30,8 @@ export default function InvoiceHeader() {
                     <span className='text-xs text-[#878787] font-mono flex-shrink-0'>:</span>
                   </div>
                   <div className='relative'>
-                    <Input
-                      className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[12px] border-none !h-5'
+                    <SeamlessInput
+                      className='!text-[12px] !h-5'
                       defaultValue='INV-0002'
                       name='invoice_number'
                     />
@@ -113,9 +113,9 @@ export default function InvoiceHeader() {
             </div>
           </div>
         </>
-        <div className='relative h-[80px] group'>
+        <div className='relative group'>
           <label htmlFor='logo-upload' className='block h-full'>
-            <div className='h-[80px] w-[80px] bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)]' />
+            <div className='h-[95px] w-[95px] bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] hover:cursor-pointer' />
           </label>
           <input
             id='logo-upload'
