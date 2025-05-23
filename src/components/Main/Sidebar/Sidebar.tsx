@@ -209,7 +209,7 @@ export default function AppSidebar() {
           <SidebarContent className='bg-white dark:bg-[#141414] px-2 group-data-[state=collapsed]:px-2'>
             {isChatView ? (
               <>
-                <div className='flex items-center justify-between px-0 mt-2 mb-4'>
+                <div className='flex items-center justify-between group-data-[state=collapsed]:justify-center px-0 mt-2 mb-4'>
                   <Button
                     variant='ghost'
                     size='sm'
