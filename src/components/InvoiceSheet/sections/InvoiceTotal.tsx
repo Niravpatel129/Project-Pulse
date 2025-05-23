@@ -12,7 +12,7 @@ const InvoiceTotal = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     if (spanRef.current && inputRef.current) {
-      inputRef.current.style.width = spanRef.current.offsetWidth + 14 + 'px';
+      inputRef.current.style.width = spanRef.current.offsetWidth + 4 + 'px';
     }
   }, [taxRate]);
 
@@ -50,7 +50,7 @@ const InvoiceTotal = () => {
               type='number'
               value={taxRate}
               onChange={handleTaxChange}
-              className='min-w-0 w-auto text-[10px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
+              className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
               min='0'
               max='100'
               style={{ width: 'auto' }}
