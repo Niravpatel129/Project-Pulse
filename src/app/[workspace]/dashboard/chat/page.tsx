@@ -11,9 +11,10 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Gift, HelpCircle, Mic, Moon, Paperclip, Plus, Search, Send, Sun, Zap } from 'lucide-react';
+import { Mic, Moon, Paperclip, Plus, Search, Send, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
+import { BsRobot } from 'react-icons/bs';
 
 interface Message {
   id: string;
@@ -87,7 +88,6 @@ function ThemeToggle() {
     return (
       <Button variant='ghost' size='icon' className='rounded-full relative h-8 w-8'>
         <Sun className='h-4 w-4 text-gray-500' />
-        <div className='absolute right-1.5 bottom-1.5 w-1.5 h-1.5 bg-green-500 rounded-full'></div>
       </Button>
     );
   }
@@ -105,7 +105,6 @@ function ThemeToggle() {
     >
       <Sun className='h-4 w-4 text-gray-500 dark:text-gray-400 rotate-0 scale-100 transition-all duration-200 dark:-rotate-90 dark:scale-0' />
       <Moon className='absolute h-4 w-4 text-gray-500 dark:text-gray-400 rotate-90 scale-0 transition-all duration-200 dark:rotate-0 dark:scale-100' />
-      <div className='absolute right-1.5 bottom-1.5 w-1.5 h-1.5 bg-green-500 rounded-full'></div>
     </Button>
   );
 }
@@ -361,35 +360,18 @@ export default function Home() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className='flex flex-col h-screen bg-white dark:bg-[#141414] w-full'>
-      <header className='border-b border-gray-100 dark:border-[#232428] px-6 py-4 flex items-center justify-between shrink-0'>
+    <div className='flex flex-col h-screen bg-white dark:bg-background w-full'>
+      <header className='dark:border-[#232428] px-6 py-4 flex items-center justify-between shrink-0'>
         <h1 className='text-base font-medium text-gray-900 dark:text-white'>AI Chat</h1>
         <div className='flex items-center gap-4'>
-          <Button
-            variant='default'
-            className='rounded-full h-8 px-4 text-xs font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-[#232323] transition-colors'
-          >
-            <Zap className='mr-1.5 h-3.5 w-3.5' />
-            Upgrade
-          </Button>
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant='ghost' size='icon' className='rounded-full h-8 w-8'>
-                  <HelpCircle className='h-4 w-4 text-gray-500 dark:text-[#8b8b8b]' />
+                <Button variant='ghost' size='icon' className='rounded-full h-8 w-8' disabled>
+                  <BsRobot className='h-4 w-4 text-gray-500 dark:text-[#8b8b8b]' />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className='text-xs'>Help</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant='ghost' size='icon' className='rounded-full h-8 w-8'>
-                  <Gift className='h-4 w-4 text-gray-500 dark:text-[#8b8b8b]' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className='text-xs'>Gifts</TooltipContent>
+              <TooltipContent className='text-xs'>Script AI</TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <ThemeToggle />
@@ -398,7 +380,7 @@ export default function Home() {
 
       <main className='flex-1 flex flex-col overflow-hidden'>
         {/* Content area (welcome screen or chat messages) */}
-        <div className='flex-1 overflow-y-auto'>
+        <div className='flex-1 overflow-y-auto bg-background'>
           {!hasMessages ? (
             <div className='h-full flex flex-col'>
               <div className='flex-1 flex items-center justify-center'>
@@ -469,7 +451,7 @@ export default function Home() {
         </div>
 
         {/* Chat input fixed at bottom - always visible */}
-        <div className='border-t border-gray-100 dark:border-[#232428] bg-white dark:bg-[#141414] px-6 py-4 shrink-0'>
+        <div className=' dark:border-[#232428] bg-white dark:bg-[#141414] px-6 py-4 shrink-0'>
           <div className='mx-auto max-w-3xl relative'>
             <div className='border border-gray-200 dark:border-[#313131] rounded-lg overflow-hidden'>
               <Input
