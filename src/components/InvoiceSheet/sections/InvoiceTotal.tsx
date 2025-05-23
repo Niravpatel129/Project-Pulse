@@ -1,3 +1,4 @@
+import { AnimatedNumber } from '@/components/ui/animated-number';
 import { Input } from '@/components/ui/input';
 import { useLayoutEffect, useRef, useState } from 'react';
 
@@ -69,7 +70,9 @@ const InvoiceTotal = () => {
         <div className='h-[1px] bg-[#e0e0e0] my-3'></div>
         <div className='flex justify-between items-center'>
           <span className='text-[11px]'>Total</span>
-          <span className='text-[21px] text-[#111] font-medium'>${total.toLocaleString()}</span>
+          <span className='text-[21px] text-[#111] font-medium'>
+            <AnimatedNumber value={total} currency='USD' />
+          </span>
         </div>
       </div>
       <style jsx global>{`
