@@ -55,14 +55,14 @@ const InvoiceItemsRow = () => {
   return (
     <div className='flex flex-col gap-2 mt-8'>
       {/* Labels */}
-      <div className='flex items-center gap-4 h-6'>
+      <div className='flex items-center gap-6 h-6'>
         <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
         <div className='w-[60px] text-center text-[11px] text-muted-foreground'>Quantity</div>
         <div className='w-[80px] text-[11px] text-muted-foreground'>Price</div>
         <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
       </div>
       {/* Content */}
-      <div className='flex gap-4 h-6'>
+      <div className='flex gap-6 h-6'>
         {/* Description */}
         <div className='flex-[4] flex items-center'>
           <Textarea
