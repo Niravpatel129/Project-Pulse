@@ -1,6 +1,6 @@
 import { SeamlessInput } from '@/components/ui/seamless-input';
 import { Textarea } from '@/components/ui/textarea';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface InvoiceItem {
@@ -13,9 +13,11 @@ interface InvoiceItem {
 interface InvoiceItemsRowProps {
   item: InvoiceItem;
   onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
+  isFirstRow?: boolean;
+  onDelete?: (id: string) => void;
 }
 
-const InvoiceItemsRow = ({ item, onUpdate }: InvoiceItemsRowProps) => {
+const InvoiceItemsRow = ({ item, onUpdate, isFirstRow, onDelete }: InvoiceItemsRowProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPriceFocused, setIsPriceFocused] = useState(false);
   const [isQuantityFocused, setIsQuantityFocused] = useState(false);
@@ -61,7 +63,7 @@ const InvoiceItemsRow = ({ item, onUpdate }: InvoiceItemsRowProps) => {
   const total = Number(item.price) * item.quantity || 0;
 
   return (
-    <div className='flex gap-6 h-6'>
+    <div className='flex gap-6 h-6 group relative'>
       {/* Description */}
       <div className='flex-[4] flex items-center'>
         <Textarea
@@ -157,6 +159,18 @@ const InvoiceItemsRow = ({ item, onUpdate }: InvoiceItemsRowProps) => {
       <div className='w-[80px] text-right font-mono text-[11px] flex items-center justify-end'>
         ${total}
       </div>
+      {/* Delete Button */}
+      {!isFirstRow && onDelete && (
+        <button
+          type='button'
+          onClick={() => {
+            return onDelete(item.id);
+          }}
+          className='absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive'
+        >
+          <X className='w-4 h-4' />
+        </button>
+      )}
     </div>
   );
 };

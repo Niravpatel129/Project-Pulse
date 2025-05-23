@@ -107,8 +107,22 @@ const InvoiceSheet = ({
               <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
             </div>
             {/* Items */}
-            {items.map((item) => {
-              return <InvoiceItemsRow key={item.id} item={item} onUpdate={handleUpdateItem} />;
+            {items.map((item, index) => {
+              return (
+                <InvoiceItemsRow
+                  key={item.id}
+                  item={item}
+                  onUpdate={handleUpdateItem}
+                  isFirstRow={index === 0}
+                  onDelete={(id) => {
+                    setItems(
+                      items.filter((item) => {
+                        return item.id !== id;
+                      }),
+                    );
+                  }}
+                />
+              );
             })}
             {/* Add Item Button */}
             <div
