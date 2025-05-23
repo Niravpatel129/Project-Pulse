@@ -9,7 +9,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
-import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
+import { Sheet, SheetContent, SheetFooter, SheetHeader } from '../ui/sheet';
 import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 import InvoiceItemsRow from './sections/InvoiceItemsRow';
@@ -186,13 +186,12 @@ const InvoiceSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='right'
-        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide'
+        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide flex flex-col p-0'
       >
-        <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
-        <div className='sticky top-0 z-10 bg-background pb-4'>
+        <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
           <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
-        </div>
-        <div className='mt-4'>
+        </SheetHeader>
+        <div className='mt-4 flex-1 px-12'>
           <InvoiceHeader dateFormat={invoiceSettings.dateFormat} />
           <InvoiceFromTo />
           <div className='flex flex-col gap-2 mt-8'>
@@ -255,7 +254,9 @@ const InvoiceSheet = ({
           />
           <InvoiceNotes />
         </div>
-        <InvoiceSheetFooter />
+        <SheetFooter className='sticky bottom-0 bg-background pt-4 border-none'>
+          <InvoiceSheetFooter />
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

@@ -21,7 +21,7 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
 
   return (
     <div>
-      <div className='flex justify-between mt-12'>
+      <div className='flex justify-between mt-2'>
         <>
           <div>
             <div className='relative mb-1'>

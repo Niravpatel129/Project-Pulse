@@ -55,7 +55,7 @@ const InvoiceSheetMenu = ({ settings, onSettingsChange }: InvoiceSheetMenuProps)
   };
 
   return (
-    <div className='flex justify-end'>
+    <div className='flex justify-end mr-4'>
       <DropdownMenu modal>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' size='icon'>
