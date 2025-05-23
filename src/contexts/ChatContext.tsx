@@ -346,7 +346,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (!sessionId) return;
 
     try {
-      await newRequest.delete(`/ai/chat/history/${sessionId}`);
       setMessages([]);
       contentAccumulatorRef.current = {};
       setSessionId(null);
