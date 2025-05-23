@@ -161,7 +161,7 @@ export const streamRequest = ({
 
                     if (data.type === 'start') {
                       onStart?.(data);
-                    } else if (data.type === 'chunk') {
+                    } else if (data.type === 'chunk' || data.type === 'text') {
                       onChunk?.(data);
                     } else if (data.type === 'end') {
                       // Will be handled by done === true

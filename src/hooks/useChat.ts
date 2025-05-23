@@ -77,7 +77,7 @@ export const useChat = () => {
 
     try {
       const streamController = streamRequest({
-        endpoint: '/ai/chat/stream',
+        endpoint: '/ai-2/chat/stream',
         method: 'POST',
         data: {
           message: content,
