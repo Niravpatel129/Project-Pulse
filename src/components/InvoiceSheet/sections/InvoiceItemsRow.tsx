@@ -76,8 +76,8 @@ const InvoiceItemsRow = () => {
           >
             <Minus className='w-3 h-3' />
           </button>
-          <span className='mx-1 text-[11px] font-mono leading-none flex items-center'>
-            ${quantity}
+          <span className='mx-1 text-[12px] font-mono leading-none flex items-center'>
+            {quantity}
           </span>
           <button
             type='button'
