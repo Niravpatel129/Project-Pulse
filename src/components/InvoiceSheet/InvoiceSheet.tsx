@@ -12,6 +12,7 @@ import {
 import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
 import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
+import InvoiceItemsRow from './sections/InvoiceItemsRow';
 
 const InvoiceSheet = ({
   open,
@@ -55,6 +56,7 @@ const InvoiceSheet = ({
         <div className='mt-4'>
           <InvoiceHeader />
           <InvoiceFromTo />
+          <InvoiceItemsRow />
         </div>
       </SheetContent>
     </Sheet>
