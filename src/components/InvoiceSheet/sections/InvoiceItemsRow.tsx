@@ -43,12 +43,12 @@ const InvoiceItemsRow = () => {
       {/* Content */}
       <div className='flex gap-4'>
         {/* Description */}
-        <div className='flex-[4]'>
+        <div className='flex-[4] flex items-start'>
           <Textarea
             ref={textareaRef}
-            className={`!text-[11px] !h-6 font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+            className={`!text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               !isFocused && !description
-                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-6'
+                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] !h-6'
                 : ''
             }`}
             placeholder=''

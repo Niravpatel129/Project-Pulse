@@ -60,8 +60,8 @@ const InvoiceFromTo = () => {
   };
 
   return (
-    <div className='flex justify-between mt-8'>
-      <div className='flex-1 mr-8'>
+    <div className='flex justify-between mt-8 gap-4'>
+      <div className='flex-1'>
         <div className='mb-2'>
           <span className='text-[11px] text-[#878787] font-mono'>From</span>
         </div>
