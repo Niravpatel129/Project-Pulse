@@ -161,7 +161,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const deleteSession = (sessionId: string) => {
+  const deleteSession = async (sessionId: string) => {
     setSessions((prev) => {
       return prev.filter((session) => {
         return session.id !== sessionId;
@@ -170,6 +170,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (currentSession?.id === sessionId) {
       setCurrentSession(null);
     }
+
+    await newRequest.delete(`/new-ai/chat/history/${sessionId}`);
   };
 
   const handleSend = async (content: string) => {
