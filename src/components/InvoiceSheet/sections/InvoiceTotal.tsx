@@ -42,6 +42,7 @@ interface InvoiceTotalProps {
   currency: string;
   formatNumber: (value: number) => string;
   decimals: 'yes' | 'no';
+  salesTax: string;
 }
 
 const InvoiceTotal = ({
@@ -54,6 +55,7 @@ const InvoiceTotal = ({
   currency,
   formatNumber,
   decimals,
+  salesTax,
 }: InvoiceTotalProps) => {
   const taxAmount = (subtotal * taxRate) / 100;
   const currencySymbol = getCurrencySymbol(currency);
@@ -107,45 +109,47 @@ const InvoiceTotal = ({
             {formatNumber(subtotal)}
           </span>
         </div>
-        <div className='flex justify-between items-center'>
-          <div className='flex items-center'>
-            <span
-              contentEditable
-              suppressContentEditableWarning
-              onInput={handleTaxLabelChange}
-              className='min-w-[25px] !text-[11px] outline-none font-mono text-[#878787]'
-            >
-              {taxLabel}
+        {salesTax === 'enable' && (
+          <div className='flex justify-between items-center'>
+            <div className='flex items-center'>
+              <span
+                contentEditable
+                suppressContentEditableWarning
+                onInput={handleTaxLabelChange}
+                className='min-w-[25px] !text-[11px] outline-none font-mono text-[#878787]'
+              >
+                {taxLabel}
+              </span>
+              <span className='text-[11px]'> (</span>
+              <span
+                ref={spanRef}
+                className='invisible absolute font-mono text-[10px] px-0'
+                style={{ whiteSpace: 'pre' }}
+              >
+                {taxRate}
+              </span>
+              <Input
+                ref={inputRef}
+                type='number'
+                value={taxRate}
+                onChange={handleTaxChange}
+                className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
+                min='0'
+                max={MAX_TAX_RATE}
+                style={{ width: 'auto' }}
+              />
+              <span className='text-[11px]'>%)</span>
+            </div>
+            <span className='text-[11px]'>
+              {currencySymbol}
+              {formatNumber(taxAmount)}
             </span>
-            <span className='text-[11px]'> (</span>
-            <span
-              ref={spanRef}
-              className='invisible absolute font-mono text-[10px] px-0'
-              style={{ whiteSpace: 'pre' }}
-            >
-              {taxRate}
-            </span>
-            <Input
-              ref={inputRef}
-              type='number'
-              value={taxRate}
-              onChange={handleTaxChange}
-              className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
-              min='0'
-              max={MAX_TAX_RATE}
-              style={{ width: 'auto' }}
-            />
-            <span className='text-[11px]'>%)</span>
           </div>
-          <span className='text-[11px]'>
-            {currencySymbol}
-            {formatNumber(taxAmount)}
-          </span>
-        </div>
+        )}
         <div className='h-[1px] bg-[#e0e0e0] my-3'></div>
         <div className='flex justify-between items-center'>
           <span className='text-[11px]'>Total</span>
-          <span className='text-[21px] text-[#111] dark:text-[#fff] font-medium'>
+          <span className='text-[21px] text-[#111] dark:text-white'>
             <AnimatedNumber value={total} currency={currency} decimals={decimals} />
           </span>
         </div>

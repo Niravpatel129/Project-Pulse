@@ -161,7 +161,7 @@ const InvoiceSheet = ({
       return sum + quantity * price;
     }, 0);
 
-    const taxAmount = (subtotal * taxRate) / 100;
+    const taxAmount = invoiceSettings.salesTax === 'enable' ? (subtotal * taxRate) / 100 : 0;
     const total = subtotal + taxAmount;
 
     return {
@@ -169,7 +169,7 @@ const InvoiceSheet = ({
       taxAmount,
       total,
     };
-  }, [items, taxRate]);
+  }, [items, taxRate, invoiceSettings.salesTax]);
 
   const handleTaxRateChange = (newTaxRate: number) => {
     setTaxRate(newTaxRate);
@@ -241,6 +241,7 @@ const InvoiceSheet = ({
             currency={invoiceSettings.currency}
             formatNumber={formatNumber}
             decimals={invoiceSettings.decimals}
+            salesTax={invoiceSettings.salesTax}
           />
           <InvoiceNotes />
         </div>
