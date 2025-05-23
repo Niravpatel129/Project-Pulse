@@ -14,12 +14,40 @@ interface InvoiceItem {
 const MAX_QUANTITY = 999999;
 const MAX_PRICE = 999999.99;
 
+const getCurrencySymbol = (currency: string) => {
+  switch (currency) {
+    case 'USD':
+      return '$';
+    case 'CAD':
+      return 'CA$';
+    case 'EUR':
+      return '€';
+    case 'GBP':
+      return '£';
+    case 'JPY':
+      return '¥';
+    case 'AUD':
+      return 'A$';
+    case 'INR':
+      return '₹';
+    case 'CNY':
+      return '¥';
+    case 'CHF':
+      return 'Fr';
+    case 'SGD':
+      return 'S$';
+    default:
+      return currency;
+  }
+};
+
 interface InvoiceItemsRowProps {
   item: InvoiceItem;
   onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
   isFirstRow?: boolean;
   onDelete?: (id: string) => void;
   dragHandleProps?: any;
+  currency: string;
 }
 
 const InvoiceItemsRow = ({
@@ -28,12 +56,14 @@ const InvoiceItemsRow = ({
   isFirstRow,
   onDelete,
   dragHandleProps,
+  currency,
 }: InvoiceItemsRowProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPriceFocused, setIsPriceFocused] = useState(false);
   const [isQuantityFocused, setIsQuantityFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const quantityRef = useRef<HTMLDivElement>(null);
+  const currencySymbol = getCurrencySymbol(currency);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -184,7 +214,8 @@ const InvoiceItemsRow = ({
       </div>
       {/* Total */}
       <div className='w-[80px] text-right font-mono text-[11px] flex items-center justify-end'>
-        ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        {currencySymbol}
+        {total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
       {/* Delete Button */}
       {!isFirstRow && onDelete && (

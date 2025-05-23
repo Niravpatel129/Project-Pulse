@@ -5,15 +5,50 @@ import { useLayoutEffect, useRef } from 'react';
 // Safe maximum limits
 const MAX_TAX_RATE = 100;
 
+const getCurrencySymbol = (currency: string) => {
+  switch (currency) {
+    case 'USD':
+      return '$';
+    case 'CAD':
+      return 'CA$';
+    case 'EUR':
+      return '€';
+    case 'GBP':
+      return '£';
+    case 'JPY':
+      return '¥';
+    case 'AUD':
+      return 'A$';
+    case 'INR':
+      return '₹';
+    case 'CNY':
+      return '¥';
+    case 'CHF':
+      return 'Fr';
+    case 'SGD':
+      return 'S$';
+    default:
+      return currency;
+  }
+};
+
 interface InvoiceTotalProps {
   subtotal: number;
   total: number;
   taxRate: number;
   onTaxRateChange: (taxRate: number) => void;
+  currency: string;
 }
 
-const InvoiceTotal = ({ subtotal, total, taxRate, onTaxRateChange }: InvoiceTotalProps) => {
+const InvoiceTotal = ({
+  subtotal,
+  total,
+  taxRate,
+  onTaxRateChange,
+  currency,
+}: InvoiceTotalProps) => {
   const taxAmount = (subtotal * taxRate) / 100;
+  const currencySymbol = getCurrencySymbol(currency);
 
   // Dynamic width logic
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -49,7 +84,7 @@ const InvoiceTotal = ({ subtotal, total, taxRate, onTaxRateChange }: InvoiceTota
         <div className='flex justify-between mb-3'>
           <span className='text-[11px]'>Subtotal</span>
           <span className='text-[11px]'>
-            $
+            {currencySymbol}
             {subtotal.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -79,7 +114,7 @@ const InvoiceTotal = ({ subtotal, total, taxRate, onTaxRateChange }: InvoiceTota
             <span className='text-[11px]'>%)</span>
           </div>
           <span className='text-[11px]'>
-            $
+            {currencySymbol}
             {taxAmount.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -90,7 +125,7 @@ const InvoiceTotal = ({ subtotal, total, taxRate, onTaxRateChange }: InvoiceTota
         <div className='flex justify-between items-center'>
           <span className='text-[11px]'>Total</span>
           <span className='text-[21px] text-[#111] dark:text-[#fff] font-medium'>
-            <AnimatedNumber value={total} currency='USD' />
+            <AnimatedNumber value={total} currency={currency} />
           </span>
         </div>
       </div>

@@ -43,11 +43,13 @@ const SortableInvoiceItem = ({
   index,
   onUpdate,
   onDelete,
+  currency,
 }: {
   item: InvoiceItem;
   index: number;
   onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
   onDelete: (id: string) => void;
+  currency: string;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -67,6 +69,7 @@ const SortableInvoiceItem = ({
         isFirstRow={index === 0}
         onDelete={onDelete}
         dragHandleProps={index === 0 ? undefined : listeners}
+        currency={currency}
       />
     </div>
   );
@@ -203,6 +206,7 @@ const InvoiceSheet = ({
                           }),
                         );
                       }}
+                      currency={invoiceSettings.currency}
                     />
                   );
                 })}
@@ -221,6 +225,7 @@ const InvoiceSheet = ({
             total={totals.total}
             taxRate={taxRate}
             onTaxRateChange={handleTaxRateChange}
+            currency={invoiceSettings.currency}
           />
           <InvoiceNotes />
         </div>
