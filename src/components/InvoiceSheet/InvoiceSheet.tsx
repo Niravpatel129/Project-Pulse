@@ -1,3 +1,11 @@
+import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Hash, MoreVertical, Printer } from 'lucide-react';
 import { useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
@@ -24,6 +32,40 @@ interface InvoiceItem {
   quantity: number;
   price: string;
 }
+
+const SortableInvoiceItem = ({
+  item,
+  index,
+  onUpdate,
+  onDelete,
+}: {
+  item: InvoiceItem;
+  index: number;
+  onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <InvoiceItemsRow
+        item={item}
+        onUpdate={onUpdate}
+        isFirstRow={index === 0}
+        onDelete={onDelete}
+        dragHandleProps={index === 0 ? undefined : listeners}
+      />
+    </div>
+  );
+};
 
 const InvoiceSheet = ({
   open,
@@ -61,6 +103,23 @@ const InvoiceSheet = ({
         },
       ];
     });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setItems((items) => {
+        const oldIndex = items.findIndex((item) => {
+          return item.id === active.id;
+        });
+        const newIndex = items.findIndex((item) => {
+          return item.id === over.id;
+        });
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   return (
@@ -107,23 +166,32 @@ const InvoiceSheet = ({
               <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
             </div>
             {/* Items */}
-            {items.map((item, index) => {
-              return (
-                <InvoiceItemsRow
-                  key={item.id}
-                  item={item}
-                  onUpdate={handleUpdateItem}
-                  isFirstRow={index === 0}
-                  onDelete={(id) => {
-                    setItems(
-                      items.filter((item) => {
-                        return item.id !== id;
-                      }),
-                    );
-                  }}
-                />
-              );
-            })}
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={items.map((item) => {
+                  return item.id;
+                })}
+                strategy={verticalListSortingStrategy}
+              >
+                {items.map((item, index) => {
+                  return (
+                    <SortableInvoiceItem
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      onUpdate={handleUpdateItem}
+                      onDelete={(id) => {
+                        setItems(
+                          items.filter((item) => {
+                            return item.id !== id;
+                          }),
+                        );
+                      }}
+                    />
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
             {/* Add Item Button */}
             <div
               className='flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer hover:text-primary'

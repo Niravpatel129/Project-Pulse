@@ -1,6 +1,6 @@
 import { SeamlessInput } from '@/components/ui/seamless-input';
 import { Textarea } from '@/components/ui/textarea';
-import { Minus, Plus, X } from 'lucide-react';
+import { GripVertical, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface InvoiceItem {
@@ -15,9 +15,16 @@ interface InvoiceItemsRowProps {
   onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
   isFirstRow?: boolean;
   onDelete?: (id: string) => void;
+  dragHandleProps?: any;
 }
 
-const InvoiceItemsRow = ({ item, onUpdate, isFirstRow, onDelete }: InvoiceItemsRowProps) => {
+const InvoiceItemsRow = ({
+  item,
+  onUpdate,
+  isFirstRow,
+  onDelete,
+  dragHandleProps,
+}: InvoiceItemsRowProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPriceFocused, setIsPriceFocused] = useState(false);
   const [isQuantityFocused, setIsQuantityFocused] = useState(false);
@@ -64,6 +71,15 @@ const InvoiceItemsRow = ({ item, onUpdate, isFirstRow, onDelete }: InvoiceItemsR
 
   return (
     <div className='flex gap-6 h-6 group relative'>
+      {/* Drag Handle */}
+      {!isFirstRow && dragHandleProps && (
+        <div
+          className='absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing'
+          {...dragHandleProps}
+        >
+          <GripVertical className='w-4 h-4 text-muted-foreground' />
+        </div>
+      )}
       {/* Description */}
       <div className='flex-[4] flex items-center'>
         <Textarea
