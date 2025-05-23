@@ -19,7 +19,7 @@ import { ArrowLeft, Moon, PencilIcon, Send, Sun, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   RiChat1Fill,
   RiFileListFill,
@@ -37,9 +37,7 @@ function useMediaQuery(query: string) {
     if (typeof window === 'undefined') return;
 
     const media = window.matchMedia(query);
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
+    setMatches(media.matches);
 
     const listener = () => {
       return setMatches(media.matches);
@@ -49,7 +47,7 @@ function useMediaQuery(query: string) {
     return () => {
       return media.removeEventListener('change', listener);
     };
-  }, [matches, query]);
+  }, [query]);
 
   return matches;
 }
@@ -96,11 +94,6 @@ export default function AppSidebar() {
     }
   }, [isTablet, state, setOpen]);
 
-  // Return null during server-side rendering or before mounting
-  if (!mounted) {
-    return null;
-  }
-
   const getInitials = (name?: string) => {
     if (!name) return '';
     const nameParts = name.split(' ');
@@ -110,57 +103,95 @@ export default function AppSidebar() {
     return name.substring(0, 2);
   };
 
-  const navigation = [
-    {
-      name: 'Payments',
-      items: [
-        {
-          name: 'Invoices',
-          href: '/dashboard/invoices',
-          current: pathname === '/dashboard/invoices',
-          icon: RiFileListFill,
-        },
-        {
-          name: 'Payments',
-          href: '/dashboard/payments',
-          current: pathname === '/dashboard/payments',
-          icon: RiMoneyDollarCircleFill,
-        },
-        {
-          name: 'Customers',
-          href: '/dashboard/customers',
-          current: pathname === '/dashboard/customers',
-          icon: RiUserFill,
-        },
-      ],
-    },
-    ...(process.env.NODE_ENV === 'development'
-      ? [
+  // Memoize the base navigation structure
+  const baseNavigation = useMemo(() => {
+    return [
+      {
+        name: 'Payments',
+        items: [
           {
-            name: 'AI',
-            items: [
-              {
-                name: 'Chat',
-                href: '/dashboard/chat',
-                current: pathname === '/dashboard/chat',
-                icon: RiChat1Fill,
-              },
-            ],
+            name: 'Invoices',
+            href: '/dashboard/invoices',
+            icon: RiFileListFill,
           },
-        ]
-      : []),
-    {
-      name: 'Management',
-      items: [
-        {
-          name: 'Settings',
-          href: '/dashboard/settings',
-          current: pathname === '/dashboard/settings',
-          icon: RiSettingsFill,
-        },
-      ],
-    },
-  ];
+          {
+            name: 'Payments',
+            href: '/dashboard/payments',
+            icon: RiMoneyDollarCircleFill,
+          },
+          {
+            name: 'Customers',
+            href: '/dashboard/customers',
+            icon: RiUserFill,
+          },
+        ],
+      },
+      ...(process.env.NODE_ENV === 'development'
+        ? [
+            {
+              name: 'AI',
+              items: [
+                {
+                  name: 'Chat',
+                  href: '/dashboard/chat',
+                  icon: RiChat1Fill,
+                },
+              ],
+            },
+          ]
+        : []),
+      {
+        name: 'Management',
+        items: [
+          {
+            name: 'Settings',
+            href: '/dashboard/settings',
+            icon: RiSettingsFill,
+          },
+        ],
+      },
+    ];
+  }, []); // Empty dependency array since this never changes
+
+  // Memoize navigation items with current pathname
+  const navigationItems = useMemo(() => {
+    return baseNavigation.map((section) => {
+      return (
+        <div key={section.name} className='mb-4'>
+          <h3 className='px-0 text-xs font-semibold text-[#3F3F46] dark:text-[#898989] text-[13px] uppercase tracking-wider mb-2 group-data-[state=collapsed]:hidden'>
+            {section.name}
+          </h3>
+          {section.items.map((item) => {
+            return (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href}
+                  tooltip={item.name}
+                  className='text-white hover:bg-[#eaeaea] dark:hover:bg-white/10 data-[active=true]:bg-[#eaeaea] dark:data-[active=true]:bg-white/10 mb-1'
+                >
+                  <Link
+                    href={item.href}
+                    className='flex items-center gap-3 px-2 text-[#3F3F46] dark:text-[#fafafa] group-data-[state=collapsed]:justify-center'
+                  >
+                    <item.icon className='h-4 w-4 text-[#3F3F46] dark:text-[#858585]' />
+                    <span className='group-data-[state=collapsed]:hidden text-[#3F3F46] dark:text-[#fafafa]'>
+                      {item.name}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </div>
+      );
+    });
+  }, [baseNavigation, pathname]);
+
+  // Return null during server-side rendering or before mounting
+  if (!mounted) {
+    return null;
+  }
 
   const handleBackToDashboard = () => {
     router.push('/dashboard/invoices');
@@ -298,39 +329,7 @@ export default function AppSidebar() {
                 </div>
 
                 <SidebarGroup>
-                  <SidebarMenu>
-                    {navigation.map((section) => {
-                      return (
-                        <div key={section.name} className='mb-4'>
-                          <h3 className='px-0 text-xs font-semibold text-[#3F3F46] dark:text-[#898989] text-[13px] uppercase tracking-wider mb-2 group-data-[state=collapsed]:hidden'>
-                            {section.name}
-                          </h3>
-                          {section.items.map((item) => {
-                            return (
-                              <SidebarMenuItem key={item.name}>
-                                <SidebarMenuButton
-                                  asChild
-                                  isActive={item.current}
-                                  tooltip={item.name}
-                                  className='text-white hover:bg-[#eaeaea] dark:hover:bg-white/10 data-[active=true]:bg-[#eaeaea] dark:data-[active=true]:bg-white/10 mb-1'
-                                >
-                                  <Link
-                                    href={item.href}
-                                    className='flex items-center gap-3 px-2 text-[#3F3F46] dark:text-[#fafafa] group-data-[state=collapsed]:justify-center'
-                                  >
-                                    <item.icon className='h-4 w-4 text-[#3F3F46] dark:text-[#858585]' />
-                                    <span className='group-data-[state=collapsed]:hidden text-[#3F3F46] dark:text-[#fafafa]'>
-                                      {item.name}
-                                    </span>
-                                  </Link>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </SidebarMenu>
+                  <SidebarMenu>{navigationItems}</SidebarMenu>
                 </SidebarGroup>
               </>
             )}
