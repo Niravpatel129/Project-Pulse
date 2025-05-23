@@ -3,7 +3,6 @@
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatMessage } from '@/components/chat/ChatMessage';
-import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import { WelcomeScreen } from '@/components/chat/WelcomeScreen';
 import { useChat } from '@/hooks/useChat';
 
@@ -72,9 +71,8 @@ export default function Home() {
             <div className='px-6 py-6'>
               <div className='mx-auto max-w-3xl space-y-6'>
                 {messages.map((message) => {
-                  return <ChatMessage key={message.id} message={message} />;
+                  return <ChatMessage key={message.id} message={message} isTyping={isTyping} />;
                 })}
-                {isTyping && <TypingIndicator />}
                 <div ref={messagesEndRef} />
               </div>
             </div>

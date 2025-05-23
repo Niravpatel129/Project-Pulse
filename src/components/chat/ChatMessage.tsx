@@ -7,9 +7,20 @@ interface Message {
 
 interface ChatMessageProps {
   message: Message;
+  isTyping: boolean;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+function TypingAnimation() {
+  return (
+    <span className='inline-flex items-center'>
+      <span className='animate-bounce'>.</span>
+      <span className='animate-bounce delay-100'>.</span>
+      <span className='animate-bounce delay-200'>.</span>
+    </span>
+  );
+}
+
+export function ChatMessage({ message, isTyping }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   if (message.content === '') {
@@ -27,6 +38,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           }`}
         >
           {message.content}
+          {!isUser && isTyping && <TypingAnimation />}
         </div>
         <div
           className={`text-xs text-gray-400 dark:text-gray-500 mt-1 ${
