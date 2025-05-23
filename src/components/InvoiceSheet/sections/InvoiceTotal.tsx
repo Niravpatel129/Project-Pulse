@@ -37,6 +37,8 @@ interface InvoiceTotalProps {
   total: number;
   taxRate: number;
   onTaxRateChange: (taxRate: number) => void;
+  taxLabel?: string;
+  onTaxLabelChange?: (label: string) => void;
   currency: string;
   formatNumber: (value: number) => string;
   decimals: 'yes' | 'no';
@@ -47,6 +49,8 @@ const InvoiceTotal = ({
   total,
   taxRate,
   onTaxRateChange,
+  taxLabel = 'Tax',
+  onTaxLabelChange = () => {},
   currency,
   formatNumber,
   decimals,
@@ -57,11 +61,18 @@ const InvoiceTotal = ({
   // Dynamic width logic
   const spanRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const taxLabelRef = useRef<HTMLSpanElement>(null);
+  const taxLabelInputRef = useRef<HTMLInputElement>(null);
+
   useLayoutEffect(() => {
     if (spanRef.current && inputRef.current) {
       inputRef.current.style.width = spanRef.current.offsetWidth + 4 + 'px';
     }
-  }, [taxRate]);
+    if (taxLabelRef.current && taxLabelInputRef.current) {
+      const width = Math.max(taxLabelRef.current.offsetWidth + 4, 30); // Minimum width of 30px
+      taxLabelInputRef.current.style.width = `${width}px`;
+    }
+  }, [taxRate, taxLabel]);
 
   const handleTaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -82,6 +93,10 @@ const InvoiceTotal = ({
     }
   };
 
+  const handleTaxLabelChange = (e: React.FormEvent<HTMLSpanElement>) => {
+    onTaxLabelChange(e.currentTarget.textContent || '');
+  };
+
   return (
     <div className='w-full justify-end flex mt-8'>
       <div className='w-[300px] font-mono text-[#878787]'>
@@ -94,7 +109,15 @@ const InvoiceTotal = ({
         </div>
         <div className='flex justify-between items-center'>
           <div className='flex items-center'>
-            <span className='text-[11px]'>Tax (</span>
+            <span
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleTaxLabelChange}
+              className='min-w-[25px] !text-[11px] outline-none font-mono text-[#878787]'
+            >
+              {taxLabel}
+            </span>
+            <span className='text-[11px]'> (</span>
             <span
               ref={spanRef}
               className='invisible absolute font-mono text-[10px] px-0'
