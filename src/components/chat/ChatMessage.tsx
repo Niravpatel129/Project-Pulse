@@ -1,3 +1,6 @@
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 interface Message {
   id: string;
   content: string;
@@ -31,13 +34,13 @@ export function ChatMessage({ message, isTyping }: ChatMessageProps) {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'}`}>
         <div
-          className={`px-4 py-3 rounded-lg text-sm ${
+          className={`px-4 py-3 rounded-lg text-sm prose dark:prose-invert max-w-none ${
             isUser
               ? 'bg-black text-white dark:bg-white dark:text-black'
               : 'bg-gray-100 dark:bg-[#141414] text-gray-900 dark:text-gray-100'
           }`}
         >
-          {message.content}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           {!isUser && isTyping && <TypingAnimation />}
         </div>
         <div
