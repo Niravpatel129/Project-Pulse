@@ -1,4 +1,4 @@
-import CreateInvoiceDialog from '@/components/InvoicesList/CreateInvoiceDialog';
+import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -351,7 +351,8 @@ export default function AppSidebar() {
         </Sidebar>
       </SidebarToggleContext.Provider>
 
-      <CreateInvoiceDialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
+      {/* <CreateInvoiceDialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} /> */}
+      <InvoiceSheet open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
     </>
   );
 }
