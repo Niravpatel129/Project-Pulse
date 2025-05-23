@@ -173,7 +173,7 @@ const InvoiceItemsRow = ({
       </div>
       {/* Total */}
       <div className='w-[80px] text-right font-mono text-[11px] flex items-center justify-end'>
-        ${total}
+        ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
       {/* Delete Button */}
       {!isFirstRow && onDelete && (

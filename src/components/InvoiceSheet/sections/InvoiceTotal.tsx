@@ -2,11 +2,14 @@ import { AnimatedNumber } from '@/components/ui/animated-number';
 import { Input } from '@/components/ui/input';
 import { useLayoutEffect, useRef, useState } from 'react';
 
-const InvoiceTotal = () => {
+interface InvoiceTotalProps {
+  subtotal: number;
+  total: number;
+}
+
+const InvoiceTotal = ({ subtotal, total }: InvoiceTotalProps) => {
   const [taxRate, setTaxRate] = useState<number | ''>(0);
-  const subtotal = 66600;
   const taxAmount = (subtotal * (typeof taxRate === 'number' ? taxRate : 0)) / 100;
-  const total = subtotal + taxAmount;
 
   // Dynamic width logic
   const spanRef = useRef<HTMLSpanElement>(null);

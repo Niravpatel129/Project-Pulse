@@ -7,7 +7,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Hash, MoreVertical, Printer } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '../ui/button';
@@ -124,6 +124,20 @@ const InvoiceSheet = ({
     }
   };
 
+  // Calculate totals
+  const totals = useMemo(() => {
+    const subtotal = items.reduce((sum, item) => {
+      const quantity = item.quantity;
+      const price = parseFloat(item.price) || 0;
+      return sum + quantity * price;
+    }, 0);
+
+    return {
+      subtotal,
+      total: subtotal,
+    };
+  }, [items]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -202,7 +216,7 @@ const InvoiceSheet = ({
               <FiPlus /> Add Item
             </div>
           </div>
-          <InvoiceTotal />
+          <InvoiceTotal subtotal={totals.subtotal} total={totals.total} />
           <InvoiceNotes />
         </div>
         <InvoiceSheetFooter />
