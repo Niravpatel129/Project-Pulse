@@ -1,4 +1,15 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
+import { Hash, MoreVertical, Printer } from 'lucide-react';
+import { Button } from '../ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
 
 const InvoiceSheet = ({
   open,
@@ -9,10 +20,36 @@ const InvoiceSheet = ({
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className='fixed right-4 top-4 bottom-4 w-[400px] sm:w-[540px] p-6 border rounded-lg shadow-lg bg-background max-h-[calc(100vh-2rem)] overflow-y-auto'>
-        <SheetHeader>
-          <SheetTitle>Invoice</SheetTitle>
-        </SheetHeader>
+      <SheetContent
+        side='right'
+        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 p-6 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden'
+      >
+        <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
+        <div className='flex justify-end'>
+          <DropdownMenu modal>
+            <DropdownMenuTrigger asChild>
+              <Button variant='ghost' size='icon'>
+                <MoreVertical className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' sideOffset={5} className='z-[100]'>
+              <DropdownMenuItem>
+                <Printer className='mr-2 h-4 w-4' />
+                Print
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Hash className='mr-2 h-4 w-4' />
+                  Decimals
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem>Yes</DropdownMenuItem>
+                  <DropdownMenuItem>No</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </SheetContent>
     </Sheet>
   );
