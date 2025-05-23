@@ -35,14 +35,20 @@ const InvoiceItemsRow = () => {
   const adjustHeight = (ref: React.RefObject<HTMLTextAreaElement>) => {
     const textarea = ref.current;
     if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
+      if (!isFocused && !description) {
+        textarea.style.height = '24px';
+        textarea.style.minHeight = '24px';
+      } else {
+        textarea.style.minHeight = '24px';
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.max(24, textarea.scrollHeight)}px`;
+      }
     }
   };
 
   useEffect(() => {
     adjustHeight(textareaRef);
-  }, [description]);
+  }, [description, isFocused]);
 
   const total = Number(price) * quantity || 0;
 
@@ -61,9 +67,9 @@ const InvoiceItemsRow = () => {
         <div className='flex-[4] flex items-center'>
           <Textarea
             ref={textareaRef}
-            className={`p-0 !text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+            className={`p-0 !text-[11px] font-mono w-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[24px] ${
               !isFocused && !description
-                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-!'
+                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'
                 : ''
             }`}
             placeholder=''
@@ -89,7 +95,7 @@ const InvoiceItemsRow = () => {
           }}
         >
           {!isQuantityFocused && !quantity ? (
-            <div className='w-full bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[40px]'></div>
+            <div className='w-full bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'></div>
           ) : (
             <>
               {' '}
@@ -133,7 +139,7 @@ const InvoiceItemsRow = () => {
           <SeamlessInput
             className={`p-0 !text-[11px] font-mono w-full relative rounded-none border-b-2 border-transparent focus:border-[#dadad8] focus-visible:border-[#dadad8] active:border-[#dadad8] ${
               !isPriceFocused && !price
-                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)]'
+                ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'
                 : ''
             }`}
             placeholder=''
