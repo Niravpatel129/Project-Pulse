@@ -361,6 +361,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // Load chat history for a session
   const loadChatHistory = async (sessionId: string) => {
     try {
+      if (!sessionId) return;
+
       const response = await newRequest.get(`/new-ai/chat/history/${sessionId}`);
       const { conversation } = response.data;
 
