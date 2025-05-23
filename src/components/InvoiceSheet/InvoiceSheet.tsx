@@ -182,7 +182,9 @@ const InvoiceSheet = ({
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide'
       >
         <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
-        <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
+        <div className='sticky top-0 z-10 bg-background pb-4'>
+          <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
+        </div>
         <div className='mt-4'>
           <InvoiceHeader dateFormat={invoiceSettings.dateFormat} />
           <InvoiceFromTo />
