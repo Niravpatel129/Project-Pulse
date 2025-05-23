@@ -18,11 +18,18 @@ const InvoiceTotal = () => {
 
   const handleTaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+
     if (value === '') {
       setTaxRate('');
     } else {
-      const numValue = Number(value);
-      if (numValue <= 100) {
+      // Remove leading zeros first
+      const cleanValue = value.replace(/^0+/, '') || '0';
+
+      const numValue = Number(cleanValue);
+
+      if (!isNaN(numValue) && numValue <= 100) {
+        // Force the input to show the cleaned value
+        e.target.value = cleanValue;
         setTaxRate(numValue);
       }
     }
