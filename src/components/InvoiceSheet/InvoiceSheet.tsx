@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
+import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 
 const InvoiceSheet = ({
@@ -23,10 +24,10 @@ const InvoiceSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='right'
-        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 p-6 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono'
+        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono'
       >
         <SheetTitle className='sr-only'>Invoice Details</SheetTitle>
-        <div className='flex justify-end'>
+        <div className='flex justify-end absolute top-4 right-4'>
           <DropdownMenu modal>
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' size='icon'>
@@ -51,7 +52,10 @@ const InvoiceSheet = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <InvoiceHeader />
+        <div className='mt-4'>
+          <InvoiceHeader />
+          <InvoiceFromTo />
+        </div>
       </SheetContent>
     </Sheet>
   );

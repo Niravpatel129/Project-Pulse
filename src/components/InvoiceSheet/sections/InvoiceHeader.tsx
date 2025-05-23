@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export default function InvoiceHeader() {
   return (
     <div>
-      <div className='flex justify-between mt-8'>
+      <div className='flex justify-between mt-12'>
         <>
           <div>
             <div className='relative mb-1'>
@@ -31,7 +31,7 @@ export default function InvoiceHeader() {
                   </div>
                   <div className='relative'>
                     <SeamlessInput
-                      className='!text-[12px] !h-5'
+                      className='!text-[11px] !h-5'
                       defaultValue='INV-0002'
                       name='invoice_number'
                     />
@@ -58,7 +58,7 @@ export default function InvoiceHeader() {
                             'text-primary text-xs font-mono whitespace-nowrap flex h-auto p-0 hover:bg-transparent',
                           )}
                         >
-                          <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[12px] border-none bg-transparent'>
+                          <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
                             23/05/2025
                           </span>
                         </Button>
@@ -94,7 +94,7 @@ export default function InvoiceHeader() {
                           'text-primary text-xs font-mono whitespace-nowrap flex h-auto p-0 hover:bg-transparent',
                         )}
                       >
-                        <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[12px] border-none bg-transparent'>
+                        <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
                           23/06/2025
                         </span>
                       </Button>
@@ -115,7 +115,7 @@ export default function InvoiceHeader() {
         </>
         <div className='relative group'>
           <label htmlFor='logo-upload' className='block h-full'>
-            <div className='h-[95px] w-[95px] bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] hover:cursor-pointer' />
+            <div className='h-[80px] w-[80px] bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] hover:cursor-pointer' />
           </label>
           <input
             id='logo-upload'
