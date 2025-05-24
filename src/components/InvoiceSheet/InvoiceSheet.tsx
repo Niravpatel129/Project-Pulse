@@ -1,3 +1,4 @@
+import { useClients } from '@/hooks/useClients';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -85,6 +86,7 @@ const InvoiceSheet = ({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {
+  const { clients } = useClients();
   const [items, setItems] = useState<InvoiceItem[]>([
     {
       id: uuidv4(),
@@ -220,6 +222,51 @@ const InvoiceSheet = ({
     if (!validateInvoice()) {
       return;
     }
+
+    // Get the selected customer data
+    const selectedCustomerData = clients.find((client) => {
+      return client._id === selectedCustomer;
+    });
+
+    // Prepare invoice data
+    const invoiceData = {
+      customer: {
+        id: selectedCustomer,
+        name: selectedCustomerData?.user.name,
+        email: selectedCustomerData?.user.email,
+      },
+      items: items.map((item) => {
+        return {
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          price: parseFloat(item.price),
+          total: item.quantity * parseFloat(item.price),
+        };
+      }),
+      totals: {
+        subtotal: totals.subtotal,
+        taxAmount: totals.taxAmount,
+        vatAmount: totals.vatAmount,
+        total: totals.total,
+      },
+      settings: {
+        currency: invoiceSettings.currency,
+        dateFormat: invoiceSettings.dateFormat,
+        salesTax: {
+          enabled: invoiceSettings.salesTax === 'enable',
+          rate: taxRate,
+        },
+        vat: {
+          enabled: invoiceSettings.vat === 'enable',
+          rate: vatRate,
+        },
+        decimals: invoiceSettings.decimals,
+      },
+    };
+
+    // Log the invoice data as a single object
+    console.log(JSON.stringify(invoiceData, null, 2));
 
     // Here you would typically make an API call to create the invoice
     // For now, we'll just show a success message
