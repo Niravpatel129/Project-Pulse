@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { newRequest } from '@/utils/newRequest';
 import { Copy, Download } from 'lucide-react';
 import React from 'react';
 
@@ -74,6 +75,11 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
                 variant='outline'
                 size='icon'
                 className='shrink-0 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-150'
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/invoice/${createdInvoiceData._id}`,
+                  );
+                }}
               >
                 <Copy className='h-3 w-3 text-neutral-500' />
               </Button>
@@ -81,6 +87,35 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
                 variant='outline'
                 size='icon'
                 className='shrink-0 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-150'
+                onClick={async () => {
+                  try {
+                    const response = await newRequest.get(
+                      `/invoices2/${createdInvoiceData._id}/download`,
+                      { responseType: 'blob' },
+                    );
+
+                    // Create a blob from the PDF data
+                    const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+
+                    // Create a URL for the blob
+                    const url = window.URL.createObjectURL(pdfBlob);
+
+                    // Create a temporary link element
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `Invoice-${createdInvoiceData.invoiceNumber}.pdf`;
+
+                    // Append to body, click, and remove
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Clean up the URL object
+                    window.URL.revokeObjectURL(url);
+                  } catch (error) {
+                    console.error('Error downloading PDF:', error);
+                  }
+                }}
               >
                 <Download className='h-3 w-3 text-neutral-500' />
               </Button>
