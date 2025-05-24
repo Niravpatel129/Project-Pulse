@@ -51,8 +51,11 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
               <div className='flex justify-between items-baseline'>
                 <span className='text-xs text-neutral-400 uppercase tracking-wide'>Total</span>
                 <span className='text-xl font-medium text-neutral-900 font-mono'>
-                  {createdInvoiceData.settings?.currency || 'CA$'}
-                  {createdInvoiceData.totals?.total?.toLocaleString()}
+                  {createdInvoiceData.settings?.currency || 'CA$'}{' '}
+                  {createdInvoiceData.totals?.total?.toLocaleString(undefined, {
+                    minimumFractionDigits: createdInvoiceData.settings?.decimals === 'yes' ? 2 : 0,
+                    maximumFractionDigits: createdInvoiceData.settings?.decimals === 'yes' ? 2 : 0,
+                  })}
                 </span>
               </div>
             </div>
