@@ -16,9 +16,15 @@ import { FiEdit } from 'react-icons/fi';
 
 interface InvoiceFromToProps {
   onCustomerSelect: (customerId: string) => void;
+  onFromAddressChange: (address: string) => void;
+  onToAddressChange: (address: string) => void;
 }
 
-const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
+const InvoiceFromTo = ({
+  onCustomerSelect,
+  onFromAddressChange,
+  onToAddressChange,
+}: InvoiceFromToProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState('');
   const [open, setOpen] = useState(false);
@@ -26,6 +32,7 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [toContent, setToContent] = useState('');
+  const [isToFocused, setIsToFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toTextareaRef = useRef<HTMLTextAreaElement>(null);
   const { clients } = useClients();
@@ -45,17 +52,6 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
   useEffect(() => {
     adjustHeight(toTextareaRef);
   }, [toContent]);
-
-  const selectedCustomerData = clients.find((client) => {
-    return client._id === selectedCustomer;
-  });
-
-  useEffect(() => {
-    if (selectedCustomerData) {
-      setToContent(`${selectedCustomerData.user.name}\n${selectedCustomerData.user.email}`);
-      onCustomerSelect(selectedCustomerData._id);
-    }
-  }, [selectedCustomerData, onCustomerSelect]);
 
   const handleEditCustomer = (e: React.MouseEvent, client: any) => {
     e.stopPropagation();
@@ -78,7 +74,7 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
                 ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] p-0'
                 : 'p-0 h-auto'
             }`}
-            defaultValue=''
+            value={content}
             name='from_address'
             onFocus={() => {
               return setIsFocused(true);
@@ -88,6 +84,7 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
             }}
             onChange={(e) => {
               setContent(e.target.value);
+              onFromAddressChange(e.target.value);
               adjustHeight(textareaRef);
             }}
           />
@@ -99,7 +96,7 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
           <span className='text-[11px] text-[#878787] font-mono'>To</span>
         </div>
         <div className='space-y-0'>
-          {!selectedCustomer ? (
+          {!selectedCustomer && !isToFocused ? (
             <Popover open={open} onOpenChange={setOpen} modal>
               <PopoverTrigger asChild>
                 <div className='relative'>
@@ -125,6 +122,8 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
                           value={client.user.name}
                           onSelect={() => {
                             setSelectedCustomer(client._id);
+                            setToContent(`${client.user.name}\n${client.user.email}`);
+                            onToAddressChange(`${client.user.name}\n${client.user.email}`);
                             setOpen(false);
                           }}
                           className='!text-[11px] group'
@@ -168,12 +167,26 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
             <div className='relative group'>
               <Textarea
                 ref={toTextareaRef}
-                className='!text-[11px] min-h-[100px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-hidden p-0 h-auto'
+                className={`!text-[11px] min-h-[100px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-hidden ${
+                  !isToFocused && !toContent
+                    ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] p-0'
+                    : 'p-0 h-auto'
+                }`}
                 value={toContent}
+                onFocus={() => {
+                  return setIsToFocused(true);
+                }}
+                onBlur={() => {
+                  return setIsToFocused(false);
+                }}
                 onChange={(e) => {
-                  setToContent(e.target.value);
+                  const newValue = e.target.value;
+                  setToContent(newValue);
+                  onToAddressChange(newValue);
                   adjustHeight(toTextareaRef);
-                  if (!e.target.value.trim()) {
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && toContent === '') {
                     setSelectedCustomer('');
                   }
                 }}
@@ -183,6 +196,7 @@ const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
                 onClick={() => {
                   setToContent('');
                   setSelectedCustomer('');
+                  onToAddressChange('');
                 }}
                 className='absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity text-[#333333] dark:text-[#fff] hover:opacity-80'
               >

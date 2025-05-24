@@ -109,6 +109,8 @@ const InvoiceSheet = ({
     qrCode: 'enable',
   });
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [fromAddress, setFromAddress] = useState<string>('');
+  const [toAddress, setToAddress] = useState<string>('');
 
   const formatNumber = (value: number) => {
     if (invoiceSettings.decimals === 'yes') {
@@ -250,6 +252,8 @@ const InvoiceSheet = ({
         name: selectedCustomerData?.user.name,
         email: selectedCustomerData?.user.email,
       },
+      from: fromAddress,
+      to: toAddress,
       items: items.map((item) => {
         return {
           id: item.id,
@@ -308,7 +312,19 @@ const InvoiceSheet = ({
         </SheetHeader>
         <div className='mt-4 flex-1 px-12'>
           <InvoiceHeader dateFormat={invoiceSettings.dateFormat} />
-          <InvoiceFromTo onCustomerSelect={setSelectedCustomer} />
+          <InvoiceFromTo
+            onCustomerSelect={(id) => {
+              setSelectedCustomer(id);
+              const customer = clients.find((c) => {
+                return c._id === id;
+              });
+              if (customer) {
+                setToAddress(`${customer.user.name}\n${customer.user.email}`);
+              }
+            }}
+            onFromAddressChange={setFromAddress}
+            onToAddressChange={setToAddress}
+          />
           <div className='flex flex-col gap-2 mt-8'>
             {/* Labels */}
             <div className='flex items-center gap-6 h-6'>
