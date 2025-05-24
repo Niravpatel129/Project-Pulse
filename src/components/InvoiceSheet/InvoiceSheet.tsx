@@ -28,7 +28,6 @@ interface InvoiceItem {
 
 interface InvoiceSettings {
   dateFormat: string;
-  invoiceSize: string;
   salesTax: string;
   vat: string;
   currency: string;
@@ -96,14 +95,13 @@ const InvoiceSheet = ({
   const [taxRate, setTaxRate] = useState<number>(13);
   const [vatRate, setVatRate] = useState<number>(20);
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
-    dateFormat: 'MM/DD/YYYY',
-    invoiceSize: 'A4',
+    dateFormat: 'DD/MM/YYYY',
     salesTax: 'enable',
-    vat: 'enable',
-    currency: 'USD',
+    vat: 'disable',
+    currency: 'CAD',
     discount: 'disable',
     attachPdf: 'disable',
-    decimals: 'no',
+    decimals: 'yes',
     qrCode: 'enable',
   });
 

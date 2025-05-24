@@ -4,7 +4,6 @@ import {
   DollarSign,
   Hash,
   Landmark,
-  Maximize2,
   MoreVertical,
   Ticket,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ import {
 
 interface InvoiceSettings {
   dateFormat: string;
-  invoiceSize: string;
   salesTax: string;
   vat: string;
   currency: string;
@@ -90,39 +88,6 @@ const InvoiceSheetMenu = ({ settings, onSettingsChange }: InvoiceSheetMenuProps)
                   }}
                 >
                   DD/MM/YYYY
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Maximize2 className='mr-2 h-4 w-4' />
-              Invoice size
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup
-                value={settings.invoiceSize}
-                onValueChange={(value) => {
-                  return handleSettingChange('invoiceSize', value);
-                }}
-              >
-                <DropdownMenuRadioItem
-                  value='A4'
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleSettingChange('invoiceSize', 'A4');
-                  }}
-                >
-                  A4
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value='Letter'
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleSettingChange('invoiceSize', 'Letter');
-                  }}
-                >
-                  Letter
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
