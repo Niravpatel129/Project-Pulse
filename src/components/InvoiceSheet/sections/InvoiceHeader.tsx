@@ -19,6 +19,8 @@ interface InvoiceHeaderProps {
   onIssueDateChange: (date: Date) => void;
   dueDate: Date;
   onDueDateChange: (date: Date) => void;
+  invoiceTitle: string;
+  onInvoiceTitleChange: (value: string) => void;
 }
 
 export default function InvoiceHeader({
@@ -29,6 +31,8 @@ export default function InvoiceHeader({
   onIssueDateChange,
   dueDate,
   onDueDateChange,
+  invoiceTitle,
+  onInvoiceTitleChange,
 }: InvoiceHeaderProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
@@ -101,11 +105,11 @@ export default function InvoiceHeader({
             <div className='relative mb-1'>
               <SeamlessInput
                 className='!text-[21px] font-medium'
-                value={invoiceNumber}
+                value={invoiceTitle}
                 onChange={(e) => {
-                  return onInvoiceNumberChange(e.target.value);
+                  return onInvoiceTitleChange(e.target.value);
                 }}
-                name='invoice_number'
+                name='invoice_title'
               />
             </div>
             <div className='flex flex-col gap-0.5'>

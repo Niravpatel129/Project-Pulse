@@ -1,4 +1,5 @@
 import { useClients } from '@/hooks/useClients';
+import { useCreateInvoice } from '@/hooks/useCreateInvoice';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
@@ -92,6 +93,7 @@ const InvoiceSheet = ({
 }) => {
   const { clients } = useClients();
   const { data: globalInvoiceSettings } = useInvoiceSettings();
+  const createInvoice = useCreateInvoice();
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
     dateFormat: 'DD/MM/YYYY',
     salesTax: 'enable',
@@ -112,6 +114,7 @@ const InvoiceSheet = ({
       price: '',
     },
   ]);
+  const [invoiceTitle, setInvoiceTitle] = useState<string>('Invoice');
   const [taxRate, setTaxRate] = useState<number>(13);
   const [vatRate, setVatRate] = useState<number>(20);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
@@ -287,16 +290,17 @@ const InvoiceSheet = ({
     const invoiceData = {
       customer: {
         id: selectedCustomer,
-        name: selectedCustomerData?.user.name,
-        email: selectedCustomerData?.user.email,
+        name: selectedCustomerData?.user.name || '',
+        email: selectedCustomerData?.user.email || '',
       },
+      invoiceTitle: invoiceTitle,
+      invoiceNumber: invoiceNumber,
       from: fromAddress,
       to: toAddress,
       issueDate: issueDate,
       dueDate: dueDate,
       items: items.map((item) => {
         return {
-          id: item.id,
           description: item.description,
           quantity: item.quantity,
           price: parseFloat(item.price),
@@ -331,42 +335,20 @@ const InvoiceSheet = ({
       logo: invoiceSettings.logo,
     };
 
-    // Log invoice settings
-    console.log('Invoice Settings:', {
-      currency: invoiceSettings.currency,
-      dateFormat: invoiceSettings.dateFormat,
-      salesTax: {
-        enabled: invoiceSettings.salesTax === 'enable',
-        rate: taxRate,
+    createInvoice.mutate(invoiceData, {
+      onSuccess: () => {
+        toast.success('Invoice created successfully');
+        onOpenChange(false);
       },
-      vat: {
-        enabled: invoiceSettings.vat === 'enable',
-        rate: vatRate,
+      onError: (error: any) => {
+        if (error?.response?.data?.message === 'Invoice number already exists') {
+          toast.error('This invoice number is already in use. Please choose a different number.');
+        } else {
+          toast.error('Failed to create invoice');
+          console.error('Error creating invoice:', error);
+        }
       },
-      discount: {
-        enabled: invoiceSettings.discount === 'enable',
-        amount: discountAmount,
-      },
-      decimals: invoiceSettings.decimals,
-      logo: invoiceSettings.logo,
     });
-
-    // Log invoice data
-    console.log('Invoice Data:', {
-      customer: invoiceData.customer,
-      from: invoiceData.from,
-      to: invoiceData.to,
-      issueDate: invoiceData.issueDate,
-      dueDate: invoiceData.dueDate,
-      items: invoiceData.items,
-      totals: invoiceData.totals,
-      notes: invoiceData.notes,
-    });
-
-    // Here you would typically make an API call to create the invoice
-    // For now, we'll just show a success message
-    toast.success('Invoice created successfully');
-    onOpenChange(false);
   };
 
   return (
@@ -393,6 +375,10 @@ const InvoiceSheet = ({
             onIssueDateChange={setIssueDate}
             dueDate={dueDate}
             onDueDateChange={setDueDate}
+            invoiceTitle={invoiceTitle}
+            onInvoiceTitleChange={(title) => {
+              return setInvoiceTitle(title);
+            }}
           />
           <InvoiceFromTo
             onCustomerSelect={(id) => {
