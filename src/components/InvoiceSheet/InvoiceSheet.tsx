@@ -374,10 +374,12 @@ const InvoiceSheet = ({
     };
 
     createInvoice.mutate(invoiceData, {
-      onSuccess: (data) => {
+      onSuccess: (response) => {
         toast.success('Invoice created successfully');
         setInvoiceCreated(true);
-        setCreatedInvoiceData({ ...invoiceData, ...data });
+        // Access the invoice data from the nested response structure
+        const invoiceData = response.data.invoice;
+        setCreatedInvoiceData(invoiceData);
         // Do NOT close the sheet here
       },
       onError: (error: any) => {
@@ -398,19 +400,20 @@ const InvoiceSheet = ({
   };
 
   const handleViewInvoice = () => {
+    onOpenChange(false);
+
     const id = createdInvoiceData?._id || createdInvoiceData?.id;
     if (id) {
       router.push(`/dashboard/invoices?inv=${id}`);
+      onOpenChange(false);
     }
   };
 
   const resetForm = () => {
-    // Reset form fields but preserve settings
-    setFromAddress('');
+    // Reset form fields but preserve settings, from address, and invoice number
     setInvoiceTitle('Invoice');
     setSelectedCustomer('');
     setToAddress('');
-    setInvoiceNumber('INV-0001');
     setIssueDate(new Date());
     setDueDate(() => {
       const date = new Date();
@@ -459,8 +462,14 @@ const InvoiceSheet = ({
       open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) {
-          resetForm();
+          // Only reset the form if we're not in the invoice created state
+          if (!invoiceCreated) {
+            resetForm();
+          }
         }
+        // Always reset invoice created states when opening or closing
+        setInvoiceCreated(false);
+        setCreatedInvoiceData(null);
         onOpenChange(isOpen);
       }}
     >
