@@ -1,6 +1,7 @@
 import { useClients } from '@/hooks/useClients';
 import { useCreateInvoice } from '@/hooks/useCreateInvoice';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useLastInvoiceSettings } from '@/hooks/useLastInvoiceSettings';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -93,18 +94,33 @@ const InvoiceSheet = ({
 }) => {
   const { clients } = useClients();
   const { data: globalInvoiceSettings } = useInvoiceSettings();
+  const { settings: lastInvoiceSettings } = useLastInvoiceSettings();
   const createInvoice = useCreateInvoice();
+
+  console.log('lastInvoiceSettings in component:', lastInvoiceSettings);
+
+  const [fromAddress, setFromAddress] = useState<string>('');
+
+  // Update from address when lastInvoiceSettings loads
+  useEffect(() => {
+    console.log('lastInvoiceSettings in useEffect:', lastInvoiceSettings);
+    if (lastInvoiceSettings?.from) {
+      console.log('Setting fromAddress to:', lastInvoiceSettings.from);
+      setFromAddress(lastInvoiceSettings.from);
+    }
+  }, [lastInvoiceSettings]);
+
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
-    dateFormat: 'DD/MM/YYYY',
-    salesTax: 'enable',
-    vat: 'disable',
-    currency: 'CAD',
-    discount: 'disable',
+    dateFormat: lastInvoiceSettings?.dateFormat || 'DD/MM/YYYY',
+    salesTax: lastInvoiceSettings?.salesTax?.enabled ? 'enable' : 'disable',
+    vat: lastInvoiceSettings?.vat?.enabled ? 'enable' : 'disable',
+    currency: lastInvoiceSettings?.currency || 'CAD',
+    discount: lastInvoiceSettings?.discount?.enabled ? 'enable' : 'disable',
     attachPdf: 'disable',
-    decimals: 'yes',
+    decimals: lastInvoiceSettings?.decimals || 'yes',
     qrCode: 'enable',
-    notes: '',
-    logo: globalInvoiceSettings?.logo || '',
+    notes: lastInvoiceSettings?.notes || '',
+    logo: lastInvoiceSettings?.logo || globalInvoiceSettings?.logo || '',
   });
   const [items, setItems] = useState<InvoiceItem[]>([
     {
@@ -115,13 +131,16 @@ const InvoiceSheet = ({
     },
   ]);
   const [invoiceTitle, setInvoiceTitle] = useState<string>('Invoice');
-  const [taxRate, setTaxRate] = useState<number>(13);
-  const [vatRate, setVatRate] = useState<number>(20);
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [taxRate, setTaxRate] = useState<number>(lastInvoiceSettings?.salesTax?.rate || 13);
+  const [vatRate, setVatRate] = useState<number>(lastInvoiceSettings?.vat?.rate || 20);
+  const [discountAmount, setDiscountAmount] = useState<number>(
+    lastInvoiceSettings?.discount?.amount || 0,
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [fromAddress, setFromAddress] = useState<string>('');
   const [toAddress, setToAddress] = useState<string>('');
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('INV-0001');
+  const [invoiceNumber, setInvoiceNumber] = useState<string>(
+    lastInvoiceSettings?.newInvoiceNumber || 'INV-0001',
+  );
   const [issueDate, setIssueDate] = useState<Date>(() => {
     return new Date();
   });
