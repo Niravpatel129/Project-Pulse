@@ -8,6 +8,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
+import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet';
 import { VisuallyHidden } from '../ui/visually-hidden';
@@ -104,6 +105,7 @@ const InvoiceSheet = ({
     decimals: 'yes',
     qrCode: 'enable',
   });
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
 
   const formatNumber = (value: number) => {
     if (invoiceSettings.decimals === 'yes') {
@@ -179,6 +181,52 @@ const InvoiceSheet = ({
     setVatRate(newVatRate);
   };
 
+  const validateInvoice = () => {
+    // Check if a customer is selected
+    if (!selectedCustomer) {
+      toast.error('Please select a customer for the invoice');
+      return false;
+    }
+
+    // Check if there are any items
+    if (items.length === 0) {
+      toast.error('Please add at least one item to the invoice');
+      return false;
+    }
+
+    // Check if all items have required fields
+    const invalidItems = items.filter((item) => {
+      return !item.description || !item.price;
+    });
+    if (invalidItems.length > 0) {
+      toast.error('Please fill in all required fields for each item');
+      return false;
+    }
+
+    // Check if any items have invalid prices
+    const invalidPrices = items.filter((item) => {
+      const price = parseFloat(item.price);
+      return isNaN(price) || price < 0;
+    });
+    if (invalidPrices.length > 0) {
+      toast.error('Please enter valid prices for all items');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCreateInvoice = () => {
+    if (!validateInvoice()) {
+      return;
+    }
+
+    // Here you would typically make an API call to create the invoice
+    // For now, we'll just show a success message
+    toast.success('Invoice created successfully');
+    onOpenChange(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -193,7 +241,7 @@ const InvoiceSheet = ({
         </SheetHeader>
         <div className='mt-4 flex-1 px-12'>
           <InvoiceHeader dateFormat={invoiceSettings.dateFormat} />
-          <InvoiceFromTo />
+          <InvoiceFromTo onCustomerSelect={setSelectedCustomer} />
           <div className='flex flex-col gap-2 mt-8'>
             {/* Labels */}
             <div className='flex items-center gap-6 h-6'>
@@ -255,7 +303,11 @@ const InvoiceSheet = ({
           <InvoiceNotes />
         </div>
         <SheetFooter className='sticky bottom-0 bg-background pt-4 border-none'>
-          <InvoiceSheetFooter />
+          <InvoiceSheetFooter
+            items={items}
+            onValidate={validateInvoice}
+            onCreate={handleCreateInvoice}
+          />
         </SheetFooter>
       </SheetContent>
     </Sheet>

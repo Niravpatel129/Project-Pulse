@@ -14,7 +14,11 @@ import { Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { FiEdit } from 'react-icons/fi';
 
-const InvoiceFromTo = () => {
+interface InvoiceFromToProps {
+  onCustomerSelect: (customerId: string) => void;
+}
+
+const InvoiceFromTo = ({ onCustomerSelect }: InvoiceFromToProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState('');
   const [open, setOpen] = useState(false);
@@ -49,8 +53,9 @@ const InvoiceFromTo = () => {
   useEffect(() => {
     if (selectedCustomerData) {
       setToContent(`${selectedCustomerData.user.name}\n${selectedCustomerData.user.email}`);
+      onCustomerSelect(selectedCustomerData._id);
     }
-  }, [selectedCustomerData]);
+  }, [selectedCustomerData, onCustomerSelect]);
 
   const handleEditCustomer = (e: React.MouseEvent, client: any) => {
     e.stopPropagation();
