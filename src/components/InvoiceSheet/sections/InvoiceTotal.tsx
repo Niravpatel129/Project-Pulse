@@ -141,7 +141,7 @@ const InvoiceTotal = ({
   return (
     <div className='w-full justify-end flex mt-8'>
       <div className='w-[300px] font-mono text-[#878787]'>
-        <div className='flex justify-between mb-3'>
+        <div className='flex justify-between mb-2'>
           <span className='text-[11px]'>Subtotal</span>
           <span className='text-[11px]'>
             {currencySymbol}
@@ -149,7 +149,7 @@ const InvoiceTotal = ({
           </span>
         </div>
         {vat === 'enable' && (
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-center mb-2'>
             <div className='flex items-center'>
               <span
                 contentEditable
@@ -172,7 +172,7 @@ const InvoiceTotal = ({
                 type='number'
                 value={vatRate}
                 onChange={handleVatChange}
-                className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
+                className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none h-4'
                 min='0'
                 max={MAX_TAX_RATE}
                 style={{ width: 'auto' }}
@@ -209,7 +209,7 @@ const InvoiceTotal = ({
                 type='number'
                 value={taxRate}
                 onChange={handleTaxChange}
-                className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none'
+                className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none h-4'
                 min='0'
                 max={MAX_TAX_RATE}
                 style={{ width: 'auto' }}
