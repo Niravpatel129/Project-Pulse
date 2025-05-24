@@ -274,8 +274,6 @@ const InvoiceSheet = ({
   };
 
   const handleCreateInvoice = () => {
-    console.log('Creating invoice with selected customer:', selectedCustomer);
-    console.log('Available clients:', clients);
     if (!validateInvoice()) {
       return;
     }
@@ -294,6 +292,8 @@ const InvoiceSheet = ({
       },
       from: fromAddress,
       to: toAddress,
+      issueDate: issueDate,
+      dueDate: dueDate,
       items: items.map((item) => {
         return {
           id: item.id,
@@ -331,8 +331,37 @@ const InvoiceSheet = ({
       logo: invoiceSettings.logo,
     };
 
-    // Log the invoice data as a single object
-    console.log(JSON.stringify(invoiceData, null, 2));
+    // Log invoice settings
+    console.log('Invoice Settings:', {
+      currency: invoiceSettings.currency,
+      dateFormat: invoiceSettings.dateFormat,
+      salesTax: {
+        enabled: invoiceSettings.salesTax === 'enable',
+        rate: taxRate,
+      },
+      vat: {
+        enabled: invoiceSettings.vat === 'enable',
+        rate: vatRate,
+      },
+      discount: {
+        enabled: invoiceSettings.discount === 'enable',
+        amount: discountAmount,
+      },
+      decimals: invoiceSettings.decimals,
+      logo: invoiceSettings.logo,
+    });
+
+    // Log invoice data
+    console.log('Invoice Data:', {
+      customer: invoiceData.customer,
+      from: invoiceData.from,
+      to: invoiceData.to,
+      issueDate: invoiceData.issueDate,
+      dueDate: invoiceData.dueDate,
+      items: invoiceData.items,
+      totals: invoiceData.totals,
+      notes: invoiceData.notes,
+    });
 
     // Here you would typically make an API call to create the invoice
     // For now, we'll just show a success message
