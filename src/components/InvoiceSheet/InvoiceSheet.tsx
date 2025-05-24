@@ -12,12 +12,14 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet';
 import { VisuallyHidden } from '../ui/visually-hidden';
+import InvoiceCreatedConfirmation from './InvoiceCreatedConfirmation';
 import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 import InvoiceItemsRow from './sections/InvoiceItemsRow';
@@ -99,6 +101,7 @@ const InvoiceSheet = ({
   const { settings: lastInvoiceSettings, isLoading: isLoadingLastSettings } =
     useLastInvoiceSettings();
   const createInvoice = useCreateInvoice();
+  const router = useRouter();
 
   const [fromAddress, setFromAddress] = useState<string>('');
 
@@ -308,6 +311,9 @@ const InvoiceSheet = ({
     return true;
   };
 
+  const [invoiceCreated, setInvoiceCreated] = useState(false);
+  const [createdInvoiceData, setCreatedInvoiceData] = useState<any>(null);
+
   const handleCreateInvoice = () => {
     if (!validateInvoice()) {
       return;
@@ -368,10 +374,11 @@ const InvoiceSheet = ({
     };
 
     createInvoice.mutate(invoiceData, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success('Invoice created successfully');
-        resetForm();
-        onOpenChange(false);
+        setInvoiceCreated(true);
+        setCreatedInvoiceData({ ...invoiceData, ...data });
+        // Do NOT close the sheet here
       },
       onError: (error: any) => {
         if (error?.response?.data?.message === 'Invoice number already exists') {
@@ -382,6 +389,19 @@ const InvoiceSheet = ({
         }
       },
     });
+  };
+
+  const handleCreateAnother = () => {
+    setInvoiceCreated(false);
+    setCreatedInvoiceData(null);
+    resetForm();
+  };
+
+  const handleViewInvoice = () => {
+    const id = createdInvoiceData?._id || createdInvoiceData?.id;
+    if (id) {
+      router.push(`/dashboard/invoices?inv=${id}`);
+    }
   };
 
   const resetForm = () => {
@@ -448,123 +468,135 @@ const InvoiceSheet = ({
         side='right'
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide flex flex-col p-0'
       >
-        <VisuallyHidden>
-          <SheetTitle className='sr-only'>Invoice Editor</SheetTitle>
-        </VisuallyHidden>
-        <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
-          <InvoiceSheetMenu
-            settings={invoiceSettings}
-            onSettingsChange={handleInvoiceSettingsChange}
+        {invoiceCreated && createdInvoiceData ? (
+          <InvoiceCreatedConfirmation
+            createdInvoiceData={createdInvoiceData}
+            onViewInvoice={handleViewInvoice}
+            onCreateAnother={handleCreateAnother}
           />
-        </SheetHeader>
-        <div className='mt-4 flex-1 px-12'>
-          <InvoiceHeader
-            dateFormat={invoiceSettings.dateFormat}
-            invoiceNumber={invoiceNumber}
-            onInvoiceNumberChange={setInvoiceNumber}
-            onInvoiceNumberBlur={handleInvoiceNumberBlur}
-            issueDate={issueDate}
-            onIssueDateChange={setIssueDate}
-            dueDate={dueDate}
-            onDueDateChange={setDueDate}
-            invoiceTitle={invoiceTitle}
-            onInvoiceTitleChange={(title) => {
-              return setInvoiceTitle(title);
-            }}
-          />
-          <InvoiceFromTo
-            onCustomerSelect={(id) => {
-              setSelectedCustomer(id);
-              const customer = clients.find((c) => {
-                return c._id === id;
-              });
-              if (customer) {
-                setToAddress(`${customer.user.name}\n${customer.user.email}`);
-              }
-            }}
-            onFromAddressChange={setFromAddress}
-            fromAddress={fromAddress}
-            onToAddressChange={setToAddress}
-          />
-          <div className='flex flex-col gap-2 mt-8'>
-            {/* Labels */}
-            <div className='flex items-center gap-6 h-6'>
-              <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
-              <div className='w-[60px] text-center text-[11px] text-muted-foreground'>Quantity</div>
-              <div className='w-[80px] text-[11px] text-muted-foreground'>Price</div>
-              <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
+        ) : (
+          <>
+            <VisuallyHidden>
+              <SheetTitle className='sr-only'>Invoice Editor</SheetTitle>
+            </VisuallyHidden>
+            <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
+              <InvoiceSheetMenu
+                settings={invoiceSettings}
+                onSettingsChange={handleInvoiceSettingsChange}
+              />
+            </SheetHeader>
+            <div className='mt-4 flex-1 px-12'>
+              <InvoiceHeader
+                dateFormat={invoiceSettings.dateFormat}
+                invoiceNumber={invoiceNumber}
+                onInvoiceNumberChange={setInvoiceNumber}
+                onInvoiceNumberBlur={handleInvoiceNumberBlur}
+                issueDate={issueDate}
+                onIssueDateChange={setIssueDate}
+                dueDate={dueDate}
+                onDueDateChange={setDueDate}
+                invoiceTitle={invoiceTitle}
+                onInvoiceTitleChange={(title) => {
+                  return setInvoiceTitle(title);
+                }}
+              />
+              <InvoiceFromTo
+                onCustomerSelect={(id) => {
+                  setSelectedCustomer(id);
+                  const customer = clients.find((c) => {
+                    return c._id === id;
+                  });
+                  if (customer) {
+                    setToAddress(`${customer.user.name}\n${customer.user.email}`);
+                  }
+                }}
+                onFromAddressChange={setFromAddress}
+                fromAddress={fromAddress}
+                onToAddressChange={setToAddress}
+              />
+              <div className='flex flex-col gap-2 mt-8'>
+                {/* Labels */}
+                <div className='flex items-center gap-6 h-6'>
+                  <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
+                  <div className='w-[60px] text-center text-[11px] text-muted-foreground'>
+                    Quantity
+                  </div>
+                  <div className='w-[80px] text-[11px] text-muted-foreground'>Price</div>
+                  <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
+                </div>
+                {/* Items */}
+                <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext
+                    items={items.map((item) => {
+                      return item.id;
+                    })}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {items.map((item, index) => {
+                      return (
+                        <SortableInvoiceItem
+                          key={item.id}
+                          item={item}
+                          index={index}
+                          onUpdate={handleUpdateItem}
+                          onDelete={(id) => {
+                            setItems(
+                              items.filter((item) => {
+                                return item.id !== id;
+                              }),
+                            );
+                          }}
+                          currency={invoiceSettings.currency}
+                          formatNumber={formatNumber}
+                        />
+                      );
+                    })}
+                  </SortableContext>
+                </DndContext>
+                {/* Add Item Button */}
+                <div
+                  className='mt-1 py-1 flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer hover:text-primary'
+                  onClick={handleAddItem}
+                >
+                  <FiPlus /> Add Item
+                </div>
+              </div>
+              <InvoiceTotal
+                subtotal={totals.subtotal}
+                total={totals.total}
+                taxRate={taxRate}
+                onTaxRateChange={handleTaxRateChange}
+                vatRate={vatRate}
+                onVatRateChange={handleVatRateChange}
+                currency={invoiceSettings.currency}
+                formatNumber={formatNumber}
+                decimals={invoiceSettings.decimals}
+                salesTax={invoiceSettings.salesTax}
+                vat={invoiceSettings.vat}
+                discount={invoiceSettings.discount}
+                discountAmount={discountAmount}
+                onDiscountAmountChange={handleDiscountAmountChange}
+              />
+              <InvoiceNotes
+                notes={invoiceSettings.notes}
+                teamNotes={invoiceSettings.teamNotes}
+                onNotesChange={(notes) => {
+                  return handleInvoiceSettingsChange({ notes });
+                }}
+                onTeamNotesChange={(teamNotes) => {
+                  return handleInvoiceSettingsChange({ teamNotes });
+                }}
+              />
             </div>
-            {/* Items */}
-            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext
-                items={items.map((item) => {
-                  return item.id;
-                })}
-                strategy={verticalListSortingStrategy}
-              >
-                {items.map((item, index) => {
-                  return (
-                    <SortableInvoiceItem
-                      key={item.id}
-                      item={item}
-                      index={index}
-                      onUpdate={handleUpdateItem}
-                      onDelete={(id) => {
-                        setItems(
-                          items.filter((item) => {
-                            return item.id !== id;
-                          }),
-                        );
-                      }}
-                      currency={invoiceSettings.currency}
-                      formatNumber={formatNumber}
-                    />
-                  );
-                })}
-              </SortableContext>
-            </DndContext>
-            {/* Add Item Button */}
-            <div
-              className='mt-1 py-1 flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer hover:text-primary'
-              onClick={handleAddItem}
-            >
-              <FiPlus /> Add Item
-            </div>
-          </div>
-          <InvoiceTotal
-            subtotal={totals.subtotal}
-            total={totals.total}
-            taxRate={taxRate}
-            onTaxRateChange={handleTaxRateChange}
-            vatRate={vatRate}
-            onVatRateChange={handleVatRateChange}
-            currency={invoiceSettings.currency}
-            formatNumber={formatNumber}
-            decimals={invoiceSettings.decimals}
-            salesTax={invoiceSettings.salesTax}
-            vat={invoiceSettings.vat}
-            discount={invoiceSettings.discount}
-            discountAmount={discountAmount}
-            onDiscountAmountChange={handleDiscountAmountChange}
-          />
-          <InvoiceNotes
-            notes={invoiceSettings.notes}
-            teamNotes={invoiceSettings.teamNotes}
-            onNotesChange={(notes) => {
-              return handleInvoiceSettingsChange({ notes });
-            }}
-            onTeamNotesChange={(teamNotes) => {
-              return handleInvoiceSettingsChange({ teamNotes });
-            }}
-          />
-        </div>
-        <SheetFooter className='sticky bottom-0 bg-background pt-4 border-none'>
-          <InvoiceSheetFooter
-            items={items}
-            onValidate={validateInvoice}
-            onCreate={handleCreateInvoice}
-          />
-        </SheetFooter>
+            <SheetFooter className='sticky bottom-0 bg-background pt-4 border-none'>
+              <InvoiceSheetFooter
+                items={items}
+                onValidate={validateInvoice}
+                onCreate={handleCreateInvoice}
+              />
+            </SheetFooter>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );
