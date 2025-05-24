@@ -121,9 +121,11 @@ const InvoiceFromTo = ({
                           key={client._id}
                           value={client.user.name}
                           onSelect={() => {
+                            console.log('Customer selected:', client._id);
                             setSelectedCustomer(client._id);
                             setToContent(`${client.user.name}\n${client.user.email}`);
                             onToAddressChange(`${client.user.name}\n${client.user.email}`);
+                            onCustomerSelect(client._id);
                             setOpen(false);
                           }}
                           className='!text-[11px] group'

@@ -1,4 +1,5 @@
 import { useClients } from '@/hooks/useClients';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -7,7 +8,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,6 +38,9 @@ interface InvoiceSettings {
   attachPdf: string;
   decimals: 'yes' | 'no';
   qrCode: string;
+  notes?: string;
+  teamNotes?: string;
+  logo?: string;
 }
 
 const SortableInvoiceItem = ({
@@ -87,6 +91,20 @@ const InvoiceSheet = ({
   onOpenChange: (open: boolean) => void;
 }) => {
   const { clients } = useClients();
+  const { data: globalInvoiceSettings } = useInvoiceSettings();
+  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
+    dateFormat: 'DD/MM/YYYY',
+    salesTax: 'enable',
+    vat: 'disable',
+    currency: 'CAD',
+    discount: 'disable',
+    attachPdf: 'disable',
+    decimals: 'yes',
+    qrCode: 'enable',
+    notes: '',
+    teamNotes: '',
+    logo: globalInvoiceSettings?.logo || '',
+  });
   const [items, setItems] = useState<InvoiceItem[]>([
     {
       id: uuidv4(),
@@ -98,16 +116,6 @@ const InvoiceSheet = ({
   const [taxRate, setTaxRate] = useState<number>(13);
   const [vatRate, setVatRate] = useState<number>(20);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
-    dateFormat: 'DD/MM/YYYY',
-    salesTax: 'enable',
-    vat: 'disable',
-    currency: 'CAD',
-    discount: 'disable',
-    attachPdf: 'disable',
-    decimals: 'yes',
-    qrCode: 'enable',
-  });
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [fromAddress, setFromAddress] = useState<string>('');
   const [toAddress, setToAddress] = useState<string>('');
@@ -120,6 +128,18 @@ const InvoiceSheet = ({
     date.setDate(date.getDate() + 30);
     return date;
   });
+
+  // Update local settings when global settings change
+  useEffect(() => {
+    if (globalInvoiceSettings?.logo) {
+      setInvoiceSettings((prev) => {
+        return {
+          ...prev,
+          logo: globalInvoiceSettings.logo,
+        };
+      });
+    }
+  }, [globalInvoiceSettings?.logo]);
 
   const formatNumber = (value: number) => {
     if (invoiceSettings.decimals === 'yes') {
@@ -209,8 +229,20 @@ const InvoiceSheet = ({
     setDiscountAmount(amount);
   };
 
+  const handleInvoiceSettingsChange = (newSettings: Partial<InvoiceSettings>) => {
+    setItems((prev) => {
+      return prev.map((item) => {
+        return {
+          ...item,
+          ...newSettings,
+        };
+      });
+    });
+  };
+
   const validateInvoice = () => {
     // Check if a customer is selected
+    console.log('Selected customer:', selectedCustomer);
     if (!selectedCustomer) {
       toast.error('Please select a customer for the invoice');
       return false;
@@ -245,6 +277,8 @@ const InvoiceSheet = ({
   };
 
   const handleCreateInvoice = () => {
+    console.log('Creating invoice with selected customer:', selectedCustomer);
+    console.log('Available clients:', clients);
     if (!validateInvoice()) {
       return;
     }
@@ -296,6 +330,8 @@ const InvoiceSheet = ({
         },
         decimals: invoiceSettings.decimals,
       },
+      notes: invoiceSettings.notes,
+      logo: invoiceSettings.logo,
     };
 
     // Log the invoice data as a single object
@@ -317,7 +353,10 @@ const InvoiceSheet = ({
           <SheetTitle className='sr-only'>Invoice Editor</SheetTitle>
         </VisuallyHidden>
         <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
-          <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
+          <InvoiceSheetMenu
+            settings={invoiceSettings}
+            onSettingsChange={handleInvoiceSettingsChange}
+          />
         </SheetHeader>
         <div className='mt-4 flex-1 px-12'>
           <InvoiceHeader
@@ -403,7 +442,16 @@ const InvoiceSheet = ({
             discountAmount={discountAmount}
             onDiscountAmountChange={handleDiscountAmountChange}
           />
-          <InvoiceNotes />
+          <InvoiceNotes
+            notes={invoiceSettings.notes}
+            teamNotes={invoiceSettings.teamNotes}
+            onNotesChange={(notes) => {
+              return handleInvoiceSettingsChange({ notes });
+            }}
+            onTeamNotesChange={(teamNotes) => {
+              return handleInvoiceSettingsChange({ teamNotes });
+            }}
+          />
         </div>
         <SheetFooter className='sticky bottom-0 bg-background pt-4 border-none'>
           <InvoiceSheetFooter
