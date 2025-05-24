@@ -48,6 +48,9 @@ interface InvoiceTotalProps {
   decimals: 'yes' | 'no';
   salesTax: string;
   vat: string;
+  discount: string;
+  discountAmount: number;
+  onDiscountAmountChange: (amount: number) => void;
 }
 
 const InvoiceTotal = ({
@@ -66,6 +69,9 @@ const InvoiceTotal = ({
   decimals,
   salesTax,
   vat,
+  discount,
+  discountAmount,
+  onDiscountAmountChange,
 }: InvoiceTotalProps) => {
   const taxAmount = (subtotal * taxRate) / 100;
   const vatAmount = (subtotal * vatRate) / 100;
@@ -130,6 +136,22 @@ const InvoiceTotal = ({
     }
   };
 
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    if (value === '') {
+      onDiscountAmountChange(0);
+    } else {
+      const cleanValue = value.replace(/^0+/, '') || '0';
+      const numValue = Number(cleanValue);
+
+      if (!isNaN(numValue)) {
+        e.target.value = cleanValue;
+        onDiscountAmountChange(numValue);
+      }
+    }
+  };
+
   const handleTaxLabelChange = (e: React.FormEvent<HTMLSpanElement>) => {
     onTaxLabelChange(e.currentTarget.textContent || '');
   };
@@ -148,6 +170,20 @@ const InvoiceTotal = ({
             {formatNumber(subtotal)}
           </span>
         </div>
+        {discount === 'enable' && (
+          <div className='flex justify-between items-center mb-2'>
+            <span className='text-[11px]'>Discount</span>
+            <div className='flex items-center gap-1'>
+              <Input
+                type='number'
+                value={discountAmount}
+                onChange={handleDiscountChange}
+                className='min-w-0 w-[60px] !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-right appearance-none h-4'
+                min='0'
+              />
+            </div>
+          </div>
+        )}
         {vat === 'enable' && (
           <div className='flex justify-between items-center mb-2'>
             <div className='flex items-center'>

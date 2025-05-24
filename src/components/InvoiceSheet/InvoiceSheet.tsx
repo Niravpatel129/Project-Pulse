@@ -97,6 +97,7 @@ const InvoiceSheet = ({
   ]);
   const [taxRate, setTaxRate] = useState<number>(13);
   const [vatRate, setVatRate] = useState<number>(20);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
     dateFormat: 'DD/MM/YYYY',
     salesTax: 'enable',
@@ -165,15 +166,25 @@ const InvoiceSheet = ({
 
     const taxAmount = invoiceSettings.salesTax === 'enable' ? (subtotal * taxRate) / 100 : 0;
     const vatAmount = invoiceSettings.vat === 'enable' ? (subtotal * vatRate) / 100 : 0;
-    const total = subtotal + taxAmount + vatAmount;
+    const discount = invoiceSettings.discount === 'enable' ? discountAmount : 0;
+    const total = subtotal + taxAmount + vatAmount - discount;
 
     return {
       subtotal,
       taxAmount,
       vatAmount,
+      discount,
       total,
     };
-  }, [items, taxRate, vatRate, invoiceSettings.salesTax, invoiceSettings.vat]);
+  }, [
+    items,
+    taxRate,
+    vatRate,
+    invoiceSettings.salesTax,
+    invoiceSettings.vat,
+    invoiceSettings.discount,
+    discountAmount,
+  ]);
 
   const handleTaxRateChange = (newTaxRate: number) => {
     setTaxRate(newTaxRate);
@@ -181,6 +192,10 @@ const InvoiceSheet = ({
 
   const handleVatRateChange = (newVatRate: number) => {
     setVatRate(newVatRate);
+  };
+
+  const handleDiscountAmountChange = (amount: number) => {
+    setDiscountAmount(amount);
   };
 
   const validateInvoice = () => {
@@ -248,6 +263,7 @@ const InvoiceSheet = ({
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
         vatAmount: totals.vatAmount,
+        discount: totals.discount,
         total: totals.total,
       },
       settings: {
@@ -260,6 +276,10 @@ const InvoiceSheet = ({
         vat: {
           enabled: invoiceSettings.vat === 'enable',
           rate: vatRate,
+        },
+        discount: {
+          enabled: invoiceSettings.discount === 'enable',
+          amount: discountAmount,
         },
         decimals: invoiceSettings.decimals,
       },
@@ -346,6 +366,9 @@ const InvoiceSheet = ({
             decimals={invoiceSettings.decimals}
             salesTax={invoiceSettings.salesTax}
             vat={invoiceSettings.vat}
+            discount={invoiceSettings.discount}
+            discountAmount={discountAmount}
+            onDiscountAmountChange={handleDiscountAmountChange}
           />
           <InvoiceNotes />
         </div>
