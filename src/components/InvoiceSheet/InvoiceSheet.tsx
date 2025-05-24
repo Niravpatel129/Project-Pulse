@@ -102,7 +102,6 @@ const InvoiceSheet = ({
     decimals: 'yes',
     qrCode: 'enable',
     notes: '',
-    teamNotes: '',
     logo: globalInvoiceSettings?.logo || '',
   });
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -230,13 +229,11 @@ const InvoiceSheet = ({
   };
 
   const handleInvoiceSettingsChange = (newSettings: Partial<InvoiceSettings>) => {
-    setItems((prev) => {
-      return prev.map((item) => {
-        return {
-          ...item,
-          ...newSettings,
-        };
-      });
+    setInvoiceSettings((prev) => {
+      return {
+        ...prev,
+        ...newSettings,
+      };
     });
   };
 
