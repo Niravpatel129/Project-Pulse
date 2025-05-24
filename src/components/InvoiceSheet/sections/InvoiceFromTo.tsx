@@ -18,15 +18,17 @@ interface InvoiceFromToProps {
   onCustomerSelect: (customerId: string) => void;
   onFromAddressChange: (address: string) => void;
   onToAddressChange: (address: string) => void;
+  fromAddress: string;
 }
 
 const InvoiceFromTo = ({
   onCustomerSelect,
   onFromAddressChange,
   onToAddressChange,
+  fromAddress,
 }: InvoiceFromToProps) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(fromAddress);
   const [open, setOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
