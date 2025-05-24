@@ -2,6 +2,7 @@ import { useClients } from '@/hooks/useClients';
 import { useCreateInvoice } from '@/hooks/useCreateInvoice';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useLastInvoiceSettings } from '@/hooks/useLastInvoiceSettings';
+import { newRequest } from '@/utils/newRequest';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -10,6 +11,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { toast } from 'sonner';
@@ -368,6 +370,7 @@ const InvoiceSheet = ({
     createInvoice.mutate(invoiceData, {
       onSuccess: () => {
         toast.success('Invoice created successfully');
+        resetForm();
         onOpenChange(false);
       },
       onError: (error: any) => {
@@ -381,8 +384,66 @@ const InvoiceSheet = ({
     });
   };
 
+  const resetForm = () => {
+    // Reset form fields but preserve settings
+    setFromAddress('');
+    setInvoiceTitle('Invoice');
+    setSelectedCustomer('');
+    setToAddress('');
+    setInvoiceNumber('INV-0001');
+    setIssueDate(new Date());
+    setDueDate(() => {
+      const date = new Date();
+      date.setDate(date.getDate() + 30);
+      return date;
+    });
+    setItems([
+      {
+        id: uuidv4(),
+        description: '',
+        quantity: 1,
+        price: '',
+      },
+    ]);
+
+    // Keep the current settings but reset tax, vat, and discount values
+    setTaxRate(13);
+    setVatRate(20);
+    setDiscountAmount(0);
+  };
+
+  const { data: invoiceNumberValidation, refetch: validateInvoiceNumber } = useQuery({
+    queryKey: ['validateInvoiceNumber', invoiceNumber],
+    queryFn: async () => {
+      const response = await newRequest.get(`/validate-number/${invoiceNumber}`);
+      return response.data;
+    },
+    enabled: false, // Don't run automatically
+  });
+
+  const handleInvoiceNumberBlur = async () => {
+    if (invoiceNumber) {
+      try {
+        await validateInvoiceNumber();
+        if (invoiceNumberValidation?.exists) {
+          toast.error('This invoice number is already in use. Please choose a different number.');
+        }
+      } catch (error) {
+        console.error('Error validating invoice number:', error);
+      }
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          resetForm();
+        }
+        onOpenChange(isOpen);
+      }}
+    >
       <SheetContent
         side='right'
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide flex flex-col p-0'
@@ -401,6 +462,7 @@ const InvoiceSheet = ({
             dateFormat={invoiceSettings.dateFormat}
             invoiceNumber={invoiceNumber}
             onInvoiceNumberChange={setInvoiceNumber}
+            onInvoiceNumberBlur={handleInvoiceNumberBlur}
             issueDate={issueDate}
             onIssueDateChange={setIssueDate}
             dueDate={dueDate}

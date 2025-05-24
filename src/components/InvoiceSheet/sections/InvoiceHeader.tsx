@@ -15,6 +15,7 @@ interface InvoiceHeaderProps {
   dateFormat?: string;
   invoiceNumber: string;
   onInvoiceNumberChange: (value: string) => void;
+  onInvoiceNumberBlur?: () => void;
   issueDate: Date;
   onIssueDateChange: (date: Date) => void;
   dueDate: Date;
@@ -27,6 +28,7 @@ export default function InvoiceHeader({
   dateFormat = 'MM/dd/yyyy',
   invoiceNumber,
   onInvoiceNumberChange,
+  onInvoiceNumberBlur,
   issueDate,
   onIssueDateChange,
   dueDate,
@@ -131,6 +133,7 @@ export default function InvoiceHeader({
                       onChange={(e) => {
                         return onInvoiceNumberChange(e.target.value);
                       }}
+                      onBlur={onInvoiceNumberBlur}
                       name='invoice_number'
                     />
                   </div>
