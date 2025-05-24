@@ -9,7 +9,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
-import { Sheet, SheetContent, SheetFooter, SheetHeader } from '../ui/sheet';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet';
+import { VisuallyHidden } from '../ui/visually-hidden';
 import InvoiceFromTo from './sections/InvoiceFromTo';
 import InvoiceHeader from './sections/InvoiceHeader';
 import InvoiceItemsRow from './sections/InvoiceItemsRow';
@@ -33,7 +34,6 @@ interface InvoiceSettings {
   currency: string;
   discount: string;
   attachPdf: string;
-  units: string;
   decimals: 'yes' | 'no';
   qrCode: string;
 }
@@ -103,7 +103,6 @@ const InvoiceSheet = ({
     currency: 'USD',
     discount: 'disable',
     attachPdf: 'disable',
-    units: 'disable',
     decimals: 'no',
     qrCode: 'enable',
   });
@@ -188,6 +187,9 @@ const InvoiceSheet = ({
         side='right'
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide flex flex-col p-0'
       >
+        <VisuallyHidden>
+          <SheetTitle className='sr-only'>Invoice Editor</SheetTitle>
+        </VisuallyHidden>
         <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
           <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
         </SheetHeader>

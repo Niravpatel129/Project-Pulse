@@ -6,7 +6,6 @@ import {
   Landmark,
   Maximize2,
   MoreVertical,
-  Ruler,
   Ticket,
 } from 'lucide-react';
 import { Button } from '../../ui/button';
@@ -29,7 +28,6 @@ interface InvoiceSettings {
   currency: string;
   discount: string;
   attachPdf: string;
-  units: string;
   decimals: 'yes' | 'no';
   qrCode: string;
 }
@@ -299,39 +297,7 @@ const InvoiceSheetMenu = ({ settings, onSettingsChange }: InvoiceSheetMenuProps)
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Ruler className='mr-2 h-4 w-4' />
-              Add units
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup
-                value={settings.units}
-                onValueChange={(value) => {
-                  return handleSettingChange('units', value);
-                }}
-              >
-                <DropdownMenuRadioItem
-                  value='enable'
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleSettingChange('units', 'enable');
-                  }}
-                >
-                  Enable
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value='disable'
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleSettingChange('units', 'disable');
-                  }}
-                >
-                  Disable
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Hash className='mr-2 h-4 w-4' />
