@@ -111,6 +111,15 @@ const InvoiceSheet = ({
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [fromAddress, setFromAddress] = useState<string>('');
   const [toAddress, setToAddress] = useState<string>('');
+  const [invoiceNumber, setInvoiceNumber] = useState<string>('INV-0001');
+  const [issueDate, setIssueDate] = useState<Date>(() => {
+    return new Date();
+  });
+  const [dueDate, setDueDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    return date;
+  });
 
   const formatNumber = (value: number) => {
     if (invoiceSettings.decimals === 'yes') {
@@ -311,7 +320,15 @@ const InvoiceSheet = ({
           <InvoiceSheetMenu settings={invoiceSettings} onSettingsChange={setInvoiceSettings} />
         </SheetHeader>
         <div className='mt-4 flex-1 px-12'>
-          <InvoiceHeader dateFormat={invoiceSettings.dateFormat} />
+          <InvoiceHeader
+            dateFormat={invoiceSettings.dateFormat}
+            invoiceNumber={invoiceNumber}
+            onInvoiceNumberChange={setInvoiceNumber}
+            issueDate={issueDate}
+            onIssueDateChange={setIssueDate}
+            dueDate={dueDate}
+            onDueDateChange={setDueDate}
+          />
           <InvoiceFromTo
             onCustomerSelect={(id) => {
               setSelectedCustomer(id);

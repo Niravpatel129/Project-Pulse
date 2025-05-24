@@ -13,12 +13,28 @@ import { toast } from 'sonner';
 
 interface InvoiceHeaderProps {
   dateFormat?: string;
+  invoiceNumber: string;
+  onInvoiceNumberChange: (value: string) => void;
+  issueDate: Date;
+  onIssueDateChange: (date: Date) => void;
+  dueDate: Date;
+  onDueDateChange: (date: Date) => void;
 }
 
-export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHeaderProps) {
+export default function InvoiceHeader({
+  dateFormat = 'MM/dd/yyyy',
+  invoiceNumber,
+  onInvoiceNumberChange,
+  issueDate,
+  onIssueDateChange,
+  dueDate,
+  onDueDateChange,
+}: InvoiceHeaderProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
   const [logoPreview, setLogoPreview] = useState<string | null>(invoiceSettings?.logo || null);
+  const [issueDateOpen, setIssueDateOpen] = useState(false);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
 
   const formatDate = (date: Date) => {
     // Convert from MM/DD/YYYY or DD/MM/YYYY to date-fns format
@@ -85,7 +101,10 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
             <div className='relative mb-1'>
               <SeamlessInput
                 className='!text-[21px] font-medium'
-                defaultValue='INV-0002'
+                value={invoiceNumber}
+                onChange={(e) => {
+                  return onInvoiceNumberChange(e.target.value);
+                }}
                 name='invoice_number'
               />
             </div>
@@ -104,7 +123,10 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
                   <div className='relative'>
                     <SeamlessInput
                       className='!text-[11px] !h-5'
-                      defaultValue='INV-0002'
+                      value={invoiceNumber}
+                      onChange={(e) => {
+                        return onInvoiceNumberChange(e.target.value);
+                      }}
                       name='invoice_number'
                     />
                   </div>
@@ -122,7 +144,7 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
                     <span className='text-xs text-[#878787] font-mono'>:</span>
                   </div>
                   <div className=''>
-                    <Popover>
+                    <Popover modal open={issueDateOpen} onOpenChange={setIssueDateOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant='ghost'
@@ -131,15 +153,20 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
                           )}
                         >
                           <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
-                            {formatDate(new Date('2025-05-23'))}
+                            {formatDate(issueDate)}
                           </span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className='w-auto p-0' align='start'>
                         <Calendar
                           mode='single'
-                          selected={new Date('2025-05-23')}
-                          onSelect={() => {}}
+                          selected={issueDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              onIssueDateChange(date);
+                              setIssueDateOpen(false);
+                            }
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -158,7 +185,7 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
                     </span>
                     <span className='text-xs text-[#878787] font-mono'>:</span>
                   </div>
-                  <Popover modal>
+                  <Popover modal open={dueDateOpen} onOpenChange={setDueDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant='ghost'
@@ -167,15 +194,20 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
                         )}
                       >
                         <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
-                          {formatDate(new Date('2025-06-23'))}
+                          {formatDate(dueDate)}
                         </span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className='w-auto p-0' align='start'>
                       <Calendar
                         mode='single'
-                        selected={new Date('2025-06-23')}
-                        onSelect={() => {}}
+                        selected={dueDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            onDueDateChange(date);
+                            setDueDateOpen(false);
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
