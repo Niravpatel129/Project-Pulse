@@ -2,14 +2,24 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SeamlessInput } from '@/components/ui/seamless-input';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { X } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface InvoiceHeaderProps {
   dateFormat?: string;
 }
 
 export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHeaderProps) {
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
+  const [logoPreview, setLogoPreview] = useState<string | null>(invoiceSettings?.logo || null);
+
   const formatDate = (date: Date) => {
     // Convert from MM/DD/YYYY or DD/MM/YYYY to date-fns format
     const formatMap: Record<string, string> = {
@@ -17,6 +27,54 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
       'DD/MM/YYYY': 'dd/MM/yyyy',
     };
     return format(date, formatMap[dateFormat] || 'MM/dd/yyyy');
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setLogoPreview(base64String);
+        updateInvoiceSettings.mutate(
+          {
+            settings: {
+              logo: base64String,
+            },
+          },
+          {
+            onSuccess: () => {
+              toast.success('Logo updated successfully');
+            },
+            onError: () => {
+              toast.error('Failed to update logo');
+              setLogoPreview(invoiceSettings?.logo || null);
+            },
+          },
+        );
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteLogo = () => {
+    setLogoPreview(null);
+    updateInvoiceSettings.mutate(
+      {
+        settings: {
+          logo: '',
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Logo removed successfully');
+        },
+        onError: () => {
+          toast.error('Failed to remove logo');
+          setLogoPreview(invoiceSettings?.logo || null);
+        },
+      },
+    );
   };
 
   return (
@@ -129,13 +187,40 @@ export default function InvoiceHeader({ dateFormat = 'MM/dd/yyyy' }: InvoiceHead
         </>
         <div className='relative group'>
           <label htmlFor='logo-upload' className='block h-full'>
-            <div className='h-[80px] w-[80px] bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] hover:cursor-pointer' />
+            {logoPreview ? (
+              <div className='h-[80px] w-[80px] relative group/logo'>
+                <Image
+                  src={logoPreview}
+                  alt='Company Logo'
+                  fill
+                  className='object-contain'
+                  unoptimized
+                />
+                <div className='absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center'>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDeleteLogo();
+                    }}
+                    className='h-8 w-8 bg-black/90 hover:bg-black text-white hover:text-white'
+                  >
+                    <X className='h-4 w-4' />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className='h-[80px] w-[80px] bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] hover:cursor-pointer' />
+            )}
           </label>
           <input
             id='logo-upload'
             accept='image/jpeg,image/jpg,image/png'
             className='hidden'
             type='file'
+            onChange={handleLogoChange}
           />
         </div>
       </div>
