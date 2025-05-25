@@ -12,29 +12,17 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/components/ui/sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { MoreHorizontal } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiSidebar } from 'react-icons/fi';
 import { toast } from 'sonner';
 import InvoicePreview2 from './InvoicePreview2';
+import { InvoiceTable } from './InvoiceTable';
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
   return new Intl.NumberFormat('en-US', {
@@ -127,7 +115,6 @@ function getCustomerAvatar(name: string) {
 }
 
 const Bills = () => {
-  const [search, setSearch] = useState('');
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -139,7 +126,7 @@ const Bills = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
-  console.log('🚀 selectedInvoice:', selectedInvoice);
+
   const {
     data: invoices,
     isLoading,
@@ -221,29 +208,6 @@ const Bills = () => {
     return sum + (inv.totals?.total || 0);
   }, 0);
 
-  // Filtered invoices
-  const filteredInvoices = useMemo(() => {
-    if (!search) {
-      return [...invoiceList].sort((a: any, b: any) => {
-        const dateA = new Date(a.issueDate || 0);
-        const dateB = new Date(b.issueDate || 0);
-        return dateB.getTime() - dateA.getTime();
-      });
-    }
-    return invoiceList
-      .filter((inv: any) => {
-        return (
-          inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
-          inv.customer?.name?.toLowerCase().includes(search.toLowerCase())
-        );
-      })
-      .sort((a: any, b: any) => {
-        const dateA = new Date(a.issueDate || 0);
-        const dateB = new Date(b.issueDate || 0);
-        return dateB.getTime() - dateA.getTime();
-      });
-  }, [invoiceList, search]);
-
   const onRefresh = () => {
     // Add any additional refresh logic here if needed
   };
@@ -262,75 +226,6 @@ const Bills = () => {
   };
 
   if (error) return <div>Error loading invoices</div>;
-
-  const InvoiceSkeleton = () => {
-    return (
-      <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
-        <table className='min-w-full text-sm'>
-          <thead>
-            <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
-              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                Invoice
-              </th>
-              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                Status
-              </th>
-              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                Due Date
-              </th>
-              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                Customer
-              </th>
-              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                Amount
-              </th>
-              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                Issue Date
-              </th>
-              <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[80px]'>
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
-            {[...Array(5)].map((_, index) => {
-              return (
-                <tr
-                  key={index}
-                  className='h-[57px] divide-x divide-slate-100 dark:divide-[#232428]'
-                >
-                  <td className='px-4 py-3'>
-                    <Skeleton className='h-4 w-24' />
-                  </td>
-                  <td className='px-4 py-3'>
-                    <Skeleton className='h-5 w-16 rounded-full' />
-                  </td>
-                  <td className='px-4 py-3'>
-                    <div className='space-y-1'>
-                      <Skeleton className='h-4 w-20' />
-                      <Skeleton className='h-3 w-16' />
-                    </div>
-                  </td>
-                  <td className='px-4 py-3'>
-                    <Skeleton className='h-4 w-32' />
-                  </td>
-                  <td className='px-4 py-3'>
-                    <Skeleton className='h-4 w-20' />
-                  </td>
-                  <td className='px-4 py-3'>
-                    <Skeleton className='h-4 w-16' />
-                  </td>
-                  <td className='px-2 py-3'>
-                    <Skeleton className='h-8 w-8 rounded-md' />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
 
   return (
     <div>
@@ -356,269 +251,30 @@ const Bills = () => {
             transition: { duration: 0.3, ease: 'easeInOut' },
           }}
         >
-          {/* Invoice Table */}
-          {isLoading ? (
-            <InvoiceSkeleton />
-          ) : filteredInvoices.length === 0 ? (
-            <div className='flex flex-col items-center justify-center py-24'>
-              <h2 className='text-2xl font-semibold mb-2'>No invoices</h2>
-              <p className='text-gray-500 mb-6 text-center'>
-                You haven&apos;t created any invoices yet.
-                <br />
-                Go ahead and create your first one.
-              </p>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  return setEditingInvoice({});
-                }}
-              >
-                Create invoice
-              </Button>
-            </div>
-          ) : (
-            <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
-              <table className='min-w-full text-sm'>
-                <thead>
-                  <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
-                    <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                      Invoice
-                    </th>
-                    <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                      Status
-                    </th>
-                    <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                      Due Date
-                    </th>
-                    <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                      Customer
-                    </th>
-                    <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                      Amount
-                    </th>
-                    <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-                      Issue Date
-                    </th>
-                    <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[80px]'>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
-                  {filteredInvoices.map((invoice: any) => {
-                    return (
-                      <motion.tr
-                        key={invoice._id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
-                          selectedInvoice?._id === invoice._id
-                            ? 'bg-slate-50 dark:bg-[#232428]'
-                            : ''
-                        }`}
-                        onClick={() => {
-                          return setSelectedInvoice(invoice);
-                        }}
-                      >
-                        <td className='px-4 py-3'>
-                          <div className='flex flex-col gap-1'>
-                            <span className='font-medium text-[#121212] dark:text-white'>
-                              {invoice.invoiceNumber}
-                            </span>
-                          </div>
-                        </td>
-                        <td className='px-4 py-3'>{getStatusBadge(invoice.status)}</td>
-                        <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
-                          {invoice.dueDate ? (
-                            <div className='h-full'>
-                              {formatDate(invoice.dueDate)}
-                              <div className='text-slate-400 dark:text-slate-500 ml-0 text-xs'>
-                                {invoice.dueDate > new Date().toISOString()
-                                  ? getRelativeTime(invoice.dueDate)
-                                  : 'overdue ' +
-                                    formatDate(invoice.dueDate) +
-                                    ' ' +
-                                    formatDate(new Date().toISOString())}
-                              </div>
-                            </div>
-                          ) : (
-                            '--'
-                          )}
-                        </td>
-                        <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
-                          <div className='h-full flex items-center'>
-                            <span>{invoice.customer?.name}</span>
-                          </div>
-                        </td>
-                        <td className='px-4 py-3 font-medium text-[#121212] dark:text-white'>
-                          <span
-                            className={
-                              invoice.status?.toLowerCase() === 'cancelled' ? 'line-through' : ''
-                            }
-                          >
-                            {formatCurrency(
-                              invoice.totals?.total || 0,
-                              invoice.settings?.currency || 'CAD',
-                            )}
-                          </span>
-                        </td>
-                        <td className='px-4 py-3 text-[#121212] dark:text-slate-300'>
-                          {invoice.issueDate ? (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>{formatDate(invoice.issueDate)}</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{formatDateTime(invoice.issueDate)}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ) : (
-                            '--'
-                          )}
-                        </td>
-                        <td className='px-2 py-3 w-[60px]'>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                className='p-1.5 hover:bg-slate-100 dark:hover:bg-[#232428] transition-colors duration-150'
-                                onClick={(e) => {
-                                  return e.stopPropagation();
-                                }}
-                                aria-label='Actions'
-                              >
-                                <MoreHorizontal className='w-4 h-4 text-slate-400 dark:text-slate-500' />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem>Open invoice</DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(
-                                    `${window.location.origin}/invoice/${invoice._id}`,
-                                  );
-                                }}
-                              >
-                                Copy link
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    const response = await newRequest.get(
-                                      `/invoices2/${invoice._id}/download`,
-                                      { responseType: 'blob' },
-                                    );
-
-                                    // Create a blob from the PDF data
-                                    const pdfBlob = new Blob([response.data], {
-                                      type: 'application/pdf',
-                                    });
-
-                                    // Create a URL for the blob
-                                    const url = window.URL.createObjectURL(pdfBlob);
-
-                                    // Create a temporary link element
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
-
-                                    // Append to body, click, and remove
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-
-                                    // Clean up the URL object
-                                    window.URL.revokeObjectURL(url);
-                                  } catch (error) {
-                                    console.error('Error downloading PDF:', error);
-                                  }
-                                }}
-                              >
-                                Download
-                              </DropdownMenuItem>
-                              {invoice.status?.toLowerCase() !== 'cancelled' &&
-                                invoice.status?.toLowerCase() !== 'paid' &&
-                                invoice.status?.toLowerCase() !== 'draft' && (
-                                  <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger
-                                      onClick={(e) => {
-                                        return e.stopPropagation();
-                                      }}
-                                    >
-                                      Mark as paid
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className='p-0'>
-                                      <div
-                                        className='p-2'
-                                        onClick={(e) => {
-                                          return e.stopPropagation();
-                                        }}
-                                      >
-                                        <Calendar
-                                          mode='single'
-                                          onSelect={(date) => {
-                                            if (date && invoice._id) {
-                                              markAsPaidMutation.mutate({
-                                                invoiceId: invoice._id,
-                                                paymentDate: date,
-                                              });
-                                            }
-                                          }}
-                                          disabled={(date) => {
-                                            return date > new Date();
-                                          }}
-                                        />
-                                      </div>
-                                    </DropdownMenuSubContent>
-                                  </DropdownMenuSub>
-                                )}
-                              {invoice.status?.toLowerCase() !== 'cancelled' &&
-                                invoice.status?.toLowerCase() !== 'paid' && (
-                                  <DropdownMenuItem
-                                    className='text-red-600'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (invoice._id) {
-                                        setPendingAction({
-                                          type: 'cancel',
-                                          invoiceId: invoice._id,
-                                        });
-                                        setShowConfirmDialog(true);
-                                      }
-                                    }}
-                                  >
-                                    Cancel
-                                  </DropdownMenuItem>
-                                )}
-                              {invoice.status?.toLowerCase() === 'cancelled' && (
-                                <DropdownMenuItem
-                                  className='text-red-600'
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (invoice._id) {
-                                      setPendingAction({
-                                        type: 'delete',
-                                        invoiceId: invoice._id,
-                                      });
-                                      setShowConfirmDialog(true);
-                                    }
-                                  }}
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <InvoiceTable
+            invoices={invoiceList}
+            selectedInvoice={selectedInvoice}
+            setSelectedInvoice={setSelectedInvoice}
+            setEditingInvoice={setEditingInvoice}
+            onMarkAsPaid={(invoiceId, paymentDate) => {
+              markAsPaidMutation.mutate({ invoiceId, paymentDate });
+            }}
+            onCancel={(invoiceId) => {
+              setPendingAction({
+                type: 'cancel',
+                invoiceId,
+              });
+              setShowConfirmDialog(true);
+            }}
+            onDelete={(invoiceId) => {
+              setPendingAction({
+                type: 'delete',
+                invoiceId,
+              });
+              setShowConfirmDialog(true);
+            }}
+            isLoading={isLoading}
+          />
         </motion.div>
         {selectedInvoice &&
           (isMobile ? (
