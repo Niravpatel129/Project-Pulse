@@ -334,16 +334,7 @@ const Bills = () => {
 
   return (
     <div>
-      <motion.div
-        className='flex items-center justify-between px-4 pb-2 pt-3 border-b border-[#E4E4E7] dark:border-[#232428] relative z-[1] bg-background'
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{
-          duration: 0.6,
-          ease: [0.4, 0, 0.2, 1],
-          delay: 0.1,
-        }}
-      >
+      <div className='flex items-center justify-between px-4 pb-2 pt-3 border-b border-[#E4E4E7] dark:border-[#232428] relative z-[1] bg-background'>
         <div className='flex items-center gap-2'>
           <Button
             variant='ghost'
@@ -356,7 +347,7 @@ const Bills = () => {
           <h1 className='text-lg font-semibold text-[#121212] dark:text-white'>Invoices</h1>
         </div>
         <div className='flex items-center gap-2'></div>
-      </motion.div>
+      </div>
       <div className='flex h-full bg-white dark:bg-[#1A1A1A]'>
         <motion.div
           className='flex-1 py-4 px-4 overflow-hidden'
