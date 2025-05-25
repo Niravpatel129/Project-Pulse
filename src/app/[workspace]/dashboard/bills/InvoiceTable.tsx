@@ -15,6 +15,16 @@ import { newRequest } from '@/utils/newRequest';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 
+const TABLE_HEADERS = [
+  { label: 'Invoice', className: 'px-4 py-3' },
+  { label: 'Status', className: 'px-4 py-3' },
+  { label: 'Due Date', className: 'px-4 py-3' },
+  { label: 'Customer', className: 'px-4 py-3' },
+  { label: 'Amount', className: 'px-4 py-3' },
+  { label: 'Issue Date', className: 'px-4 py-3' },
+  { label: 'Actions', className: 'px-2 py-3 w-[80px]' },
+];
+
 function formatCurrency(amount: number, currency: string = 'CAD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -66,30 +76,30 @@ function formatDateTime(dateStr: string) {
 function getStatusBadge(status: string) {
   if (status === 'Overdue')
     return (
-      <span className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+      <span className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
         Overdue
       </span>
     );
   if (status === 'Draft' || status === 'draft')
     return (
-      <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+      <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
         Draft
       </span>
     );
   if (status === 'Paid' || status === 'paid')
     return (
-      <span className='bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+      <span className='bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
         Paid
       </span>
     );
   if (status === 'Cancelled' || status === 'cancelled')
     return (
-      <span className='bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+      <span className='bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
         Cancelled
       </span>
     );
   return (
-    <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+    <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
       Unpaid
     </span>
   );
@@ -99,29 +109,18 @@ export const InvoiceSkeleton = () => {
   return (
     <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
       <table className='min-w-full text-sm'>
-        <thead>
+        <thead className='!font-normal'>
           <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Invoice
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Status
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Due Date
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Customer
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Amount
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Issue Date
-            </th>
-            <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[80px]'>
-              Actions
-            </th>
+            {TABLE_HEADERS.map((header, index) => {
+              return (
+                <th
+                  key={index}
+                  className={`${header.className} text-left text-[#121212] dark:text-slate-300  tracking-wide font-light`}
+                >
+                  {header.label}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
@@ -211,28 +210,17 @@ export const InvoiceTable = ({
     <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
       <table className='min-w-full text-sm'>
         <thead>
-          <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Invoice
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Status
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Due Date
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Customer
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Amount
-            </th>
-            <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
-              Issue Date
-            </th>
-            <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[80px]'>
-              Actions
-            </th>
+          <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428] !font-normal'>
+            {TABLE_HEADERS.map((header, index) => {
+              return (
+                <th
+                  key={index}
+                  className={`${header.className} text-left text-[#121212] dark:text-slate-300 tracking-wide font-[500]`}
+                >
+                  {header.label}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
@@ -252,9 +240,7 @@ export const InvoiceTable = ({
               >
                 <td className='px-4 py-3'>
                   <div className='flex flex-col gap-1'>
-                    <span className='font-medium text-[#121212] dark:text-white'>
-                      {invoice.invoiceNumber}
-                    </span>
+                    <span className=' text-[#121212] dark:text-white'>{invoice.invoiceNumber}</span>
                   </div>
                 </td>
                 <td className='px-4 py-3'>{getStatusBadge(invoice.status)}</td>
@@ -280,7 +266,7 @@ export const InvoiceTable = ({
                     <span>{invoice.customer?.name}</span>
                   </div>
                 </td>
-                <td className='px-4 py-3 font-medium text-[#121212] dark:text-white'>
+                <td className='px-4 py-3  text-[#121212] dark:text-white'>
                   <span
                     className={invoice.status?.toLowerCase() === 'cancelled' ? 'line-through' : ''}
                   >
