@@ -140,12 +140,18 @@ const Bills = () => {
         <div className='flex items-center gap-2'></div>
       </motion.div>
       <div className='flex h-full bg-white dark:bg-[#1A1A1A]'>
-        <div className='flex-1 py-4 pl-4 overflow-hidden'>
+        <motion.div
+          className='flex-1 py-4 pl-4 overflow-hidden'
+          animate={{
+            marginRight: selectedInvoice ? '600px' : '0',
+            transition: { duration: 0.3, ease: 'easeInOut' },
+          }}
+        >
           {/* Invoice Table */}
           <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
             <table className='min-w-full text-sm'>
               <thead>
-                <tr className='divide-x divide-slate-100 dark:divide-[#232428] bg-slate-50/50 dark:bg-[#232428]'>
+                <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
                   <th className='px-6 py-4 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
                     Invoice
                   </th>
@@ -239,15 +245,20 @@ const Bills = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
         {selectedInvoice && (
-          <div className='h-[calc(100vh-55px)] min-w-[600px] '>
+          <motion.div
+            className='fixed right-0 top-[53px] h-[calc(100vh-55px)] w-[600px]  bg-white dark:bg-[#1A1A1A]'
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
             <InvoicePreview2
               selectedInvoice={selectedInvoice}
               setSelectedInvoice={setSelectedInvoice}
               setEditingInvoice={setEditingInvoice}
             />
-          </div>
+          </motion.div>
         )}
 
         {editingInvoice && (
