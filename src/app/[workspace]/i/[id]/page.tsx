@@ -93,6 +93,12 @@ const InvoicePage = () => {
   const params = useParams();
   const invoiceId = params.id as string;
 
+  // Force light mode
+  useEffect(() => {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
+  }, []);
+
   const {
     data: invoice,
     isLoading,
@@ -176,18 +182,10 @@ const InvoicePage = () => {
               variant='outline'
               className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#00C969] bg-[#DDF1E4] dark:text-[#00C969] dark:bg-[#00C969]/10'
             >
-              <span className='line-clamp-1 truncate inline-block'>{invoice.status}</span>
+              <span className='line-clamp-1 truncate inline-block capitalize'>
+                {invoice.status}
+              </span>
             </Badge>
-            {invoice.paymentMethod && (
-              <Badge
-                variant='outline'
-                className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#0066FF] bg-[#E6F0FF] dark:text-[#0066FF] dark:bg-[#0066FF]/10'
-              >
-                <span className='line-clamp-1 truncate inline-block'>
-                  {invoice.paymentMethod.replace('_', ' ')}
-                </span>
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -413,19 +411,11 @@ const InvoicePage = () => {
                           options={{
                             clientSecret,
                             appearance: {
-                              theme: document?.documentElement?.classList?.contains('dark')
-                                ? 'night'
-                                : 'flat',
+                              theme: 'flat',
                               variables: {
                                 colorPrimary: '#1D1D1F',
-                                colorBackground: document?.documentElement?.classList?.contains(
-                                  'dark',
-                                )
-                                  ? '#232323'
-                                  : '#FFFFFF',
-                                colorText: document?.documentElement?.classList?.contains('dark')
-                                  ? '#fafafa'
-                                  : '#1D1D1F',
+                                colorBackground: '#FFFFFF',
+                                colorText: '#1D1D1F',
                                 colorDanger: '#FF3B30',
                                 fontFamily:
                                   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -434,9 +424,7 @@ const InvoicePage = () => {
                               },
                               rules: {
                                 '.Tab': {
-                                  border: document?.documentElement?.classList?.contains('dark')
-                                    ? '1px solid #333'
-                                    : '1px solid #E4E4E7',
+                                  border: '1px solid #E4E4E7',
                                   borderRadius: '8px',
                                 },
                                 '.Tab:hover': {
@@ -455,16 +443,10 @@ const InvoicePage = () => {
                                   fontWeight: '500',
                                 },
                                 '.Input': {
-                                  border: document?.documentElement?.classList?.contains('dark')
-                                    ? '1px solid #333'
-                                    : '1px solid #E4E4E7',
+                                  border: '1px solid #E4E4E7',
                                   borderRadius: '8px',
                                   padding: '12px',
-                                  backgroundColor: document?.documentElement?.classList?.contains(
-                                    'dark',
-                                  )
-                                    ? '#232323'
-                                    : '#FFFFFF',
+                                  backgroundColor: '#FFFFFF',
                                 },
                                 '.Input:focus': {
                                   borderColor: '#1D1D1F',
@@ -477,30 +459,18 @@ const InvoicePage = () => {
                                   boxShadow: '0 0 0 1px #FF3B30',
                                 },
                                 '.AccordionItem': {
-                                  border: document?.documentElement?.classList?.contains('dark')
-                                    ? '1px solid #333'
-                                    : '1px solid #E4E4E7',
+                                  border: '1px solid #E4E4E7',
                                   borderRadius: '12px',
                                   marginBottom: '8px',
-                                  backgroundColor: document?.documentElement?.classList?.contains(
-                                    'dark',
-                                  )
-                                    ? '#232323'
-                                    : '#FFFFFF',
+                                  backgroundColor: '#FFFFFF',
                                 },
                                 '.AccordionItemButton': {
                                   padding: '16px',
                                   fontWeight: '500',
-                                  color: document?.documentElement?.classList?.contains('dark')
-                                    ? '#fafafa'
-                                    : '#1D1D1F',
+                                  color: '#1D1D1F',
                                 },
                                 '.AccordionItemButton:hover': {
-                                  backgroundColor: document?.documentElement?.classList?.contains(
-                                    'dark',
-                                  )
-                                    ? 'rgba(255, 255, 255, 0.05)'
-                                    : 'rgba(0, 0, 0, 0.02)',
+                                  backgroundColor: 'rgba(0, 0, 0, 0.02)',
                                 },
                                 '.AccordionItemButton:focus': {
                                   boxShadow: 'none',
@@ -508,9 +478,7 @@ const InvoicePage = () => {
                                 },
                                 '.AccordionItemContent': {
                                   padding: '16px',
-                                  borderTop: document?.documentElement?.classList?.contains('dark')
-                                    ? '1px solid #333'
-                                    : '1px solid #E4E4E7',
+                                  borderTop: '1px solid #E4E4E7',
                                 },
                               },
                             },

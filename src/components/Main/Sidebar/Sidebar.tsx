@@ -76,6 +76,9 @@ export default function AppSidebar() {
     useChat();
   const [isLoadingChat, setIsLoadingChat] = useState(false);
 
+  // Check if we're on the invoice page
+  const isInvoicePage = pathname.includes('/i/');
+
   // Set mounted state after hydration
   useEffect(() => {
     setMounted(true);
@@ -215,6 +218,13 @@ export default function AppSidebar() {
     }
   };
 
+  // Handle theme toggle
+  const handleThemeToggle = () => {
+    if (!isInvoicePage) {
+      setTheme(theme === 'dark' ? 'light' : 'dark');
+    }
+  };
+
   return (
     <>
       <SidebarToggleContext.Provider value={{ toggleSidebar }}>
@@ -328,9 +338,7 @@ export default function AppSidebar() {
               variant='ghost'
               size='icon'
               className='w-full text-[#8b8b8b] hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white hover:bg-gray-300 dark:hover:bg-white/10'
-              onClick={() => {
-                return setTheme(theme === 'dark' ? 'light' : 'dark');
-              }}
+              onClick={handleThemeToggle}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
