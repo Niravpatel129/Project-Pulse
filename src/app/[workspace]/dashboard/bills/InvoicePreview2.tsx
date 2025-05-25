@@ -35,6 +35,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   onCancel,
   onDelete,
 }) => {
+  console.log('🚀 selectedInvoice:', selectedInvoice);
   const [activityOpen, setActivityOpen] = useState(true);
   const [noteOpen, setNoteOpen] = useState(false);
 
@@ -81,7 +82,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 
         {/* Actions */}
         <div className='flex gap-2 px-6 pb-6'>
-          {(selectedInvoice.status === 'open' || selectedInvoice.status === 'draft') && (
+          {selectedInvoice.status === 'open' || selectedInvoice.status === 'draft' ? (
             <button
               onClick={() => {
                 return setEditingInvoice(selectedInvoice);
@@ -90,6 +91,11 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             >
               <span className='inline-flex items-center justify-center gap-1.5'>Edit</span>
             </button>
+          ) : (
+            <div className='flex-1 py-2'>
+              <div className='text-base font-medium'>Canceled on May 25</div>
+              <div className='text-xs text-gray-500 dark:text-gray-400'>Marked as canceled</div>
+            </div>
           )}
           <InvoicePreviewActions
             invoice={selectedInvoice}
