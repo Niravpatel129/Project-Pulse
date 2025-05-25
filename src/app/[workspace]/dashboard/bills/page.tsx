@@ -279,10 +279,10 @@ const Bills = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return handleFilterChange('dueDate', 'custom');
+                          return handleFilterChange('dueDate', 'this_year');
                         }}
                       >
-                        Custom...
+                        This Year
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
@@ -384,7 +384,7 @@ const Bills = () => {
                       {type === 'dueDate' && value === 'today' && 'Due Today'}
                       {type === 'dueDate' && value === 'this_week' && 'Due This Week'}
                       {type === 'dueDate' && value === 'this_month' && 'Due This Month'}
-                      {type === 'dueDate' && value === 'custom' && 'Custom Due Date'}
+                      {type === 'dueDate' && value === 'this_year' && 'Due This Year'}
                       {type === 'customer' && value === 'all' && 'All Customers'}
                       {type === 'customer' && value !== 'all' && `Customer: ${value}`}
                       {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
