@@ -11,6 +11,7 @@ interface InvoiceSheetFooterProps {
   onValidate: () => boolean;
   onCreate: () => void;
   isEditing?: boolean;
+  isLoading?: boolean;
 }
 
 const InvoiceSheetFooter = ({
@@ -18,6 +19,7 @@ const InvoiceSheetFooter = ({
   onValidate,
   onCreate,
   isEditing,
+  isLoading = false,
 }: InvoiceSheetFooterProps) => {
   const [editedTime] = useState('just now');
 
@@ -31,8 +33,11 @@ const InvoiceSheetFooter = ({
   return (
     <div className='sticky bottom-0 left-0 right-0 bg-background pb-3 pr-4 flex items-center justify-end z-10 px-0'>
       <Button
-        className='w-[100px] h-10 text-[12px] font-medium rounded-none bg-[#18181b] hover:bg-[#232326] dark:bg-[#fff] dark:hover:bg-[#f1f1f1] dark:text-[#18181b]'
+        className={`w-[100px] h-10 text-[12px] font-medium rounded-none bg-[#18181b] hover:bg-[#232326] dark:bg-[#fff] dark:hover:bg-[#f1f1f1] dark:text-[#18181b] transition-transform ${
+          isLoading ? 'scale-95' : ''
+        }`}
         onClick={handleCreate}
+        disabled={isLoading}
       >
         {isEditing ? 'Update' : 'Create'}
       </Button>

@@ -775,6 +775,7 @@ const InvoiceSheet = ({
                 onValidate={validateInvoice}
                 onCreate={handleCreateInvoice}
                 isEditing={!!existingInvoice}
+                isLoading={createInvoice.isPending || updateInvoice.isPending}
               />
             </SheetFooter>
           </>
