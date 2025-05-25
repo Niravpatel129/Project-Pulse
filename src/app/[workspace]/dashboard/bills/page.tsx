@@ -254,10 +254,53 @@ const Bills = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align='end'>
-                            <DropdownMenuItem>Edit invoice</DropdownMenuItem>
                             <DropdownMenuItem>Open invoice</DropdownMenuItem>
-                            <DropdownMenuItem>Copy link</DropdownMenuItem>
-                            <DropdownMenuItem>Download</DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(
+                                  `${window.location.origin}/invoice/${invoice._id}`,
+                                );
+                              }}
+                            >
+                              Copy link
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const response = await newRequest.get(
+                                    `/invoices2/${invoice._id}/download`,
+                                    { responseType: 'blob' },
+                                  );
+
+                                  // Create a blob from the PDF data
+                                  const pdfBlob = new Blob([response.data], {
+                                    type: 'application/pdf',
+                                  });
+
+                                  // Create a URL for the blob
+                                  const url = window.URL.createObjectURL(pdfBlob);
+
+                                  // Create a temporary link element
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+
+                                  // Append to body, click, and remove
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+
+                                  // Clean up the URL object
+                                  window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                  console.error('Error downloading PDF:', error);
+                                }
+                              }}
+                            >
+                              Download
+                            </DropdownMenuItem>
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger>Mark as paid</DropdownMenuSubTrigger>
                               <DropdownMenuSubContent className='p-0'>
