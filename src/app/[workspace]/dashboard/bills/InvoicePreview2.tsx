@@ -1,11 +1,16 @@
 import { Badge } from '@/components/ui/badge';
+import { newRequest } from '@/utils/newRequest';
 import { XIcon } from 'lucide-react';
 import React, { useState } from 'react';
+import InvoicePreviewActions from './InvoicePreviewActions';
 
 interface InvoicePreview2Props {
   selectedInvoice?: any;
   setSelectedInvoice: (invoice: any) => void;
   setEditingInvoice: (invoice: any) => void;
+  onMarkAsPaid?: (invoiceId: string, paymentDate: Date) => void;
+  onCancel?: (invoiceId: string) => void;
+  onDelete?: (invoiceId: string) => void;
 }
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -26,6 +31,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   selectedInvoice,
   setSelectedInvoice,
   setEditingInvoice,
+  onMarkAsPaid,
+  onCancel,
+  onDelete,
 }) => {
   const [activityOpen, setActivityOpen] = useState(true);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -81,13 +89,12 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           >
             <span className='inline-flex items-center justify-center gap-1.5'>Edit</span>
           </button>
-          <button className='w-9 h-9 flex items-center justify-center rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'>
-            <svg width='16' height='16' fill='none' viewBox='0 0 24 24'>
-              <circle cx='12' cy='5' r='1.5' fill='currentColor' />
-              <circle cx='12' cy='12' r='1.5' fill='currentColor' />
-              <circle cx='12' cy='19' r='1.5' fill='currentColor' />
-            </svg>
-          </button>
+          <InvoicePreviewActions
+            invoice={selectedInvoice}
+            onMarkAsPaid={onMarkAsPaid || (() => {})}
+            onCancel={onCancel || (() => {})}
+            onDelete={onDelete || (() => {})}
+          />
         </div>
 
         {/* Details */}
@@ -120,6 +127,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             <button
               className='p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 transition-colors duration-150'
               title='Copy'
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/i/${selectedInvoice._id}`);
+              }}
             >
               <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
                 <rect
@@ -146,6 +156,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             <button
               className='p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 transition-colors duration-150'
               title='Open'
+              onClick={() => {
+                window.open(`${window.location.origin}/i/${selectedInvoice._id}`, '_blank');
+              }}
             >
               <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
                 <path
@@ -160,6 +173,39 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             <button
               className='p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 transition-colors duration-150'
               title='Download'
+              onClick={async () => {
+                try {
+                  const response = await newRequest.get(
+                    `/invoices2/${selectedInvoice._id}/download`,
+                    {
+                      responseType: 'blob',
+                    },
+                  );
+
+                  // Create a blob from the PDF data
+                  const pdfBlob = new Blob([response.data], {
+                    type: 'application/pdf',
+                  });
+
+                  // Create a URL for the blob
+                  const url = window.URL.createObjectURL(pdfBlob);
+
+                  // Create a temporary link element
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `Invoice-${selectedInvoice.invoiceNumber}.pdf`;
+
+                  // Append to body, click, and remove
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+
+                  // Clean up the URL object
+                  window.URL.revokeObjectURL(url);
+                } catch (error) {
+                  console.error('Error downloading PDF:', error);
+                }
+              }}
             >
               <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
                 <path

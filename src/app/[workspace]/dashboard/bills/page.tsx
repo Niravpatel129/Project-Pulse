@@ -521,6 +521,23 @@ const Bills = () => {
                   selectedInvoice={selectedInvoice}
                   setSelectedInvoice={setSelectedInvoice}
                   setEditingInvoice={setEditingInvoice}
+                  onMarkAsPaid={(invoiceId, paymentDate) => {
+                    markAsPaidMutation.mutate({ invoiceId, paymentDate });
+                  }}
+                  onCancel={(invoiceId) => {
+                    setPendingAction({
+                      type: 'cancel',
+                      invoiceId,
+                    });
+                    setShowConfirmDialog(true);
+                  }}
+                  onDelete={(invoiceId) => {
+                    setPendingAction({
+                      type: 'delete',
+                      invoiceId,
+                    });
+                    setShowConfirmDialog(true);
+                  }}
                 />
               </SheetContent>
             </Sheet>
@@ -535,6 +552,23 @@ const Bills = () => {
                 selectedInvoice={selectedInvoice}
                 setSelectedInvoice={setSelectedInvoice}
                 setEditingInvoice={setEditingInvoice}
+                onMarkAsPaid={(invoiceId, paymentDate) => {
+                  markAsPaidMutation.mutate({ invoiceId, paymentDate });
+                }}
+                onCancel={(invoiceId) => {
+                  setPendingAction({
+                    type: 'cancel',
+                    invoiceId,
+                  });
+                  setShowConfirmDialog(true);
+                }}
+                onDelete={(invoiceId) => {
+                  setPendingAction({
+                    type: 'delete',
+                    invoiceId,
+                  });
+                  setShowConfirmDialog(true);
+                }}
               />
             </motion.div>
           ))}
