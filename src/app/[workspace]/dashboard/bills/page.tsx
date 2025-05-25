@@ -1,9 +1,12 @@
 'use client';
 
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
+import { Button } from '@/components/ui/button';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
+import { FiSidebar } from 'react-icons/fi';
 import InvoicePreview2 from './InvoicePreview2';
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -52,6 +55,8 @@ const Bills = () => {
   const [search, setSearch] = useState('');
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const queryClient = useQueryClient();
   console.log('🚀 selectedInvoice:', selectedInvoice);
   const {
@@ -99,123 +104,158 @@ const Bills = () => {
     });
   }, [invoiceList, search]);
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const onRefresh = () => {
+    // Add any additional refresh logic here if needed
+  };
+
   if (error) return <div>Error loading invoices</div>;
 
   return (
-    <div className='flex h-full bg-white'>
-      <div className='flex-1 py-4 pl-4 overflow-hidden'>
-        {/* Invoice Table */}
-        <div className='overflow-x-auto rounded-lg border border-slate-100 shadow-sm'>
-          <table className='min-w-full text-sm'>
-            <thead>
-              <tr className='divide-x divide-slate-100 bg-slate-50/50'>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Invoice
-                </th>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Status
-                </th>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Due Date
-                </th>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Customer
-                </th>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Amount
-                </th>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Issue Date
-                </th>
-                <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className='divide-y divide-slate-100'>
-              {filteredInvoices.map((invoice: any) => {
-                return (
-                  <tr
-                    key={invoice._id}
-                    className={`divide-x divide-slate-100 cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 ${
-                      selectedInvoice?._id === invoice._id ? 'bg-slate-50' : ''
-                    }`}
-                    onClick={() => {
-                      return setSelectedInvoice(invoice);
-                    }}
-                  >
-                    <td className='px-6 py-4'>
-                      <div className='flex flex-col gap-1'>
-                        <span className='font-medium text-slate-900'>{invoice.invoiceNumber}</span>
-                      </div>
-                    </td>
-                    <td className='px-6 py-4'>{getStatusBadge(invoice.status)}</td>
-                    <td className='px-6 py-4 text-slate-600'>
-                      {invoice.dueDate ? (
-                        <>
-                          {formatDate(invoice.dueDate)}
-                          <div className='text-slate-400 ml-0 text-xs'>
-                            {invoice.dueDate > new Date().toISOString()
-                              ? 'in 1 month'
-                              : 'overdue ' +
-                                formatDate(invoice.dueDate) +
-                                ' ' +
-                                formatDate(new Date().toISOString())}
-                          </div>
-                        </>
-                      ) : (
-                        '--'
-                      )}
-                    </td>
-                    <td className='px-6 py-4 text-slate-600 flex items-center'>
-                      <span>{invoice.customer?.name}</span>
-                    </td>
-                    <td className='px-6 py-4 font-medium text-slate-900'>
-                      {formatCurrency(
-                        invoice.totals?.total || 0,
-                        invoice.settings?.currency || 'CAD',
-                      )}
-                    </td>
-                    <td className='px-6 py-4 text-slate-600'>
-                      {invoice.issueDate ? formatDate(invoice.issueDate) : '--'}
-                    </td>
-                    <td className='px-6 py-4'>
-                      <button className='p-1.5 rounded-full hover:bg-slate-100 transition-colors duration-150'>
-                        <svg
-                          width='16'
-                          height='16'
-                          fill='none'
-                          viewBox='0 0 24 24'
-                          className='text-slate-400'
-                        >
-                          <circle cx='12' cy='5' r='1.5' fill='currentColor' />
-                          <circle cx='12' cy='12' r='1.5' fill='currentColor' />
-                          <circle cx='12' cy='19' r='1.5' fill='currentColor' />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <div>
+      <motion.div
+        className='flex items-center justify-between px-4 py-2 border-b border-[#E4E4E7] dark:border-[#232428]'
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{
+          duration: 0.6,
+          ease: [0.4, 0, 0.2, 1],
+          delay: 0.1,
+        }}
+      >
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
+            onClick={toggleSidebar}
+          >
+            <FiSidebar size={20} />
+          </Button>
+          <h1 className='text-lg font-semibold text-[#3F3F46] dark:text-white'>Invoices</h1>
         </div>
-      </div>
-      {selectedInvoice && (
-        <InvoicePreview2
-          selectedInvoice={selectedInvoice}
-          setSelectedInvoice={setSelectedInvoice}
-          setEditingInvoice={setEditingInvoice}
-        />
-      )}
+        <div className='flex items-center gap-2'></div>
+      </motion.div>
+      <div className='flex h-full bg-white'>
+        <div className='flex-1 py-4 pl-4 overflow-hidden'>
+          {/* Invoice Table */}
+          <div className='overflow-x-auto rounded-lg border border-slate-100 shadow-sm'>
+            <table className='min-w-full text-sm'>
+              <thead>
+                <tr className='divide-x divide-slate-100 bg-slate-50/50'>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Invoice
+                  </th>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Status
+                  </th>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Due Date
+                  </th>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Customer
+                  </th>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Amount
+                  </th>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Issue Date
+                  </th>
+                  <th className='px-6 py-4 text-left text-slate-600 font-medium tracking-wide'>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className='divide-y divide-slate-100'>
+                {filteredInvoices.map((invoice: any) => {
+                  return (
+                    <tr
+                      key={invoice._id}
+                      className={`divide-x divide-slate-100 cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 ${
+                        selectedInvoice?._id === invoice._id ? 'bg-slate-50' : ''
+                      }`}
+                      onClick={() => {
+                        return setSelectedInvoice(invoice);
+                      }}
+                    >
+                      <td className='px-6 py-4'>
+                        <div className='flex flex-col gap-1'>
+                          <span className='font-medium text-slate-900'>
+                            {invoice.invoiceNumber}
+                          </span>
+                        </div>
+                      </td>
+                      <td className='px-6 py-4'>{getStatusBadge(invoice.status)}</td>
+                      <td className='px-6 py-4 text-slate-600'>
+                        {invoice.dueDate ? (
+                          <>
+                            {formatDate(invoice.dueDate)}
+                            <div className='text-slate-400 ml-0 text-xs'>
+                              {invoice.dueDate > new Date().toISOString()
+                                ? 'in 1 month'
+                                : 'overdue ' +
+                                  formatDate(invoice.dueDate) +
+                                  ' ' +
+                                  formatDate(new Date().toISOString())}
+                            </div>
+                          </>
+                        ) : (
+                          '--'
+                        )}
+                      </td>
+                      <td className='px-6 py-4 text-slate-600 flex items-center'>
+                        <span>{invoice.customer?.name}</span>
+                      </td>
+                      <td className='px-6 py-4 font-medium text-slate-900'>
+                        {formatCurrency(
+                          invoice.totals?.total || 0,
+                          invoice.settings?.currency || 'CAD',
+                        )}
+                      </td>
+                      <td className='px-6 py-4 text-slate-600'>
+                        {invoice.issueDate ? formatDate(invoice.issueDate) : '--'}
+                      </td>
+                      <td className='px-6 py-4'>
+                        <button className='p-1.5 rounded-full hover:bg-slate-100 transition-colors duration-150'>
+                          <svg
+                            width='16'
+                            height='16'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            className='text-slate-400'
+                          >
+                            <circle cx='12' cy='5' r='1.5' fill='currentColor' />
+                            <circle cx='12' cy='12' r='1.5' fill='currentColor' />
+                            <circle cx='12' cy='19' r='1.5' fill='currentColor' />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {selectedInvoice && (
+          <InvoicePreview2
+            selectedInvoice={selectedInvoice}
+            setSelectedInvoice={setSelectedInvoice}
+            setEditingInvoice={setEditingInvoice}
+          />
+        )}
 
-      {editingInvoice && (
-        <InvoiceSheet
-          open={!!editingInvoice}
-          onOpenChange={setEditingInvoice}
-          existingInvoice={editingInvoice}
-        />
-      )}
+        {editingInvoice && (
+          <InvoiceSheet
+            open={!!editingInvoice}
+            onOpenChange={setEditingInvoice}
+            existingInvoice={editingInvoice}
+          />
+        )}
+      </div>
     </div>
   );
 };
