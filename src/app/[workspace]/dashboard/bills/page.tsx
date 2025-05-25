@@ -1,5 +1,6 @@
 'use client';
 
+import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -49,6 +50,7 @@ function getCustomerAvatar(name: string) {
 
 const Bills = () => {
   const [search, setSearch] = useState('');
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const {
     data: invoices,
@@ -190,8 +192,11 @@ const Bills = () => {
         <InvoicePreview2
           selectedInvoice={selectedInvoice}
           setSelectedInvoice={setSelectedInvoice}
+          setEditingInvoice={setEditingInvoice}
         />
       )}
+
+      {editingInvoice && <InvoiceSheet open={!!editingInvoice} onOpenChange={setEditingInvoice} />}
     </div>
   );
 };

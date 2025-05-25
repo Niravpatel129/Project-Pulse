@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 interface InvoicePreview2Props {
   selectedInvoice?: any;
   setSelectedInvoice: (invoice: any) => void;
+  setEditingInvoice: (invoice: any) => void;
 }
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -24,6 +25,7 @@ function formatDate(dateStr?: string) {
 const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   selectedInvoice,
   setSelectedInvoice,
+  setEditingInvoice,
 }) => {
   const [activityOpen, setActivityOpen] = useState(true);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -71,20 +73,13 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 
         {/* Actions */}
         <div className='flex gap-2 px-6 pb-6'>
-          <button className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'>
-            <span className='inline-flex items-center justify-center gap-1.5'>
-              <svg width='16' height='16' fill='none' viewBox='0 0 24 24' className='text-gray-500'>
-                <path
-                  d='M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2'
-                  stroke='currentColor'
-                  strokeWidth='1.5'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                />
-                <circle cx='12' cy='7' r='4' stroke='currentColor' strokeWidth='1.5' />
-              </svg>
-              Edit
-            </span>
+          <button
+            onClick={() => {
+              return setEditingInvoice(selectedInvoice);
+            }}
+            className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
+          >
+            <span className='inline-flex items-center justify-center gap-1.5'>Edit</span>
           </button>
           <button className='w-9 h-9 flex items-center justify-center rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'>
             <svg width='16' height='16' fill='none' viewBox='0 0 24 24'>
