@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
-import { motion } from 'framer-motion';
 import { ArrowLeft, Moon, PencilIcon, Send, Sun, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -270,14 +269,12 @@ export default function AppSidebar() {
                     <div className='space-y-2'>
                       {sessions.map((session) => {
                         return (
-                          <motion.div
+                          <div
                             key={session.id}
                             className='flex items-center justify-between p-2 rounded-md hover:bg-[#eaeaea] dark:hover:bg-white/10 cursor-pointer'
                             onClick={() => {
                               return handleChatClick(session.id);
                             }}
-                            whileHover='hover'
-                            initial='initial'
                           >
                             <div className='flex-1 min-w-0'>
                               <p className='text-sm font-medium text-[#3F3F46] dark:text-[#f7f7f7] truncate'>
@@ -287,27 +284,19 @@ export default function AppSidebar() {
                                 {new Date(session.timestamp).toLocaleString()}
                               </p>
                             </div>
-                            <motion.div
-                              variants={{
-                                initial: { opacity: 0 },
-                                hover: { opacity: 1 },
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='h-8 w-8'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteSession(session.id);
                               }}
-                              transition={{ duration: 0.2 }}
+                              disabled={isLoadingChat}
                             >
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='h-8 w-8'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteSession(session.id);
-                                }}
-                                disabled={isLoadingChat}
-                              >
-                                <Trash2 className='h-4 w-4 text-[#3F3F46] dark:text-[#f7f7f7]' />
-                              </Button>
-                            </motion.div>
-                          </motion.div>
+                              <Trash2 className='h-4 w-4 text-[#3F3F46] dark:text-[#f7f7f7]' />
+                            </Button>
+                          </div>
                         );
                       })}
                     </div>
