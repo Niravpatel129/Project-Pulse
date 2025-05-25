@@ -126,7 +126,7 @@ const InvoiceSheet = ({
   const { clients } = useClients();
   const { data: globalInvoiceSettings } = useInvoiceSettings();
   const { settings: lastInvoiceSettings, isLoading: isLoadingLastSettings } =
-    useLastInvoiceSettings();
+    useLastInvoiceSettings(open);
   const createInvoice = useCreateInvoice();
   const queryClient = useQueryClient();
   const router = useRouter();

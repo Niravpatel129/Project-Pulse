@@ -30,7 +30,7 @@ interface LastInvoiceSettingsResponse {
   };
 }
 
-export function useLastInvoiceSettings() {
+export function useLastInvoiceSettings(open?: boolean) {
   const {
     data: settingsResponse,
     isLoading,
@@ -47,6 +47,8 @@ export function useLastInvoiceSettings() {
         throw err;
       }
     },
+    enabled: open === true, // Only run the query when open is true
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   console.log('🚀 Transformed settings:', settingsResponse?.data?.invoiceSettings);
