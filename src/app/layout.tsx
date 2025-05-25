@@ -1,6 +1,5 @@
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ChatProvider } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
 import { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
@@ -224,10 +223,8 @@ export default function RootLayout({
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           <AuthProvider>
             <ClientLayout>
-              <ChatProvider>
-                {children}
-                <Toaster />
-              </ChatProvider>
+              {children}
+              <Toaster />
             </ClientLayout>
           </AuthProvider>
         </ThemeProvider>
