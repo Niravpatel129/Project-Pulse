@@ -412,6 +412,15 @@ const InvoiceSheet = ({
   const [invoiceCreated, setInvoiceCreated] = useState(false);
   const [createdInvoiceData, setCreatedInvoiceData] = useState<any>(null);
 
+  // Reset form when sheet opens, unless editing existing invoice
+  useEffect(() => {
+    if (open && !existingInvoice) {
+      resetForm();
+      setInvoiceCreated(false);
+      setCreatedInvoiceData(null);
+    }
+  }, [open, existingInvoice]);
+
   const updateInvoice = useMutation({
     mutationFn: async (invoiceData: any) => {
       const response = await newRequest.put(`/invoices2/${existingInvoice._id}`, invoiceData);
