@@ -233,165 +233,172 @@ const Bills = () => {
             transition: { duration: 0.3, ease: 'easeInOut' },
           }}
         >
-          <div className='flex items-center gap-1 mb-4 h-9'>
-            <div className='relative flex items-center max-w-xs w-full'>
-              <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
-              <Input
-                className='rounded-none pl-7 pr-10 border-slate-100'
-                placeholder='Search or filter'
-              />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type='button'
-                    className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none'
-                    aria-label='Filter'
-                  >
-                    <VscListFilter className='w-4 h-4' />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className='text-xs w-[240px]'>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Calendar className='mr-2 w-4 h-4' /> Due Date
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('dueDate', 'today');
-                        }}
-                      >
-                        Today
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('dueDate', 'this_week');
-                        }}
-                      >
-                        This Week
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('dueDate', 'this_month');
-                        }}
-                      >
-                        This Month
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('dueDate', 'this_year');
-                        }}
-                      >
-                        This Year
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <User className='mr-2 w-4 h-4' /> Customer
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('customer', 'all');
-                        }}
-                      >
-                        All Customers
-                      </DropdownMenuItem>
-                      {invoiceList &&
-                        Array.from(
-                          new Set(
-                            invoiceList
-                              .map((inv) => {
-                                return inv.customer?.name;
-                              })
-                              .filter((name): name is string => {
-                                return Boolean(name);
-                              }),
-                          ),
-                        ).map((name: string) => {
-                          return (
-                            <DropdownMenuItem
-                              key={name}
-                              onClick={() => {
-                                return handleFilterChange('customer', String(name));
-                              }}
-                            >
-                              {String(name)}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Ticket className='mr-2 w-4 h-4' /> Status
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'paid');
-                        }}
-                      >
-                        Paid
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'unpaid');
-                        }}
-                      >
-                        Unpaid
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'overdue');
-                        }}
-                      >
-                        Overdue
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'draft');
-                        }}
-                      >
-                        Draft
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'cancelled');
-                        }}
-                      >
-                        Cancelled
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <div className='flex items-center justify-between w-full'>
+            <div className='flex items-center gap-1 mb-4 h-9 w-full'>
+              <div className='relative flex items-center max-w-xs w-full'>
+                <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
+                <Input
+                  className='rounded-none pl-7 pr-10 border-slate-100'
+                  placeholder='Search or filter'
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type='button'
+                      className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none'
+                      aria-label='Filter'
+                    >
+                      <VscListFilter className='w-4 h-4' />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className='text-xs w-[240px]'>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Calendar className='mr-2 w-4 h-4' /> Due Date
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('dueDate', 'today');
+                          }}
+                        >
+                          Today
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('dueDate', 'this_week');
+                          }}
+                        >
+                          This Week
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('dueDate', 'this_month');
+                          }}
+                        >
+                          This Month
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('dueDate', 'this_year');
+                          }}
+                        >
+                          This Year
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <User className='mr-2 w-4 h-4' /> Customer
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('customer', 'all');
+                          }}
+                        >
+                          All Customers
+                        </DropdownMenuItem>
+                        {invoiceList &&
+                          Array.from(
+                            new Set(
+                              invoiceList
+                                .map((inv) => {
+                                  return inv.customer?.name;
+                                })
+                                .filter((name): name is string => {
+                                  return Boolean(name);
+                                }),
+                            ),
+                          ).map((name: string) => {
+                            return (
+                              <DropdownMenuItem
+                                key={name}
+                                onClick={() => {
+                                  return handleFilterChange('customer', String(name));
+                                }}
+                              >
+                                {String(name)}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Ticket className='mr-2 w-4 h-4' /> Status
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('status', 'paid');
+                          }}
+                        >
+                          Paid
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('status', 'unpaid');
+                          }}
+                        >
+                          Unpaid
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('status', 'overdue');
+                          }}
+                        >
+                          Overdue
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('status', 'draft');
+                          }}
+                        >
+                          Draft
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleFilterChange('status', 'cancelled');
+                          }}
+                        >
+                          Cancelled
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {/* Active Filters */}
+              <div className='flex items-center gap-2 h-full'>
+                {Object.entries(activeFilters).map(([type, value]) => {
+                  return (
+                    <div
+                      key={`${type}-${value}`}
+                      className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors'
+                      onClick={() => {
+                        return removeFilter(type as 'dueDate' | 'customer' | 'status');
+                      }}
+                    >
+                      <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
+                      <span className='text-xs group-hover:text-[#878787] font-medium'>
+                        {type === 'dueDate' && value === 'today' && 'Due Today'}
+                        {type === 'dueDate' && value === 'this_week' && 'Due This Week'}
+                        {type === 'dueDate' && value === 'this_month' && 'Due This Month'}
+                        {type === 'dueDate' && value === 'this_year' && 'Due This Year'}
+                        {type === 'customer' && value === 'all' && 'All Customers'}
+                        {type === 'customer' && value !== 'all' && `Customer: ${value}`}
+                        {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            {/* Active Filters */}
-            <div className='flex items-center gap-2 h-full'>
-              {Object.entries(activeFilters).map(([type, value]) => {
-                return (
-                  <div
-                    key={`${type}-${value}`}
-                    className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors'
-                    onClick={() => {
-                      return removeFilter(type as 'dueDate' | 'customer' | 'status');
-                    }}
-                  >
-                    <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
-                    <span className='text-xs group-hover:text-[#878787] font-medium'>
-                      {type === 'dueDate' && value === 'today' && 'Due Today'}
-                      {type === 'dueDate' && value === 'this_week' && 'Due This Week'}
-                      {type === 'dueDate' && value === 'this_month' && 'Due This Month'}
-                      {type === 'dueDate' && value === 'this_year' && 'Due This Year'}
-                      {type === 'customer' && value === 'all' && 'All Customers'}
-                      {type === 'customer' && value !== 'all' && `Customer: ${value}`}
-                      {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
-                    </span>
-                  </div>
-                );
-              })}
+            <div>
+              <Button variant='outline' size='sm'>
+                Clear Filters
+              </Button>
             </div>
           </div>
 
