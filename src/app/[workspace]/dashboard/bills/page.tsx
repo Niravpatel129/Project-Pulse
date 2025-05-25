@@ -126,8 +126,50 @@ const Bills = () => {
 
   const invoiceList = invoices?.data?.invoices || [];
 
+  // Filter invoices based on active filters
+  const filteredInvoices = invoiceList.filter((invoice: any) => {
+    // Due Date filter
+    if (activeFilters.dueDate) {
+      const dueDate = new Date(invoice.dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      switch (activeFilters.dueDate) {
+        case 'today':
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          if (dueDate < today || dueDate >= tomorrow) return false;
+          break;
+        case 'this_week':
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 7);
+          if (dueDate < weekStart || dueDate >= weekEnd) return false;
+          break;
+        case 'this_month':
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          if (dueDate < monthStart || dueDate > monthEnd) return false;
+          break;
+      }
+    }
+
+    // Customer filter
+    if (activeFilters.customer && activeFilters.customer !== 'all') {
+      if (invoice.customer?.name !== activeFilters.customer) return false;
+    }
+
+    // Status filter
+    if (activeFilters.status) {
+      if (invoice.status?.toLowerCase() !== activeFilters.status.toLowerCase()) return false;
+    }
+
+    return true;
+  });
+
   // Calculate Open invoices (status: 'unpaid' or 'open')
-  const openInvoices = invoiceList.filter((inv: any) => {
+  const openInvoices = filteredInvoices.filter((inv: any) => {
     return inv.status?.toLowerCase() === 'unpaid' || inv.status?.toLowerCase() === 'open';
   });
   const openAmount = openInvoices.reduce((sum: number, inv: any) => {
@@ -354,7 +396,7 @@ const Bills = () => {
           </div>
 
           <InvoiceTable
-            invoices={invoiceList}
+            invoices={filteredInvoices}
             selectedInvoice={selectedInvoice}
             setSelectedInvoice={setSelectedInvoice}
             setEditingInvoice={setEditingInvoice}
