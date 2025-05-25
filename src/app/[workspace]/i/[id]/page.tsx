@@ -380,7 +380,7 @@ const InvoicePage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className='flex flex-col items-center justify-center py-12'
+                    className='flex flex-col items-center justify-center py-12 min-h-[600px]'
                   >
                     <div className='text-center mb-8'>
                       <h2 className='text-2xl font-mono mb-4'>Payment Details</h2>
