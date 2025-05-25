@@ -354,10 +354,16 @@ const Bills = () => {
                           </div>
                         </td>
                         <td className='px-4 py-3 font-medium text-[#121212] dark:text-white'>
-                          {formatCurrency(
-                            invoice.totals?.total || 0,
-                            invoice.settings?.currency || 'CAD',
-                          )}
+                          <span
+                            className={
+                              invoice.status?.toLowerCase() === 'cancelled' ? 'line-through' : ''
+                            }
+                          >
+                            {formatCurrency(
+                              invoice.totals?.total || 0,
+                              invoice.settings?.currency || 'CAD',
+                            )}
+                          </span>
                         </td>
                         <td className='px-4 py-3 text-[#121212] dark:text-slate-300'>
                           {invoice.issueDate ? formatDate(invoice.issueDate) : '--'}

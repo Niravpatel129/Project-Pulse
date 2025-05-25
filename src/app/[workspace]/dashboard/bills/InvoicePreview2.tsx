@@ -72,7 +72,11 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 
         {/* Amount */}
         <div className='px-6 pt-1 pb-5'>
-          <div className='text-3xl font-mono font-light text-gray-900 dark:text-gray-100 tracking-tight'>
+          <div
+            className={`text-3xl font-mono font-light text-gray-900 dark:text-gray-100 tracking-tight ${
+              selectedInvoice.status === 'cancelled' ? 'line-through' : ''
+            }`}
+          >
             {formatCurrency(
               selectedInvoice.totals?.total || 0,
               selectedInvoice.settings?.currency || 'CAD',
@@ -262,16 +266,70 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             </svg>
           </button>
           {activityOpen && (
-            <div className='pl-2 pb-2 text-xs text-gray-500 dark:text-gray-400 space-y-1.5'>
+            <div className='pl-2 pb-2 text-xs text-gray-500 dark:text-gray-400 space-y-3'>
               <div className='flex items-center gap-2'>
-                <span className='h-1.5 w-1.5 rounded-full bg-gray-400 inline-block'></span>
-                Created{' '}
-                <span className='ml-auto'>{formatDate(selectedInvoice.issueDate)}, 06:38</span>
+                <div className='w-3 flex justify-center'>
+                  <span className='h-1.5 w-1.5 rounded-full bg-gray-400'></span>
+                </div>
+                <div className='flex-1'>
+                  <div className='flex items-center justify-between'>
+                    <span>Created</span>
+                    <span>{formatDate(selectedInvoice.createdAt)}</span>
+                  </div>
+                </div>
               </div>
-              <div className='flex items-center gap-2'>
-                <span className='h-1.5 w-1.5 rounded-full border border-gray-400 inline-block'></span>
-                Paid
-              </div>
+              {selectedInvoice.status === 'paid' && (
+                <div className='flex items-center gap-2'>
+                  <div className='w-3 flex justify-center'>
+                    <span className='h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse'></span>
+                  </div>
+                  <div className='flex-1'>
+                    <div className='flex items-center justify-between'>
+                      <span>Paid</span>
+                      <span>{formatDate(selectedInvoice.paidAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {selectedInvoice.status === 'cancelled' && (
+                <div className='flex items-center gap-2'>
+                  <div className='w-3 flex justify-center'>
+                    <span className='h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse'></span>
+                  </div>
+                  <div className='flex-1'>
+                    <div className='flex items-center justify-between'>
+                      <span>Cancelled</span>
+                      <span>{formatDate(selectedInvoice.statusChangedAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {selectedInvoice.status === 'open' && (
+                <>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-3 flex justify-center'>
+                      <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600'></span>
+                    </div>
+                    <div className='flex-1'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-gray-400 dark:text-gray-500'>Seen</span>
+                        <span className='text-gray-400 dark:text-gray-500'>--</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-3 flex justify-center'>
+                      <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600 animate-pulse'></span>
+                    </div>
+                    <div className='flex-1'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-gray-400 dark:text-gray-500'>Paid</span>
+                        <span className='text-gray-400 dark:text-gray-500'>--</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
