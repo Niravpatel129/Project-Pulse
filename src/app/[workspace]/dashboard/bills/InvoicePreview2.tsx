@@ -39,12 +39,12 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   }
 
   return (
-    <div className='h-full p-4 pl-0 relative'>
+    <div className='h-full lg:p-4 lg:pl-0 relative p-0'>
       <button
         onClick={() => {
           return setSelectedInvoice(null);
         }}
-        className='absolute top-8 right-8 p-2 rounded-full hover:bg-slate-100 transition-colors duration-150 text-gray-400'
+        className='absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors duration-150 text-gray-400'
       >
         <XIcon className='w-4 h-4' />
       </button>

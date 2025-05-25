@@ -2,6 +2,8 @@
 
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -58,6 +60,7 @@ const Bills = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   console.log('🚀 selectedInvoice:', selectedInvoice);
   const {
     data: invoices,
@@ -143,7 +146,7 @@ const Bills = () => {
         <motion.div
           className='flex-1 py-4 px-4 overflow-hidden'
           animate={{
-            marginRight: selectedInvoice ? '600px' : '0',
+            marginRight: !isMobile && selectedInvoice ? '600px' : '0',
             transition: { duration: 0.3, ease: 'easeInOut' },
           }}
         >
@@ -248,20 +251,39 @@ const Bills = () => {
             </table>
           </div>
         </motion.div>
-        {selectedInvoice && (
-          <motion.div
-            className='fixed right-0 top-[53px] h-[calc(100vh-55px)] w-[600px]  bg-white dark:bg-[#1A1A1A]'
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
-            <InvoicePreview2
-              selectedInvoice={selectedInvoice}
-              setSelectedInvoice={setSelectedInvoice}
-              setEditingInvoice={setEditingInvoice}
-            />
-          </motion.div>
-        )}
+        {selectedInvoice &&
+          (isMobile ? (
+            <Sheet
+              open={!!selectedInvoice}
+              onOpenChange={() => {
+                return setSelectedInvoice(null);
+              }}
+            >
+              <SheetContent side='right' className='w-full sm:max-w-lg p-0'>
+                <SheetHeader className='sr-only'>
+                  <SheetTitle>Invoice Preview</SheetTitle>
+                </SheetHeader>
+                <InvoicePreview2
+                  selectedInvoice={selectedInvoice}
+                  setSelectedInvoice={setSelectedInvoice}
+                  setEditingInvoice={setEditingInvoice}
+                />
+              </SheetContent>
+            </Sheet>
+          ) : (
+            <motion.div
+              className='fixed right-0 top-[53px] h-[calc(100vh-55px)] w-[600px] bg-white dark:bg-[#1A1A1A]'
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <InvoicePreview2
+                selectedInvoice={selectedInvoice}
+                setSelectedInvoice={setSelectedInvoice}
+                setEditingInvoice={setEditingInvoice}
+              />
+            </motion.div>
+          ))}
 
         {editingInvoice && (
           <InvoiceSheet
