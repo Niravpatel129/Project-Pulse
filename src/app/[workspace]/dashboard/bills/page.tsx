@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useSidebar } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -93,7 +94,6 @@ const Bills = () => {
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: 'delete' | 'cancel';
@@ -101,6 +101,7 @@ const Bills = () => {
   } | null>(null);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { toggleSidebar } = useSidebar();
   console.log('🚀 selectedInvoice:', selectedInvoice);
   const {
     data: invoices,
@@ -205,10 +206,6 @@ const Bills = () => {
         return dateB.getTime() - dateA.getTime();
       });
   }, [invoiceList, search]);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   const onRefresh = () => {
     // Add any additional refresh logic here if needed
