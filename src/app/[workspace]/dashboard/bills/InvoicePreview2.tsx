@@ -39,7 +39,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   }
 
   return (
-    <div className='h-full p-4 relative'>
+    <div className='h-full p-4 pl-0 relative'>
       <button
         onClick={() => {
           return setSelectedInvoice(null);
