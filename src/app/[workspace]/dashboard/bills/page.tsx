@@ -28,9 +28,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Calendar, Ticket, User } from 'lucide-react';
+import { Calendar, ListFilter, Ticket, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { FiFilter, FiSidebar, FiX } from 'react-icons/fi';
+import { FiSidebar, FiX } from 'react-icons/fi';
 import { VscSearch } from 'react-icons/vsc';
 import { toast } from 'sonner';
 import InvoicePreview2 from './InvoicePreview2';
@@ -202,10 +202,10 @@ const Bills = () => {
                 <DropdownMenuTrigger asChild>
                   <button
                     type='button'
-                    className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
+                    className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none'
                     aria-label='Filter'
                   >
-                    <FiFilter className='w-4 h-4' />
+                    <ListFilter className='w-4 h-4' />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className='text-xs w-[240px]'>
