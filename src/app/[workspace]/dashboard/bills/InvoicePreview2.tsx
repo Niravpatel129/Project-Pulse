@@ -1,7 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { XIcon } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InvoicePreviewActions from './InvoicePreviewActions';
 
 interface InvoicePreview2Props {
@@ -37,7 +38,36 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 }) => {
   console.log('🚀 selectedInvoice:', selectedInvoice);
   const [activityOpen, setActivityOpen] = useState(true);
-  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(!!selectedInvoice?.internalNote);
+  const [internalNote, setInternalNote] = useState(selectedInvoice?.internalNote || '');
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setInternalNote(selectedInvoice?.internalNote || '');
+    setNoteOpen(!!selectedInvoice?.internalNote);
+  }, [selectedInvoice]);
+
+  const updateInternalNoteMutation = useMutation({
+    mutationFn: async (note: string) => {
+      const response = await newRequest.patch(`/invoices2/${selectedInvoice._id}/internal-note`, {
+        a: note,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+  });
+
+  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInternalNote(e.target.value);
+  };
+
+  const handleNoteBlur = () => {
+    if (internalNote !== selectedInvoice?.internalNote) {
+      updateInternalNoteMutation.mutate(internalNote);
+    }
+  };
 
   if (!selectedInvoice) {
     return (
@@ -366,6 +396,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             <textarea
               className='w-full mt-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-gray-100 min-h-[40px] focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-neutral-700 transition-shadow resize-none'
               placeholder='Add a note...'
+              value={internalNote}
+              onChange={handleNoteChange}
+              onBlur={handleNoteBlur}
             />
           )}
         </div>
