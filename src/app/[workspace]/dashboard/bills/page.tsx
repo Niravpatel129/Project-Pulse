@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -45,6 +46,18 @@ function formatCurrency(amount: number, currency: string = 'CAD') {
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function formatDateTime(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 function getStatusBadge(status: string) {
@@ -362,7 +375,18 @@ const Bills = () => {
                           </span>
                         </td>
                         <td className='px-4 py-3 text-[#121212] dark:text-slate-300'>
-                          {invoice.issueDate ? formatDate(invoice.issueDate) : '--'}
+                          {invoice.issueDate ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>{formatDate(invoice.issueDate)}</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{formatDateTime(invoice.issueDate)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            '--'
+                          )}
                         </td>
                         <td className='px-2 py-3 w-[60px]'>
                           <DropdownMenu>
