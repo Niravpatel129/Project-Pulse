@@ -30,7 +30,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Calendar, Ticket, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { FiFilter, FiSidebar } from 'react-icons/fi';
+import { FiFilter, FiSidebar, FiX } from 'react-icons/fi';
 import { VscSearch } from 'react-icons/vsc';
 import { toast } from 'sonner';
 import InvoicePreview2 from './InvoicePreview2';
@@ -44,6 +44,11 @@ const Bills = () => {
     type: 'delete' | 'cancel';
     invoiceId: string;
   } | null>(null);
+  const [activeFilters, setActiveFilters] = useState<{
+    dueDate?: string;
+    customer?: string;
+    status?: string;
+  }>({});
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
@@ -146,12 +151,26 @@ const Bills = () => {
     setPendingAction(null);
   };
 
+  const handleFilterChange = (type: 'dueDate' | 'customer' | 'status', value: string | null) => {
+    setActiveFilters((prev) => {
+      if (value === null) {
+        const { [type]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [type]: value };
+    });
+  };
+
+  const removeFilter = (type: 'dueDate' | 'customer' | 'status') => {
+    handleFilterChange(type, null);
+  };
+
   if (error) return <div>Error loading invoices</div>;
 
   return (
     <div>
       <div className='flex items-center justify-between px-4 pb-2 pt-3 border-b border-[#E4E4E7] dark:border-[#232428] relative z-[1] bg-background'>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 h-full'>
           <Button
             variant='ghost'
             size='icon'
@@ -172,70 +191,168 @@ const Bills = () => {
             transition: { duration: 0.3, ease: 'easeInOut' },
           }}
         >
-          <div className='mb-4 relative flex items-center max-w-xs w-full'>
-            <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
-            <Input className='rounded-none h-9 pl-7 pr-10' placeholder='Search or filter' />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type='button'
-                  className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
-                  aria-label='Filter'
-                >
-                  <FiFilter className='w-4 h-4' />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className='text-xs w-[240px]'>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Calendar className='mr-2 w-4 h-4' /> Due Date
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem>Today</DropdownMenuItem>
-                    <DropdownMenuItem>This Week</DropdownMenuItem>
-                    <DropdownMenuItem>This Month</DropdownMenuItem>
-                    <DropdownMenuItem>Custom...</DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <User className='mr-2 w-4 h-4' /> Customer
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem>All Customers</DropdownMenuItem>
-                    {invoiceList &&
-                      Array.from(
-                        new Set(
-                          invoiceList
-                            .map((inv) => {
-                              return inv.customer?.name;
-                            })
-                            .filter((name): name is string => {
-                              return Boolean(name);
-                            }),
-                        ),
-                      ).map((name) => {
-                        return (
-                          <DropdownMenuItem key={String(name)}>{String(name)}</DropdownMenuItem>
-                        );
-                      })}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Ticket className='mr-2 w-4 h-4' /> Status
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem>Paid</DropdownMenuItem>
-                    <DropdownMenuItem>Unpaid</DropdownMenuItem>
-                    <DropdownMenuItem>Overdue</DropdownMenuItem>
-                    <DropdownMenuItem>Draft</DropdownMenuItem>
-                    <DropdownMenuItem>Cancelled</DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className='flex items-center gap-1 mb-4 h-9'>
+            <div className='relative flex items-center max-w-xs w-full'>
+              <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
+              <Input
+                className='rounded-none pl-7 pr-10 border-slate-100'
+                placeholder='Search or filter'
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type='button'
+                    className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
+                    aria-label='Filter'
+                  >
+                    <FiFilter className='w-4 h-4' />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className='text-xs w-[240px]'>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Calendar className='mr-2 w-4 h-4' /> Due Date
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('dueDate', 'today');
+                        }}
+                      >
+                        Today
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('dueDate', 'this_week');
+                        }}
+                      >
+                        This Week
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('dueDate', 'this_month');
+                        }}
+                      >
+                        This Month
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('dueDate', 'custom');
+                        }}
+                      >
+                        Custom...
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <User className='mr-2 w-4 h-4' /> Customer
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('customer', 'all');
+                        }}
+                      >
+                        All Customers
+                      </DropdownMenuItem>
+                      {invoiceList &&
+                        Array.from(
+                          new Set(
+                            invoiceList
+                              .map((inv) => {
+                                return inv.customer?.name;
+                              })
+                              .filter((name): name is string => {
+                                return Boolean(name);
+                              }),
+                          ),
+                        ).map((name: string) => {
+                          return (
+                            <DropdownMenuItem
+                              key={name}
+                              onClick={() => {
+                                return handleFilterChange('customer', String(name));
+                              }}
+                            >
+                              {String(name)}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Ticket className='mr-2 w-4 h-4' /> Status
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'paid');
+                        }}
+                      >
+                        Paid
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'unpaid');
+                        }}
+                      >
+                        Unpaid
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'overdue');
+                        }}
+                      >
+                        Overdue
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'draft');
+                        }}
+                      >
+                        Draft
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'cancelled');
+                        }}
+                      >
+                        Cancelled
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {/* Active Filters */}
+            <div className='flex items-center gap-2 h-full'>
+              {Object.entries(activeFilters).map(([type, value]) => {
+                return (
+                  <div
+                    key={`${type}-${value}`}
+                    className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors'
+                    onClick={() => {
+                      return removeFilter(type as 'dueDate' | 'customer' | 'status');
+                    }}
+                  >
+                    <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
+                    <span className='text-xs group-hover:text-[#878787] font-medium'>
+                      {type === 'dueDate' && value === 'today' && 'Due Today'}
+                      {type === 'dueDate' && value === 'this_week' && 'Due This Week'}
+                      {type === 'dueDate' && value === 'this_month' && 'Due This Month'}
+                      {type === 'dueDate' && value === 'custom' && 'Custom Due Date'}
+                      {type === 'customer' && value === 'all' && 'All Customers'}
+                      {type === 'customer' && value !== 'all' && `Customer: ${value}`}
+                      {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
           <InvoiceTable
             invoices={invoiceList}
             selectedInvoice={selectedInvoice}
