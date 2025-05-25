@@ -20,6 +20,11 @@ interface Invoice {
   attachments: any[];
   from: string;
   to: string;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+  };
   issueDate: string;
   dueDate: string;
   items: Array<{
@@ -63,7 +68,25 @@ interface Invoice {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  depositPercentage: number;
+  requireDeposit: boolean;
+  paymentIntentId: string;
+  paidAt: string;
 }
+
+const formatDate = (date: string, format: string) => {
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+
+  return format.replace('DD', day).replace('MM', month).replace('YYYY', year.toString());
+};
+
+const formatCurrency = (amount: number, currency: string, decimals: string) => {
+  const formattedAmount = decimals === 'yes' ? amount.toFixed(2) : Math.round(amount).toString();
+  return `${currency}${formattedAmount}`;
+};
 
 const InvoicePage = () => {
   const [showPayment, setShowPayment] = useState(false);
@@ -103,6 +126,7 @@ const InvoicePage = () => {
     invoiceId,
     currency: invoice?.settings.currency || 'USD',
   });
+  console.log('🚀 invoice:', invoice);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -145,14 +169,26 @@ const InvoicePage = () => {
               <AvatarImage src={invoice.logo} />
               <AvatarFallback>m</AvatarFallback>
             </Avatar>
-            <span className='truncate text-sm'>{invoice.to}</span>
+            <span className='truncate text-sm'>{invoice.customer?.name || invoice.to}</span>
           </div>
-          <Badge
-            variant='outline'
-            className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#00C969] bg-[#DDF1E4] dark:text-[#00C969] dark:bg-[#00C969]/10'
-          >
-            <span className='line-clamp-1 truncate inline-block'>{invoice.status}</span>
-          </Badge>
+          <div className='flex items-center space-x-2'>
+            <Badge
+              variant='outline'
+              className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#00C969] bg-[#DDF1E4] dark:text-[#00C969] dark:bg-[#00C969]/10'
+            >
+              <span className='line-clamp-1 truncate inline-block'>{invoice.status}</span>
+            </Badge>
+            {invoice.paymentMethod && (
+              <Badge
+                variant='outline'
+                className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#0066FF] bg-[#E6F0FF] dark:text-[#0066FF] dark:bg-[#0066FF]/10'
+              >
+                <span className='line-clamp-1 truncate inline-block'>
+                  {invoice.paymentMethod.replace('_', ' ')}
+                </span>
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className='pb-24 md:pb-0'>
@@ -190,7 +226,7 @@ const InvoicePage = () => {
                                   Issue Date:
                                 </span>
                                 <span className='text-[11px] font-mono flex-shrink-0'>
-                                  {new Date(invoice.issueDate).toLocaleDateString()}
+                                  {formatDate(invoice.issueDate, invoice.settings.dateFormat)}
                                 </span>
                               </div>
                             </div>
@@ -202,7 +238,7 @@ const InvoicePage = () => {
                                   Due Date:
                                 </span>
                                 <span className='text-[11px] font-mono flex-shrink-0'>
-                                  {new Date(invoice.dueDate).toLocaleDateString()}
+                                  {formatDate(invoice.dueDate, invoice.settings.dateFormat)}
                                 </span>
                               </div>
                             </div>
@@ -253,10 +289,18 @@ const InvoicePage = () => {
                             </div>
                             <div className='text-[11px] self-start'>{item.quantity}</div>
                             <div className='text-[11px] self-start'>
-                              {invoice.settings.currency}${item.price.toFixed(2)}
+                              {formatCurrency(
+                                item.price,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
                             </div>
                             <div className='text-[11px] text-right self-start'>
-                              {invoice.settings.currency}${item.total.toFixed(2)}
+                              {formatCurrency(
+                                item.total,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
                             </div>
                           </div>
                         );
@@ -268,29 +312,61 @@ const InvoicePage = () => {
                         <div className='flex justify-between items-center py-1'>
                           <span className='text-[11px] text-[#878787] font-mono'>Subtotal</span>
                           <span className='text-right font-mono text-[11px] text-[#878787]'>
-                            {invoice.settings.currency}${invoice.totals.subtotal.toFixed(2)}
+                            {formatCurrency(
+                              invoice.totals.subtotal,
+                              invoice.settings.currency,
+                              invoice.settings.decimals,
+                            )}
                           </span>
                         </div>
-                        <div className='flex justify-between items-center py-1'>
-                          <span className='text-[11px] text-[#878787] font-mono'>Discount</span>
-                          <span className='text-right font-mono text-[11px] text-[#878787]'>
-                            {invoice.settings.currency}${invoice.totals.discount.toFixed(2)}
-                          </span>
-                        </div>
-                        {invoice.settings.salesTax.enabled && (
+                        {invoice.settings.discount.enabled && invoice.totals.discount > 0 && (
+                          <div className='flex justify-between items-center py-1'>
+                            <span className='text-[11px] text-[#878787] font-mono'>Discount</span>
+                            <span className='text-right font-mono text-[11px] text-[#878787]'>
+                              {formatCurrency(
+                                invoice.totals.discount,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {invoice.settings.salesTax.enabled && invoice.totals.taxAmount > 0 && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>
-                              VAT ({invoice.settings.salesTax.rate}%)
+                              Sales Tax ({invoice.settings.salesTax.rate}%)
                             </span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
-                              {invoice.settings.currency}${invoice.totals.taxAmount.toFixed(2)}
+                              {formatCurrency(
+                                invoice.totals.taxAmount,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {invoice.settings.vat.enabled && invoice.totals.vatAmount > 0 && (
+                          <div className='flex justify-between items-center py-1'>
+                            <span className='text-[11px] text-[#878787] font-mono'>
+                              VAT ({invoice.settings.vat.rate}%)
+                            </span>
+                            <span className='text-right font-mono text-[11px] text-[#878787]'>
+                              {formatCurrency(
+                                invoice.totals.vatAmount,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
                             </span>
                           </div>
                         )}
                         <div className='flex justify-between items-center py-4 mt-2 border-t border-border'>
                           <span className='text-[11px] text-[#878787] font-mono'>Total</span>
                           <span className='text-right font-mono text-[21px]'>
-                            {invoice.settings.currency}${invoice.totals.total.toFixed(2)}
+                            {formatCurrency(
+                              invoice.totals.total,
+                              invoice.settings.currency,
+                              invoice.settings.decimals,
+                            )}
                           </span>
                         </div>
                       </div>
@@ -306,9 +382,28 @@ const InvoicePage = () => {
                   >
                     <div className='text-center mb-8'>
                       <h2 className='text-2xl font-mono mb-4'>Payment Details</h2>
+                      {invoice.requireDeposit && (
+                        <div className='mb-4'>
+                          <p className='text-[11px] text-[#878787] mb-2'>Required Deposit</p>
+                          <div className='text-2xl font-mono mb-2'>
+                            {formatCurrency(
+                              (invoice.totals.total * invoice.depositPercentage) / 100,
+                              invoice.settings.currency,
+                              invoice.settings.decimals,
+                            )}
+                          </div>
+                          <p className='text-[11px] text-[#878787]'>
+                            {invoice.depositPercentage}% of total
+                          </p>
+                        </div>
+                      )}
                       <p className='text-[11px] text-[#878787] mb-6'>Total Amount Due</p>
                       <div className='text-4xl font-mono mb-8'>
-                        {invoice.settings.currency}${invoice.totals.total.toFixed(2)}
+                        {formatCurrency(
+                          invoice.totals.total,
+                          invoice.settings.currency,
+                          invoice.settings.decimals,
+                        )}
                       </div>
                     </div>
                     <div className='w-full max-w-md space-y-4'>
