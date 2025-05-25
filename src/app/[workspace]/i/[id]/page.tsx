@@ -417,19 +417,101 @@ const InvoicePage = () => {
                                 ? 'night'
                                 : 'flat',
                               variables: {
-                                colorPrimary: '#0066FF',
+                                colorPrimary: '#1D1D1F',
                                 colorBackground: document?.documentElement?.classList?.contains(
                                   'dark',
                                 )
                                   ? '#232323'
-                                  : '#F4F4F5',
+                                  : '#FFFFFF',
                                 colorText: document?.documentElement?.classList?.contains('dark')
                                   ? '#fafafa'
-                                  : '#3F3F46',
-                                colorDanger: '#ef4444',
-                                fontFamily: 'system-ui, sans-serif',
+                                  : '#1D1D1F',
+                                colorDanger: '#FF3B30',
+                                fontFamily:
+                                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                                 spacingUnit: '4px',
                                 borderRadius: '12px',
+                              },
+                              rules: {
+                                '.Tab': {
+                                  border: document?.documentElement?.classList?.contains('dark')
+                                    ? '1px solid #333'
+                                    : '1px solid #E4E4E7',
+                                  borderRadius: '8px',
+                                },
+                                '.Tab:hover': {
+                                  color: 'var(--colorText)',
+                                },
+                                '.Tab--selected': {
+                                  borderColor: '#1D1D1F',
+                                  backgroundColor: 'rgba(29, 29, 31, 0.1)',
+                                },
+                                '.TabIcon': {
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                },
+                                '.TabLabel': {
+                                  fontWeight: '500',
+                                },
+                                '.Input': {
+                                  border: document?.documentElement?.classList?.contains('dark')
+                                    ? '1px solid #333'
+                                    : '1px solid #E4E4E7',
+                                  borderRadius: '8px',
+                                  padding: '12px',
+                                  backgroundColor: document?.documentElement?.classList?.contains(
+                                    'dark',
+                                  )
+                                    ? '#232323'
+                                    : '#FFFFFF',
+                                },
+                                '.Input:focus': {
+                                  borderColor: '#1D1D1F',
+                                  boxShadow: '0 0 0 1px #1D1D1F',
+                                },
+                                '.Input--invalid': {
+                                  borderColor: '#FF3B30',
+                                },
+                                '.Input--invalid:focus': {
+                                  boxShadow: '0 0 0 1px #FF3B30',
+                                },
+                                '.AccordionItem': {
+                                  border: document?.documentElement?.classList?.contains('dark')
+                                    ? '1px solid #333'
+                                    : '1px solid #E4E4E7',
+                                  borderRadius: '12px',
+                                  marginBottom: '8px',
+                                  backgroundColor: document?.documentElement?.classList?.contains(
+                                    'dark',
+                                  )
+                                    ? '#232323'
+                                    : '#FFFFFF',
+                                },
+                                '.AccordionItemButton': {
+                                  padding: '16px',
+                                  fontWeight: '500',
+                                  color: document?.documentElement?.classList?.contains('dark')
+                                    ? '#fafafa'
+                                    : '#1D1D1F',
+                                },
+                                '.AccordionItemButton:hover': {
+                                  backgroundColor: document?.documentElement?.classList?.contains(
+                                    'dark',
+                                  )
+                                    ? 'rgba(255, 255, 255, 0.05)'
+                                    : 'rgba(0, 0, 0, 0.02)',
+                                },
+                                '.AccordionItemButton:focus': {
+                                  boxShadow: 'none',
+                                  outline: 'none',
+                                },
+                                '.AccordionItemContent': {
+                                  padding: '16px',
+                                  borderTop: document?.documentElement?.classList?.contains('dark')
+                                    ? '1px solid #333'
+                                    : '1px solid #E4E4E7',
+                                },
                               },
                             },
                           }}

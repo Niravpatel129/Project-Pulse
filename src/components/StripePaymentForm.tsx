@@ -101,7 +101,7 @@ export function StripePaymentForm({
       <div className='space-y-6'>
         <div className='bg-[#F4F4F5] dark:bg-[#232323] p-4 rounded-xl'>
           <div className='py-12 flex flex-col items-center justify-center'>
-            <div className='w-10 h-10 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin mb-4'></div>
+            <div className='w-10 h-10 border-4 border-[#86868B] border-t-transparent rounded-full animate-spin mb-4'></div>
             <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Loading payment form...</p>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function StripePaymentForm({
         <button
           type='submit'
           disabled={!stripe || isProcessing}
-          className='w-full bg-[#0066FF] text-white rounded-xl h-12 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+          className='w-full bg-[#1D1D1F] text-white rounded-xl h-12 font-medium flex items-center justify-center gap-2 hover:bg-[#2D2D2F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
         >
           {isProcessing ? (
             <>
