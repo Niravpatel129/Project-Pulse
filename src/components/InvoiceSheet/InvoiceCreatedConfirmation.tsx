@@ -8,12 +8,14 @@ interface InvoiceCreatedConfirmationProps {
   createdInvoiceData: any;
   onViewInvoice: () => void;
   onCreateAnother: () => void;
+  isEditing?: boolean;
 }
 
 const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
   createdInvoiceData,
   onViewInvoice,
   onCreateAnother,
+  isEditing,
 }) => {
   console.log('🚀 createdInvoiceData:', createdInvoiceData);
   return (
@@ -22,9 +24,11 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
         <div className='mx-auto max-w-lg space-y-12'>
           {/* Header */}
           <div className='space-y-3'>
-            <h1 className='text-2xl font-medium text-neutral-900 tracking-tight'>Created & Sent</h1>
+            <h1 className='text-2xl font-medium text-neutral-900 tracking-tight'>
+              {isEditing ? 'Updated & Sent' : 'Created & Sent'}
+            </h1>
             <p className='text-sm text-neutral-500 leading-relaxed'>
-              Your invoice was created and sent successfully
+              Your invoice was {isEditing ? 'updated' : 'created'} and sent successfully
             </p>
           </div>
 
@@ -134,12 +138,14 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
           >
             View invoice
           </Button>
-          <Button
-            className='flex-1 text-xs bg-neutral-900 hover:bg-neutral-800 transition-all duration-150'
-            onClick={onCreateAnother}
-          >
-            Create another
-          </Button>
+          {!isEditing && (
+            <Button
+              className='flex-1 text-xs bg-neutral-900 hover:bg-neutral-800 transition-all duration-150'
+              onClick={onCreateAnother}
+            >
+              Create another
+            </Button>
+          )}
         </div>
       </div>
     </div>

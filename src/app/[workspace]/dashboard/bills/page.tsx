@@ -2,8 +2,8 @@
 
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import InvoicePreview2 from './InvoicePreview2';
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -52,6 +52,7 @@ const Bills = () => {
   const [search, setSearch] = useState('');
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const queryClient = useQueryClient();
   console.log('🚀 selectedInvoice:', selectedInvoice);
   const {
     data: invoices,
@@ -65,6 +66,18 @@ const Bills = () => {
     },
   });
 
+  // Update selectedInvoice when invoices data changes
+  useEffect(() => {
+    if (selectedInvoice && invoices?.data?.invoices) {
+      const updatedInvoice = invoices.data.invoices.find((inv: any) => {
+        return inv._id === selectedInvoice._id;
+      });
+      if (updatedInvoice) {
+        setSelectedInvoice(updatedInvoice);
+      }
+    }
+  }, [invoices?.data?.invoices, selectedInvoice]);
+
   const invoiceList = invoices?.data?.invoices || [];
 
   // Calculate Open invoices (status: 'unpaid' or 'open')
@@ -74,7 +87,6 @@ const Bills = () => {
   const openAmount = openInvoices.reduce((sum: number, inv: any) => {
     return sum + (inv.totals?.total || 0);
   }, 0);
-  const openCurrency = openInvoices[0]?.settings?.currency || 'CAD';
 
   // Filtered invoices
   const filteredInvoices = useMemo(() => {

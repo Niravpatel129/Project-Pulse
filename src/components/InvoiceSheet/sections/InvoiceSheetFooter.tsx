@@ -10,9 +10,15 @@ interface InvoiceSheetFooterProps {
   }>;
   onValidate: () => boolean;
   onCreate: () => void;
+  isEditing?: boolean;
 }
 
-const InvoiceSheetFooter = ({ items, onValidate, onCreate }: InvoiceSheetFooterProps) => {
+const InvoiceSheetFooter = ({
+  items,
+  onValidate,
+  onCreate,
+  isEditing,
+}: InvoiceSheetFooterProps) => {
   const [editedTime] = useState('just now');
 
   const handleCreate = () => {
@@ -28,7 +34,7 @@ const InvoiceSheetFooter = ({ items, onValidate, onCreate }: InvoiceSheetFooterP
         className='w-[100px] h-10 text-[12px] font-medium rounded-none bg-[#18181b] hover:bg-[#232326] dark:bg-[#fff] dark:hover:bg-[#f1f1f1] dark:text-[#18181b]'
         onClick={handleCreate}
       >
-        Create
+        {isEditing ? 'Update' : 'Create'}
       </Button>
     </div>
   );

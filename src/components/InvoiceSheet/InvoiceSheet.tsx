@@ -414,7 +414,7 @@ const InvoiceSheet = ({
 
   const updateInvoice = useMutation({
     mutationFn: async (invoiceData: any) => {
-      const response = await newRequest.put(`/invoices/${existingInvoice._id}`, invoiceData);
+      const response = await newRequest.put(`/invoices2/${existingInvoice._id}`, invoiceData);
       return response.data;
     },
     onSuccess: (response) => {
@@ -519,6 +519,11 @@ const InvoiceSheet = ({
     setInvoiceCreated(false);
     setCreatedInvoiceData(null);
     resetForm();
+    // Clear the existingInvoice by calling onOpenChange with false and then true
+    onOpenChange(false);
+    setTimeout(() => {
+      onOpenChange(true);
+    }, 0);
   };
 
   const handleViewInvoice = () => {
@@ -646,6 +651,7 @@ const InvoiceSheet = ({
             createdInvoiceData={createdInvoiceData}
             onViewInvoice={handleViewInvoice}
             onCreateAnother={handleCreateAnother}
+            isEditing={!!existingInvoice}
           />
         ) : (
           <>
@@ -768,6 +774,7 @@ const InvoiceSheet = ({
                 items={items}
                 onValidate={validateInvoice}
                 onCreate={handleCreateInvoice}
+                isEditing={!!existingInvoice}
               />
             </SheetFooter>
           </>
