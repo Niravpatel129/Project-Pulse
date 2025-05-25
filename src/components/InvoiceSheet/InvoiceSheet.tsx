@@ -11,7 +11,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
@@ -33,9 +33,34 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   price: string;
+  total?: number;
 }
 
 interface InvoiceSettings {
+  dateFormat: string;
+  salesTax: {
+    enabled: boolean;
+    rate: number;
+  };
+  vat: {
+    enabled: boolean;
+    rate: number;
+  };
+  currency: string;
+  discount: {
+    enabled: boolean;
+    amount: number;
+  };
+  attachPdf: string;
+  decimals: 'yes' | 'no';
+  qrCode: string;
+  notes?: string;
+  teamNotes?: string;
+  logo?: string;
+}
+
+// Interface for the menu component's settings
+interface MenuInvoiceSettings {
   dateFormat: string;
   salesTax: string;
   vat: string;
@@ -92,77 +117,150 @@ const SortableInvoiceItem = ({
 const InvoiceSheet = ({
   open,
   onOpenChange,
+  existingInvoice,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  existingInvoice?: any;
 }) => {
   const { clients } = useClients();
   const { data: globalInvoiceSettings } = useInvoiceSettings();
   const { settings: lastInvoiceSettings, isLoading: isLoadingLastSettings } =
     useLastInvoiceSettings();
   const createInvoice = useCreateInvoice();
+  const queryClient = useQueryClient();
   const router = useRouter();
 
   const [fromAddress, setFromAddress] = useState<string>('');
 
-  // Update from address when lastInvoiceSettings loads
+  // Update from address when lastInvoiceSettings loads or when editing
   useEffect(() => {
-    if (lastInvoiceSettings?.from) {
+    if (existingInvoice?.from) {
+      setFromAddress(existingInvoice.from);
+    } else if (lastInvoiceSettings?.from) {
       setFromAddress(lastInvoiceSettings.from);
     }
-  }, [lastInvoiceSettings]);
+  }, [lastInvoiceSettings, existingInvoice]);
 
-  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
-    dateFormat: 'DD/MM/YYYY',
-    salesTax: 'disable',
-    vat: 'disable',
-    currency: 'CAD',
-    discount: 'disable',
-    attachPdf: 'disable',
-    decimals: 'yes',
-    qrCode: 'enable',
-    notes: '',
-    logo: globalInvoiceSettings?.logo || '',
+  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>(() => {
+    if (existingInvoice?.settings) {
+      return {
+        dateFormat: existingInvoice.settings.dateFormat || 'DD/MM/YYYY',
+        salesTax: {
+          enabled: existingInvoice.settings.salesTax?.enabled || false,
+          rate: existingInvoice.settings.salesTax?.rate || 13,
+        },
+        vat: {
+          enabled: existingInvoice.settings.vat?.enabled || false,
+          rate: existingInvoice.settings.vat?.rate || 20,
+        },
+        currency: existingInvoice.settings.currency || 'CAD',
+        discount: {
+          enabled: existingInvoice.settings.discount?.enabled || false,
+          amount: existingInvoice.settings.discount?.amount || 0,
+        },
+        attachPdf: 'disable',
+        decimals: existingInvoice.settings.decimals || 'yes',
+        qrCode: 'enable',
+        notes: existingInvoice.notes || '',
+        logo: existingInvoice.logo || globalInvoiceSettings?.logo || '',
+      };
+    }
+    return {
+      dateFormat: 'DD/MM/YYYY',
+      salesTax: {
+        enabled: false,
+        rate: 13,
+      },
+      vat: {
+        enabled: false,
+        rate: 20,
+      },
+      currency: 'CAD',
+      discount: {
+        enabled: false,
+        amount: 0,
+      },
+      attachPdf: 'disable',
+      decimals: 'yes',
+      qrCode: 'enable',
+      notes: '',
+      logo: globalInvoiceSettings?.logo || '',
+    };
   });
 
   // Update invoice settings when lastInvoiceSettings loads
   useEffect(() => {
-    if (lastInvoiceSettings) {
+    if (!existingInvoice && lastInvoiceSettings) {
       setInvoiceSettings((prev) => {
         return {
           ...prev,
           dateFormat: lastInvoiceSettings.dateFormat || prev.dateFormat,
-          salesTax: lastInvoiceSettings.salesTax?.enabled ? 'enable' : 'disable',
-          vat: lastInvoiceSettings.vat?.enabled ? 'enable' : 'disable',
+          salesTax: {
+            enabled: lastInvoiceSettings.salesTax?.enabled || false,
+            rate: lastInvoiceSettings.salesTax?.rate || prev.salesTax.rate,
+          },
+          vat: {
+            enabled: lastInvoiceSettings.vat?.enabled || false,
+            rate: lastInvoiceSettings.vat?.rate || prev.vat.rate,
+          },
           currency: lastInvoiceSettings.currency || prev.currency,
-          discount: lastInvoiceSettings.discount?.enabled ? 'enable' : 'disable',
+          discount: {
+            enabled: lastInvoiceSettings.discount?.enabled || false,
+            amount: lastInvoiceSettings.discount?.amount || prev.discount.amount,
+          },
           decimals: lastInvoiceSettings.decimals || prev.decimals,
           notes: lastInvoiceSettings.notes || prev.notes,
           logo: lastInvoiceSettings.logo || globalInvoiceSettings?.logo || prev.logo,
         };
       });
     }
-  }, [lastInvoiceSettings, globalInvoiceSettings?.logo]);
+  }, [lastInvoiceSettings, globalInvoiceSettings?.logo, existingInvoice]);
 
-  const [items, setItems] = useState<InvoiceItem[]>([
-    {
-      id: uuidv4(),
-      description: '',
-      quantity: 1,
-      price: '',
-    },
-  ]);
-  const [invoiceTitle, setInvoiceTitle] = useState<string>('Invoice');
-  const [taxRate, setTaxRate] = useState<number>(13);
-  const [vatRate, setVatRate] = useState<number>(20);
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [toAddress, setToAddress] = useState<string>('');
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('INV-0001');
+  const [items, setItems] = useState<InvoiceItem[]>(() => {
+    if (existingInvoice?.items) {
+      return existingInvoice.items.map((item: any) => {
+        return {
+          id: item._id || uuidv4(),
+          description: item.description || '',
+          quantity: item.quantity || 1,
+          price: item.price?.toString() || '',
+          total: item.total,
+        };
+      });
+    }
+    return [
+      {
+        id: uuidv4(),
+        description: '',
+        quantity: 1,
+        price: '',
+      },
+    ];
+  });
+
+  const [invoiceTitle, setInvoiceTitle] = useState<string>(
+    existingInvoice?.invoiceTitle || 'Invoice',
+  );
+  const [taxRate, setTaxRate] = useState<number>(existingInvoice?.settings?.salesTax?.rate || 13);
+  const [vatRate, setVatRate] = useState<number>(existingInvoice?.settings?.vat?.rate || 20);
+  const [discountAmount, setDiscountAmount] = useState<number>(
+    existingInvoice?.settings?.discount?.amount || 0,
+  );
+  const [selectedCustomer, setSelectedCustomer] = useState<string>(
+    existingInvoice?.customer?.id || '',
+  );
+  const [toAddress, setToAddress] = useState<string>(existingInvoice?.to || '');
+  const [invoiceNumber, setInvoiceNumber] = useState<string>(
+    existingInvoice?.invoiceNumber || 'INV-0001',
+  );
   const [issueDate, setIssueDate] = useState<Date>(() => {
-    return new Date();
+    return existingInvoice?.issueDate ? new Date(existingInvoice.issueDate) : new Date();
   });
   const [dueDate, setDueDate] = useState<Date>(() => {
+    if (existingInvoice?.dueDate) {
+      return new Date(existingInvoice.dueDate);
+    }
     const date = new Date();
     date.setDate(date.getDate() + 30);
     return date;
@@ -170,13 +268,13 @@ const InvoiceSheet = ({
 
   // Update rates and invoice number when lastInvoiceSettings loads
   useEffect(() => {
-    if (lastInvoiceSettings) {
+    if (!existingInvoice && lastInvoiceSettings) {
       setTaxRate(lastInvoiceSettings.salesTax?.rate || 13);
       setVatRate(lastInvoiceSettings.vat?.rate || 20);
       setDiscountAmount(lastInvoiceSettings.discount?.amount || 0);
       setInvoiceNumber(lastInvoiceSettings.newInvoiceNumber || 'INV-0001');
     }
-  }, [lastInvoiceSettings]);
+  }, [lastInvoiceSettings, existingInvoice]);
 
   const formatNumber = (value: number) => {
     if (invoiceSettings.decimals === 'yes') {
@@ -232,9 +330,9 @@ const InvoiceSheet = ({
       return sum + quantity * price;
     }, 0);
 
-    const taxAmount = invoiceSettings.salesTax === 'enable' ? (subtotal * taxRate) / 100 : 0;
-    const vatAmount = invoiceSettings.vat === 'enable' ? (subtotal * vatRate) / 100 : 0;
-    const discount = invoiceSettings.discount === 'enable' ? discountAmount : 0;
+    const taxAmount = invoiceSettings.salesTax.enabled ? (subtotal * taxRate) / 100 : 0;
+    const vatAmount = invoiceSettings.vat.enabled ? (subtotal * vatRate) / 100 : 0;
+    const discount = invoiceSettings.discount.enabled ? discountAmount : 0;
     const total = subtotal + taxAmount + vatAmount - discount;
 
     return {
@@ -248,9 +346,9 @@ const InvoiceSheet = ({
     items,
     taxRate,
     vatRate,
-    invoiceSettings.salesTax,
-    invoiceSettings.vat,
-    invoiceSettings.discount,
+    invoiceSettings.salesTax.enabled,
+    invoiceSettings.vat.enabled,
+    invoiceSettings.discount.enabled,
     discountAmount,
   ]);
 
@@ -314,6 +412,28 @@ const InvoiceSheet = ({
   const [invoiceCreated, setInvoiceCreated] = useState(false);
   const [createdInvoiceData, setCreatedInvoiceData] = useState<any>(null);
 
+  const updateInvoice = useMutation({
+    mutationFn: async (invoiceData: any) => {
+      const response = await newRequest.put(`/invoices/${existingInvoice._id}`, invoiceData);
+      return response.data;
+    },
+    onSuccess: (response) => {
+      toast.success('Invoice updated successfully');
+      setInvoiceCreated(true);
+      setCreatedInvoiceData(response.data.invoice);
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', existingInvoice._id] });
+    },
+    onError: (error: any) => {
+      if (error?.response?.data?.message === 'Invoice number already exists') {
+        toast.error('This invoice number is already in use. Please choose a different number.');
+      } else {
+        toast.error('Failed to update invoice');
+        console.error('Error updating invoice:', error);
+      }
+    },
+  });
+
   const handleCreateInvoice = () => {
     if (!validateInvoice()) {
       return;
@@ -356,15 +476,15 @@ const InvoiceSheet = ({
         currency: invoiceSettings.currency,
         dateFormat: invoiceSettings.dateFormat,
         salesTax: {
-          enabled: invoiceSettings.salesTax === 'enable',
+          enabled: invoiceSettings.salesTax.enabled,
           rate: taxRate,
         },
         vat: {
-          enabled: invoiceSettings.vat === 'enable',
+          enabled: invoiceSettings.vat.enabled,
           rate: vatRate,
         },
         discount: {
-          enabled: invoiceSettings.discount === 'enable',
+          enabled: invoiceSettings.discount.enabled,
           amount: discountAmount,
         },
         decimals: invoiceSettings.decimals,
@@ -373,24 +493,26 @@ const InvoiceSheet = ({
       logo: invoiceSettings.logo,
     };
 
-    createInvoice.mutate(invoiceData, {
-      onSuccess: (response) => {
-        toast.success('Invoice created successfully');
-        setInvoiceCreated(true);
-        // Access the invoice data from the nested response structure
-        const invoiceData = response.data.invoice;
-        setCreatedInvoiceData(invoiceData);
-        // Do NOT close the sheet here
-      },
-      onError: (error: any) => {
-        if (error?.response?.data?.message === 'Invoice number already exists') {
-          toast.error('This invoice number is already in use. Please choose a different number.');
-        } else {
-          toast.error('Failed to create invoice');
-          console.error('Error creating invoice:', error);
-        }
-      },
-    });
+    if (existingInvoice) {
+      updateInvoice.mutate(invoiceData);
+    } else {
+      createInvoice.mutate(invoiceData, {
+        onSuccess: (response) => {
+          toast.success('Invoice created successfully');
+          setInvoiceCreated(true);
+          const invoiceData = response.data.invoice;
+          setCreatedInvoiceData(invoiceData);
+        },
+        onError: (error: any) => {
+          if (error?.response?.data?.message === 'Invoice number already exists') {
+            toast.error('This invoice number is already in use. Please choose a different number.');
+          } else {
+            toast.error('Failed to create invoice');
+            console.error('Error creating invoice:', error);
+          }
+        },
+      });
+    }
   };
 
   const handleCreateAnother = () => {
@@ -457,17 +579,59 @@ const InvoiceSheet = ({
     }
   };
 
+  // Convert internal settings to menu settings format
+  const menuSettings: MenuInvoiceSettings = {
+    dateFormat: invoiceSettings.dateFormat,
+    salesTax: invoiceSettings.salesTax.enabled ? 'enable' : 'disable',
+    vat: invoiceSettings.vat.enabled ? 'enable' : 'disable',
+    currency: invoiceSettings.currency,
+    discount: invoiceSettings.discount.enabled ? 'enable' : 'disable',
+    attachPdf: invoiceSettings.attachPdf,
+    decimals: invoiceSettings.decimals,
+    qrCode: invoiceSettings.qrCode,
+    notes: invoiceSettings.notes,
+    teamNotes: invoiceSettings.teamNotes,
+    logo: invoiceSettings.logo,
+  };
+
+  // Handle settings change from menu
+  const handleMenuSettingsChange = (newSettings: Partial<MenuInvoiceSettings>) => {
+    setInvoiceSettings((prev) => {
+      return {
+        ...prev,
+        dateFormat: newSettings.dateFormat || prev.dateFormat,
+        salesTax: {
+          enabled: newSettings.salesTax === 'enable',
+          rate: prev.salesTax.rate,
+        },
+        vat: {
+          enabled: newSettings.vat === 'enable',
+          rate: prev.vat.rate,
+        },
+        currency: newSettings.currency || prev.currency,
+        discount: {
+          enabled: newSettings.discount === 'enable',
+          amount: prev.discount.amount,
+        },
+        attachPdf: newSettings.attachPdf || prev.attachPdf,
+        decimals: newSettings.decimals || prev.decimals,
+        qrCode: newSettings.qrCode || prev.qrCode,
+        notes: newSettings.notes || prev.notes,
+        teamNotes: newSettings.teamNotes || prev.teamNotes,
+        logo: newSettings.logo || prev.logo,
+      };
+    });
+  };
+
   return (
     <Sheet
       open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) {
-          // Only reset the form if we're not in the invoice created state
           if (!invoiceCreated) {
             resetForm();
           }
         }
-        // Always reset invoice created states when opening or closing
         setInvoiceCreated(false);
         setCreatedInvoiceData(null);
         onOpenChange(isOpen);
@@ -490,8 +654,8 @@ const InvoiceSheet = ({
             </VisuallyHidden>
             <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
               <InvoiceSheetMenu
-                settings={invoiceSettings}
-                onSettingsChange={handleInvoiceSettingsChange}
+                settings={menuSettings}
+                onSettingsChange={handleMenuSettingsChange}
               />
             </SheetHeader>
             <div className='mt-4 flex-1 px-12'>
@@ -522,6 +686,8 @@ const InvoiceSheet = ({
                 onFromAddressChange={setFromAddress}
                 fromAddress={fromAddress}
                 onToAddressChange={setToAddress}
+                selectedCustomer={selectedCustomer}
+                toAddress={toAddress}
               />
               <div className='flex flex-col gap-2 mt-8'>
                 {/* Labels */}
@@ -580,9 +746,9 @@ const InvoiceSheet = ({
                 currency={invoiceSettings.currency}
                 formatNumber={formatNumber}
                 decimals={invoiceSettings.decimals}
-                salesTax={invoiceSettings.salesTax}
-                vat={invoiceSettings.vat}
-                discount={invoiceSettings.discount}
+                salesTax={invoiceSettings.salesTax.enabled ? 'enable' : 'disable'}
+                vat={invoiceSettings.vat.enabled ? 'enable' : 'disable'}
+                discount={invoiceSettings.discount.enabled ? 'enable' : 'disable'}
                 discountAmount={discountAmount}
                 onDiscountAmountChange={handleDiscountAmountChange}
               />

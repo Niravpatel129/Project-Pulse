@@ -19,6 +19,8 @@ interface InvoiceFromToProps {
   onFromAddressChange: (address: string) => void;
   onToAddressChange: (address: string) => void;
   fromAddress: string;
+  selectedCustomer?: string;
+  toAddress?: string;
 }
 
 const InvoiceFromTo = ({
@@ -26,18 +28,31 @@ const InvoiceFromTo = ({
   onFromAddressChange,
   onToAddressChange,
   fromAddress,
+  selectedCustomer,
+  toAddress,
 }: InvoiceFromToProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState(fromAddress);
   const [open, setOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
-  const [toContent, setToContent] = useState('');
+  const [toContent, setToContent] = useState(toAddress || '');
   const [isToFocused, setIsToFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toTextareaRef = useRef<HTMLTextAreaElement>(null);
   const { clients } = useClients();
+
+  useEffect(() => {
+    if (toAddress) {
+      setToContent(toAddress);
+    }
+  }, [toAddress]);
+
+  useEffect(() => {
+    if (fromAddress) {
+      setContent(fromAddress);
+    }
+  }, [fromAddress]);
 
   const adjustHeight = (ref: React.RefObject<HTMLTextAreaElement>) => {
     const textarea = ref.current;
@@ -92,7 +107,6 @@ const InvoiceFromTo = ({
           />
         </div>
       </div>
-
       <div className='flex-1'>
         <div className='mb-2'>
           <span className='text-[11px] text-[#878787] font-mono'>To</span>
@@ -123,16 +137,14 @@ const InvoiceFromTo = ({
                           key={client._id}
                           value={client.user.name}
                           onSelect={() => {
-                            console.log('Customer selected:', client._id);
-                            setSelectedCustomer(client._id);
+                            onCustomerSelect(client._id);
                             setToContent(`${client.user.name}\n${client.user.email}`);
                             onToAddressChange(`${client.user.name}\n${client.user.email}`);
-                            onCustomerSelect(client._id);
                             setOpen(false);
                           }}
                           className='!text-[11px] group'
                         >
-                          <div className='flex items-center justify-between w-full '>
+                          <div className='flex items-center justify-between w-full'>
                             <div
                               className={`flex items-center max-w-[150px] ${
                                 selectedCustomer === client._id ? 'font-bold' : ''
@@ -191,7 +203,7 @@ const InvoiceFromTo = ({
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Backspace' && toContent === '') {
-                    setSelectedCustomer('');
+                    onCustomerSelect('');
                   }
                 }}
                 name='to_address'
@@ -199,7 +211,7 @@ const InvoiceFromTo = ({
               <button
                 onClick={() => {
                   setToContent('');
-                  setSelectedCustomer('');
+                  onCustomerSelect('');
                   onToAddressChange('');
                 }}
                 className='absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity text-[#333333] dark:text-[#fff] hover:opacity-80'
@@ -224,21 +236,20 @@ const InvoiceFromTo = ({
           )}
         </div>
       </div>
-
       <AddCustomerDialog
         open={isNewCustomerDialogOpen}
         onOpenChange={setIsNewCustomerDialogOpen}
+        initialData={editingCustomer}
         onEdit={(client) => {
           if (editingCustomer) {
             // Handle the edited customer
-            setSelectedCustomer(client._id);
+            onCustomerSelect(client._id);
             setEditingCustomer(null);
           } else {
             // Handle the newly created customer
-            setSelectedCustomer(client._id);
+            onCustomerSelect(client._id);
           }
         }}
-        initialData={editingCustomer}
       />
     </div>
   );

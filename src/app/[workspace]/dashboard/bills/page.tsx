@@ -52,6 +52,7 @@ const Bills = () => {
   const [search, setSearch] = useState('');
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  console.log('🚀 selectedInvoice:', selectedInvoice);
   const {
     data: invoices,
     isLoading,
@@ -196,7 +197,13 @@ const Bills = () => {
         />
       )}
 
-      {editingInvoice && <InvoiceSheet open={!!editingInvoice} onOpenChange={setEditingInvoice} />}
+      {editingInvoice && (
+        <InvoiceSheet
+          open={!!editingInvoice}
+          onOpenChange={setEditingInvoice}
+          existingInvoice={editingInvoice}
+        />
+      )}
     </div>
   );
 };
