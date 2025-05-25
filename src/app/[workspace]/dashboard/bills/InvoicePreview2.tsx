@@ -47,7 +47,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 
   useEffect(() => {
     setInternalNote(selectedInvoice?.internalNote || '');
-    setNoteOpen(!!selectedInvoice?.internalNote);
+    setNoteOpen(!!selectedInvoice?.internalNote || !!selectedInvoice?.attachments?.length);
     setAttachments(selectedInvoice?.attachments || []);
   }, [selectedInvoice]);
 
@@ -80,6 +80,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
       });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       setIsFileManagerOpen(false);
+      setNoteOpen(true);
     } catch (error) {
       console.error('Error adding attachment:', error);
     }
