@@ -688,13 +688,11 @@ const Bills = () => {
             </motion.div>
           ))}
 
-        {editingInvoice && (
-          <InvoiceSheet
-            open={!!editingInvoice}
-            onOpenChange={setEditingInvoice}
-            existingInvoice={editingInvoice}
-          />
-        )}
+        <InvoiceSheet
+          open={!!editingInvoice}
+          onOpenChange={setEditingInvoice}
+          existingInvoice={editingInvoice}
+        />
       </div>
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
