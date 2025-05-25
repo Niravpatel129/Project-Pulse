@@ -45,6 +45,7 @@ export function useStripeInvoice2Payment({ invoiceId, currency }: UseStripeInvoi
 
   const createPaymentIntent = useCallback(
     async (amount: number, type: PaymentType) => {
+      console.log('createPaymentIntent', amount, type);
       if (!invoiceId) throw new Error('Invoice not loaded');
       try {
         setIsLoading(true);
@@ -74,10 +75,6 @@ export function useStripeInvoice2Payment({ invoiceId, currency }: UseStripeInvoi
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
           setPaymentStatus('form');
-          toast({
-            title: 'Payment ready',
-            description: 'Please complete your payment details below.',
-          });
         }
       } catch (error) {
         setPaymentStatus('select');

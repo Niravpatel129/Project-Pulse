@@ -1,8 +1,11 @@
 'use client';
+import { StripePaymentForm } from '@/components/StripePaymentForm';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { useStripeInvoice2Payment } from '@/hooks/useStripeInvoice2Payment';
 import { newRequest } from '@/utils/newRequest';
+import { Elements } from '@stripe/react-stripe-js';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
@@ -77,16 +80,34 @@ const InvoicePage = () => {
       const response = await newRequest.get<{ data: { invoice: Invoice } }>(
         `/invoices2/${invoiceId}`,
       );
-      return response.data.data.invoice;
+
+      const invoice = response.data.data.invoice;
+
+      handleSelectPayment(invoice?.totals.total || 0, 'full');
+
+      return invoice;
     },
     enabled: !!invoiceId,
   });
-  console.log('🚀 invoice:', invoice);
+
+  const {
+    stripePromise,
+    clientSecret,
+    paymentAmount,
+    paymentStatus,
+    isLoading: isPaymentLoading,
+    handleSelectPayment,
+    handleBackToSelection,
+    setIsLoading,
+  } = useStripeInvoice2Payment({
+    invoiceId,
+    currency: invoice?.settings.currency || 'USD',
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowPayment(true);
-    }, 1000);
+    }, 2000);
 
     return () => {
       return clearTimeout(timer);
@@ -254,20 +275,10 @@ const InvoicePage = () => {
                             {invoice.settings.currency}${invoice.totals.discount.toFixed(2)}
                           </span>
                         </div>
-                        {invoice.settings.vat.enabled && (
-                          <div className='flex justify-between items-center py-1'>
-                            <span className='text-[11px] text-[#878787] font-mono'>
-                              VAT ({invoice.settings.vat.rate}%)
-                            </span>
-                            <span className='text-right font-mono text-[11px] text-[#878787]'>
-                              {invoice.settings.currency}${invoice.totals.vatAmount.toFixed(2)}
-                            </span>
-                          </div>
-                        )}
                         {invoice.settings.salesTax.enabled && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>
-                              Sales Tax ({invoice.settings.salesTax.rate}%)
+                              VAT ({invoice.settings.salesTax.rate}%)
                             </span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
                               {invoice.settings.currency}${invoice.totals.taxAmount.toFixed(2)}
@@ -299,14 +310,41 @@ const InvoicePage = () => {
                       </div>
                     </div>
                     <div className='w-full max-w-md space-y-4'>
-                      <div className='p-4 border rounded-lg'>
-                        <p className='text-[11px] text-[#878787] mb-2'>Payment Method</p>
-                        <p className='font-mono'>{invoice.paymentMethod}</p>
-                      </div>
-                      <div className='p-4 border rounded-lg'>
-                        <p className='text-[11px] text-[#878787] mb-2'>Payment Status</p>
-                        <p className='font-mono text-[#00C969]'>{invoice.status}</p>
-                      </div>
+                      {clientSecret && stripePromise && (
+                        <Elements
+                          stripe={stripePromise}
+                          options={{
+                            clientSecret,
+                            appearance: {
+                              theme: document?.documentElement?.classList?.contains('dark')
+                                ? 'night'
+                                : 'flat',
+                              variables: {
+                                colorPrimary: '#0066FF',
+                                colorBackground: document?.documentElement?.classList?.contains(
+                                  'dark',
+                                )
+                                  ? '#232323'
+                                  : '#F4F4F5',
+                                colorText: document?.documentElement?.classList?.contains('dark')
+                                  ? '#fafafa'
+                                  : '#3F3F46',
+                                colorDanger: '#ef4444',
+                                fontFamily: 'system-ui, sans-serif',
+                                spacingUnit: '4px',
+                                borderRadius: '12px',
+                              },
+                            },
+                          }}
+                        >
+                          <StripePaymentForm
+                            clientSecret={clientSecret}
+                            invoice={invoice}
+                            onBack={handleBackToSelection}
+                            setIsLoading={setIsLoading}
+                          />
+                        </Elements>
+                      )}
                     </div>
                   </motion.div>
                 )}
