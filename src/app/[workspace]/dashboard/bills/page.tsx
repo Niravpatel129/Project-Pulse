@@ -49,6 +49,7 @@ const Bills = () => {
     customer?: string;
     status?: string;
   }>({});
+  const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
@@ -128,6 +129,19 @@ const Bills = () => {
 
   // Filter invoices based on active filters
   const filteredInvoices = invoiceList.filter((invoice: any) => {
+    // Search query filter
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        invoice.invoiceNumber?.toLowerCase().includes(searchLower) ||
+        invoice.customer?.name?.toLowerCase().includes(searchLower) ||
+        invoice.customer?.email?.toLowerCase().includes(searchLower) ||
+        invoice.status?.toLowerCase().includes(searchLower) ||
+        invoice.totals?.total?.toString().includes(searchQuery);
+
+      if (!matchesSearch) return false;
+    }
+
     // Due Date filter
     if (activeFilters.dueDate) {
       const dueDate = new Date(invoice.dueDate);
@@ -240,6 +254,10 @@ const Bills = () => {
                 <Input
                   className='rounded-none pl-7 pr-10 border-slate-100'
                   placeholder='Search or filter'
+                  value={searchQuery}
+                  onChange={(e) => {
+                    return setSearchQuery(e.target.value);
+                  }}
                 />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
