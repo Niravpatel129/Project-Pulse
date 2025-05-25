@@ -48,6 +48,29 @@ function formatDate(dateStr: string) {
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric' });
 }
 
+function getRelativeTime(dateStr: string) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffTime = date.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return `overdue ${Math.abs(diffDays)} days`;
+  } else if (diffDays === 0) {
+    return 'due today';
+  } else if (diffDays === 1) {
+    return 'due tomorrow';
+  } else if (diffDays < 7) {
+    return `in ${diffDays} days`;
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return `in ${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+  } else {
+    const months = Math.floor(diffDays / 30);
+    return `in ${months} ${months === 1 ? 'month' : 'months'}`;
+  }
+}
+
 function formatDateTime(dateStr: string) {
   const date = new Date(dateStr);
   return date.toLocaleString('en-US', {
@@ -346,7 +369,7 @@ const Bills = () => {
                               {formatDate(invoice.dueDate)}
                               <div className='text-slate-400 dark:text-slate-500 ml-0 text-xs'>
                                 {invoice.dueDate > new Date().toISOString()
-                                  ? 'in 1 month'
+                                  ? getRelativeTime(invoice.dueDate)
                                   : 'overdue ' +
                                     formatDate(invoice.dueDate) +
                                     ' ' +
