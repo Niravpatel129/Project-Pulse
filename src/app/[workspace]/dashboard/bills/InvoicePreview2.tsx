@@ -81,14 +81,16 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 
         {/* Actions */}
         <div className='flex gap-2 px-6 pb-6'>
-          <button
-            onClick={() => {
-              return setEditingInvoice(selectedInvoice);
-            }}
-            className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
-          >
-            <span className='inline-flex items-center justify-center gap-1.5'>Edit</span>
-          </button>
+          {(selectedInvoice.status === 'open' || selectedInvoice.status === 'draft') && (
+            <button
+              onClick={() => {
+                return setEditingInvoice(selectedInvoice);
+              }}
+              className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
+            >
+              <span className='inline-flex items-center justify-center gap-1.5'>Edit</span>
+            </button>
+          )}
           <InvoicePreviewActions
             invoice={selectedInvoice}
             onMarkAsPaid={onMarkAsPaid || (() => {})}
