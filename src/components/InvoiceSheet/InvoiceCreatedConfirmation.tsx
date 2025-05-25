@@ -80,7 +80,7 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
                 className='shrink-0 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-150'
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `${window.location.origin}/invoice/${createdInvoiceData._id}`,
+                    `${window.location.origin}/i/${createdInvoiceData._id}`,
                   );
                 }}
               >
