@@ -241,11 +241,13 @@ const Bills = () => {
           </div>
         </div>
         {selectedInvoice && (
-          <InvoicePreview2
-            selectedInvoice={selectedInvoice}
-            setSelectedInvoice={setSelectedInvoice}
-            setEditingInvoice={setEditingInvoice}
-          />
+          <div className='h-[calc(100vh-55px)] min-w-[600px] '>
+            <InvoicePreview2
+              selectedInvoice={selectedInvoice}
+              setSelectedInvoice={setSelectedInvoice}
+              setEditingInvoice={setEditingInvoice}
+            />
+          </div>
         )}
 
         {editingInvoice && (
