@@ -53,7 +53,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
         onClick={() => {
           return setSelectedInvoice(null);
         }}
-        className='absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors duration-150 text-gray-400'
+        className='absolute top-5 right-5 p-2  transition-colors duration-150 text-gray-400'
       >
         <XIcon className='w-4 h-4' />
       </button>

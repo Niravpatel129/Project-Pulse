@@ -273,7 +273,6 @@ const Bills = () => {
               </p>
               <Button
                 variant='outline'
-                className='text-lg px-8 py-3'
                 onClick={() => {
                   return setEditingInvoice({});
                 }}
@@ -304,7 +303,7 @@ const Bills = () => {
                     <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                       Issue Date
                     </th>
-                    <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[60px]'>
+                    <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[80px]'>
                       Actions
                     </th>
                   </tr>
@@ -372,7 +371,7 @@ const Bills = () => {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
-                                className='p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#232428] transition-colors duration-150'
+                                className='p-1.5 hover:bg-slate-100 dark:hover:bg-[#232428] transition-colors duration-150'
                                 onClick={(e) => {
                                   return e.stopPropagation();
                                 }}
