@@ -16,6 +16,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -25,6 +28,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { Calendar, Ticket, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FiFilter, FiSidebar } from 'react-icons/fi';
 import { VscSearch } from 'react-icons/vsc';
@@ -259,27 +263,69 @@ const Bills = () => {
             transition: { duration: 0.3, ease: 'easeInOut' },
           }}
         >
-          <div className='mb-4 relative flex items-center max-w-xs'>
+          <div className='mb-4 relative flex items-center max-w-xs w-full'>
             <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
-            <Input className=' rounded-none h-9 pl-7' placeholder='Search or filter' />
-            <div className='absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2'>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='hover:bg-transparent hover:text-[#3F3F46]/60 dark:hover:text-[#8b8b8b]'
-                  >
-                    <FiFilter className='w-3 h-3' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>
-                    <span>Filter</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <Input className='rounded-none h-9 pl-7 pr-10' placeholder='Search or filter' />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type='button'
+                  className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800'
+                  aria-label='Filter'
+                >
+                  <FiFilter className='w-4 h-4' />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className='text-xs w-[240px]'>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Calendar className='mr-2 w-4 h-4' /> Due Date
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem>Today</DropdownMenuItem>
+                    <DropdownMenuItem>This Week</DropdownMenuItem>
+                    <DropdownMenuItem>This Month</DropdownMenuItem>
+                    <DropdownMenuItem>Custom...</DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <User className='mr-2 w-4 h-4' /> Customer
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem>All Customers</DropdownMenuItem>
+                    {invoiceList &&
+                      Array.from(
+                        new Set(
+                          invoiceList
+                            .map((inv) => {
+                              return inv.customer?.name;
+                            })
+                            .filter((name): name is string => {
+                              return Boolean(name);
+                            }),
+                        ),
+                      ).map((name) => {
+                        return (
+                          <DropdownMenuItem key={String(name)}>{String(name)}</DropdownMenuItem>
+                        );
+                      })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Ticket className='mr-2 w-4 h-4' /> Status
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem>Paid</DropdownMenuItem>
+                    <DropdownMenuItem>Unpaid</DropdownMenuItem>
+                    <DropdownMenuItem>Overdue</DropdownMenuItem>
+                    <DropdownMenuItem>Draft</DropdownMenuItem>
+                    <DropdownMenuItem>Cancelled</DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <InvoiceTable
             invoices={invoiceList}
