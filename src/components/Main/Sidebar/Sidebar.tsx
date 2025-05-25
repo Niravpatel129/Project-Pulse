@@ -192,11 +192,6 @@ export default function AppSidebar() {
     });
   }, [baseNavigation, pathname]);
 
-  // Return null during server-side rendering or before mounting
-  if (!mounted) {
-    return null;
-  }
-
   const handleBackToDashboard = () => {
     router.push('/dashboard/invoices');
     setIsChatView(false);
