@@ -3,6 +3,7 @@ import { StripePaymentForm } from '@/components/StripePaymentForm';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useStripeInvoice2Payment } from '@/hooks/useStripeInvoice2Payment';
 import { newRequest } from '@/utils/newRequest';
 import { Elements } from '@stripe/react-stripe-js';
@@ -498,6 +499,91 @@ const InvoicePage = () => {
               </AnimatePresence>
             </CardContent>
           </Card>
+        </div>
+        <div
+          className='fixed inset-x-0 -bottom-1 flex justify-center'
+          style={{ opacity: 1, filter: 'blur(0px)', transform: 'translateY(-24px)' }}
+        >
+          <div className='backdrop-filter backdrop-blur-lg dark:bg-[#1A1A1A]/80 bg-[#F6F6F3]/80 rounded-full pl-2 pr-4 py-3 h-10 flex items-center justify-center border-[0.5px] border-border'>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await newRequest.get(`/invoices2/${invoiceId}/download`, {
+                          responseType: 'blob',
+                        });
+
+                        // Create a blob from the PDF data
+                        const pdfBlob = new Blob([response.data], {
+                          type: 'application/pdf',
+                        });
+
+                        // Create a URL for the blob
+                        const url = window.URL.createObjectURL(pdfBlob);
+
+                        // Create a temporary link element
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+
+                        // Append to body, click, and remove
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        // Clean up the URL object
+                        window.URL.revokeObjectURL(url);
+                      } catch (error) {
+                        console.error('Error downloading PDF:', error);
+                      }
+                    }}
+                    className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'
+                  >
+                    <svg
+                      stroke='currentColor'
+                      fill='currentColor'
+                      strokeWidth='0'
+                      viewBox='0 0 24 24'
+                      className='size-[18px]'
+                      height='1em'
+                      width='1em'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path fill='none' d='M0 0h24v24H0z'></path>
+                      <path d='M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zm-1-4-1.41-1.41L13 12.17V4h-2v8.17L8.41 9.59 7 11l5 5 5-5z'></path>
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Download Invoice</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'>
+                    <svg
+                      stroke='currentColor'
+                      fill='currentColor'
+                      strokeWidth='0'
+                      viewBox='0 0 24 24'
+                      height='1em'
+                      width='1em'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path fill='none' d='M0 0h24v24H0z'></path>
+                      <path d='M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z'></path>
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Print Invoice</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
     </div>
