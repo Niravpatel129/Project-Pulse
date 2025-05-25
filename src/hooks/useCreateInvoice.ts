@@ -1,5 +1,5 @@
 import { newRequest } from '@/utils/newRequest';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface InvoiceItem {
   description: string;
@@ -48,10 +48,15 @@ interface CreateInvoiceData {
 }
 
 export const useCreateInvoice = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: CreateInvoiceData) => {
       const response = await newRequest.post('/invoices2/', data);
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
   });
 };
