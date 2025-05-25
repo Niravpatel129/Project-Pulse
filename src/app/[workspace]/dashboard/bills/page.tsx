@@ -138,7 +138,7 @@ const Bills = () => {
           >
             <FiSidebar size={20} />
           </Button>
-          <h1 className='text-lg font-semibold text-[#3F3F46] dark:text-white'>Invoices</h1>
+          <h1 className='text-lg font-semibold text-[#121212] dark:text-white'>Invoices</h1>
         </div>
         <div className='flex items-center gap-2'></div>
       </motion.div>
@@ -155,25 +155,25 @@ const Bills = () => {
             <table className='min-w-full text-sm'>
               <thead>
                 <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
-                  <th className='px-4 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
+                  <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                     Invoice
                   </th>
-                  <th className='px-4 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
+                  <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                     Status
                   </th>
-                  <th className='px-4 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
+                  <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                     Due Date
                   </th>
-                  <th className='px-4 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
+                  <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                     Customer
                   </th>
-                  <th className='px-4 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
+                  <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                     Amount
                   </th>
-                  <th className='px-4 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide'>
+                  <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
                     Issue Date
                   </th>
-                  <th className='px-2 py-3 text-left text-slate-600 dark:text-slate-300 font-medium tracking-wide w-[60px]'>
+                  <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[60px]'>
                     Actions
                   </th>
                 </tr>
@@ -192,13 +192,13 @@ const Bills = () => {
                     >
                       <td className='px-4 py-3'>
                         <div className='flex flex-col gap-1'>
-                          <span className='font-medium text-slate-900 dark:text-white'>
+                          <span className='font-medium text-[#121212] dark:text-white'>
                             {invoice.invoiceNumber}
                           </span>
                         </div>
                       </td>
                       <td className='px-4 py-3'>{getStatusBadge(invoice.status)}</td>
-                      <td className='px-4 py-3 text-slate-600 dark:text-slate-300 h-full'>
+                      <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
                         {invoice.dueDate ? (
                           <div className='h-full'>
                             {formatDate(invoice.dueDate)}
@@ -215,18 +215,18 @@ const Bills = () => {
                           '--'
                         )}
                       </td>
-                      <td className='px-4 py-3 text-slate-600 dark:text-slate-300 h-full'>
+                      <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
                         <div className='h-full flex items-center'>
                           <span>{invoice.customer?.name}</span>
                         </div>
                       </td>
-                      <td className='px-4 py-3 font-medium text-slate-900 dark:text-white'>
+                      <td className='px-4 py-3 font-medium text-[#121212] dark:text-white'>
                         {formatCurrency(
                           invoice.totals?.total || 0,
                           invoice.settings?.currency || 'CAD',
                         )}
                       </td>
-                      <td className='px-4 py-3 text-slate-600 dark:text-slate-300'>
+                      <td className='px-4 py-3 text-[#121212] dark:text-slate-300'>
                         {invoice.issueDate ? formatDate(invoice.issueDate) : '--'}
                       </td>
                       <td className='px-2 py-3 w-[60px]'>
