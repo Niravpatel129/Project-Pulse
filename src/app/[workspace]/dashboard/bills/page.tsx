@@ -185,13 +185,25 @@ const Bills = () => {
 
   // Filtered invoices
   const filteredInvoices = useMemo(() => {
-    if (!search) return invoiceList;
-    return invoiceList.filter((inv: any) => {
-      return (
-        inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
-        inv.customer?.name?.toLowerCase().includes(search.toLowerCase())
-      );
-    });
+    if (!search) {
+      return [...invoiceList].sort((a: any, b: any) => {
+        const dateA = new Date(a.issueDate || 0);
+        const dateB = new Date(b.issueDate || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+    }
+    return invoiceList
+      .filter((inv: any) => {
+        return (
+          inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
+          inv.customer?.name?.toLowerCase().includes(search.toLowerCase())
+        );
+      })
+      .sort((a: any, b: any) => {
+        const dateA = new Date(a.issueDate || 0);
+        const dateB = new Date(b.issueDate || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [invoiceList, search]);
 
   const toggleSidebar = () => {
