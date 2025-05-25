@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
@@ -262,6 +263,75 @@ const Bills = () => {
 
   if (error) return <div>Error loading invoices</div>;
 
+  const InvoiceSkeleton = () => {
+    return (
+      <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
+        <table className='min-w-full text-sm'>
+          <thead>
+            <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
+              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
+                Invoice
+              </th>
+              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
+                Status
+              </th>
+              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
+                Due Date
+              </th>
+              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
+                Customer
+              </th>
+              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
+                Amount
+              </th>
+              <th className='px-4 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide'>
+                Issue Date
+              </th>
+              <th className='px-2 py-3 text-left text-[#121212] dark:text-slate-300 font-medium tracking-wide w-[80px]'>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
+            {[...Array(5)].map((_, index) => {
+              return (
+                <tr
+                  key={index}
+                  className='h-[57px] divide-x divide-slate-100 dark:divide-[#232428]'
+                >
+                  <td className='px-4 py-3'>
+                    <Skeleton className='h-4 w-24' />
+                  </td>
+                  <td className='px-4 py-3'>
+                    <Skeleton className='h-5 w-16 rounded-full' />
+                  </td>
+                  <td className='px-4 py-3'>
+                    <div className='space-y-1'>
+                      <Skeleton className='h-4 w-20' />
+                      <Skeleton className='h-3 w-16' />
+                    </div>
+                  </td>
+                  <td className='px-4 py-3'>
+                    <Skeleton className='h-4 w-32' />
+                  </td>
+                  <td className='px-4 py-3'>
+                    <Skeleton className='h-4 w-20' />
+                  </td>
+                  <td className='px-4 py-3'>
+                    <Skeleton className='h-4 w-16' />
+                  </td>
+                  <td className='px-2 py-3'>
+                    <Skeleton className='h-8 w-8 rounded-md' />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div>
       <motion.div
@@ -296,7 +366,9 @@ const Bills = () => {
           }}
         >
           {/* Invoice Table */}
-          {filteredInvoices.length === 0 ? (
+          {isLoading ? (
+            <InvoiceSkeleton />
+          ) : filteredInvoices.length === 0 ? (
             <div className='flex flex-col items-center justify-center py-24'>
               <h2 className='text-2xl font-semibold mb-2'>No invoices</h2>
               <p className='text-gray-500 mb-6 text-center'>
