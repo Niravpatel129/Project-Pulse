@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +29,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Calendar, Ticket, User } from 'lucide-react';
+import { Calendar, FilterIcon, Ticket, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FiSidebar, FiX } from 'react-icons/fi';
 import { VscListFilter, VscSearch } from 'react-icons/vsc';
@@ -50,6 +51,15 @@ const Bills = () => {
     status?: string;
   }>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleColumns, setVisibleColumns] = useState({
+    Invoice: true,
+    Status: true,
+    'Due Date': true,
+    Customer: true,
+    Amount: true,
+    'Issue Date': true,
+    Actions: true,
+  });
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
@@ -221,6 +231,15 @@ const Bills = () => {
     handleFilterChange(type, null);
   };
 
+  const toggleColumn = (column: string) => {
+    setVisibleColumns((prev) => {
+      return {
+        ...prev,
+        [column]: !prev[column],
+      };
+    });
+  };
+
   if (error) return <div>Error loading invoices</div>;
 
   return (
@@ -237,7 +256,6 @@ const Bills = () => {
           </Button>
           <h1 className='text-lg font-semibold text-[#121212] dark:text-white'>Invoices</h1>
         </div>
-        <div className='flex items-center gap-2'></div>
       </div>
       <div className='flex h-full bg-white dark:bg-[#1A1A1A]'>
         <motion.div
@@ -413,10 +431,40 @@ const Bills = () => {
                 })}
               </div>
             </div>
-            <div>
-              <Button variant='outline' size='sm'>
-                Clear Filters
-              </Button>
+            <div className='flex items-center gap-2'>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className='w-9 h-9 p-0' variant='outline'>
+                    <FilterIcon className='w-4 h-4' />
+                    <span className='sr-only'>Filter</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='w-48'>
+                  <DropdownMenuItem className='font-medium text-sm text-muted-foreground'>
+                    Visible Columns
+                  </DropdownMenuItem>
+                  {Object.entries(visibleColumns).map(([column, isVisible]) => {
+                    return (
+                      <DropdownMenuItem
+                        key={column}
+                        className='flex items-center gap-2'
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          toggleColumn(column);
+                        }}
+                      >
+                        <Checkbox
+                          checked={isVisible}
+                          onCheckedChange={() => {
+                            return toggleColumn(column);
+                          }}
+                        />
+                        <span>{column}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -443,6 +491,7 @@ const Bills = () => {
               setShowConfirmDialog(true);
             }}
             isLoading={isLoading}
+            visibleColumns={visibleColumns}
           />
         </motion.div>
         {selectedInvoice &&

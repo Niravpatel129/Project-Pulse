@@ -1,17 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { newRequest } from '@/utils/newRequest';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 
@@ -169,6 +163,7 @@ interface InvoiceTableProps {
   onCancel: (invoiceId: string) => void;
   onDelete: (invoiceId: string) => void;
   isLoading: boolean;
+  visibleColumns: Record<string, boolean>;
 }
 
 export const InvoiceTable = ({
@@ -180,6 +175,7 @@ export const InvoiceTable = ({
   onCancel,
   onDelete,
   isLoading,
+  visibleColumns,
 }: InvoiceTableProps) => {
   if (isLoading) {
     return <InvoiceSkeleton />;
@@ -212,6 +208,7 @@ export const InvoiceTable = ({
         <thead>
           <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428] !font-normal'>
             {TABLE_HEADERS.map((header, index) => {
+              if (!visibleColumns[header.label]) return null;
               return (
                 <th
                   key={index}
@@ -238,182 +235,111 @@ export const InvoiceTable = ({
                   return setSelectedInvoice(invoice);
                 }}
               >
-                <td className='px-4 py-3'>
-                  <div className='flex flex-col gap-1'>
-                    <span className=' text-[#121212] dark:text-white'>{invoice.invoiceNumber}</span>
-                  </div>
-                </td>
-                <td className='px-4 py-3'>{getStatusBadge(invoice.status)}</td>
-                <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
-                  {invoice.dueDate ? (
-                    <div className='h-full'>
-                      {formatDate(invoice.dueDate)}
-                      <div className='text-slate-400 dark:text-slate-500 ml-0 text-xs'>
-                        {invoice.dueDate > new Date().toISOString()
-                          ? getRelativeTime(invoice.dueDate)
-                          : 'overdue ' +
-                            formatDate(invoice.dueDate) +
-                            ' ' +
-                            formatDate(new Date().toISOString())}
-                      </div>
+                {visibleColumns['Invoice'] && (
+                  <td className='px-4 py-3'>
+                    <div className='flex flex-col gap-1'>
+                      <span className=' text-[#121212] dark:text-white'>
+                        {invoice.invoiceNumber}
+                      </span>
                     </div>
-                  ) : (
-                    '--'
-                  )}
-                </td>
-                <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
-                  <div className='h-full flex items-center'>
-                    <span>{invoice.customer?.name}</span>
-                  </div>
-                </td>
-                <td className='px-4 py-3  text-[#121212] dark:text-white'>
-                  <span
-                    className={invoice.status?.toLowerCase() === 'cancelled' ? 'line-through' : ''}
-                  >
-                    {formatCurrency(
-                      invoice.totals?.total || 0,
-                      invoice.settings?.currency || 'CAD',
+                  </td>
+                )}
+                {visibleColumns['Status'] && (
+                  <td className='px-4 py-3'>{getStatusBadge(invoice.status)}</td>
+                )}
+                {visibleColumns['Due Date'] && (
+                  <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
+                    {invoice.dueDate ? (
+                      <div className='h-full'>
+                        {formatDate(invoice.dueDate)}
+                        <div className='text-xs text-muted-foreground'>
+                          {getRelativeTime(invoice.dueDate)}
+                        </div>
+                      </div>
+                    ) : (
+                      '-'
                     )}
-                  </span>
-                </td>
-                <td className='px-4 py-3 text-[#121212] dark:text-slate-300'>
-                  {invoice.issueDate ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>{formatDate(invoice.issueDate)}</TooltipTrigger>
-                        <TooltipContent>
-                          <p>{formatDateTime(invoice.issueDate)}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    '--'
-                  )}
-                </td>
-                <td className='px-2 py-3 w-[60px]'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className='p-1.5 hover:bg-slate-100 dark:hover:bg-[#232428] transition-colors duration-150'
-                        onClick={(e) => {
-                          return e.stopPropagation();
-                        }}
-                        aria-label='Actions'
-                      >
-                        <MoreHorizontal className='w-4 h-4 text-slate-400 dark:text-slate-500' />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                      <DropdownMenuItem>Open invoice</DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText(
-                            `${window.location.origin}/invoice/${invoice._id}`,
-                          );
-                        }}
-                      >
-                        Copy link
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const response = await newRequest.get(
-                              `/invoices2/${invoice._id}/download`,
-                              { responseType: 'blob' },
-                            );
-
-                            // Create a blob from the PDF data
-                            const pdfBlob = new Blob([response.data], {
-                              type: 'application/pdf',
-                            });
-
-                            // Create a URL for the blob
-                            const url = window.URL.createObjectURL(pdfBlob);
-
-                            // Create a temporary link element
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
-
-                            // Append to body, click, and remove
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-
-                            // Clean up the URL object
-                            window.URL.revokeObjectURL(url);
-                          } catch (error) {
-                            console.error('Error downloading PDF:', error);
-                          }
-                        }}
-                      >
-                        Download
-                      </DropdownMenuItem>
-                      {invoice.status?.toLowerCase() !== 'cancelled' &&
-                        invoice.status?.toLowerCase() !== 'paid' &&
-                        invoice.status?.toLowerCase() !== 'draft' && (
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger
-                              onClick={(e) => {
-                                return e.stopPropagation();
-                              }}
-                            >
-                              Mark as paid
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className='p-0'>
-                              <div
-                                className='p-2'
-                                onClick={(e) => {
-                                  return e.stopPropagation();
-                                }}
-                              >
-                                <Calendar
-                                  mode='single'
-                                  onSelect={(date) => {
-                                    if (date && invoice._id) {
-                                      onMarkAsPaid(invoice._id, date);
-                                    }
-                                  }}
-                                  disabled={(date) => {
-                                    return date > new Date();
-                                  }}
-                                />
-                              </div>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                        )}
-                      {invoice.status?.toLowerCase() !== 'cancelled' &&
-                        invoice.status?.toLowerCase() !== 'paid' && (
-                          <DropdownMenuItem
-                            className='text-red-600'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (invoice._id) {
-                                onCancel(invoice._id);
-                              }
-                            }}
-                          >
-                            Cancel
-                          </DropdownMenuItem>
-                        )}
-                      {invoice.status?.toLowerCase() === 'cancelled' && (
-                        <DropdownMenuItem
-                          className='text-red-600'
+                  </td>
+                )}
+                {visibleColumns['Customer'] && (
+                  <td className='px-4 py-3'>
+                    <div className='flex flex-col'>
+                      <span className='text-[#121212] dark:text-white'>
+                        {invoice.customer?.name || '-'}
+                      </span>
+                      <span className='text-xs text-muted-foreground'>
+                        {invoice.customer?.email || '-'}
+                      </span>
+                    </div>
+                  </td>
+                )}
+                {visibleColumns['Amount'] && (
+                  <td className='px-4 py-3'>
+                    <span className='text-[#121212] dark:text-white'>
+                      {formatCurrency(invoice.totals?.total || 0, invoice.currency)}
+                    </span>
+                  </td>
+                )}
+                {visibleColumns['Issue Date'] && (
+                  <td className='px-4 py-3'>
+                    <span className='text-[#121212] dark:text-slate-300'>
+                      {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
+                    </span>
+                  </td>
+                )}
+                {visibleColumns['Actions'] && (
+                  <td className='px-2 py-3'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          className='h-8 w-8 p-0'
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (invoice._id) {
-                              onDelete(invoice._id);
-                            }
                           }}
+                        >
+                          <MoreHorizontal className='h-4 w-4' />
+                          <span className='sr-only'>Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingInvoice(invoice);
+                          }}
+                        >
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onMarkAsPaid(invoice._id, new Date());
+                          }}
+                        >
+                          Mark as paid
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCancel(invoice._id);
+                          }}
+                        >
+                          Cancel
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(invoice._id);
+                          }}
+                          className='text-red-600'
                         >
                           Delete
                         </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                )}
               </motion.tr>
             );
           })}
