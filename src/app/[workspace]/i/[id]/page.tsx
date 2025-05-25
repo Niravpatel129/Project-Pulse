@@ -150,7 +150,10 @@ const InvoicePage = () => {
   if (isLoading) {
     return (
       <div className='dotted-bg min-h-screen w-full flex items-center justify-center'>
-        <div className='text-center'>Loading...</div>
+        <div className='flex flex-col items-center gap-4'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D1D1F]'></div>
+          <span className='text-sm text-[#878787] font-mono'>Loading invoice...</span>
+        </div>
       </div>
     );
   }
