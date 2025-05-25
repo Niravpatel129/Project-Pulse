@@ -135,25 +135,28 @@ export default function FileUploadManagerModal({
                 className='hidden'
                 multiple
               />
-              <Button
-                size='sm'
-                className='gap-1 mb-2'
-                variant='outline'
-                onClick={triggerFileUpload}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <>
-                    <div className='h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className='h-4 w-4' />
-                    Upload File
-                  </>
-                )}
-              </Button>
+              <div className='flex flex-col items-end gap-1'>
+                <Button
+                  size='sm'
+                  className='gap-1 mb-2'
+                  variant='outline'
+                  onClick={triggerFileUpload}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <div className='h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className='h-4 w-4' />
+                      Upload File
+                    </>
+                  )}
+                </Button>
+                <span className='text-xs text-muted-foreground'>Max 5 files, 10MB each</span>
+              </div>
             </CardHeader>
 
             {/* Recent Files */}

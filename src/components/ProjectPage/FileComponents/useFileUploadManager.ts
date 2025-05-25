@@ -3,6 +3,10 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 
+// Add constants for file limits
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES_PER_UPLOAD = 5;
+
 export type FileItem = {
   _id: string;
   name: string;
@@ -102,6 +106,31 @@ export function useFileUploadManager() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
+
+    // Check number of files
+    if (e.target.files.length > MAX_FILES_PER_UPLOAD) {
+      toast({
+        title: 'Too many files',
+        description: `You can only upload up to ${MAX_FILES_PER_UPLOAD} files at once.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check file sizes
+    const oversizedFiles = Array.from(e.target.files).filter((file) => {
+      return file.size > MAX_FILE_SIZE;
+    });
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: 'Files too large',
+        description: `${oversizedFiles.length} file(s) exceed the ${
+          MAX_FILE_SIZE / (1024 * 1024)
+        }MB limit.`,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsUploading(true);
 
