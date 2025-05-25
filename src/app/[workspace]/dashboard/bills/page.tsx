@@ -391,7 +391,8 @@ const Bills = () => {
                               Download
                             </DropdownMenuItem>
                             {invoice.status?.toLowerCase() !== 'cancelled' &&
-                              invoice.status?.toLowerCase() !== 'paid' && (
+                              invoice.status?.toLowerCase() !== 'paid' &&
+                              invoice.status?.toLowerCase() !== 'draft' && (
                                 <DropdownMenuSub>
                                   <DropdownMenuSubTrigger
                                     onClick={(e) => {
