@@ -266,6 +266,69 @@ const InvoiceSheet = ({
     return date;
   });
 
+  // Update form fields when existingInvoice changes
+  useEffect(() => {
+    if (existingInvoice) {
+      setFromAddress(existingInvoice.from || '');
+      setInvoiceTitle(existingInvoice.invoiceTitle || 'Invoice');
+      setSelectedCustomer(existingInvoice.customer?.id || '');
+      setToAddress(existingInvoice.to || '');
+      setInvoiceNumber(existingInvoice.invoiceNumber || 'INV-0001');
+      setIssueDate(existingInvoice.issueDate ? new Date(existingInvoice.issueDate) : new Date());
+      setDueDate(
+        existingInvoice.dueDate
+          ? new Date(existingInvoice.dueDate)
+          : (() => {
+              const date = new Date();
+              date.setDate(date.getDate() + 30);
+              return date;
+            })(),
+      );
+      setItems(
+        existingInvoice.items?.map((item: any) => {
+          return {
+            id: item._id || uuidv4(),
+            description: item.description || '',
+            quantity: item.quantity || 1,
+            price: item.price?.toString() || '',
+            total: item.total,
+          };
+        }) || [
+          {
+            id: uuidv4(),
+            description: '',
+            quantity: 1,
+            price: '',
+          },
+        ],
+      );
+      setTaxRate(existingInvoice.settings?.salesTax?.rate || 13);
+      setVatRate(existingInvoice.settings?.vat?.rate || 20);
+      setDiscountAmount(existingInvoice.settings?.discount?.amount || 0);
+      setInvoiceSettings({
+        dateFormat: existingInvoice.settings?.dateFormat || 'DD/MM/YYYY',
+        salesTax: {
+          enabled: existingInvoice.settings?.salesTax?.enabled || false,
+          rate: existingInvoice.settings?.salesTax?.rate || 13,
+        },
+        vat: {
+          enabled: existingInvoice.settings?.vat?.enabled || false,
+          rate: existingInvoice.settings?.vat?.rate || 20,
+        },
+        currency: existingInvoice.settings?.currency || 'CAD',
+        discount: {
+          enabled: existingInvoice.settings?.discount?.enabled || false,
+          amount: existingInvoice.settings?.discount?.amount || 0,
+        },
+        attachPdf: 'disable',
+        decimals: existingInvoice.settings?.decimals || 'yes',
+        qrCode: 'enable',
+        notes: existingInvoice.notes || '',
+        logo: existingInvoice.logo || globalInvoiceSettings?.logo || '',
+      });
+    }
+  }, [existingInvoice, globalInvoiceSettings?.logo]);
+
   // Update rates and invoice number when lastInvoiceSettings loads
   useEffect(() => {
     if (!existingInvoice && lastInvoiceSettings) {
