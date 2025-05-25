@@ -98,6 +98,7 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
     overflow-y: auto;
     scrollbar-gutter: stable;
+    pointer-events: auto !important;
   }
 
   /* Custom scrollbar */

@@ -1,6 +1,16 @@
 'use client';
 
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -15,11 +25,12 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FiSidebar } from 'react-icons/fi';
+import { toast } from 'sonner';
 import InvoicePreview2 from './InvoicePreview2';
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -36,16 +47,29 @@ function formatDate(dateStr: string) {
 }
 
 function getStatusBadge(status: string) {
+  console.log('🚀 status:', status);
   if (status === 'Overdue')
     return (
       <span className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
         Overdue
       </span>
     );
-  if (status === 'Draft')
+  if (status === 'Draft' || status === 'draft')
     return (
       <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
         Draft
+      </span>
+    );
+  if (status === 'Paid' || status === 'paid')
+    return (
+      <span className='bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+        Paid
+      </span>
+    );
+  if (status === 'Cancelled' || status === 'cancelled')
+    return (
+      <span className='bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
+        Cancelled
       </span>
     );
   return (
@@ -70,6 +94,11 @@ const Bills = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: 'delete' | 'cancel';
+    invoiceId: string;
+  } | null>(null);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   console.log('🚀 selectedInvoice:', selectedInvoice);
@@ -82,6 +111,53 @@ const Bills = () => {
     queryFn: async () => {
       const response = await newRequest.get('/invoices2');
       return response.data;
+    },
+  });
+
+  const markAsPaidMutation = useMutation({
+    mutationFn: async ({ invoiceId, paymentDate }: { invoiceId: string; paymentDate: Date }) => {
+      const response = await newRequest.post(`/invoices2/${invoiceId}/paid`, {
+        paymentDate: paymentDate.toISOString(),
+        paymentMethod: 'bank_transfer',
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice marked as paid');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to mark invoice as paid');
+    },
+  });
+
+  const cancelInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const response = await newRequest.put(`/invoices2/${invoiceId}/status`, {
+        status: 'cancelled',
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice cancelled successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to cancel invoice');
+    },
+  });
+
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const response = await newRequest.delete(`/invoices2/${invoiceId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete invoice');
     },
   });
 
@@ -124,6 +200,19 @@ const Bills = () => {
 
   const onRefresh = () => {
     // Add any additional refresh logic here if needed
+  };
+
+  const handleConfirmAction = () => {
+    if (!pendingAction) return;
+
+    if (pendingAction.type === 'delete') {
+      deleteInvoiceMutation.mutate(pendingAction.invoiceId);
+    } else {
+      cancelInvoiceMutation.mutate(pendingAction.invoiceId);
+    }
+
+    setShowConfirmDialog(false);
+    setPendingAction(null);
   };
 
   if (error) return <div>Error loading invoices</div>;
@@ -301,23 +390,76 @@ const Bills = () => {
                             >
                               Download
                             </DropdownMenuItem>
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>Mark as paid</DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent className='p-0'>
-                                <div className='p-2'>
-                                  <Calendar
-                                    mode='single'
-                                    onSelect={(date) => {
-                                      console.log('Paid date selected:', date);
+                            {invoice.status?.toLowerCase() !== 'cancelled' &&
+                              invoice.status?.toLowerCase() !== 'paid' && (
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger
+                                    onClick={(e) => {
+                                      return e.stopPropagation();
                                     }}
-                                    disabled={(date) => {
-                                      return date > new Date();
-                                    }}
-                                  />
-                                </div>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuItem className='text-red-600'>Cancel</DropdownMenuItem>
+                                  >
+                                    Mark as paid
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent className='p-0'>
+                                    <div
+                                      className='p-2'
+                                      onClick={(e) => {
+                                        return e.stopPropagation();
+                                      }}
+                                    >
+                                      <Calendar
+                                        mode='single'
+                                        onSelect={(date) => {
+                                          if (date && invoice._id) {
+                                            markAsPaidMutation.mutate({
+                                              invoiceId: invoice._id,
+                                              paymentDate: date,
+                                            });
+                                          }
+                                        }}
+                                        disabled={(date) => {
+                                          return date > new Date();
+                                        }}
+                                      />
+                                    </div>
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                              )}
+                            {invoice.status?.toLowerCase() !== 'cancelled' &&
+                              invoice.status?.toLowerCase() !== 'paid' && (
+                                <DropdownMenuItem
+                                  className='text-red-600'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (invoice._id) {
+                                      setPendingAction({
+                                        type: 'cancel',
+                                        invoiceId: invoice._id,
+                                      });
+                                      setShowConfirmDialog(true);
+                                    }
+                                  }}
+                                >
+                                  Cancel
+                                </DropdownMenuItem>
+                              )}
+                            {invoice.status?.toLowerCase() === 'cancelled' && (
+                              <DropdownMenuItem
+                                className='text-red-600'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (invoice._id) {
+                                    setPendingAction({
+                                      type: 'delete',
+                                      invoiceId: invoice._id,
+                                    });
+                                    setShowConfirmDialog(true);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -370,6 +512,27 @@ const Bills = () => {
           />
         )}
       </div>
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.type === 'delete'
+                ? 'This action cannot be undone. This will permanently delete the invoice.'
+                : 'This will cancel the invoice. This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmAction}
+              className='bg-red-600 hover:bg-red-700'
+            >
+              {pendingAction?.type === 'delete' ? 'Delete' : 'Cancel Invoice'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
