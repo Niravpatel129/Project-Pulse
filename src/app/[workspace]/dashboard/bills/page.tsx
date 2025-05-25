@@ -407,8 +407,11 @@ const Bills = () => {
                 <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
                   {filteredInvoices.map((invoice: any) => {
                     return (
-                      <tr
+                      <motion.tr
                         key={invoice._id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
                         className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
                           selectedInvoice?._id === invoice._id
                             ? 'bg-slate-50 dark:bg-[#232428]'
@@ -609,7 +612,7 @@ const Bills = () => {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
-                      </tr>
+                      </motion.tr>
                     );
                   })}
                 </tbody>
