@@ -2,11 +2,22 @@
 
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { MoreHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FiSidebar } from 'react-icons/fi';
 import InvoicePreview2 from './InvoicePreview2';
@@ -230,19 +241,42 @@ const Bills = () => {
                         {invoice.issueDate ? formatDate(invoice.issueDate) : '--'}
                       </td>
                       <td className='px-2 py-3 w-[60px]'>
-                        <button className='p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#232428] transition-colors duration-150'>
-                          <svg
-                            width='16'
-                            height='16'
-                            fill='none'
-                            viewBox='0 0 24 24'
-                            className='text-slate-400 dark:text-slate-500'
-                          >
-                            <circle cx='12' cy='5' r='1.5' fill='currentColor' />
-                            <circle cx='12' cy='12' r='1.5' fill='currentColor' />
-                            <circle cx='12' cy='19' r='1.5' fill='currentColor' />
-                          </svg>
-                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className='p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#232428] transition-colors duration-150'
+                              onClick={(e) => {
+                                return e.stopPropagation();
+                              }}
+                              aria-label='Actions'
+                            >
+                              <MoreHorizontal className='w-4 h-4 text-slate-400 dark:text-slate-500' />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem>Edit invoice</DropdownMenuItem>
+                            <DropdownMenuItem>Open invoice</DropdownMenuItem>
+                            <DropdownMenuItem>Copy link</DropdownMenuItem>
+                            <DropdownMenuItem>Download</DropdownMenuItem>
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>Mark as paid</DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent className='p-0'>
+                                <div className='p-2'>
+                                  <Calendar
+                                    mode='single'
+                                    onSelect={(date) => {
+                                      console.log('Paid date selected:', date);
+                                    }}
+                                    disabled={(date) => {
+                                      return date > new Date();
+                                    }}
+                                  />
+                                </div>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuItem className='text-red-600'>Cancel</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   );
