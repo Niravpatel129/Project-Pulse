@@ -106,13 +106,15 @@ const InvoicePage = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setShowPayment(true);
+      if (invoice?.status !== 'paid') {
+        setShowPayment(true);
+      }
     }, 2000);
 
     return () => {
       return clearTimeout(timer);
     };
-  }, []);
+  }, [invoice?.status]);
 
   if (isLoading) {
     return (
