@@ -24,7 +24,7 @@ interface InvoicesProps {
 }
 
 export default function Invoices({
-  invoices,
+  invoices = [],
   onPreviewClick,
   isPreviewOpen,
   showStarredOnly = false,
@@ -35,11 +35,14 @@ export default function Invoices({
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Ensure invoices is an array
+  const safeInvoices = Array.isArray(invoices) ? invoices : [];
+
   // Fetch notes for each invoice
   const { data: notesMap = {} } = useQuery({
     queryKey: ['invoices-notes'],
     queryFn: async () => {
-      const notesPromises = invoices.map(async (invoice) => {
+      const notesPromises = safeInvoices.map(async (invoice) => {
         const response = await newRequest.get(`/invoices/${invoice._id}/notes`);
         return { [invoice._id]: response.data };
       });
@@ -50,15 +53,15 @@ export default function Invoices({
 
   // Filter invoices based on starred status
   const filteredInvoices = showStarredOnly
-    ? invoices.filter((invoice) => {
+    ? safeInvoices.filter((invoice) => {
         return invoice.starred;
       })
-    : invoices;
+    : safeInvoices;
 
   // Star mutation
   const starMutation = useMutation({
     mutationFn: async (invoiceId: string) => {
-      const invoice = invoices.find((inv) => {
+      const invoice = safeInvoices.find((inv) => {
         return inv._id === invoiceId;
       });
       return newRequest.put(`/invoices/${invoiceId}/star`, {
@@ -181,6 +184,7 @@ export default function Invoices({
       </motion.div>
       <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
         <AnimatePresence mode='popLayout'>
+          {console.log('filteredInvoices:', filteredInvoices)}
           {filteredInvoices?.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}

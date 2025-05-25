@@ -115,6 +115,11 @@ export default function AppSidebar() {
             icon: RiFileListFill,
           },
           {
+            name: 'Bills',
+            href: '/dashboard/bills',
+            icon: RiFileListFill,
+          },
+          {
             name: 'Payments',
             href: '/dashboard/payments',
             icon: RiMoneyDollarCircleFill,
