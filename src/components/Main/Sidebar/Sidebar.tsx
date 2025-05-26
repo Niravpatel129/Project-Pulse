@@ -112,11 +112,11 @@ export default function AppSidebar() {
       {
         name: 'Payments',
         items: [
-          {
-            name: 'Invoices',
-            href: '/dashboard/invoices',
-            icon: RiFileListFill,
-          },
+          // {
+          //   name: 'Invoices',
+          //   href: '/dashboard/invoices',
+          //   icon: RiFileListFill,
+          // },
           {
             name: 'Bills',
             href: '/dashboard/bills',
