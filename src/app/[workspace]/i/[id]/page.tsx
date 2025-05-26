@@ -104,8 +104,18 @@ const InvoicePage = () => {
 
   // Force light mode
   useEffect(() => {
+    // Remove dark mode class
     document.documentElement.classList.remove('dark');
+    // Force light color scheme
     document.documentElement.style.colorScheme = 'light';
+    // Additional light mode enforcement
+    document.body.classList.remove('dark');
+    document.body.style.colorScheme = 'light';
+    // Set meta theme-color to light
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', '#ffffff');
+    }
   }, []);
 
   const {
