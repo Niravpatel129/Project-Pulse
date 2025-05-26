@@ -11,8 +11,9 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useChat } from '@/contexts/ChatContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Info, Plus } from 'lucide-react';
+import { Check, ChevronDown, Info, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 
 interface Agent {
@@ -32,6 +33,8 @@ interface Agent {
 export function ChatHeader() {
   const { clearConversation } = useChat();
   const router = useRouter();
+  const [selectedAgents, setSelectedAgents] = useState<Agent[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
   const { data: agents = [] } = useQuery<Agent[]>({
     queryKey: ['agents'],
@@ -41,36 +44,68 @@ export function ChatHeader() {
     },
   });
 
+  const toggleAgent = (agent: Agent) => {
+    setSelectedAgents((prev) => {
+      const isSelected = prev.some((a) => {
+        return a._id === agent._id;
+      });
+      if (isSelected) {
+        return prev.filter((a) => {
+          return a._id !== agent._id;
+        });
+      } else {
+        return [...prev, agent];
+      }
+    });
+  };
+
   return (
     <header className='dark:border-[#232428] px-6 py-4 flex items-center justify-between shrink-0'>
       <div className='flex items-center gap-4'>
         <SidebarTrigger />
-        <DropdownMenu>
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='flex items-center gap-2 px-2'>
-              <h1 className='text-base font-medium text-gray-900 dark:text-white'>AI Chat</h1>
+            <Button
+              variant='ghost'
+              className={`flex items-center gap-2 px-2 ${!isOpen ? 'focus-visible:ring-0' : ''}`}
+            >
+              <h1 className='text-base font-medium text-gray-900 dark:text-white'>
+                {selectedAgents.length > 0
+                  ? selectedAgents
+                      .map((agent) => {
+                        return agent.name;
+                      })
+                      .join(', ')
+                  : 'Select Agents'}
+              </h1>
               <ChevronDown className='h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='start' className='w-48'>
             <DropdownMenuItem
               onClick={() => {
-                return router.push('/dashboard/chat/agents');
+                router.push('/dashboard/chat/agents');
+                setIsOpen(false);
               }}
             >
               Manage Agents
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {agents.map((agent) => {
+              const isSelected = selectedAgents.some((a) => {
+                return a._id === agent._id;
+              });
               return (
                 <DropdownMenuItem
                   key={agent._id}
-                  onClick={() => {
-                    // TODO: Implement agent switching logic
-                    console.log('Switching to agent:', agent.name);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleAgent(agent);
                   }}
+                  className='flex items-center justify-between'
                 >
-                  {agent.name}
+                  <span>{agent.name}</span>
+                  {isSelected && <Check className='h-4 w-4' />}
                 </DropdownMenuItem>
               );
             })}
