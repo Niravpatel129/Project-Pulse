@@ -196,11 +196,9 @@ const PaymentScoreCard: FC = () => {
         </h3>
         <PaymentScoreVisualizer score={numericScore} paymentStatus={score} />
       </div>
-      <div className='px-4 md:px-6 sm:hidden xl:flex'>
-        <div className='flex flex-col gap-1 sm:gap-2'>
-          <div className='text-sm sm:text-base'>Payment score</div>
-          <div className='text-xs sm:text-sm text-muted-foreground'>{text}</div>
-        </div>
+      <div className='px-4 sm:px-6 flex-col gap-1 sm:gap-2 hidden md:flex'>
+        <div className='text-sm sm:text-base'>Payment score</div>
+        <div className='text-xs sm:text-sm text-muted-foreground'>{text}</div>
       </div>
     </div>
   );
