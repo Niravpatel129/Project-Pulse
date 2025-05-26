@@ -1,4 +1,5 @@
-import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
+'use client';
+
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
@@ -96,21 +97,5 @@ export default function InvoiceLayout({ children }: { children: React.ReactNode 
     return null;
   }
 
-  return (
-    <div className='min-h-screen bg-background'>
-      <div className='container mx-auto py-6'>
-        <div className='flex flex-col lg:flex-row gap-6'>
-          {/* Main Content */}
-          <div className='flex-1'>{children}</div>
-
-          {/* Invoice Preview Sidebar */}
-          <div className='lg:w-[500px] sticky top-6'>
-            <div className='bg-background rounded-lg border border-border shadow-sm'>
-              <InvoicePdf invoice={invoice} isReadOnly />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return children;
 }
