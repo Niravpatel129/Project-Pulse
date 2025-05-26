@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  ArrowLeft,
   Brain,
   CalendarDays,
   Lightbulb,
@@ -15,6 +16,7 @@ import {
   Settings2,
   Wrench,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import AgentSheet from './components/AgentSheet';
@@ -190,6 +192,7 @@ const AgentsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAgentSheetOpen, setIsAgentSheetOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const router = useRouter();
 
   const handleCreateAgent = () => {
     setSelectedAgent(null);
@@ -204,11 +207,23 @@ const AgentsPage = () => {
   return (
     <div className='container mx-auto py-8 px-4 sm:px-6 lg:px-8'>
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>AI Agents</h1>
-          <p className='text-muted-foreground mt-1'>
-            Manage and configure your intelligent agents.
-          </p>
+        <div className='flex items-center gap-4'>
+          <div>
+            <div className='flex items-center gap-2'>
+              <div
+                onClick={() => {
+                  return router.push('/dashboard/chat');
+                }}
+                className='cursor-pointer'
+              >
+                <ArrowLeft className='h-4 w-4' />
+              </div>
+              <h1 className='text-3xl font-bold tracking-tight'>AI Agents</h1>
+            </div>
+            <p className='text-muted-foreground mt-1'>
+              Manage and configure your intelligent agents.
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreateAgent} className='mt-4 sm:mt-0'>
           <Plus className='mr-2 h-4 w-4' /> Create New Agent
