@@ -71,9 +71,9 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
           {message.content && (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           )}
-          {message.tool_calls?.map((tool) => (
-            <ToolCall key={tool.id} tool={tool} />
-          ))}
+          {message.tool_calls?.map((tool) => {
+            return <ToolCall key={tool.id} tool={tool} />;
+          })}
           {!isUser && isTyping && isLatestMessage && <TypingAnimation />}
         </div>
         <div
