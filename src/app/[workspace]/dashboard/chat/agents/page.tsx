@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Brain,
   CalendarDays,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import AgentCards from './components/AgentCards';
 import AgentSheet from './components/AgentSheet';
 import AgentTable from './components/AgentTable';
 
@@ -240,33 +238,7 @@ const AgentsPage = () => {
         </div>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          return setActiveTab(value as 'cards' | 'table');
-        }}
-        className='w-full'
-      >
-        <TabsList className='grid w-full grid-cols-2 md:w-[200px] mb-6'>
-          <TabsTrigger value='cards'>Cards</TabsTrigger>
-          <TabsTrigger value='table'>Table</TabsTrigger>
-        </TabsList>
-        <TabsContent value='cards'>
-          <AgentCards
-            searchQuery={searchQuery}
-            onEditAgent={handleEditAgent}
-            mockData={mockAgents}
-          />
-        </TabsContent>
-        <TabsContent value='table'>
-          <AgentTable
-            searchQuery={searchQuery}
-            onEditAgent={handleEditAgent}
-            mockData={mockAgents}
-          />
-        </TabsContent>
-      </Tabs>
-
+      <AgentTable searchQuery={searchQuery} onEditAgent={handleEditAgent} mockData={mockAgents} />
       <AgentSheet
         open={isAgentSheetOpen}
         onOpenChange={setIsAgentSheetOpen}
