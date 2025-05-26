@@ -134,20 +134,16 @@ export default function AppSidebar() {
           },
         ],
       },
-      ...(process.env.NODE_ENV === 'development'
-        ? [
-            {
-              name: 'AI',
-              items: [
-                {
-                  name: 'Chat',
-                  href: '/dashboard/chat',
-                  icon: RiChat1Fill,
-                },
-              ],
-            },
-          ]
-        : []),
+      {
+        name: 'AI',
+        items: [
+          {
+            name: 'Chat',
+            href: '/dashboard/chat',
+            icon: RiChat1Fill,
+          },
+        ],
+      },
       {
         name: 'Management',
         items: [
