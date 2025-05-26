@@ -332,7 +332,27 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               content: data.content,
               type: data.type,
               tool_calls: data.tool_calls,
+              sessionId: data.sessionId,
             });
+
+            // Update sessionId if it's provided in the stream
+            if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+              setSessionId(data.sessionId);
+              localStorage.setItem('chatSessionId', data.sessionId);
+
+              const url = new URL(window.location.href);
+              const pathParts = url.pathname.split('/');
+              const basePath = pathParts
+                .filter((part) => {
+                  return !part.match(/^[0-9a-f]{24}$/);
+                })
+                .join('/');
+              url.pathname = `${basePath}/${data.sessionId}`;
+              window.history.pushState({}, '', url.toString());
+
+              queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+              queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
+            }
 
             if (data.type === 'tool_call') {
               setMessages((prev) => {
@@ -396,24 +416,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             }
           },
           onEnd: (data) => {
-            if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-              setSessionId(data.sessionId);
-              localStorage.setItem('chatSessionId', data.sessionId);
-
-              const url = new URL(window.location.href);
-              const pathParts = url.pathname.split('/');
-              const basePath = pathParts
-                .filter((part) => {
-                  return !part.match(/^[0-9a-f]{24}$/);
-                })
-                .join('/');
-              url.pathname = `${basePath}/${data.sessionId}`;
-              window.history.pushState({}, '', url.toString());
-
-              queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
-              queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
-            }
-
             // Update all streaming messages to not streaming
             setMessages((prev) => {
               return prev.map((msg) => {

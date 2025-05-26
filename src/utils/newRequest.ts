@@ -174,6 +174,7 @@ export const streamRequest = ({
                           id: data.id,
                           created: data.created,
                           model: data.model,
+                          sessionId: data.sessionId,
                           ...data,
                         });
                       }
@@ -189,6 +190,7 @@ export const streamRequest = ({
                           id: data.id,
                           created: data.created,
                           model: data.model,
+                          sessionId: data.sessionId,
                           finish_reason: choice.finish_reason,
                           ...data,
                         });
@@ -205,6 +207,7 @@ export const streamRequest = ({
                           id: data.id,
                           created: data.created,
                           model: data.model,
+                          sessionId: data.sessionId,
                           finish_reason: choice.finish_reason,
                           ...data,
                         });
