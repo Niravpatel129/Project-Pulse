@@ -57,6 +57,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   const [internalNote, setInternalNote] = useState(selectedInvoice?.internalNote || '');
   const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
   const [attachments, setAttachments] = useState<any[]>([]);
+  const [copyFeedback, setCopyFeedback] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -225,29 +226,51 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
               title='Copy'
               onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/i/${selectedInvoice._id}`);
+                setCopyFeedback(true);
+                setTimeout(() => {
+                  return setCopyFeedback(false);
+                }, 1500);
               }}
             >
-              <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
-                <rect
-                  x='9'
-                  y='9'
-                  width='13'
-                  height='13'
-                  rx='2'
-                  stroke='currentColor'
-                  strokeWidth='1.5'
-                />
-                <rect
-                  x='3'
-                  y='3'
-                  width='13'
-                  height='13'
-                  rx='2'
+              {copyFeedback ? (
+                <svg
+                  width='14'
+                  height='14'
                   fill='none'
-                  stroke='currentColor'
-                  strokeWidth='1.5'
-                />
-              </svg>
+                  viewBox='0 0 24 24'
+                  className='text-green-500'
+                >
+                  <path
+                    d='M20 6L9 17L4 12'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
+              ) : (
+                <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
+                  <rect
+                    x='9'
+                    y='9'
+                    width='13'
+                    height='13'
+                    rx='2'
+                    stroke='currentColor'
+                    strokeWidth='1.5'
+                  />
+                  <rect
+                    x='3'
+                    y='3'
+                    width='13'
+                    height='13'
+                    rx='2'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth='1.5'
+                  />
+                </svg>
+              )}
             </button>
             <button
               className='p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 transition-colors duration-150'
