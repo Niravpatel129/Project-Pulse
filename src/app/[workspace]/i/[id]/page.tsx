@@ -207,7 +207,7 @@ const InvoicePage = () => {
         </div>
 
         <div className='pb-24 md:pb-0'>
-          <Card className='shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)]'>
+          <Card className='shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)]'>
             <CardContent className='p-4 sm:p-6 md:p-8'>
               <AnimatePresence mode='wait'>
                 {!showPayment ? (
@@ -558,7 +558,7 @@ const InvoicePage = () => {
           className='fixed inset-x-0 -bottom-1 flex justify-center'
           style={{ opacity: 1, filter: 'blur(0px)', transform: 'translateY(-24px)' }}
         >
-          <div className='backdrop-filter backdrop-blur-lg dark:bg-[#1A1A1A]/80 bg-[#F6F6F3]/80 rounded-full pl-2 pr-4 py-3 h-10 flex items-center justify-center border-[0.5px] border-border'>
+          <div className='backdrop-filter backdrop-blur-lg bg-[#F6F6F3]/80 rounded-full pl-2 pr-4 py-3 h-10 flex items-center justify-center border-[0.5px] border-border'>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
