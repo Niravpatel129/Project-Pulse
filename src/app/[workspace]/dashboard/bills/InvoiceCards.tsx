@@ -9,8 +9,8 @@ interface InvoiceCardProps {
 
 const InvoiceCard: FC<InvoiceCardProps> = ({ amount, status, count }) => {
   return (
-    <button type='button' className='hidden sm:block text-left w-full'>
-      <div className='border bg-background text-card-foreground rounded-lg'>
+    <button type='button' className='hidden sm:block text-left w-full h-full'>
+      <div className='border bg-background text-card-foreground rounded-lg h-full'>
         <div className='flex flex-col space-y-1.5 p-6 pb-2 relative'>
           <h3 className='tracking-tight mb-2 font-mono font-medium text-2xl'>
             ${amount.toLocaleString()}
@@ -122,7 +122,7 @@ const PaymentScoreCard: FC = () => {
   const { score, text, numericScore } = calculatePaymentScore();
 
   return (
-    <div className='border bg-background text-card-foreground rounded-lg'>
+    <div className='border bg-background text-card-foreground rounded-lg h-full'>
       <div className='space-y-1.5 p-6 pb-2 flex flex-col xl:flex-row justify-between'>
         <h3 className='tracking-tight mb-2 font-mono font-medium text-2xl'>{score}</h3>
         <PaymentScoreVisualizer score={numericScore} paymentStatus={score} />
@@ -149,12 +149,12 @@ const InvoiceCards: FC = () => {
     <div className='flex flex-wrap gap-4'>
       {cards.map((card, index) => {
         return (
-          <div key={index} className='flex-1 min-w-[300px]'>
+          <div key={index} className='flex-1 min-w-[300px] h-[200px]'>
             <InvoiceCard {...card} />
           </div>
         );
       })}
-      <div className='flex-1 min-w-[300px]'>
+      <div className='flex-1 min-w-[300px] h-[200px]'>
         <PaymentScoreCard />
       </div>
     </div>
