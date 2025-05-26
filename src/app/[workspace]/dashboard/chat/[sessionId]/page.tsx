@@ -78,8 +78,16 @@ export default function ChatSession() {
     return (
       <div className='px-6 py-6'>
         <div className='mx-auto max-w-3xl space-y-6'>
-          {messages.map((message) => {
-            return <ChatMessage key={message.id} message={message} isTyping={isTyping} />;
+          {messages.map((message, index) => {
+            const isLatestMessage = index === messages.length - 1;
+            return (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                isTyping={isTyping}
+                isLatestMessage={isLatestMessage}
+              />
+            );
           })}
           <div ref={messagesEndRef} />
         </div>

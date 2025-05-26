@@ -11,6 +11,7 @@ interface Message {
 interface ChatMessageProps {
   message: Message;
   isTyping: boolean;
+  isLatestMessage?: boolean;
 }
 
 function TypingAnimation() {
@@ -23,7 +24,7 @@ function TypingAnimation() {
   );
 }
 
-export function ChatMessage({ message, isTyping }: ChatMessageProps) {
+export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   if (message.content === '') {
@@ -41,7 +42,7 @@ export function ChatMessage({ message, isTyping }: ChatMessageProps) {
           }`}
         >
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-          {!isUser && isTyping && <TypingAnimation />}
+          {!isUser && isTyping && isLatestMessage && <TypingAnimation />}
         </div>
         <div
           className={`text-xs text-gray-400 dark:text-gray-500 mt-1 ${
