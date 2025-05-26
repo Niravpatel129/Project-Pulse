@@ -1,5 +1,4 @@
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
-import CreateInvoiceDialog from '@/components/InvoicesList/CreateInvoiceDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -118,15 +117,11 @@ export default function AppSidebar() {
             href: '/dashboard/invoices',
             icon: RiFileListFill,
           },
-          ...(process.env.NODE_ENV === 'development'
-            ? [
-                {
-                  name: 'Bills',
-                  href: '/dashboard/bills',
-                  icon: RiFileListFill,
-                },
-              ]
-            : []),
+          {
+            name: 'Bills',
+            href: '/dashboard/bills',
+            icon: RiFileListFill,
+          },
           {
             name: 'Payments',
             href: '/dashboard/payments',
@@ -353,9 +348,6 @@ export default function AppSidebar() {
         </Sidebar>
       </SidebarToggleContext.Provider>
 
-      {process.env.NODE_ENV !== 'development' && (
-        <CreateInvoiceDialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
-      )}
       {process.env.NODE_ENV === 'development' && (
         <InvoiceSheet open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
       )}
