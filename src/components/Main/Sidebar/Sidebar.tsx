@@ -281,7 +281,7 @@ export default function AppSidebar() {
                         return (
                           <div
                             key={session.id}
-                            className='flex items-center justify-between p-2 rounded-md hover:bg-[#eaeaea] dark:hover:bg-white/10 cursor-pointer'
+                            className='session-item group/session flex items-center justify-between p-2 rounded-md hover:bg-[#eaeaea] dark:hover:bg-white/10 cursor-pointer'
                             onClick={() => {
                               return handleChatClick(session.id);
                             }}
@@ -297,7 +297,7 @@ export default function AppSidebar() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='h-8 w-8'
+                              className='h-8 w-8 opacity-0 group-hover/session:opacity-100 transition-opacity'
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteSession(session.id);
