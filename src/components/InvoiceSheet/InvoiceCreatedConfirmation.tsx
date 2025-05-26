@@ -70,7 +70,7 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
             <div className='text-xs text-neutral-400 uppercase tracking-wide'>Share</div>
             <div className='flex gap-2'>
               <Input
-                value={`${window.location.origin}/invoice/${createdInvoiceData._id}`}
+                value={`${window.location.origin}/i/${createdInvoiceData._id}`}
                 readOnly
                 className='flex-1 text-xs font-mono bg-white border-neutral-200 focus:border-neutral-300 transition-colors'
               />
