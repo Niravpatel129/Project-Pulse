@@ -1,11 +1,22 @@
 'use client';
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -17,12 +28,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Brain,
   CalendarDays,
-  ChevronDown,
-  GripVertical,
   Lightbulb,
   ListChecks,
   Mail,
   MessageSquareText,
+  MoreVertical,
   Plus,
   SearchCode,
   Settings2,
@@ -112,6 +122,350 @@ const getSectionIcon = (type: SectionType) => {
   }
 };
 
+interface AgentSettings {
+  systemPrompt: 'enable' | 'disable';
+  instructions: 'enable' | 'disable';
+  outputStructure: 'enable' | 'disable';
+  examples: 'enable' | 'disable';
+  tools: ToolId[];
+  memory: 'enable' | 'disable';
+  streaming: 'enable' | 'disable';
+  temperature: 'low' | 'medium' | 'high';
+  maxTokens: 'short' | 'medium' | 'long';
+}
+
+interface AgentSheetMenuProps {
+  settings: AgentSettings;
+  onSettingsChange: (settings: AgentSettings) => void;
+}
+
+const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => {
+  const handleSettingChange = (key: keyof AgentSettings, value: string | ToolId[]) => {
+    onSettingsChange({
+      ...settings,
+      [key]: value,
+    });
+  };
+
+  const handleToolToggle = (toolId: ToolId) => {
+    const currentTools = settings.tools;
+    const newTools = currentTools.includes(toolId)
+      ? currentTools.filter((id) => {
+          return id !== toolId;
+        })
+      : [...currentTools, toolId];
+    handleSettingChange('tools', newTools);
+  };
+
+  return (
+    <div className='flex justify-end mr-4'>
+      <DropdownMenu modal>
+        <DropdownMenuTrigger asChild>
+          <Button variant='ghost' size='icon'>
+            <MoreVertical className='h-4 w-4' />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='end' sideOffset={5} className='z-[100] min-w-[240px]'>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Brain className='mr-2 h-4 w-4' />
+              System Prompt
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={settings.systemPrompt}
+                onValueChange={(value) => {
+                  return handleSettingChange('systemPrompt', value);
+                }}
+              >
+                <DropdownMenuRadioItem
+                  value='enable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Enable
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value='disable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Disable
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <MessageSquareText className='mr-2 h-4 w-4' />
+              Instructions
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={settings.instructions}
+                onValueChange={(value) => {
+                  return handleSettingChange('instructions', value);
+                }}
+              >
+                <DropdownMenuRadioItem
+                  value='enable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Enable
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value='disable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Disable
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <ListChecks className='mr-2 h-4 w-4' />
+              Output Structure
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={settings.outputStructure}
+                onValueChange={(value) => {
+                  return handleSettingChange('outputStructure', value);
+                }}
+              >
+                <DropdownMenuRadioItem
+                  value='enable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Enable
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value='disable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Disable
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Lightbulb className='mr-2 h-4 w-4' />
+              Examples
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={settings.examples}
+                onValueChange={(value) => {
+                  return handleSettingChange('examples', value);
+                }}
+              >
+                <DropdownMenuRadioItem
+                  value='enable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Enable
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value='disable'
+                  onSelect={(e) => {
+                    return e.preventDefault();
+                  }}
+                >
+                  Disable
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Wrench className='mr-2 h-4 w-4' />
+              Tools
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {AVAILABLE_TOOLS.map((tool) => {
+                const ToolIcon = tool.icon;
+                return (
+                  <DropdownMenuItem
+                    key={tool.id}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleToolToggle(tool.id);
+                    }}
+                  >
+                    <div className='flex items-center space-x-2'>
+                      <ToolIcon className='h-4 w-4' />
+                      <span>{tool.name}</span>
+                      {settings.tools.includes(tool.id) && <span className='ml-auto'>✓</span>}
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Settings2 className='mr-2 h-4 w-4' />
+              Advanced Settings
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Memory</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={settings.memory}
+                    onValueChange={(value) => {
+                      return handleSettingChange('memory', value);
+                    }}
+                  >
+                    <DropdownMenuRadioItem
+                      value='enable'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Enable
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value='disable'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Disable
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Streaming</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={settings.streaming}
+                    onValueChange={(value) => {
+                      return handleSettingChange('streaming', value);
+                    }}
+                  >
+                    <DropdownMenuRadioItem
+                      value='enable'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Enable
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value='disable'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Disable
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Temperature</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={settings.temperature}
+                    onValueChange={(value) => {
+                      return handleSettingChange('temperature', value);
+                    }}
+                  >
+                    <DropdownMenuRadioItem
+                      value='low'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Low
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value='medium'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Medium
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value='high'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      High
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Max Tokens</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={settings.maxTokens}
+                    onValueChange={(value) => {
+                      return handleSettingChange('maxTokens', value);
+                    }}
+                  >
+                    <DropdownMenuRadioItem
+                      value='short'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Short
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value='medium'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Medium
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value='long'
+                      onSelect={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
+                      Long
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
 interface AgentSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -124,6 +478,17 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
   const [agentName, setAgentName] = useState('');
   const [agentDescription, setAgentDescription] = useState('');
   const [currentSections, setCurrentSections] = useState<Section[]>([]);
+  const [agentSettings, setAgentSettings] = useState<AgentSettings>({
+    systemPrompt: 'enable',
+    instructions: 'enable',
+    outputStructure: 'enable',
+    examples: 'enable',
+    tools: [],
+    memory: 'enable',
+    streaming: 'enable',
+    temperature: 'medium',
+    maxTokens: 'medium',
+  });
 
   // Reset form when sheet opens
   useEffect(() => {
@@ -132,13 +497,160 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
         setAgentName(existingAgent.name);
         setAgentDescription(existingAgent.description);
         setCurrentSections(JSON.parse(JSON.stringify(existingAgent.sections)));
+        // Set initial settings based on existing sections
+        const initialSettings: AgentSettings = {
+          systemPrompt: existingAgent.sections.some((s) => {
+            return s.type === 'system_prompt';
+          })
+            ? 'enable'
+            : 'disable',
+          instructions: existingAgent.sections.some((s) => {
+            return s.type === 'instructions';
+          })
+            ? 'enable'
+            : 'disable',
+          outputStructure: existingAgent.sections.some((s) => {
+            return s.type === 'output_structure';
+          })
+            ? 'enable'
+            : 'disable',
+          examples: existingAgent.sections.some((s) => {
+            return s.type === 'examples';
+          })
+            ? 'enable'
+            : 'disable',
+          tools:
+            existingAgent.sections
+              .find((s) => {
+                return s.type === 'tools';
+              })
+              ?.tools?.map((t) => {
+                return t.id;
+              }) || [],
+          memory: 'enable',
+          streaming: 'enable',
+          temperature: 'medium',
+          maxTokens: 'medium',
+        };
+        setAgentSettings(initialSettings);
       } else {
         setAgentName('');
         setAgentDescription('');
         setCurrentSections([]);
+        setAgentSettings({
+          systemPrompt: 'enable',
+          instructions: 'enable',
+          outputStructure: 'enable',
+          examples: 'enable',
+          tools: [],
+          memory: 'enable',
+          streaming: 'enable',
+          temperature: 'medium',
+          maxTokens: 'medium',
+        });
       }
     }
   }, [open, existingAgent]);
+
+  // Update sections based on settings changes
+  useEffect(() => {
+    const updateSections = () => {
+      const newSections: Section[] = [];
+
+      if (agentSettings.systemPrompt === 'enable') {
+        const existingSection = currentSections.find((s) => {
+          return s.type === 'system_prompt';
+        });
+        if (existingSection) {
+          newSections.push(existingSection);
+        } else {
+          newSections.push({
+            id: uuidv4(),
+            type: 'system_prompt',
+            title: 'System Prompt / Role / Persona',
+            content: '',
+          });
+        }
+      }
+
+      if (agentSettings.instructions === 'enable') {
+        const existingSection = currentSections.find((s) => {
+          return s.type === 'instructions';
+        });
+        if (existingSection) {
+          newSections.push(existingSection);
+        } else {
+          newSections.push({
+            id: uuidv4(),
+            type: 'instructions',
+            title: 'Instructions / Conditions',
+            content: '',
+          });
+        }
+      }
+
+      if (agentSettings.outputStructure === 'enable') {
+        const existingSection = currentSections.find((s) => {
+          return s.type === 'output_structure';
+        });
+        if (existingSection) {
+          newSections.push(existingSection);
+        } else {
+          newSections.push({
+            id: uuidv4(),
+            type: 'output_structure',
+            title: 'Output Structure',
+            content: '',
+          });
+        }
+      }
+
+      if (agentSettings.examples === 'enable') {
+        const existingSection = currentSections.find((s) => {
+          return s.type === 'examples';
+        });
+        if (existingSection) {
+          newSections.push(existingSection);
+        } else {
+          newSections.push({
+            id: uuidv4(),
+            type: 'examples',
+            title: 'Examples',
+            examples: [],
+          });
+        }
+      }
+
+      if (agentSettings.tools.length > 0) {
+        const existingSection = currentSections.find((s) => {
+          return s.type === 'tools';
+        });
+        if (existingSection) {
+          // Update tools based on settings
+          const updatedTools = AVAILABLE_TOOLS.filter((tool) => {
+            return agentSettings.tools.includes(tool.id);
+          });
+          newSections.push({
+            ...existingSection,
+            tools: updatedTools,
+          });
+        } else {
+          newSections.push({
+            id: uuidv4(),
+            type: 'tools',
+            title: 'Tools',
+            tools: AVAILABLE_TOOLS.filter((tool) => {
+              return agentSettings.tools.includes(tool.id);
+            }),
+          });
+        }
+      }
+
+      setCurrentSections(newSections);
+    };
+
+    updateSections();
+  }, [agentSettings]);
 
   const createAgent = useMutation({
     mutationFn: async (agentData: Agent) => {
@@ -330,6 +842,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                 Define the agent&apos;s core attributes, instructions, and capabilities.
               </p>
             </div>
+            <AgentSheetMenu settings={agentSettings} onSettingsChange={setAgentSettings} />
           </div>
         </SheetHeader>
 
@@ -378,227 +891,123 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
             </CardContent>
           </Card>
 
-          <div className='flex justify-between items-center mt-8'>
-            <h3 className='text-[11px] font-medium text-muted-foreground'>Agent Configuration</h3>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='outline'>
-                  <Plus className='mr-2 h-4 w-4' /> Add Section{' '}
-                  <ChevronDown className='ml-2 h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                {SECTION_TEMPLATES.map((template) => {
-                  const Icon = getSectionIcon(template.type);
-                  return (
-                    <DropdownMenuItem
-                      key={template.type}
-                      onClick={() => {
-                        return addSectionToAgent(template);
-                      }}
-                    >
-                      <Icon className='mr-2 h-4 w-4' />
-                      <span>{template.title}</span>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {currentSections.length === 0 && (
-            <Card className='text-center py-12 border-dashed mt-4'>
-              <CardContent className='flex flex-col items-center text-muted-foreground'>
-                <Sparkles className='h-12 w-12 mb-3' />
-                <p className='text-[11px] font-medium'>Your agent is a blank canvas!</p>
-                <p className='text-[11px]'>
-                  Start by adding sections like System Prompt or Tools to define it&apos;s behavior.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
           <div className='space-y-4 mt-4'>
             {currentSections.map((section) => {
               const SectionIcon = getSectionIcon(section.type);
               return (
-                <Card key={section.id} className='bg-card/80 dark:bg-card/50 group/section'>
-                  <CardHeader className='flex flex-row items-center justify-between py-3 px-4 border-b'>
-                    <div className='flex items-center space-x-3'>
-                      <GripVertical className='h-5 w-5 text-muted-foreground cursor-grab opacity-50 group-hover/section:opacity-100 transition-opacity' />
-                      <SectionIcon className='h-5 w-5 text-primary' />
-                      <h4 className='text-[13px] font-semibold'>{section.title}</h4>
-                    </div>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => {
-                        return removeSectionFromAgent(section.id);
-                      }}
-                      className='h-7 w-7 text-muted-foreground hover:text-destructive'
-                    >
-                      <Trash2 className='h-4 w-4' />
-                    </Button>
-                  </CardHeader>
-                  <CardContent className='p-4 space-y-3'>
-                    {section.type === 'system_prompt' ||
-                    section.type === 'instructions' ||
-                    section.type === 'output_structure' ? (
-                      <Textarea
-                        placeholder={`Enter ${section.title.toLowerCase()} here...`}
-                        value={section.content || ''}
-                        onChange={(e) => {
-                          return updateSectionContent(section.id, e.target.value);
-                        }}
-                        rows={5}
-                        className='text-[11px]'
-                      />
-                    ) : section.type === 'examples' ? (
-                      <div className='space-y-3'>
-                        {section.examples?.map((ex) => {
-                          return (
-                            <Card
-                              key={ex.id}
-                              className='bg-background/70 dark:bg-background/40 p-3'
-                            >
-                              <div className='space-y-2'>
-                                <Textarea
-                                  placeholder='Input example...'
-                                  value={ex.input}
-                                  onChange={(e) => {
-                                    return updateExampleInSection(
-                                      section.id,
-                                      ex.id,
-                                      'input',
-                                      e.target.value,
-                                    );
-                                  }}
-                                  rows={2}
-                                  className='text-[11px]'
-                                />
-                                <Textarea
-                                  placeholder='Expected output example...'
-                                  value={ex.output}
-                                  onChange={(e) => {
-                                    return updateExampleInSection(
-                                      section.id,
-                                      ex.id,
-                                      'output',
-                                      e.target.value,
-                                    );
-                                  }}
-                                  rows={2}
-                                  className='text-[11px]'
-                                />
-                              </div>
-                              <div className='mt-2 flex justify-end'>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={() => {
-                                    return removeExampleFromSection(section.id, ex.id);
-                                  }}
-                                  className='text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive'
-                                >
-                                  <Trash2 className='mr-1 h-3 w-3' /> Remove Example
-                                </Button>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => {
-                            return addExampleToSection(section.id);
+                <Accordion key={section.id} type='single' collapsible className='w-full'>
+                  <AccordionItem value={section.id} className='border-none'>
+                    <AccordionTrigger className='py-3 px-4 hover:no-underline'>
+                      <div className='flex items-center space-x-3'>
+                        <SectionIcon className='h-5 w-5 text-primary' />
+                        <h4 className='text-[13px] font-semibold'>{section.title}</h4>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className='px-4 pb-4'>
+                      {section.type === 'system_prompt' ||
+                      section.type === 'instructions' ||
+                      section.type === 'output_structure' ? (
+                        <Textarea
+                          placeholder={`Enter ${section.title.toLowerCase()} here...`}
+                          value={section.content || ''}
+                          onChange={(e) => {
+                            return updateSectionContent(section.id, e.target.value);
                           }}
-                        >
-                          <Plus className='mr-2 h-4 w-4' /> Add Example
-                        </Button>
-                        {section.examples?.length === 0 && (
-                          <p className='text-[11px] text-center text-muted-foreground py-2'>
-                            No examples added for this section.
-                          </p>
-                        )}
-                      </div>
-                    ) : section.type === 'tools' ? (
-                      <div className='space-y-3'>
-                        {section.tools?.map((tool) => {
-                          const ToolIcon = tool.icon;
-                          return (
-                            <div
-                              key={tool.id}
-                              className='flex items-center justify-between p-2.5 border rounded-md bg-background/70 dark:bg-background/40 group/tool'
-                            >
-                              <div className='flex items-center space-x-2'>
-                                <GripVertical className='h-4 w-4 text-muted-foreground cursor-grab opacity-50 group-hover/tool:opacity-100 transition-opacity' />
-                                <div>
-                                  <span className='text-[11px] font-medium'>{tool.name}</span>
-                                  <p className='text-[11px] text-muted-foreground'>
-                                    {tool.description}
-                                  </p>
-                                </div>
-                              </div>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => {
-                                  return removeToolFromSection(section.id, tool.id);
-                                }}
-                                className='h-7 w-7 text-muted-foreground hover:text-destructive'
+                          rows={5}
+                          className='text-[11px]'
+                        />
+                      ) : section.type === 'examples' ? (
+                        <div className='space-y-3'>
+                          {section.examples?.map((ex) => {
+                            return (
+                              <Card
+                                key={ex.id}
+                                className='bg-background/70 dark:bg-background/40 p-3'
                               >
-                                <Trash2 className='h-4 w-4' />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='outline' size='sm'>
-                              <Plus className='mr-2 h-4 w-4' /> Add Tool{' '}
-                              <ChevronDown className='ml-2 h-4 w-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='start'>
-                            {AVAILABLE_TOOLS.map((tool) => {
-                              return (
-                                <DropdownMenuItem
-                                  key={tool.id}
-                                  onClick={() => {
-                                    return addToolToSection(section.id, tool);
-                                  }}
-                                  disabled={section.tools?.some((t) => {
-                                    return t.id === tool.id;
-                                  })}
-                                >
-                                  {tool.icon &&
-                                    React.createElement(tool.icon, { className: 'mr-2 h-4 w-4' })}
-                                  {tool.name}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                            {AVAILABLE_TOOLS.every((at) => {
-                              return section.tools?.some((st) => {
-                                return st.id === at.id;
-                              });
-                            }) &&
-                              section.tools &&
-                              section.tools.length > 0 && (
-                                <DropdownMenuItem disabled>
-                                  All available tools added
-                                </DropdownMenuItem>
-                              )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        {section.tools?.length === 0 && (
-                          <p className='text-[11px] text-center text-muted-foreground py-2'>
-                            No tools added to this section.
-                          </p>
-                        )}
-                      </div>
-                    ) : null}
-                  </CardContent>
-                </Card>
+                                <div className='space-y-2'>
+                                  <Textarea
+                                    placeholder='Input example...'
+                                    value={ex.input}
+                                    onChange={(e) => {
+                                      return updateExampleInSection(
+                                        section.id,
+                                        ex.id,
+                                        'input',
+                                        e.target.value,
+                                      );
+                                    }}
+                                    rows={2}
+                                    className='text-[11px]'
+                                  />
+                                  <Textarea
+                                    placeholder='Expected output example...'
+                                    value={ex.output}
+                                    onChange={(e) => {
+                                      return updateExampleInSection(
+                                        section.id,
+                                        ex.id,
+                                        'output',
+                                        e.target.value,
+                                      );
+                                    }}
+                                    rows={2}
+                                    className='text-[11px]'
+                                  />
+                                </div>
+                                <div className='mt-2 flex justify-end'>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    onClick={() => {
+                                      return removeExampleFromSection(section.id, ex.id);
+                                    }}
+                                    className='text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive'
+                                  >
+                                    <Trash2 className='mr-1 h-3 w-3' /> Remove Example
+                                  </Button>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => {
+                              return addExampleToSection(section.id);
+                            }}
+                          >
+                            <Plus className='mr-2 h-4 w-4' /> Add Example
+                          </Button>
+                          {section.examples?.length === 0 && (
+                            <p className='text-[11px] text-center text-muted-foreground py-2'>
+                              No examples added for this section.
+                            </p>
+                          )}
+                        </div>
+                      ) : section.type === 'tools' ? (
+                        <div className='space-y-2'>
+                          {section.tools?.map((tool) => {
+                            const ToolIcon = tool.icon;
+                            return (
+                              <div
+                                key={tool.id}
+                                className='flex items-center space-x-2 text-[11px] text-muted-foreground'
+                              >
+                                <ToolIcon className='h-4 w-4' />
+                                <span>{tool.name}</span>
+                              </div>
+                            );
+                          })}
+                          {section.tools?.length === 0 && (
+                            <p className='text-[11px] text-center text-muted-foreground'>
+                              No tools selected. Use the menu to add tools.
+                            </p>
+                          )}
+                        </div>
+                      ) : null}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               );
             })}
           </div>
