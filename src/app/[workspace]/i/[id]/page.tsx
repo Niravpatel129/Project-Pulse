@@ -526,20 +526,22 @@ const InvoicePage = () => {
                         // Create a URL for the blob
                         const url = window.URL.createObjectURL(pdfBlob);
 
-                        // Create a temporary link element
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+                        // Open PDF in new window
+                        const printWindow = window.open(url, '_blank');
 
-                        // Append to body, click, and remove
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                        // Wait for the PDF to load then print
+                        if (printWindow) {
+                          printWindow.onload = () => {
+                            printWindow.print();
+                          };
+                        }
 
-                        // Clean up the URL object
-                        window.URL.revokeObjectURL(url);
+                        // Clean up the URL object after printing
+                        setTimeout(() => {
+                          window.URL.revokeObjectURL(url);
+                        }, 1000);
                       } catch (error) {
-                        console.error('Error downloading PDF:', error);
+                        console.error('Error printing PDF:', error);
                       }
                     }}
                     className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'
@@ -566,7 +568,41 @@ const InvoicePage = () => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await newRequest.get(`/invoices2/${invoiceId}/download`, {
+                          responseType: 'blob',
+                        });
+
+                        // Create a blob from the PDF data
+                        const pdfBlob = new Blob([response.data], {
+                          type: 'application/pdf',
+                        });
+
+                        // Create a URL for the blob
+                        const url = window.URL.createObjectURL(pdfBlob);
+
+                        // Open PDF in new window
+                        const printWindow = window.open(url, '_blank');
+
+                        // Wait for the PDF to load then print
+                        if (printWindow) {
+                          printWindow.onload = () => {
+                            printWindow.print();
+                          };
+                        }
+
+                        // Clean up the URL object after printing
+                        setTimeout(() => {
+                          window.URL.revokeObjectURL(url);
+                        }, 1000);
+                      } catch (error) {
+                        console.error('Error printing PDF:', error);
+                      }
+                    }}
+                    className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'
+                  >
                     <svg
                       stroke='currentColor'
                       fill='currentColor'
