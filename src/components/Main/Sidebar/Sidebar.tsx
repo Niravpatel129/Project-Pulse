@@ -208,7 +208,7 @@ export default function AppSidebar() {
       });
       if (session) {
         await setCurrentSession(session);
-        router.push(`/dashboard/chat/${sessionId}`);
+        router.push(`/dashboard/chat/${sessionId}`, { scroll: false });
       }
     } catch (error) {
       console.error('Error loading chat:', error);
