@@ -423,14 +423,16 @@ const InvoicePage = () => {
                               )}
                           </span>
                         </div>
-                        <button
-                          onClick={() => {
-                            return setShowPayment(true);
-                          }}
-                          className='mt-4 w-full py-2 px-4 bg-[#1D1D1F] text-white rounded-lg hover:bg-[#1D1D1F]/90 transition-colors font-mono text-sm'
-                        >
-                          Proceed to Payment
-                        </button>
+                        {invoice.status === 'Paid' && (
+                          <button
+                            onClick={() => {
+                              return setShowPayment(true);
+                            }}
+                            className='mt-4 w-full py-2 px-4 bg-[#1D1D1F] text-white rounded-lg hover:bg-[#1D1D1F]/90 transition-colors font-mono text-sm'
+                          >
+                            Proceed to Payment
+                          </button>
+                        )}
                       </div>
                     </div>
                   </motion.div>
