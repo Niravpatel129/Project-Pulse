@@ -37,16 +37,18 @@ interface Section {
   content?: string;
   examples?: string;
   tools?: Tool[];
+  _id?: string;
 }
 
 interface Agent {
   _id: string;
   name: string;
-  description: string;
-  icon?: string;
   sections: Section[];
+  workspace?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
 }
 
 // Mock Data
@@ -83,7 +85,6 @@ const mockAgents: Agent[] = [
   {
     _id: uuidv4(),
     name: 'Support Assistant',
-    description: 'Handles customer support queries and provides information.',
     sections: [
       {
         id: uuidv4(),
@@ -105,7 +106,6 @@ const mockAgents: Agent[] = [
   {
     _id: uuidv4(),
     name: 'Content Creator',
-    description: 'Generates creative content based on prompts.',
     sections: [
       {
         id: uuidv4(),
@@ -117,7 +117,7 @@ const mockAgents: Agent[] = [
         id: uuidv4(),
         type: 'examples',
         title: 'Examples',
-        examples:
+        content:
           'Input: Product: new shoes\nOutput: Step into style with our new shoe collection!\n\nInput: Service: consulting\nOutput: Transform your business with expert consulting services.',
       },
       { id: uuidv4(), type: 'tools', title: 'Tools', tools: [AVAILABLE_TOOLS[1]] },
@@ -128,7 +128,6 @@ const mockAgents: Agent[] = [
   {
     _id: uuidv4(),
     name: 'Meeting Scheduler',
-    description: 'Helps schedule and manage meetings efficiently.',
     sections: [
       {
         id: uuidv4(),
@@ -150,7 +149,6 @@ const mockAgents: Agent[] = [
   {
     _id: uuidv4(),
     name: 'Research Assistant',
-    description: 'Conducts web research and summarizes findings.',
     sections: [
       {
         id: uuidv4(),
@@ -189,7 +187,6 @@ const getSectionIcon = (type: SectionType) => {
 };
 
 const AgentsPage = () => {
-  const [activeTab, setActiveTab] = useState<'cards' | 'table'>('cards');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAgentSheetOpen, setIsAgentSheetOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);

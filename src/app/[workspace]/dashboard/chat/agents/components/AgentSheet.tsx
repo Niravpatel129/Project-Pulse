@@ -67,7 +67,6 @@ interface Section {
 interface Agent {
   _id?: string;
   name: string;
-  description: string;
   icon?: string;
   sections: Section[];
   createdAt?: string;
@@ -459,7 +458,6 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [agentName, setAgentName] = useState('');
-  const [agentDescription, setAgentDescription] = useState('');
   const [currentSections, setCurrentSections] = useState<Section[]>([]);
   const [agentSettings, setAgentSettings] = useState<AgentSettings>({
     systemPrompt: 'enable',
@@ -480,7 +478,6 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
     if (open) {
       if (existingAgent) {
         setAgentName(existingAgent.name);
-        setAgentDescription(existingAgent.description);
         setCurrentSections(JSON.parse(JSON.stringify(existingAgent.sections)));
         // Set initial settings based on existing sections
         const initialSettings: AgentSettings = {
@@ -520,7 +517,6 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
         setAgentSettings(initialSettings);
       } else {
         setAgentName('');
-        setAgentDescription('');
         setCurrentSections([]);
         setAgentSettings({
           systemPrompt: 'enable',
@@ -675,7 +671,6 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
 
     const agentData: Agent = {
       name: agentName.trim(),
-      description: agentDescription.trim(),
       sections: currentSections,
     };
 
@@ -780,7 +775,6 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
       onOpenChange={(isOpen) => {
         if (!isOpen) {
           setAgentName('');
-          setAgentDescription('');
           setCurrentSections([]);
         }
         onOpenChange(isOpen);

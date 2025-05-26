@@ -2,6 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Table,
   TableBody,
   TableCell,
@@ -12,22 +18,29 @@ import {
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Bot, Edit3, Trash2 } from 'lucide-react';
+import { Bot, Edit3, MoreVertical, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+type SectionType = 'system_prompt' | 'instructions' | 'output_structure' | 'examples' | 'tools';
+
+interface Section {
+  id: string;
+  type: SectionType;
+  title: string;
+  content?: string;
+  tools?: Array<{ id: string; name: string }>;
+  _id?: string;
+}
 
 interface Agent {
   _id: string;
   name: string;
-  description: string;
-  icon?: string;
-  sections: Array<{
-    type: string;
-    title: string;
-    content?: string;
-    tools?: Array<{ id: string; name: string }>;
-  }>;
+  sections: Section[];
+  workspace?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
 }
 
 interface AgentTableProps {
@@ -42,7 +55,8 @@ const AgentTable = ({ searchQuery, onEditAgent, mockData }: AgentTableProps) => 
     queryFn: async () => {
       try {
         const response = await newRequest.get('/agents');
-        return response.data.agents;
+        console.log('🚀 response:', response);
+        return response.data.data.agents;
       } catch (error) {
         console.warn('Using mock data due to API error:', error);
         return mockData || [];
@@ -51,9 +65,13 @@ const AgentTable = ({ searchQuery, onEditAgent, mockData }: AgentTableProps) => 
   });
 
   const filteredAgents = agents.filter((agent) => {
+    const systemPrompt =
+      agent.sections.find((section) => {
+        return section.type === 'system_prompt';
+      })?.content || '';
     return (
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.description.toLowerCase().includes(searchQuery.toLowerCase())
+      systemPrompt.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
@@ -108,7 +126,9 @@ const AgentTable = ({ searchQuery, onEditAgent, mockData }: AgentTableProps) => 
                   </div>
                 </TableCell>
                 <TableCell className='max-w-[300px] truncate'>
-                  {agent.description || 'No description provided.'}
+                  {agent.sections.find((section) => {
+                    return section.type === 'system_prompt';
+                  })?.content || 'No system prompt provided.'}
                 </TableCell>
                 <TableCell>
                   <div className='flex flex-wrap gap-1'>
@@ -138,27 +158,32 @@ const AgentTable = ({ searchQuery, onEditAgent, mockData }: AgentTableProps) => 
                   {format(new Date(agent.updatedAt), 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell className='text-right'>
-                  <div className='flex justify-end space-x-2'>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='text-destructive hover:text-destructive-foreground hover:bg-destructive'
-                      onClick={() => {
-                        return handleDeleteAgent(agent._id);
-                      }}
-                    >
-                      <Trash2 className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => {
-                        return onEditAgent(agent);
-                      }}
-                    >
-                      <Edit3 className='h-4 w-4' />
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant='ghost' size='sm'>
+                        <MoreVertical className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        className='text-destructive focus:text-destructive'
+                        onClick={() => {
+                          return handleDeleteAgent(agent._id);
+                        }}
+                      >
+                        <Trash2 className='h-4 w-4 mr-2' />
+                        Delete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return onEditAgent(agent);
+                        }}
+                      >
+                        <Edit3 className='h-4 w-4 mr-2' />
+                        Edit
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             );
