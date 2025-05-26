@@ -148,26 +148,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('chat-sessions', JSON.stringify(sessions));
   }, [sessions]);
 
-  // Load session ID from localStorage on component mount
-  useEffect(() => {
-    // First try to get session ID from URL
-    const pathParts = window.location.pathname.split('/');
-    const urlSessionId = pathParts.find((part) => {
-      return part.match(/^[0-9a-f]{24}$/);
-    });
-
-    if (urlSessionId) {
-      setSessionId(urlSessionId);
-      localStorage.setItem('chatSessionId', urlSessionId);
-    } else {
-      // Fall back to localStorage if no session ID in URL
-      const savedSessionId = localStorage.getItem('chatSessionId');
-      if (savedSessionId) {
-        setSessionId(savedSessionId);
-      }
-    }
-  }, []);
-
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
