@@ -1,33 +1,81 @@
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useChat } from '@/contexts/ChatContext';
-import { Info, Plus } from 'lucide-react';
+import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, Info, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
+
+interface Agent {
+  _id: string;
+  name: string;
+  sections: {
+    id: string;
+    type: string;
+    title: string;
+    content?: string;
+    tools?: any[];
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 export function ChatHeader() {
   const { clearConversation } = useChat();
+  const router = useRouter();
 
-  // Fetch chat settings
-  // const { data: settings } = useQuery({
-  //   queryKey: ['chatSettings'],
-  //   queryFn: async () => {
-  //     const response = await newRequest.get('/chat-settings');
-  //     return (
-  //       response.data.data || {
-  //         selectedModel: 'gpt-4',
-  //         selectedStyle: 'default',
-  //         webSearchEnabled: true,
-  //       }
-  //     );
-  //   },
-  // });
+  const { data: agents = [] } = useQuery<Agent[]>({
+    queryKey: ['agents'],
+    queryFn: async () => {
+      const response = await newRequest.get('/agents');
+      return response.data.data.agents;
+    },
+  });
 
   return (
     <header className='dark:border-[#232428] px-6 py-4 flex items-center justify-between shrink-0'>
       <div className='flex items-center gap-4'>
         <SidebarTrigger />
-        <h1 className='text-base font-medium text-gray-900 dark:text-white'>AI Chat</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='flex items-center gap-2 px-2'>
+              <h1 className='text-base font-medium text-gray-900 dark:text-white'>AI Chat</h1>
+              <ChevronDown className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='start' className='w-48'>
+            <DropdownMenuItem
+              onClick={() => {
+                return router.push('/dashboard/chat/agents');
+              }}
+            >
+              Manage Agents
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {agents.map((agent) => {
+              return (
+                <DropdownMenuItem
+                  key={agent._id}
+                  onClick={() => {
+                    // TODO: Implement agent switching logic
+                    console.log('Switching to agent:', agent.name);
+                  }}
+                >
+                  {agent.name}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className='flex items-center gap-4'>
         <Popover>
