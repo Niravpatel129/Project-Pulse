@@ -326,7 +326,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
               <h2 className='text-lg font-bold'>
                 {existingAgent ? `Edit Agent: ${existingAgent.name}` : 'Create New Agent'}
               </h2>
-              <p className='text-muted-foreground text-sm'>
+              <p className='text-[11px] text-muted-foreground'>
                 Define the agent&apos;s core attributes, instructions, and capabilities.
               </p>
             </div>
@@ -343,7 +343,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
               <div>
                 <label
                   htmlFor='agentName'
-                  className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+                  className='block text-[11px] font-medium text-muted-foreground'
                 >
                   Agent Name
                 </label>
@@ -360,7 +360,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
               <div>
                 <label
                   htmlFor='agentDescription'
-                  className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+                  className='block text-[11px] font-medium text-muted-foreground'
                 >
                   Agent Description
                 </label>
@@ -379,7 +379,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
           </Card>
 
           <div className='flex justify-between items-center mt-8'>
-            <h3 className='text-xl font-semibold'>Agent Configuration</h3>
+            <h3 className='text-[11px] font-medium text-muted-foreground'>Agent Configuration</h3>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant='outline'>
@@ -410,8 +410,8 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
             <Card className='text-center py-12 border-dashed mt-4'>
               <CardContent className='flex flex-col items-center text-muted-foreground'>
                 <Sparkles className='h-12 w-12 mb-3' />
-                <p className='text-lg font-medium'>Your agent is a blank canvas!</p>
-                <p className='text-sm'>
+                <p className='text-[11px] font-medium'>Your agent is a blank canvas!</p>
+                <p className='text-[11px]'>
                   Start by adding sections like System Prompt or Tools to define it&apos;s behavior.
                 </p>
               </CardContent>
@@ -451,7 +451,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                           return updateSectionContent(section.id, e.target.value);
                         }}
                         rows={5}
-                        className='text-sm'
+                        className='text-[11px]'
                       />
                     ) : section.type === 'examples' ? (
                       <div className='space-y-3'>
@@ -474,7 +474,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                                     );
                                   }}
                                   rows={2}
-                                  className='text-sm'
+                                  className='text-[11px]'
                                 />
                                 <Textarea
                                   placeholder='Expected output example...'
@@ -488,7 +488,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                                     );
                                   }}
                                   rows={2}
-                                  className='text-sm'
+                                  className='text-[11px]'
                                 />
                               </div>
                               <div className='mt-2 flex justify-end'>
@@ -516,7 +516,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                           <Plus className='mr-2 h-4 w-4' /> Add Example
                         </Button>
                         {section.examples?.length === 0 && (
-                          <p className='text-xs text-center text-muted-foreground py-2'>
+                          <p className='text-[11px] text-center text-muted-foreground py-2'>
                             No examples added for this section.
                           </p>
                         )}
@@ -533,8 +533,8 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                               <div className='flex items-center space-x-2'>
                                 <GripVertical className='h-4 w-4 text-muted-foreground cursor-grab opacity-50 group-hover/tool:opacity-100 transition-opacity' />
                                 <div>
-                                  <span className='text-sm font-medium'>{tool.name}</span>
-                                  <p className='text-xs text-muted-foreground'>
+                                  <span className='text-[11px] font-medium'>{tool.name}</span>
+                                  <p className='text-[11px] text-muted-foreground'>
                                     {tool.description}
                                   </p>
                                 </div>
@@ -591,7 +591,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                         {section.tools?.length === 0 && (
-                          <p className='text-xs text-center text-muted-foreground py-2'>
+                          <p className='text-[11px] text-center text-muted-foreground py-2'>
                             No tools added to this section.
                           </p>
                         )}
