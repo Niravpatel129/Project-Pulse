@@ -34,7 +34,11 @@ export function middleware(request: NextRequest) {
     const workspace = subdomain;
 
     // Skip authentication check for invoice view pages and payment success page
-    if (path.match(/\/invoice\/[^\/]+$/) || path === '/payment-success') {
+    if (
+      path.match(/\/invoice\/[^\/]+$/) ||
+      path === '/payment-success' ||
+      path.match(/\/i\/[^\/]+$/)
+    ) {
       // Allow access to invoice view pages and payment success without authentication
       if (path === '/') {
         return NextResponse.rewrite(new URL(`/${workspace}`, request.url));
