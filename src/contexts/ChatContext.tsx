@@ -24,6 +24,11 @@ export type Message = {
   role: 'user' | 'assistant';
   timestamp: Date;
   isStreaming?: boolean;
+  agent?: {
+    id: string;
+    name: string;
+    icon?: string;
+  };
   attachments?: {
     id: string;
     name: string;
@@ -39,6 +44,12 @@ export type ChatSession = {
   lastMessage: string;
   timestamp: Date;
   messages: Message[];
+};
+
+export type Agent = {
+  _id: string;
+  name: string;
+  // Add any other necessary properties for the Agent type
 };
 
 export type ChatContextType = {
@@ -63,6 +74,8 @@ export type ChatContextType = {
   handleAttach: () => void;
   handleVoiceMessage: () => void;
   clearConversation: () => Promise<void>;
+  selectedAgents: Agent[];
+  setSelectedAgents: (agents: Agent[] | ((prev: Agent[]) => Agent[])) => void;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -84,6 +97,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
   const queryClient = useQueryClient();
+  const [selectedAgents, setSelectedAgents] = useState<Agent[]>([]);
 
   // Fetch conversations using React Query
   const { data: conversations = [], isLoading: isLoadingConversations } = useQuery({
@@ -117,6 +131,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           content: msg.content,
           role: msg.role,
           timestamp: new Date(response.data.conversation.lastActive),
+          agent: msg.agent,
         };
       });
     },
@@ -300,6 +315,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             message: content,
             sessionId: sessionId || undefined,
             attachments: userMessage.attachments,
+            agents: selectedAgents.map((agent) => {
+              return agent._id;
+            }),
           },
           onStart: () => {},
           onChunk: (data) => {
@@ -308,7 +326,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               setMessages((prev) => {
                 return prev.map((msg) => {
                   return msg.id === streamMessageId
-                    ? { ...msg, content: contentAccumulatorRef.current[streamMessageId] }
+                    ? {
+                        ...msg,
+                        content: contentAccumulatorRef.current[streamMessageId],
+                        agent: data.agent,
+                      }
                     : msg;
                 });
               });
@@ -340,6 +362,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                       ...msg,
                       content: contentAccumulatorRef.current[streamMessageId],
                       isStreaming: false,
+                      agent: data.agent,
                     }
                   : msg;
               });
@@ -391,7 +414,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setIsTyping(false);
       }
     },
-    [sessionId, queryClient],
+    [sessionId, queryClient, selectedAgents],
   );
 
   const handleActionCardClick = useCallback(
@@ -448,10 +471,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         // Map the messages to our Message type
         const history = conversation.messages.map((msg: any) => {
           return {
-            id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID since we don't have one in the response
+            id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             content: msg.content,
             role: msg.role,
-            timestamp: new Date(conversation.lastActive), // Using lastActive as timestamp since we don't have per-message timestamps
+            timestamp: new Date(conversation.lastActive),
+            agent: msg.agent,
           };
         });
 
@@ -506,6 +530,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       handleAttach,
       handleVoiceMessage,
       clearConversation,
+      selectedAgents,
+      setSelectedAgents,
     };
   }, [
     sessions,
@@ -526,6 +552,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     handleAttach,
     handleVoiceMessage,
     clearConversation,
+    selectedAgents,
   ]);
 
   return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;

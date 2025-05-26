@@ -31,9 +31,8 @@ interface Agent {
 }
 
 export function ChatHeader() {
-  const { clearConversation } = useChat();
+  const { clearConversation, selectedAgents, setSelectedAgents } = useChat();
   const router = useRouter();
-  const [selectedAgents, setSelectedAgents] = useState<Agent[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const { data: agents = [] } = useQuery<Agent[]>({
@@ -45,7 +44,7 @@ export function ChatHeader() {
   });
 
   const toggleAgent = (agent: Agent) => {
-    setSelectedAgents((prev) => {
+    setSelectedAgents((prev: Agent[]) => {
       const isSelected = prev.some((a) => {
         return a._id === agent._id;
       });

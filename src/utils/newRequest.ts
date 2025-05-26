@@ -168,6 +168,7 @@ export const streamRequest = ({
                         onChunk?.({
                           content: choice.delta.content || '',
                           type: 'chunk',
+                          agent: data.agent,
                         });
                       }
 
@@ -176,6 +177,7 @@ export const streamRequest = ({
                         onEnd?.({
                           content: choice.message?.content || '',
                           type: 'end',
+                          agent: data.agent,
                         });
                         return;
                       }

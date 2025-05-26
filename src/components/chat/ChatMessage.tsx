@@ -6,6 +6,10 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  agent?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface ChatMessageProps {
@@ -25,6 +29,7 @@ function TypingAnimation() {
 }
 
 export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageProps) {
+  console.log('🚀 message:', message);
   const isUser = message.role === 'user';
 
   if (message.content === '') {
@@ -34,6 +39,9 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'}`}>
+        {!isUser && message.agent && (
+          <div className='text-xs text-gray-500 dark:text-gray-400 mb-1'>{message.agent.name}</div>
+        )}
         <div
           className={`px-4 py-3 rounded-lg text-sm prose dark:prose-invert max-w-none ${
             isUser
