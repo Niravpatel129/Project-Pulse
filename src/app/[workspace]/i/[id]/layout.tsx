@@ -89,7 +89,7 @@ export default function InvoiceLayout({ children }: { children: React.ReactNode 
   const { data: invoice } = useQuery<Invoice>({
     queryKey: ['invoice', params.id],
     queryFn: () => {
-      return newRequest.get(`/invoices/${params.id}`);
+      return newRequest.get(`/invoices2/${params.id}`);
     },
   });
 

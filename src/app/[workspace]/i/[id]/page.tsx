@@ -76,10 +76,18 @@ interface Invoice {
 }
 
 const formatDate = (date: string, format: string) => {
+  if (!date) {
+    return '';
+  }
+
   const d = new Date(date);
   const day = d.getDate().toString().padStart(2, '0');
   const month = (d.getMonth() + 1).toString().padStart(2, '0');
   const year = d.getFullYear();
+
+  if (!format) {
+    return '';
+  }
 
   return format.replace('DD', day).replace('MM', month).replace('YYYY', year.toString());
 };
@@ -131,7 +139,7 @@ const InvoicePage = () => {
     setIsLoading,
   } = useStripeInvoice2Payment({
     invoiceId,
-    currency: invoice?.settings.currency || 'USD',
+    currency: invoice?.settings?.currency || 'USD',
   });
   console.log('🚀 invoice:', invoice);
 
@@ -224,7 +232,7 @@ const InvoicePage = () => {
                                   Issue Date:
                                 </span>
                                 <span className='text-[11px] font-mono flex-shrink-0'>
-                                  {formatDate(invoice.issueDate, invoice.settings.dateFormat)}
+                                  {formatDate(invoice?.issueDate, invoice?.settings?.dateFormat)}
                                 </span>
                               </div>
                             </div>
@@ -236,7 +244,7 @@ const InvoicePage = () => {
                                   Due Date:
                                 </span>
                                 <span className='text-[11px] font-mono flex-shrink-0'>
-                                  {formatDate(invoice.dueDate, invoice.settings.dateFormat)}
+                                  {formatDate(invoice?.dueDate, invoice?.settings?.dateFormat)}
                                 </span>
                               </div>
                             </div>
@@ -280,7 +288,7 @@ const InvoicePage = () => {
                         <div className='text-[11px] text-[#878787]'>Price</div>
                         <div className='text-[11px] text-[#878787] text-right'>Total</div>
                       </div>
-                      {invoice.items.map((item) => {
+                      {invoice?.items?.map((item) => {
                         return (
                           <div
                             key={item._id}
@@ -318,14 +326,15 @@ const InvoicePage = () => {
                         <div className='flex justify-between items-center py-1'>
                           <span className='text-[11px] text-[#878787] font-mono'>Subtotal</span>
                           <span className='text-right font-mono text-[11px] text-[#878787]'>
-                            {formatCurrency(
-                              invoice.totals.subtotal,
-                              invoice.settings.currency,
-                              invoice.settings.decimals,
-                            )}
+                            {invoice?.totals?.subtotal !== undefined &&
+                              formatCurrency(
+                                invoice.totals.subtotal,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
                           </span>
                         </div>
-                        {invoice.settings.discount.enabled && invoice.totals.discount > 0 && (
+                        {invoice?.settings?.discount?.enabled && invoice?.totals?.discount > 0 && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>Discount</span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
@@ -337,7 +346,7 @@ const InvoicePage = () => {
                             </span>
                           </div>
                         )}
-                        {invoice.settings.salesTax.enabled && invoice.totals.taxAmount > 0 && (
+                        {invoice?.settings?.salesTax?.enabled && invoice?.totals?.taxAmount > 0 && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>
                               Sales Tax ({invoice.settings.salesTax.rate}%)
@@ -351,7 +360,7 @@ const InvoicePage = () => {
                             </span>
                           </div>
                         )}
-                        {invoice.settings.vat.enabled && invoice.totals.vatAmount > 0 && (
+                        {invoice?.settings?.vat?.enabled && invoice?.totals?.vatAmount > 0 && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>
                               VAT ({invoice.settings.vat.rate}%)
@@ -368,11 +377,12 @@ const InvoicePage = () => {
                         <div className='flex justify-between items-center py-4 mt-2 border-t border-border'>
                           <span className='text-[11px] text-[#878787] font-mono'>Total</span>
                           <span className='text-right font-mono text-[21px]'>
-                            {formatCurrency(
-                              invoice.totals.total,
-                              invoice.settings.currency,
-                              invoice.settings.decimals,
-                            )}
+                            {invoice?.totals?.total !== undefined &&
+                              formatCurrency(
+                                invoice.totals.total,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
                           </span>
                         </div>
                       </div>
