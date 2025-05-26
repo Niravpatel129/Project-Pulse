@@ -348,9 +348,7 @@ export default function AppSidebar() {
         </Sidebar>
       </SidebarToggleContext.Provider>
 
-      {process.env.NODE_ENV === 'development' && (
-        <InvoiceSheet open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
-      )}
+      <InvoiceSheet open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
     </>
   );
 }
