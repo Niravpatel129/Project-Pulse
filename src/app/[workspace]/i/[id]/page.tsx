@@ -626,7 +626,7 @@ const InvoicePage = () => {
                         console.error('Error printing PDF:', error);
                       }
                     }}
-                    className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'
+                    className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8 text-black'
                   >
                     <svg
                       stroke='currentColor'
@@ -683,7 +683,7 @@ const InvoicePage = () => {
                         console.error('Error printing PDF:', error);
                       }
                     }}
-                    className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8'
+                    className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8 text-black'
                   >
                     <svg
                       stroke='currentColor'
