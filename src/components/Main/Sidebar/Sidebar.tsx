@@ -15,11 +15,12 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
-import { ArrowLeft, Moon, PencilIcon, Send, Sun, Trash2 } from 'lucide-react';
+import { ArrowLeft, Moon, PencilIcon, Send, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { FiTrash2 } from 'react-icons/fi';
 import {
   RiChat1Fill,
   RiFileListFill,
@@ -304,7 +305,7 @@ export default function AppSidebar() {
                               }}
                               disabled={isLoadingChat}
                             >
-                              <Trash2 className='h-3 w-3 text-[#515151] dark:text-[#f7f7f7]' />
+                              <FiTrash2 className='h-3 w-3 text-[#515151] dark:text-[#f7f7f7]' />
                             </Button>
                           </div>
                         );
