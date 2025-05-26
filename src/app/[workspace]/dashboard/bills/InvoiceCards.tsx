@@ -5,11 +5,18 @@ interface InvoiceCardProps {
   amount: number;
   status: 'Open' | 'Paid' | 'Overdue';
   count: number;
+  onFilter?: (status: string) => void;
 }
 
-const InvoiceCard: FC<InvoiceCardProps> = ({ amount, status, count }) => {
+const InvoiceCard: FC<InvoiceCardProps> = ({ amount, status, count, onFilter }) => {
   return (
-    <button type='button' className='text-left w-full h-full'>
+    <button
+      type='button'
+      className='text-left w-full h-full'
+      onClick={() => {
+        return onFilter?.(status.toLowerCase());
+      }}
+    >
       <div className='border bg-background text-card-foreground rounded-lg h-full'>
         <div className='flex flex-col space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 relative'>
           <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
@@ -139,7 +146,11 @@ const PaymentScoreCard: FC = () => {
   );
 };
 
-const InvoiceCards: FC = () => {
+interface InvoiceCardsProps {
+  onFilter?: (status: string) => void;
+}
+
+const InvoiceCards: FC<InvoiceCardsProps> = ({ onFilter }) => {
   // Example data - replace with your actual data
   const cards = [
     { amount: 15000, status: 'Open' as const, count: 0 },
@@ -152,7 +163,7 @@ const InvoiceCards: FC = () => {
       {cards.map((card, index) => {
         return (
           <div key={index} className='flex-1 min-w-[200px] sm:min-w-[300px] h-[155px]'>
-            <InvoiceCard {...card} />
+            <InvoiceCard {...card} onFilter={onFilter} />
           </div>
         );
       })}

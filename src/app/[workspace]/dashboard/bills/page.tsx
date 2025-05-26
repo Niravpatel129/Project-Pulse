@@ -267,7 +267,11 @@ const Bills = () => {
           }}
         >
           <div className='mb-4'>
-            <InvoiceCards />
+            <InvoiceCards
+              onFilter={(status) => {
+                return handleFilterChange('status', status);
+              }}
+            />
           </div>
           <div className='flex items-center justify-between w-full'>
             <div className='flex items-center gap-1 mb-4 h-9 w-full'>
