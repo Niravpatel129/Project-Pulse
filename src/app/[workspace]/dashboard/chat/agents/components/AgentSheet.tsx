@@ -320,24 +320,24 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
             {existingAgent ? 'Edit Agent' : 'Create New Agent'}
           </SheetTitle>
         </VisuallyHidden>
-        <SheetHeader className='sticky top-3 right-3 z-10 bg-background pb-4'>
-          <div className='flex justify-between items-center'>
+        <SheetHeader className='sticky top-0 right-3 z-10 bg-background pb-4'>
+          <div className='flex justify-between items-center px-6 pt-4'>
             <div>
-              <h2 className='text-2xl font-bold'>
+              <h2 className='text-lg font-bold'>
                 {existingAgent ? `Edit Agent: ${existingAgent.name}` : 'Create New Agent'}
               </h2>
-              <p className='text-muted-foreground'>
-                Define the agent's core attributes, instructions, and capabilities.
+              <p className='text-muted-foreground text-sm'>
+                Define the agent&apos;s core attributes, instructions, and capabilities.
               </p>
             </div>
           </div>
         </SheetHeader>
 
-        <div className='mt-4 flex-1 px-12'>
+        <div className='mt-4 flex-1 px-6'>
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Set the agent's name and description.</CardDescription>
+              <CardDescription>Set the agent&apos;s name and description.</CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
               <div>
@@ -605,7 +605,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
         </div>
 
         <SheetFooter className='sticky bottom-0 bg-background pt-4 border-none'>
-          <div className='flex justify-end space-x-3'>
+          <div className='flex justify-end space-x-3 px-6 pb-3'>
             <Button
               variant='outline'
               onClick={() => {

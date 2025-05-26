@@ -32,14 +32,20 @@ interface Agent {
 interface AgentCardsProps {
   searchQuery: string;
   onEditAgent: (agent: Agent) => void;
+  mockData?: Agent[];
 }
 
-const AgentCards = ({ searchQuery, onEditAgent }: AgentCardsProps) => {
+const AgentCards = ({ searchQuery, onEditAgent, mockData }: AgentCardsProps) => {
   const { data: agents = [], refetch } = useQuery<Agent[]>({
     queryKey: ['agents'],
     queryFn: async () => {
-      const response = await newRequest.get('/agents');
-      return response.data.agents;
+      try {
+        const response = await newRequest.get('/agents');
+        return response.data.agents;
+      } catch (error) {
+        console.warn('Using mock data due to API error:', error);
+        return mockData || [];
+      }
     },
   });
 

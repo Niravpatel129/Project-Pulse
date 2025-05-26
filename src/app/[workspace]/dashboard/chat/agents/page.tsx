@@ -4,14 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Bot,
   Brain,
   CalendarDays,
   Lightbulb,
   ListChecks,
   Mail,
   MessageSquareText,
-  Palette,
   Plus,
   Search,
   SearchCode,
@@ -44,10 +42,10 @@ interface Section {
 }
 
 interface Agent {
-  id: string;
+  _id: string;
   name: string;
   description: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: string;
   sections: Section[];
   createdAt: string;
   updatedAt: string;
@@ -83,12 +81,11 @@ const SECTION_TEMPLATES: Omit<Section, 'id' | 'content' | 'examples' | 'tools'>[
   { type: 'tools', title: 'Tools' },
 ];
 
-const initialAgents: Agent[] = [
+const mockAgents: Agent[] = [
   {
-    id: uuidv4(),
+    _id: uuidv4(),
     name: 'Support Assistant',
     description: 'Handles customer support queries and provides information.',
-    icon: Bot,
     sections: [
       {
         id: uuidv4(),
@@ -108,10 +105,9 @@ const initialAgents: Agent[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: uuidv4(),
+    _id: uuidv4(),
     name: 'Content Creator',
     description: 'Generates creative content based on prompts.',
-    icon: Palette,
     sections: [
       {
         id: uuidv4(),
@@ -130,6 +126,50 @@ const initialAgents: Agent[] = [
             output: 'Step into style with our new shoe collection!',
           },
         ],
+      },
+      { id: uuidv4(), type: 'tools', title: 'Tools', tools: [AVAILABLE_TOOLS[1]] },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: uuidv4(),
+    name: 'Meeting Scheduler',
+    description: 'Helps schedule and manage meetings efficiently.',
+    sections: [
+      {
+        id: uuidv4(),
+        type: 'system_prompt',
+        title: 'System Prompt / Role / Persona',
+        content: 'You are an efficient meeting scheduler and calendar manager.',
+      },
+      {
+        id: uuidv4(),
+        type: 'instructions',
+        title: 'Instructions / Conditions',
+        content: 'Check availability before scheduling. Send confirmation emails.',
+      },
+      { id: uuidv4(), type: 'tools', title: 'Tools', tools: [AVAILABLE_TOOLS[2]] },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: uuidv4(),
+    name: 'Research Assistant',
+    description: 'Conducts web research and summarizes findings.',
+    sections: [
+      {
+        id: uuidv4(),
+        type: 'system_prompt',
+        title: 'System Prompt / Role / Persona',
+        content: 'You are a thorough research assistant with attention to detail.',
+      },
+      {
+        id: uuidv4(),
+        type: 'output_structure',
+        title: 'Output Structure',
+        content: 'Provide sources, key findings, and a summary.',
       },
       { id: uuidv4(), type: 'tools', title: 'Tools', tools: [AVAILABLE_TOOLS[1]] },
     ],
@@ -159,14 +199,14 @@ const AgentsPage = () => {
   const [activeTab, setActiveTab] = useState<'cards' | 'table'>('cards');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAgentSheetOpen, setIsAgentSheetOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   const handleCreateAgent = () => {
     setSelectedAgent(null);
     setIsAgentSheetOpen(true);
   };
 
-  const handleEditAgent = (agent: any) => {
+  const handleEditAgent = (agent: Agent) => {
     setSelectedAgent(agent);
     setIsAgentSheetOpen(true);
   };
@@ -212,10 +252,18 @@ const AgentsPage = () => {
           <TabsTrigger value='table'>Table</TabsTrigger>
         </TabsList>
         <TabsContent value='cards'>
-          <AgentCards searchQuery={searchQuery} onEditAgent={handleEditAgent} />
+          <AgentCards
+            searchQuery={searchQuery}
+            onEditAgent={handleEditAgent}
+            mockData={mockAgents}
+          />
         </TabsContent>
         <TabsContent value='table'>
-          <AgentTable searchQuery={searchQuery} onEditAgent={handleEditAgent} />
+          <AgentTable
+            searchQuery={searchQuery}
+            onEditAgent={handleEditAgent}
+            mockData={mockAgents}
+          />
         </TabsContent>
       </Tabs>
 
