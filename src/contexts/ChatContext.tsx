@@ -3,7 +3,15 @@
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 type StreamEndData = {
   sessionId?: string;
@@ -189,239 +197,228 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     scrollToBottom();
   }, [messages, isTyping, isChatRoute]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
-  const addSession = (session: ChatSession) => {
+  const addSession = useCallback((session: ChatSession) => {
     setSessions((prev) => {
       return [...prev, session];
     });
-  };
+  }, []);
 
-  const updateSession = (sessionId: string, updates: Partial<ChatSession>) => {
+  const updateSession = useCallback((sessionId: string, updates: Partial<ChatSession>) => {
     setSessions((prev) => {
       return prev.map((session) => {
         return session.id === sessionId ? { ...session, ...updates } : session;
       });
     });
-  };
+  }, []);
 
-  const deleteSession = async (sessionId: string) => {
-    setSessions((prev) => {
-      return prev.filter((session) => {
-        return session.id !== sessionId;
+  const deleteSession = useCallback(
+    async (sessionId: string) => {
+      setSessions((prev) => {
+        return prev.filter((session) => {
+          return session.id !== sessionId;
+        });
       });
-    });
-    if (currentSession?.id === sessionId) {
-      setCurrentSession(null);
-    }
+      if (currentSession?.id === sessionId) {
+        setCurrentSession(null);
+      }
 
-    await newRequest.delete(`/new-ai/chat/history/${sessionId}`);
-  };
+      await newRequest.delete(`/new-ai/chat/history/${sessionId}`);
+    },
+    [currentSession],
+  );
 
-  const handleSend = async (content: string, attachments?: File[]) => {
-    if (!content.trim() && (!attachments || attachments.length === 0)) return;
+  const handleSend = useCallback(
+    async (content: string, attachments?: File[]) => {
+      if (!content.trim() && (!attachments || attachments.length === 0)) return;
 
-    // Create user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content,
-      role: 'user',
-      timestamp: new Date(),
-    };
+      // Create user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content,
+        role: 'user',
+        timestamp: new Date(),
+      };
 
-    // Handle attachments if any
-    if (attachments && attachments.length > 0) {
-      const formData = new FormData();
-      attachments.forEach((file) => {
-        formData.append('files', file);
+      // Handle attachments if any
+      if (attachments && attachments.length > 0) {
+        const formData = new FormData();
+        attachments.forEach((file) => {
+          formData.append('files', file);
+        });
+
+        try {
+          const response = await newRequest.post('/new-ai/chat/upload', formData);
+          userMessage.attachments = response.data.files.map((file: any) => {
+            return {
+              id: file.id,
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              url: file.url,
+            };
+          });
+        } catch (error) {
+          console.error('Error uploading files:', error);
+        }
+      }
+
+      setMessages((prev) => {
+        return [...prev, userMessage];
       });
+
+      const streamMessageId = `ai-${userMessage.id}`;
+      const streamingMessage: Message = {
+        id: streamMessageId,
+        content: '',
+        role: 'assistant',
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+
+      setMessages((prev) => {
+        return [...prev, streamingMessage];
+      });
+
+      setIsTyping(true);
+
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      abortControllerRef.current = new AbortController();
+      contentAccumulatorRef.current[streamMessageId] = '';
 
       try {
-        const response = await newRequest.post('/new-ai/chat/upload', formData);
-        userMessage.attachments = response.data.files.map((file: any) => {
-          return {
-            id: file.id,
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            url: file.url,
-          };
-        });
-      } catch (error) {
-        console.error('Error uploading files:', error);
-        // Continue with message even if file upload fails
-      }
-    }
+        const streamController = streamRequest({
+          endpoint: '/new-ai/chat/stream',
+          method: 'POST',
+          data: {
+            message: content,
+            sessionId: sessionId || undefined,
+            attachments: userMessage.attachments,
+          },
+          onStart: () => {},
+          onChunk: (data) => {
+            if (data.content) {
+              contentAccumulatorRef.current[streamMessageId] += data.content;
+              setMessages((prev) => {
+                return prev.map((msg) => {
+                  return msg.id === streamMessageId
+                    ? { ...msg, content: contentAccumulatorRef.current[streamMessageId] }
+                    : msg;
+                });
+              });
+            }
+          },
+          onEnd: (data) => {
+            if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+              setSessionId(data.sessionId);
+              localStorage.setItem('chatSessionId', data.sessionId);
 
-    // Optimistically update messages
-    setMessages((prev) => {
-      return [...prev, userMessage];
-    });
+              const url = new URL(window.location.href);
+              const pathParts = url.pathname.split('/');
+              const basePath = pathParts
+                .filter((part) => {
+                  return !part.match(/^[0-9a-f]{24}$/);
+                })
+                .join('/');
+              url.pathname = `${basePath}/${data.sessionId}`;
+              window.history.pushState({}, '', url.toString());
 
-    // Create placeholder message for AI response
-    const streamMessageId = `ai-${userMessage.id}`;
-    const streamingMessage: Message = {
-      id: streamMessageId,
-      content: '',
-      role: 'assistant',
-      timestamp: new Date(),
-      isStreaming: true,
-    };
+              queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+              queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
+            }
 
-    // Optimistically add streaming message
-    setMessages((prev) => {
-      return [...prev, streamingMessage];
-    });
-
-    setIsTyping(true);
-
-    // Cancel any ongoing requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // New controller for this request
-    abortControllerRef.current = new AbortController();
-
-    // Initialize content accumulator
-    contentAccumulatorRef.current[streamMessageId] = '';
-
-    try {
-      const streamController = streamRequest({
-        endpoint: '/new-ai/chat/stream',
-        method: 'POST',
-        data: {
-          message: content,
-          sessionId: sessionId || undefined,
-          attachments: userMessage.attachments,
-        },
-        onStart: () => {
-          // Remove session handling from onStart since it's now in onEnd
-        },
-        onChunk: (data) => {
-          if (data.content) {
-            contentAccumulatorRef.current[streamMessageId] += data.content;
             setMessages((prev) => {
               return prev.map((msg) => {
                 return msg.id === streamMessageId
-                  ? { ...msg, content: contentAccumulatorRef.current[streamMessageId] }
+                  ? {
+                      ...msg,
+                      content: contentAccumulatorRef.current[streamMessageId],
+                      isStreaming: false,
+                    }
                   : msg;
               });
             });
-          }
-        },
-        onEnd: (data) => {
-          if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-            setSessionId(data.sessionId);
-            localStorage.setItem('chatSessionId', data.sessionId);
 
-            // Update URL with session ID as a path parameter
-            const url = new URL(window.location.href);
-            const pathParts = url.pathname.split('/');
-            // Remove any existing session ID from the path
-            const basePath = pathParts
-              .filter((part) => {
-                return !part.match(/^[0-9a-f]{24}$/);
-              })
-              .join('/');
-            // Add the new session ID
-            url.pathname = `${basePath}/${data.sessionId}`;
-            window.history.pushState({}, '', url.toString());
-
-            // Invalidate queries when a new conversation starts
-            queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
-            queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
-          }
-
-          // Update messages with final content
-          setMessages((prev) => {
-            return prev.map((msg) => {
-              return msg.id === streamMessageId
-                ? {
-                    ...msg,
-                    content: contentAccumulatorRef.current[streamMessageId],
-                    isStreaming: false,
-                  }
-                : msg;
+            queryClient.setQueryData(['chat-conversations'], (oldData: any) => {
+              if (!oldData) return oldData;
+              return oldData.map((conv: any) => {
+                if (conv.id === data.sessionId) {
+                  return {
+                    ...conv,
+                    lastMessage: contentAccumulatorRef.current[streamMessageId],
+                    timestamp: new Date(),
+                  };
+                }
+                return conv;
+              });
             });
-          });
 
-          // Update conversation list with new message
-          queryClient.setQueryData(['chat-conversations'], (oldData: any) => {
-            if (!oldData) return oldData;
-            return oldData.map((conv: any) => {
-              if (conv.id === data.sessionId) {
-                return {
-                  ...conv,
-                  lastMessage: contentAccumulatorRef.current[streamMessageId],
-                  timestamp: new Date(),
-                };
-              }
-              return conv;
+            setIsTyping(false);
+            abortControllerRef.current = null;
+          },
+          onError: (error) => {
+            console.error('Error in stream:', error);
+            setMessages((prev) => {
+              return prev.filter((msg) => {
+                return msg.id !== streamMessageId;
+              });
             });
-          });
-
-          setIsTyping(false);
-          abortControllerRef.current = null;
-        },
-        onError: (error) => {
-          console.error('Error in stream:', error);
-          // Remove the streaming message on error
-          setMessages((prev) => {
-            return prev.filter((msg) => {
-              return msg.id !== streamMessageId;
-            });
-          });
-          setIsTyping(false);
-          abortControllerRef.current = null;
-        },
-      });
-
-      // Store cancel function
-      if (abortControllerRef.current) {
-        const originalAbort = abortControllerRef.current.abort;
-        abortControllerRef.current.abort = () => {
-          streamController.cancel();
-          originalAbort.call(abortControllerRef.current);
-        };
-      }
-    } catch (error) {
-      console.error('Error in setupStreamConnection:', error);
-      // Remove the streaming message on error
-      setMessages((prev) => {
-        return prev.filter((msg) => {
-          return msg.id !== streamMessageId;
+            setIsTyping(false);
+            abortControllerRef.current = null;
+          },
         });
-      });
-      setIsTyping(false);
-    }
-  };
 
-  const handleActionCardClick = (title: string) => {
-    const prompts = {
-      'Write copy': 'Help me write compelling copy for my landing page',
-      'Image generation': 'Generate an image of a futuristic cityscape at sunset',
-      'Create avatar': 'Create a professional avatar for my LinkedIn profile',
-      'Write code': 'Write a React component for a todo list application',
-    };
+        if (abortControllerRef.current) {
+          const originalAbort = abortControllerRef.current.abort;
+          abortControllerRef.current.abort = () => {
+            streamController.cancel();
+            originalAbort.call(abortControllerRef.current);
+          };
+        }
+      } catch (error) {
+        console.error('Error in setupStreamConnection:', error);
+        setMessages((prev) => {
+          return prev.filter((msg) => {
+            return msg.id !== streamMessageId;
+          });
+        });
+        setIsTyping(false);
+      }
+    },
+    [sessionId, queryClient],
+  );
 
-    const prompt = prompts[title as keyof typeof prompts] || `Help me with ${title.toLowerCase()}`;
-    handleSend(prompt);
-  };
+  const handleActionCardClick = useCallback(
+    (title: string) => {
+      const prompts = {
+        'Write copy': 'Help me write compelling copy for my landing page',
+        'Image generation': 'Generate an image of a futuristic cityscape at sunset',
+        'Create avatar': 'Create a professional avatar for my LinkedIn profile',
+        'Write code': 'Write a React component for a todo list application',
+      };
 
-  const handleAttach = () => {
-    // TODO: Implement file attachment
+      const prompt =
+        prompts[title as keyof typeof prompts] || `Help me with ${title.toLowerCase()}`;
+      handleSend(prompt);
+    },
+    [handleSend],
+  );
+
+  const handleAttach = useCallback(() => {
     console.log('File attachment clicked');
-  };
+  }, []);
 
-  const handleVoiceMessage = () => {
-    // TODO: Implement voice message
+  const handleVoiceMessage = useCallback(() => {
     console.log('Voice message clicked');
-  };
+  }, []);
 
-  const clearConversation = async () => {
+  const clearConversation = useCallback(async () => {
     if (!sessionId) return;
 
     try {
@@ -430,7 +427,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       setSessionId(null);
       localStorage.removeItem('chatSessionId');
 
-      // Invalidate queries when clearing conversation
       queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
       queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 
@@ -438,81 +434,101 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error clearing conversation:', error);
     }
-  };
+  }, [sessionId, queryClient, router]);
 
   // Load chat history for a session
-  const loadChatHistory = async (sessionId: string) => {
-    try {
-      if (!sessionId) return;
+  const loadChatHistory = useCallback(
+    async (sessionId: string) => {
+      try {
+        if (!sessionId) return;
 
-      const response = await newRequest.get(`/new-ai/chat/history/${sessionId}`);
-      const { conversation } = response.data;
+        const response = await newRequest.get(`/new-ai/chat/history/${sessionId}`);
+        const { conversation } = response.data;
 
-      // Map the messages to our Message type
-      const history = conversation.messages.map((msg: any) => {
-        return {
-          id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID since we don't have one in the response
-          content: msg.content,
-          role: msg.role,
-          timestamp: new Date(conversation.lastActive), // Using lastActive as timestamp since we don't have per-message timestamps
-        };
-      });
-
-      // Update the current session with the conversation title
-      if (currentSession?.id === sessionId) {
-        updateSession(sessionId, {
-          title: conversation.title,
-          lastMessage: history[history.length - 1]?.content || '',
-          timestamp: new Date(conversation.lastActive),
+        // Map the messages to our Message type
+        const history = conversation.messages.map((msg: any) => {
+          return {
+            id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID since we don't have one in the response
+            content: msg.content,
+            role: msg.role,
+            timestamp: new Date(conversation.lastActive), // Using lastActive as timestamp since we don't have per-message timestamps
+          };
         });
-      }
 
-      setMessages(history);
-    } catch (error) {
-      console.error('Error loading chat history:', error);
-      setMessages([]);
-    }
-  };
+        // Update the current session with the conversation title
+        if (currentSession?.id === sessionId) {
+          updateSession(sessionId, {
+            title: conversation.title,
+            lastMessage: history[history.length - 1]?.content || '',
+            timestamp: new Date(conversation.lastActive),
+          });
+        }
+
+        setMessages(history);
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        setMessages([]);
+      }
+    },
+    [currentSession, updateSession],
+  );
 
   // Modify setCurrentSession to load history
-  const setCurrentSessionWithHistory = async (session: ChatSession | null) => {
-    setCurrentSession(session);
-    if (session) {
-      await loadChatHistory(session.id);
-    } else {
-      setMessages([]);
-    }
-  };
-
-  return (
-    <ChatContext.Provider
-      value={{
-        // Session state
-        sessions,
-        currentSession,
-        setCurrentSession: setCurrentSessionWithHistory,
-        addSession,
-        updateSession,
-        deleteSession,
-        sessionId,
-        setSessionId,
-        isLoadingSessions,
-        loadChatHistory,
-
-        // Chat state
-        messages,
-        isTyping,
-        messagesEndRef,
-        handleSend,
-        handleActionCardClick,
-        handleAttach,
-        handleVoiceMessage,
-        clearConversation,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
+  const setCurrentSessionWithHistory = useCallback(
+    async (session: ChatSession | null) => {
+      setCurrentSession(session);
+      if (session) {
+        await loadChatHistory(session.id);
+      } else {
+        setMessages([]);
+      }
+    },
+    [loadChatHistory],
   );
+
+  const contextValue = useMemo(() => {
+    return {
+      sessions,
+      currentSession,
+      setCurrentSession: setCurrentSessionWithHistory,
+      addSession,
+      updateSession,
+      deleteSession,
+      sessionId,
+      setSessionId,
+      isLoadingSessions,
+      loadChatHistory,
+      messages,
+      isTyping,
+      messagesEndRef,
+      handleSend,
+      handleActionCardClick,
+      handleAttach,
+      handleVoiceMessage,
+      clearConversation,
+    };
+  }, [
+    sessions,
+    currentSession,
+    setCurrentSessionWithHistory,
+    addSession,
+    updateSession,
+    deleteSession,
+    sessionId,
+    setSessionId,
+    isLoadingSessions,
+    loadChatHistory,
+    messages,
+    isTyping,
+    messagesEndRef,
+    handleSend,
+    handleActionCardClick,
+    handleAttach,
+    handleVoiceMessage,
+    clearConversation,
+  ]);
+
+  return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;
 }
 
 export function useChat() {
