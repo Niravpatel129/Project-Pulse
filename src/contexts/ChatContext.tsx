@@ -2,7 +2,7 @@
 
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 type StreamEndData = {
@@ -64,6 +64,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const isChatRoute = pathname?.startsWith('/dashboard/chat');
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -72,7 +75,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   // Fetch conversations using React Query
@@ -90,6 +92,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         };
       });
     },
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+    enabled: isChatRoute, // Only run query on chat route
   });
 
   // Load chat history using React Query
@@ -107,24 +112,53 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         };
       });
     },
-    enabled: !!sessionId,
+    enabled: !!sessionId && isChatRoute, // Only run query on chat route and when sessionId exists
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
   });
+
+  // Prefetch chat history for all conversations
+  useEffect(() => {
+    if (!isChatRoute) return; // Only prefetch on chat route
+
+    conversations.forEach((conv) => {
+      queryClient.prefetchQuery({
+        queryKey: ['chat-history', conv.id],
+        queryFn: async () => {
+          const response = await newRequest.get(`/new-ai/chat/history/${conv.id}`);
+          return response.data.conversation.messages.map((msg: any) => {
+            return {
+              id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              content: msg.content,
+              role: msg.role,
+              timestamp: new Date(response.data.conversation.lastActive),
+            };
+          });
+        },
+        staleTime: 30000,
+        gcTime: 5 * 60 * 1000,
+      });
+    });
+  }, [conversations, queryClient, isChatRoute]);
 
   // Update sessions when conversations data changes
   useEffect(() => {
+    if (!isChatRoute) return; // Only update sessions on chat route
     setSessions(conversations);
     setIsLoadingSessions(isLoadingConversations);
-  }, [conversations, isLoadingConversations]);
+  }, [conversations, isLoadingConversations, isChatRoute]);
 
   // Update messages when chat history changes
   useEffect(() => {
+    if (!isChatRoute) return; // Only update messages on chat route
     if (chatHistory) {
       setMessages(chatHistory);
     }
-  }, [chatHistory]);
+  }, [chatHistory, isChatRoute]);
 
   // Load sessions from localStorage on mount
   useEffect(() => {
+    if (!isChatRoute) return; // Only load from localStorage on chat route
     const savedSessions = localStorage.getItem('chat-sessions');
     if (savedSessions) {
       try {
@@ -141,17 +175,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         console.error('Error loading chat sessions:', error);
       }
     }
-  }, []);
+  }, [isChatRoute]);
 
   // Save sessions to localStorage whenever they change
   useEffect(() => {
+    if (!isChatRoute) return; // Only save to localStorage on chat route
     localStorage.setItem('chat-sessions', JSON.stringify(sessions));
-  }, [sessions]);
+  }, [sessions, isChatRoute]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
+    if (!isChatRoute) return; // Only scroll on chat route
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages, isTyping, isChatRoute]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -219,9 +255,26 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Optimistically update messages
     setMessages((prev) => {
       return [...prev, userMessage];
     });
+
+    // Create placeholder message for AI response
+    const streamMessageId = `ai-${userMessage.id}`;
+    const streamingMessage: Message = {
+      id: streamMessageId,
+      content: '',
+      role: 'assistant',
+      timestamp: new Date(),
+      isStreaming: true,
+    };
+
+    // Optimistically add streaming message
+    setMessages((prev) => {
+      return [...prev, streamingMessage];
+    });
+
     setIsTyping(true);
 
     // Cancel any ongoing requests
@@ -233,21 +286,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     abortControllerRef.current = new AbortController();
 
     // Initialize content accumulator
-    const streamMessageId = `ai-${userMessage.id}`;
     contentAccumulatorRef.current[streamMessageId] = '';
-
-    // Create placeholder message
-    const streamingMessage: Message = {
-      id: streamMessageId,
-      content: '',
-      role: 'assistant',
-      timestamp: new Date(),
-      isStreaming: true,
-    };
-
-    setMessages((prev) => {
-      return [...prev, streamingMessage];
-    });
 
     try {
       const streamController = streamRequest({
@@ -296,6 +335,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
           }
 
+          // Update messages with final content
           setMessages((prev) => {
             return prev.map((msg) => {
               return msg.id === streamMessageId
@@ -307,20 +347,31 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 : msg;
             });
           });
+
+          // Update conversation list with new message
+          queryClient.setQueryData(['chat-conversations'], (oldData: any) => {
+            if (!oldData) return oldData;
+            return oldData.map((conv: any) => {
+              if (conv.id === data.sessionId) {
+                return {
+                  ...conv,
+                  lastMessage: contentAccumulatorRef.current[streamMessageId],
+                  timestamp: new Date(),
+                };
+              }
+              return conv;
+            });
+          });
+
           setIsTyping(false);
           abortControllerRef.current = null;
         },
         onError: (error) => {
           console.error('Error in stream:', error);
+          // Remove the streaming message on error
           setMessages((prev) => {
-            return prev.map((msg) => {
-              return msg.id === streamMessageId
-                ? {
-                    ...msg,
-                    content: 'Sorry, there was an error processing your request. Please try again.',
-                    isStreaming: false,
-                  }
-                : msg;
+            return prev.filter((msg) => {
+              return msg.id !== streamMessageId;
             });
           });
           setIsTyping(false);
@@ -338,15 +389,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error in setupStreamConnection:', error);
+      // Remove the streaming message on error
       setMessages((prev) => {
-        return prev.map((msg) => {
-          return msg.id === streamMessageId
-            ? {
-                ...msg,
-                content: 'Connection error. Please try again later.',
-                isStreaming: false,
-              }
-            : msg;
+        return prev.filter((msg) => {
+          return msg.id !== streamMessageId;
         });
       });
       setIsTyping(false);
