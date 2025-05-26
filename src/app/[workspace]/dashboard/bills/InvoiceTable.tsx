@@ -70,30 +70,30 @@ function formatDateTime(dateStr: string) {
 function getStatusBadge(status: string) {
   if (status === 'Overdue')
     return (
-      <span className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
+      <span className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
         Overdue
       </span>
     );
   if (status === 'Draft' || status === 'draft')
     return (
-      <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
+      <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
         Draft
       </span>
     );
   if (status === 'Paid' || status === 'paid')
     return (
-      <span className='bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
+      <span className='bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
         Paid
       </span>
     );
   if (status === 'Cancelled' || status === 'cancelled')
     return (
-      <span className='bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
+      <span className='bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
         Cancelled
       </span>
     );
   return (
-    <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs  tracking-wide'>
+    <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
       Unpaid
     </span>
   );
@@ -212,7 +212,7 @@ export const InvoiceTable = ({
               return (
                 <th
                   key={index}
-                  className={`${header.className} text-left text-[#121212] dark:text-slate-300 tracking-wide font-[500]`}
+                  className={`${header.className} text-left text-[#121212] dark:text-slate-300 tracking-wide font-medium`}
                 >
                   {header.label}
                 </th>
@@ -238,7 +238,7 @@ export const InvoiceTable = ({
                 {visibleColumns['Invoice'] && (
                   <td className='px-4 py-3'>
                     <div className='flex flex-col gap-1'>
-                      <span className=' text-[#121212] dark:text-white'>
+                      <span className='text-[#121212] dark:text-white font-medium'>
                         {invoice.invoiceNumber}
                       </span>
                     </div>
@@ -251,7 +251,7 @@ export const InvoiceTable = ({
                   <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
                     {invoice.dueDate ? (
                       <div className='h-full'>
-                        {formatDate(invoice.dueDate)}
+                        <span className='font-medium'>{formatDate(invoice.dueDate)}</span>
                         <div className='text-xs text-muted-foreground'>
                           {getRelativeTime(invoice.dueDate)}
                         </div>
@@ -264,7 +264,7 @@ export const InvoiceTable = ({
                 {visibleColumns['Customer'] && (
                   <td className='px-4 py-3'>
                     <div className='flex flex-col'>
-                      <span className='text-[#121212] dark:text-white'>
+                      <span className='text-[#121212] dark:text-white font-medium'>
                         {invoice.customer?.name || '-'}
                       </span>
                       <span className='text-xs text-muted-foreground'>
@@ -275,14 +275,14 @@ export const InvoiceTable = ({
                 )}
                 {visibleColumns['Amount'] && (
                   <td className='px-4 py-3'>
-                    <span className='text-[#121212] dark:text-white'>
+                    <span className='text-[#121212] dark:text-white font-medium'>
                       {formatCurrency(invoice.totals?.total || 0, invoice.currency)}
                     </span>
                   </td>
                 )}
                 {visibleColumns['Issue Date'] && (
                   <td className='px-4 py-3'>
-                    <span className='text-[#121212] dark:text-slate-300'>
+                    <span className='text-[#121212] dark:text-slate-300 font-medium'>
                       {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
                     </span>
                   </td>

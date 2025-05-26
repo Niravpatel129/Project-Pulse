@@ -1,5 +1,4 @@
 import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/FileUploadManagerModal';
-import { Badge } from '@/components/ui/badge';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { XIcon } from 'lucide-react';
@@ -27,6 +26,21 @@ function formatDate(dateStr?: string) {
   if (!dateStr) return '--';
   const date = new Date(dateStr);
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getStatusBadgeStyle(status: string) {
+  switch (status.toLowerCase()) {
+    case 'overdue':
+      return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400';
+    case 'draft':
+      return 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400';
+    case 'paid':
+      return 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400';
+    case 'cancelled':
+      return 'bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400';
+    default:
+      return 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400';
+  }
 }
 
 const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
@@ -119,9 +133,13 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           <div className='flex items-center gap-3'>
             <span className='text-[14px] font-medium text-gray-900 dark:text-gray-100'>
               {selectedInvoice.customer?.name}
-              <Badge variant='outline' className='text-xs ml-2 text-slate-600'>
-                {selectedInvoice.status}
-              </Badge>
+              <span
+                className={`ml-2 ${getStatusBadgeStyle(
+                  selectedInvoice.status,
+                )} px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide`}
+              >
+                {selectedInvoice.status.charAt(0).toUpperCase() + selectedInvoice.status.slice(1)}
+              </span>
             </span>
           </div>
         </div>
