@@ -163,6 +163,21 @@ export const streamRequest = ({
                     if (data.choices && data.choices[0]) {
                       const choice = data.choices[0];
 
+                      // Handle tool calls
+                      if (choice.message?.tool_calls) {
+                        onChunk?.({
+                          type: 'tool_call',
+                          tool_calls: choice.message.tool_calls,
+                          agent: data.agent,
+                          turn: data.turn,
+                          object: data.object,
+                          id: data.id,
+                          created: data.created,
+                          model: data.model,
+                          ...data,
+                        });
+                      }
+
                       // Handle start of stream and chunk updates
                       if (choice.delta) {
                         onChunk?.({

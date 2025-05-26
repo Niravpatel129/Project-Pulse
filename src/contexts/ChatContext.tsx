@@ -29,6 +29,14 @@ export type Message = {
     name: string;
     icon?: string;
   };
+  tool_calls?: {
+    id: string;
+    type: string;
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }[];
   attachments?: {
     id: string;
     name: string;
@@ -323,9 +331,33 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               messageId,
               content: data.content,
               type: data.type,
+              tool_calls: data.tool_calls,
             });
 
-            if (data.type === 'chunk') {
+            if (data.type === 'tool_call') {
+              setMessages((prev) => {
+                const exists = prev.some((msg) => {
+                  return msg.id === messageId;
+                });
+                if (!exists) {
+                  return [
+                    ...prev,
+                    {
+                      id: messageId,
+                      content: '',
+                      role: 'assistant' as const,
+                      timestamp: new Date(),
+                      isStreaming: true,
+                      agent: data.agent,
+                      tool_calls: data.tool_calls,
+                    },
+                  ];
+                }
+                return prev.map((msg) => {
+                  return msg.id === messageId ? { ...msg, tool_calls: data.tool_calls } : msg;
+                });
+              });
+            } else if (data.type === 'chunk') {
               setMessages((prev) => {
                 const exists = prev.some((msg) => {
                   return msg.id === messageId;

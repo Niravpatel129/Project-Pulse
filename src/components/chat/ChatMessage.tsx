@@ -10,6 +10,14 @@ interface Message {
     id: string;
     name: string;
   };
+  tool_calls?: {
+    id: string;
+    type: string;
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }[];
 }
 
 interface ChatMessageProps {
@@ -28,11 +36,22 @@ function TypingAnimation() {
   );
 }
 
+function ToolCall({ tool }: { tool: Message['tool_calls'][0] }) {
+  return (
+    <div className='mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md'>
+      <div className='text-xs text-gray-500 dark:text-gray-400'>
+        Using tool: {tool.function.name}
+      </div>
+      <div className='text-xs text-gray-600 dark:text-gray-300 mt-1'>{tool.function.arguments}</div>
+    </div>
+  );
+}
+
 export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageProps) {
   console.log('🚀 message:', message);
   const isUser = message.role === 'user';
 
-  if (message.content === '') {
+  if (message.content === '' && !message.tool_calls) {
     return null;
   }
 
@@ -49,7 +68,12 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
               : 'bg-gray-100 dark:bg-[#141414] text-gray-900 dark:text-gray-100'
           }`}
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+          {message.content && (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+          )}
+          {message.tool_calls?.map((tool) => (
+            <ToolCall key={tool.id} tool={tool} />
+          ))}
           {!isUser && isTyping && isLatestMessage && <TypingAnimation />}
         </div>
         <div
