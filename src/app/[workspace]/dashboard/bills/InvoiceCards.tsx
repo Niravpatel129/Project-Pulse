@@ -67,7 +67,7 @@ const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => 
                 return (
                   <button
                     key={currency.currency}
-                    onClick={(e) => {
+                    onMouseEnter={(e) => {
                       e.stopPropagation();
                       setSelectedCurrency(currency.currency);
                     }}
@@ -76,9 +76,7 @@ const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => 
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted hover:bg-muted/80'
                     }`}
-                  >
-                    {currency.currency}
-                  </button>
+                  ></button>
                 );
               })}
             </div>
