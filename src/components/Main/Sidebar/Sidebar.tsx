@@ -304,7 +304,7 @@ export default function AppSidebar() {
                               }}
                               disabled={isLoadingChat}
                             >
-                              <Trash2 className='h-4 w-4 text-[#3F3F46] dark:text-[#f7f7f7]' />
+                              <Trash2 className='h-3 w-3 text-[#515151] dark:text-[#f7f7f7]' />
                             </Button>
                           </div>
                         );
