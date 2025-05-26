@@ -9,17 +9,17 @@ interface InvoiceCardProps {
 
 const InvoiceCard: FC<InvoiceCardProps> = ({ amount, status, count }) => {
   return (
-    <button type='button' className='hidden sm:block text-left w-full h-full'>
+    <button type='button' className='text-left w-full h-full'>
       <div className='border bg-background text-card-foreground rounded-lg h-full'>
-        <div className='flex flex-col space-y-1.5 p-6 pb-2 relative'>
-          <h3 className='tracking-tight mb-2 font-mono font-medium text-2xl'>
+        <div className='flex flex-col space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 relative'>
+          <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
             ${amount.toLocaleString()}
           </h3>
         </div>
-        <div className='p-6 pt-0'>
-          <div className='flex flex-col gap-2'>
-            <div>{status}</div>
-            <div className='text-sm text-muted-foreground'>
+        <div className='px-4 md:px-6'>
+          <div className='flex flex-col gap-1 sm:gap-2'>
+            <div className='text-sm sm:text-base'>{status}</div>
+            <div className='text-xs sm:text-sm text-muted-foreground'>
               {count} {count === 1 ? 'invoice' : 'invoices'}
             </div>
           </div>
@@ -123,14 +123,16 @@ const PaymentScoreCard: FC = () => {
 
   return (
     <div className='border bg-background text-card-foreground rounded-lg h-full'>
-      <div className='space-y-1.5 p-6 pb-2 flex flex-col xl:flex-row justify-between'>
-        <h3 className='tracking-tight mb-2 font-mono font-medium text-2xl'>{score}</h3>
+      <div className='space-y-1 sm:space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 flex flex-col xl:flex-row justify-between'>
+        <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
+          {score}
+        </h3>
         <PaymentScoreVisualizer score={numericScore} paymentStatus={score} />
       </div>
-      <div className='p-6 pt-0 sm:hidden xl:flex'>
-        <div className='flex flex-col gap-2'>
-          <div>Payment score</div>
-          <div className='text-sm text-muted-foreground'>{text}</div>
+      <div className='px-4 md:px-6 sm:hidden xl:flex'>
+        <div className='flex flex-col gap-1 sm:gap-2'>
+          <div className='text-sm sm:text-base'>Payment score</div>
+          <div className='text-xs sm:text-sm text-muted-foreground'>{text}</div>
         </div>
       </div>
     </div>
@@ -146,15 +148,15 @@ const InvoiceCards: FC = () => {
   ];
 
   return (
-    <div className='flex flex-wrap gap-4'>
+    <div className='flex flex-wrap gap-2 sm:gap-4'>
       {cards.map((card, index) => {
         return (
-          <div key={index} className='flex-1 min-w-[300px] h-[200px]'>
+          <div key={index} className='flex-1 min-w-[200px] sm:min-w-[300px] h-[155px]'>
             <InvoiceCard {...card} />
           </div>
         );
       })}
-      <div className='flex-1 min-w-[300px] h-[200px]'>
+      <div className='flex-1 min-w-[200px] sm:min-w-[300px] h-[155px]'>
         <PaymentScoreCard />
       </div>
     </div>
