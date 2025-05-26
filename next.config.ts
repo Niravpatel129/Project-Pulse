@@ -10,6 +10,7 @@ const pwaConfig = {
 };
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,
   /* config options here */
   images: {
     domains: [

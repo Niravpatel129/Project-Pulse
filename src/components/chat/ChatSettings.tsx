@@ -10,7 +10,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, RefreshCcw, RotateCcw } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -79,29 +79,29 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   // Fetch chat settings
-  const {
-    data: settings,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['chatSettings'],
-    queryFn: async () => {
-      const response = await newRequest.get('/chat-settings');
+  // const {
+  //   data: settings,
+  //   isLoading,
+  //   error,
+  // } = useQuery({
+  //   queryKey: ['chatSettings'],
+  //   queryFn: async () => {
+  //     const response = await newRequest.get('/chat-settings');
 
-      setContextSettings(response.data.data.contextSettings);
-      setWebSearchEnabled(response.data.data.webSearchEnabled);
-      setSelectedStyle(response.data.data.selectedStyle);
-      setSelectedModel(response.data.data.selectedModel);
-      return (
-        response.data.data || {
-          contextSettings: response.data.data.contextSettings,
-          webSearchEnabled: true,
-          selectedStyle: 'default',
-          selectedModel: 'gpt-4',
-        }
-      );
-    },
-  });
+  //     setContextSettings(response.data.data.contextSettings);
+  //     setWebSearchEnabled(response.data.data.webSearchEnabled);
+  //     setSelectedStyle(response.data.data.selectedStyle);
+  //     setSelectedModel(response.data.data.selectedModel);
+  //     return (
+  //       response.data.data || {
+  //         contextSettings: response.data.data.contextSettings,
+  //         webSearchEnabled: true,
+  //         selectedStyle: 'default',
+  //         selectedModel: 'gpt-4',
+  //       }
+  //     );
+  //   },
+  // });
 
   // Handle error outside of query
   useEffect(() => {

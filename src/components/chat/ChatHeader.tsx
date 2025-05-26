@@ -2,8 +2,6 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useChat } from '@/contexts/ChatContext';
-import { newRequest } from '@/utils/newRequest';
-import { useQuery } from '@tanstack/react-query';
 import { Info, Plus } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -11,19 +9,19 @@ export function ChatHeader() {
   const { clearConversation } = useChat();
 
   // Fetch chat settings
-  const { data: settings } = useQuery({
-    queryKey: ['chatSettings'],
-    queryFn: async () => {
-      const response = await newRequest.get('/chat-settings');
-      return (
-        response.data.data || {
-          selectedModel: 'gpt-4',
-          selectedStyle: 'default',
-          webSearchEnabled: true,
-        }
-      );
-    },
-  });
+  // const { data: settings } = useQuery({
+  //   queryKey: ['chatSettings'],
+  //   queryFn: async () => {
+  //     const response = await newRequest.get('/chat-settings');
+  //     return (
+  //       response.data.data || {
+  //         selectedModel: 'gpt-4',
+  //         selectedStyle: 'default',
+  //         webSearchEnabled: true,
+  //       }
+  //     );
+  //   },
+  // });
 
   return (
     <header className='dark:border-[#232428] px-6 py-4 flex items-center justify-between shrink-0'>
