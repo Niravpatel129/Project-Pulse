@@ -228,11 +228,11 @@ const InvoiceCards: FC<InvoiceCardsProps> = ({
   const { data: summaryData, isLoading, error } = useInvoiceSummary();
 
   if (isLoading) {
-    return <div className='flex flex-wrap gap-2 sm:gap-4'>Loading...</div>;
+    return <div className='flex gap-2 sm:gap-4'>Loading...</div>;
   }
 
   if (error) {
-    return <div className='flex flex-wrap gap-2 sm:gap-4'>Error loading invoice summary</div>;
+    return <div className='flex gap-2 sm:gap-4'>Error loading invoice summary</div>;
   }
 
   const cards = [
@@ -242,15 +242,15 @@ const InvoiceCards: FC<InvoiceCardsProps> = ({
   ];
 
   return (
-    <div className='flex flex-wrap gap-2 sm:gap-4'>
+    <div className='flex gap-2 sm:gap-4'>
       {cards.map((card, index) => {
         return (
-          <div key={index} className='flex-1 min-w-[200px] sm:min-w-[300px]'>
+          <div key={index} className='w-[calc(25%-6px)] min-w-0'>
             <InvoiceCard {...card} onFilter={onFilter} />
           </div>
         );
       })}
-      <div className='flex-1 min-w-[200px] sm:min-w-[300px] h-[155px]'>
+      <div className='w-[calc(25%-6px)] min-w-0 h-[155px]'>
         <PaymentScoreCard />
       </div>
     </div>
