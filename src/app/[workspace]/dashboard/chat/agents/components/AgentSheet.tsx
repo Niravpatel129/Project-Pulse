@@ -313,7 +313,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
     >
       <SheetContent
         side='right'
-        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden font-mono scrollbar-hide flex flex-col p-0'
+        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-0'
       >
         <VisuallyHidden>
           <SheetTitle className='sr-only'>
@@ -427,7 +427,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                     <div className='flex items-center space-x-3'>
                       <GripVertical className='h-5 w-5 text-muted-foreground cursor-grab opacity-50 group-hover/section:opacity-100 transition-opacity' />
                       <SectionIcon className='h-5 w-5 text-primary' />
-                      <h4 className='text-md font-semibold'>{section.title}</h4>
+                      <h4 className='text-[13px] font-semibold'>{section.title}</h4>
                     </div>
                     <Button
                       variant='ghost'
