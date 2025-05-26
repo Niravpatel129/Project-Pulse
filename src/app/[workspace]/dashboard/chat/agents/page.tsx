@@ -31,12 +31,12 @@ interface Tool {
 
 type SectionType = 'system_prompt' | 'instructions' | 'output_structure' | 'examples' | 'tools';
 interface Section {
-  id: string; // Unique ID for this instance of the section
+  id: string;
   type: SectionType;
   title: string;
   content?: string;
-  examples?: Array<{ id: string; input: string; output: string }>;
-  tools?: Tool[]; // Only for 'tools' section type
+  examples?: string;
+  tools?: Tool[];
 }
 
 interface Agent {
@@ -117,13 +117,8 @@ const mockAgents: Agent[] = [
         id: uuidv4(),
         type: 'examples',
         title: 'Examples',
-        examples: [
-          {
-            id: uuidv4(),
-            input: 'Product: new shoes',
-            output: 'Step into style with our new shoe collection!',
-          },
-        ],
+        examples:
+          'Input: Product: new shoes\nOutput: Step into style with our new shoe collection!\n\nInput: Service: consulting\nOutput: Transform your business with expert consulting services.',
       },
       { id: uuidv4(), type: 'tools', title: 'Tools', tools: [AVAILABLE_TOOLS[1]] },
     ],

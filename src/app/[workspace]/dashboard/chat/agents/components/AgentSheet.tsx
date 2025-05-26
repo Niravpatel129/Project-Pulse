@@ -7,7 +7,6 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,15 +32,14 @@ import {
   Mail,
   MessageSquareText,
   MoreVertical,
-  Plus,
   SearchCode,
   Settings2,
   Sparkles,
-  Trash2,
   Wrench,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import { FiRadio } from 'react-icons/fi';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -60,7 +58,7 @@ interface Section {
   type: SectionType;
   title: string;
   content?: string;
-  examples?: Array<{ id: string; input: string; output: string }>;
+  examples?: string;
   tools?: Tool[];
 }
 
@@ -158,7 +156,7 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
   };
 
   return (
-    <div className='flex justify-end mr-4'>
+    <div className='absolute right-3 top-3'>
       <DropdownMenu modal>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' size='icon'>
@@ -616,7 +614,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
             id: uuidv4(),
             type: 'examples',
             title: 'Examples',
-            examples: [],
+            examples: '',
           });
         }
       }
@@ -706,7 +704,7 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
       ...sectionTemplate,
       id: uuidv4(),
       ...(sectionTemplate.type === 'tools' && { tools: [] }),
-      ...(sectionTemplate.type === 'examples' && { examples: [] }),
+      ...(sectionTemplate.type === 'examples' && { examples: '' }),
       ...(sectionTemplate.type !== 'tools' &&
         sectionTemplate.type !== 'examples' && { content: '' }),
     };
@@ -724,54 +722,11 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
   const updateSectionContent = (sectionId: string, content: string) => {
     setCurrentSections(
       currentSections.map((s) => {
-        return s.id === sectionId ? { ...s, content } : s;
-      }),
-    );
-  };
-
-  const addExampleToSection = (sectionId: string) => {
-    setCurrentSections(
-      currentSections.map((s) => {
-        if (s.id === sectionId && s.type === 'examples') {
-          return {
-            ...s,
-            examples: [...(s.examples || []), { id: uuidv4(), input: '', output: '' }],
-          };
-        }
-        return s;
-      }),
-    );
-  };
-
-  const updateExampleInSection = (
-    sectionId: string,
-    exampleId: string,
-    part: 'input' | 'output',
-    value: string,
-  ) => {
-    setCurrentSections(
-      currentSections.map((s) => {
-        if (s.id === sectionId && s.type === 'examples' && s.examples) {
-          const updatedExamples = s.examples.map((ex) => {
-            return ex.id === exampleId ? { ...ex, [part]: value } : ex;
-          });
-          return { ...s, examples: updatedExamples };
-        }
-        return s;
-      }),
-    );
-  };
-
-  const removeExampleFromSection = (sectionId: string, exampleId: string) => {
-    setCurrentSections(
-      currentSections.map((s) => {
-        if (s.id === sectionId && s.type === 'examples' && s.examples) {
-          return {
-            ...s,
-            examples: s.examples.filter((ex) => {
-              return ex.id !== exampleId;
-            }),
-          };
+        if (s.id === sectionId) {
+          if (s.type === 'examples') {
+            return { ...s, examples: content };
+          }
+          return { ...s, content };
         }
         return s;
       }),
@@ -846,50 +801,24 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
           </div>
         </SheetHeader>
 
-        <div className='mt-4 flex-1 px-6'>
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Set the agent&apos;s name and description.</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div>
-                <label
-                  htmlFor='agentName'
-                  className='block text-[11px] font-medium text-muted-foreground'
-                >
-                  Agent Name
-                </label>
-                <Input
-                  id='agentName'
-                  placeholder='e.g., Marketing Copywriter'
-                  value={agentName}
-                  onChange={(e) => {
-                    return setAgentName(e.target.value);
-                  }}
-                  className='mt-1'
-                />
+        <div className='flex-1 px-6'>
+          <div className='space-y-4 px-1'>
+            <div className=''>
+              <div className='flex items-center mb-4'>
+                <FiRadio className='h-5 w-5 text-primary mr-2' />
+                <h4 className='text-[13px] font-semibold'>Agent Name</h4>
               </div>
-              <div>
-                <label
-                  htmlFor='agentDescription'
-                  className='block text-[11px] font-medium text-muted-foreground'
-                >
-                  Agent Description
-                </label>
-                <Textarea
-                  id='agentDescription'
-                  placeholder='e.g., Generates engaging marketing copy for various platforms.'
-                  value={agentDescription}
-                  onChange={(e) => {
-                    return setAgentDescription(e.target.value);
-                  }}
-                  className='mt-1'
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              <Input
+                id='agentName'
+                placeholder='e.g., Marketing Copywriter'
+                value={agentName}
+                onChange={(e) => {
+                  return setAgentName(e.target.value);
+                }}
+                className='mt-1'
+              />
+            </div>
+          </div>
 
           <div className='space-y-4 mt-4'>
             {currentSections.map((section) => {
@@ -897,92 +826,31 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
               return (
                 <Accordion key={section.id} type='single' collapsible className='w-full'>
                   <AccordionItem value={section.id} className='border-none'>
-                    <AccordionTrigger className='py-3 px-4 hover:no-underline'>
-                      <div className='flex items-center space-x-3'>
-                        <SectionIcon className='h-5 w-5 text-primary' />
+                    <AccordionTrigger className='py-3  hover:no-underline px-1'>
+                      <div className='flex items-center'>
+                        <SectionIcon className='h-5 w-5 text-primary mr-2' />
                         <h4 className='text-[13px] font-semibold'>{section.title}</h4>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className='px-4 pb-4'>
+                    <AccordionContent className=' pb-4 p-1'>
                       {section.type === 'system_prompt' ||
                       section.type === 'instructions' ||
-                      section.type === 'output_structure' ? (
-                        <Textarea
-                          placeholder={`Enter ${section.title.toLowerCase()} here...`}
-                          value={section.content || ''}
-                          onChange={(e) => {
-                            return updateSectionContent(section.id, e.target.value);
-                          }}
-                          rows={5}
-                          className='text-[11px]'
-                        />
-                      ) : section.type === 'examples' ? (
-                        <div className='space-y-3'>
-                          {section.examples?.map((ex) => {
-                            return (
-                              <Card
-                                key={ex.id}
-                                className='bg-background/70 dark:bg-background/40 p-3'
-                              >
-                                <div className='space-y-2'>
-                                  <Textarea
-                                    placeholder='Input example...'
-                                    value={ex.input}
-                                    onChange={(e) => {
-                                      return updateExampleInSection(
-                                        section.id,
-                                        ex.id,
-                                        'input',
-                                        e.target.value,
-                                      );
-                                    }}
-                                    rows={2}
-                                    className='text-[11px]'
-                                  />
-                                  <Textarea
-                                    placeholder='Expected output example...'
-                                    value={ex.output}
-                                    onChange={(e) => {
-                                      return updateExampleInSection(
-                                        section.id,
-                                        ex.id,
-                                        'output',
-                                        e.target.value,
-                                      );
-                                    }}
-                                    rows={2}
-                                    className='text-[11px]'
-                                  />
-                                </div>
-                                <div className='mt-2 flex justify-end'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() => {
-                                      return removeExampleFromSection(section.id, ex.id);
-                                    }}
-                                    className='text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive'
-                                  >
-                                    <Trash2 className='mr-1 h-3 w-3' /> Remove Example
-                                  </Button>
-                                </div>
-                              </Card>
-                            );
-                          })}
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() => {
-                              return addExampleToSection(section.id);
+                      section.type === 'output_structure' ||
+                      section.type === 'examples' ? (
+                        <div className=''>
+                          <Textarea
+                            placeholder={`Enter ${section.title.toLowerCase()} here...`}
+                            value={
+                              section.type === 'examples'
+                                ? section.examples || ''
+                                : section.content || ''
+                            }
+                            onChange={(e) => {
+                              return updateSectionContent(section.id, e.target.value);
                             }}
-                          >
-                            <Plus className='mr-2 h-4 w-4' /> Add Example
-                          </Button>
-                          {section.examples?.length === 0 && (
-                            <p className='text-[11px] text-center text-muted-foreground py-2'>
-                              No examples added for this section.
-                            </p>
-                          )}
+                            rows={5}
+                            className='text-[11px]'
+                          />
                         </div>
                       ) : section.type === 'tools' ? (
                         <div className='space-y-2'>
