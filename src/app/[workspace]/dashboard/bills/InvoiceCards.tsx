@@ -148,14 +148,27 @@ const PaymentScoreCard: FC = () => {
 
 interface InvoiceCardsProps {
   onFilter?: (status: string) => void;
+  openAmount: number;
+  openCount: number;
+  paidAmount: number;
+  paidCount: number;
+  overdueAmount: number;
+  overdueCount: number;
 }
 
-const InvoiceCards: FC<InvoiceCardsProps> = ({ onFilter }) => {
-  // Example data - replace with your actual data
+const InvoiceCards: FC<InvoiceCardsProps> = ({
+  onFilter,
+  openAmount,
+  openCount,
+  paidAmount,
+  paidCount,
+  overdueAmount,
+  overdueCount,
+}) => {
   const cards = [
-    { amount: 15000, status: 'Open' as const, count: 0 },
-    { amount: 25000, status: 'Paid' as const, count: 5 },
-    { amount: 5000, status: 'Overdue' as const, count: 2 },
+    { amount: openAmount, status: 'Open' as const, count: openCount },
+    { amount: paidAmount, status: 'Paid' as const, count: paidCount },
+    { amount: overdueAmount, status: 'Overdue' as const, count: overdueCount },
   ];
 
   return (

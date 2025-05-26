@@ -187,7 +187,24 @@ const Bills = () => {
 
     // Status filter
     if (activeFilters.status) {
-      if (invoice.status?.toLowerCase() !== activeFilters.status.toLowerCase()) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dueDate = new Date(invoice.dueDate);
+
+      if (activeFilters.status === 'overdue') {
+        // An invoice is overdue if:
+        // 1. It's not paid
+        // 2. It has a due date
+        // 3. The due date is in the past
+        if (invoice.status?.toLowerCase() === 'paid' || !invoice.dueDate || dueDate >= today) {
+          return false;
+        }
+      } else {
+        // For other statuses, check exact match
+        if (invoice.status?.toLowerCase() !== activeFilters.status.toLowerCase()) {
+          return false;
+        }
+      }
     }
 
     return true;
@@ -198,6 +215,26 @@ const Bills = () => {
     return inv.status?.toLowerCase() === 'unpaid' || inv.status?.toLowerCase() === 'open';
   });
   const openAmount = openInvoices.reduce((sum: number, inv: any) => {
+    return sum + (inv.totals?.total || 0);
+  }, 0);
+
+  // Calculate Overdue invoices
+  const overdueInvoices = invoiceList.filter((inv: any) => {
+    if (inv.status?.toLowerCase() === 'paid' || !inv.dueDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(inv.dueDate);
+    return dueDate < today;
+  });
+  const overdueAmount = overdueInvoices.reduce((sum: number, inv: any) => {
+    return sum + (inv.totals?.total || 0);
+  }, 0);
+
+  // Calculate Paid invoices
+  const paidInvoices = invoiceList.filter((inv: any) => {
+    return inv.status?.toLowerCase() === 'paid';
+  });
+  const paidAmount = paidInvoices.reduce((sum: number, inv: any) => {
     return sum + (inv.totals?.total || 0);
   }, 0);
 
@@ -271,6 +308,12 @@ const Bills = () => {
               onFilter={(status) => {
                 return handleFilterChange('status', status);
               }}
+              openAmount={openAmount}
+              openCount={openInvoices.length}
+              paidAmount={paidAmount}
+              paidCount={paidInvoices.length}
+              overdueAmount={overdueAmount}
+              overdueCount={overdueInvoices.length}
             />
           </div>
           <div className='flex items-center justify-between w-full'>
