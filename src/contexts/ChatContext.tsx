@@ -281,21 +281,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      const streamMessageId = `ai-${userMessage.id}`;
+      const streamingMessages = new Map(); // Track streaming messages for each agent
+
       setMessages((prev) => {
         return [...prev, userMessage];
-      });
-
-      const streamMessageId = `ai-${userMessage.id}`;
-      const streamingMessage: Message = {
-        id: streamMessageId,
-        content: '',
-        role: 'assistant',
-        timestamp: new Date(),
-        isStreaming: true,
-      };
-
-      setMessages((prev) => {
-        return [...prev, streamingMessage];
       });
 
       setIsTyping(true);
@@ -322,13 +312,37 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           onStart: () => {},
           onChunk: (data) => {
             if (data.content) {
-              contentAccumulatorRef.current[streamMessageId] += data.content;
+              const agentId = data.agent?.id;
+              if (!agentId) return;
+
+              // Initialize streaming message for this agent if not exists
+              if (!streamingMessages.has(agentId)) {
+                const newStreamingMessage: Message = {
+                  id: `${streamMessageId}-${agentId}`,
+                  content: '',
+                  role: 'assistant',
+                  timestamp: new Date(),
+                  isStreaming: true,
+                  agent: data.agent,
+                };
+                streamingMessages.set(agentId, newStreamingMessage);
+                setMessages((prev) => {
+                  return [...prev, newStreamingMessage];
+                });
+              }
+
+              // Update content for this agent's message
+              const currentContent =
+                contentAccumulatorRef.current[`${streamMessageId}-${agentId}`] || '';
+              contentAccumulatorRef.current[`${streamMessageId}-${agentId}`] =
+                currentContent + data.content;
+
               setMessages((prev) => {
                 return prev.map((msg) => {
-                  return msg.id === streamMessageId
+                  return msg.id === `${streamMessageId}-${agentId}`
                     ? {
                         ...msg,
-                        content: contentAccumulatorRef.current[streamMessageId],
+                        content: contentAccumulatorRef.current[`${streamMessageId}-${agentId}`],
                         agent: data.agent,
                       }
                     : msg;
@@ -355,14 +369,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
             }
 
+            // Update all streaming messages to not streaming
             setMessages((prev) => {
               return prev.map((msg) => {
-                return msg.id === streamMessageId
+                return msg.isStreaming
                   ? {
                       ...msg,
-                      content: contentAccumulatorRef.current[streamMessageId],
                       isStreaming: false,
-                      agent: data.agent,
                     }
                   : msg;
               });
@@ -372,9 +385,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               if (!oldData) return oldData;
               return oldData.map((conv: any) => {
                 if (conv.id === data.sessionId) {
+                  // Get the last message content from any agent
+                  const lastMessageContent = Array.from(streamingMessages.values())
+                    .map((msg) => {
+                      return msg.content;
+                    })
+                    .join('\n\n');
                   return {
                     ...conv,
-                    lastMessage: contentAccumulatorRef.current[streamMessageId],
+                    lastMessage: lastMessageContent,
                     timestamp: new Date(),
                   };
                 }
@@ -387,9 +406,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
           onError: (error) => {
             console.error('Error in stream:', error);
+            // Remove all streaming messages on error
             setMessages((prev) => {
               return prev.filter((msg) => {
-                return msg.id !== streamMessageId;
+                return !msg.isStreaming;
               });
             });
             setIsTyping(false);
