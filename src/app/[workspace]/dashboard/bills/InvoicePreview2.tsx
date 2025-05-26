@@ -374,7 +374,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                 <div className='flex-1'>
                   <div className='flex items-center justify-between'>
                     <span>Created</span>
-                    <span>{formatDate(selectedInvoice.createdAt)}</span>
+                    <span className='text-gray-900 dark:text-gray-100'>
+                      {formatDate(selectedInvoice.createdAt)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -386,7 +388,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                   <div className='flex-1'>
                     <div className='flex items-center justify-between'>
                       <span>Paid</span>
-                      <span>{formatDate(selectedInvoice.paidAt)}</span>
+                      <span className='text-gray-900 dark:text-gray-100'>
+                        {formatDate(selectedInvoice.paidAt)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -408,23 +412,79 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                 <>
                   <div className='flex items-center gap-2'>
                     <div className='w-3 flex justify-center'>
-                      <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600'></span>
+                      {selectedInvoice.statusHistory?.some((history) => {
+                        return history.status === 'seen';
+                      }) ? (
+                        <span className='h-1.5 w-1.5 rounded-full bg-blue-400'></span>
+                      ) : (
+                        <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600'></span>
+                      )}
                     </div>
                     <div className='flex-1'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-gray-400 dark:text-gray-500'>Seen</span>
-                        <span className='text-gray-400 dark:text-gray-500'>--</span>
+                        <span
+                          className={
+                            selectedInvoice.statusHistory?.some((history) => {
+                              return history.status === 'seen';
+                            })
+                              ? 'text-gray-900 dark:text-gray-100'
+                              : 'text-gray-400 dark:text-gray-500'
+                          }
+                        >
+                          Seen
+                        </span>
+                        <span
+                          className={
+                            selectedInvoice.statusHistory?.some((history) => {
+                              return history.status === 'seen';
+                            })
+                              ? 'text-gray-900 dark:text-gray-100'
+                              : 'text-gray-400 dark:text-gray-500'
+                          }
+                        >
+                          {selectedInvoice.statusHistory?.some((history) => {
+                            return history.status === 'seen';
+                          })
+                            ? formatDate(
+                                selectedInvoice.statusHistory.find((history) => {
+                                  return history.status === 'seen';
+                                })?.changedAt,
+                              )
+                            : '--'}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className='flex items-center gap-2'>
                     <div className='w-3 flex justify-center'>
-                      <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600 animate-pulse'></span>
+                      {selectedInvoice.status === 'paid' ? (
+                        <span className='h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse'></span>
+                      ) : (
+                        <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600'></span>
+                      )}
                     </div>
                     <div className='flex-1'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-gray-400 dark:text-gray-500'>Paid</span>
-                        <span className='text-gray-400 dark:text-gray-500'>--</span>
+                        <span
+                          className={
+                            selectedInvoice.status === 'paid'
+                              ? 'text-gray-900 dark:text-gray-100'
+                              : 'text-gray-400 dark:text-gray-500'
+                          }
+                        >
+                          Paid
+                        </span>
+                        <span
+                          className={
+                            selectedInvoice.status === 'paid'
+                              ? 'text-gray-900 dark:text-gray-100'
+                              : 'text-gray-400 dark:text-gray-500'
+                          }
+                        >
+                          {selectedInvoice.status === 'paid'
+                            ? formatDate(selectedInvoice.paidAt)
+                            : '--'}
+                        </span>
                       </div>
                     </div>
                   </div>
