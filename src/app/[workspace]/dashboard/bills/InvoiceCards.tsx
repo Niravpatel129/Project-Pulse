@@ -25,15 +25,28 @@ interface InvoiceCardProps {
   onFilter?: (status: string) => void;
 }
 
+const formatCurrencyDisplay = (currency: string, amount: number) => {
+  const currencyMap: Record<string, string> = {
+    CAD: 'CA$',
+    USD: 'US$',
+    EUR: '€',
+    GBP: '£',
+  };
+
+  const symbol = currencyMap[currency] || currency;
+  return `${symbol}${amount.toLocaleString()}`;
+};
+
 const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => {
+  const defaultCurrency = { currency: 'CAD', total_amount: 0, invoice_count: 0 };
   const [selectedCurrency, setSelectedCurrency] = useState<string>(
-    currencies[0]?.currency || 'USD',
+    currencies[0]?.currency || defaultCurrency.currency,
   );
 
   const selectedAmount =
     currencies.find((c) => {
       return c.currency === selectedCurrency;
-    }) || currencies[0];
+    }) || defaultCurrency;
 
   return (
     <button
@@ -46,9 +59,7 @@ const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => 
       <div className='border bg-background text-card-foreground rounded-lg h-full pb-6'>
         <div className='flex flex-col space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 relative'>
           <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
-            {selectedAmount
-              ? `${selectedAmount.currency} ${selectedAmount.total_amount.toLocaleString()}`
-              : '-'}
+            {formatCurrencyDisplay(selectedAmount.currency, selectedAmount.total_amount)}
           </h3>
           {currencies.length > 1 && (
             <div className='flex gap-1 mt-1'>
@@ -77,8 +88,8 @@ const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => 
           <div className='flex flex-col gap-1 sm:gap-2'>
             <div className='text-sm sm:text-base'>{status}</div>
             <div className='text-xs sm:text-sm text-muted-foreground'>
-              {selectedAmount?.invoice_count || 0}{' '}
-              {selectedAmount?.invoice_count === 1 ? 'invoice' : 'invoices'}
+              {selectedAmount.invoice_count}{' '}
+              {selectedAmount.invoice_count === 1 ? 'invoice' : 'invoices'}
             </div>
           </div>
         </div>
