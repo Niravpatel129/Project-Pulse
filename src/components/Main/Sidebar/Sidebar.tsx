@@ -116,11 +116,15 @@ export default function AppSidebar() {
             href: '/dashboard/invoices',
             icon: RiFileListFill,
           },
-          {
-            name: 'Bills',
-            href: '/dashboard/bills',
-            icon: RiFileListFill,
-          },
+          ...(process.env.NODE_ENV === 'development'
+            ? [
+                {
+                  name: 'Bills',
+                  href: '/dashboard/bills',
+                  icon: RiFileListFill,
+                },
+              ]
+            : []),
           {
             name: 'Payments',
             href: '/dashboard/payments',
