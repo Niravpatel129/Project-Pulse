@@ -463,9 +463,9 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
   const [currentSections, setCurrentSections] = useState<Section[]>([]);
   const [agentSettings, setAgentSettings] = useState<AgentSettings>({
     systemPrompt: 'enable',
-    instructions: 'enable',
-    outputStructure: 'enable',
-    examples: 'enable',
+    instructions: 'disable',
+    outputStructure: 'disable',
+    examples: 'disable',
     tools: [],
     memory: 'disable',
     streaming: 'disable',
@@ -524,9 +524,9 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
         setCurrentSections([]);
         setAgentSettings({
           systemPrompt: 'enable',
-          instructions: 'enable',
-          outputStructure: 'enable',
-          examples: 'enable',
+          instructions: 'disable',
+          outputStructure: 'disable',
+          examples: 'disable',
           tools: [],
           memory: 'disable',
           streaming: 'disable',
