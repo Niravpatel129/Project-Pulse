@@ -193,7 +193,7 @@ export default function AppSidebar() {
   }, [baseNavigation, pathname]);
 
   const handleBackToDashboard = () => {
-    router.push('/dashboard/invoices');
+    router.push('/dashboard/bills');
     setIsChatView(false);
   };
 

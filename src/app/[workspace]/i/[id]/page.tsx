@@ -8,6 +8,7 @@ import { newRequest } from '@/utils/newRequest';
 import { Elements } from '@stripe/react-stripe-js';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -243,7 +244,13 @@ const InvoicePage = () => {
                         </div>
                       </div>
                       {invoice.logo && (
-                        <img src={invoice.logo} alt={invoice.to} className='h-20 object-contain' />
+                        <Image
+                          src={invoice.logo}
+                          alt={invoice.to}
+                          className='h-20 object-contain'
+                          width={100}
+                          height={100}
+                        />
                       )}
                     </div>
 

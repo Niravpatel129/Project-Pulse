@@ -7,7 +7,7 @@ export default function MainPage() {
 
   // Only redirect if we're at the root path
   if (pathname === '/') {
-    redirect('/dashboard/invoices');
+    redirect('/dashboard/bills');
   }
 
   return null;
