@@ -242,7 +242,9 @@ const InvoicePage = () => {
                           </div>
                         </div>
                       </div>
-                      <img src={invoice.logo} alt={invoice.to} className='h-20 object-contain' />
+                      {invoice.logo && (
+                        <img src={invoice.logo} alt={invoice.to} className='h-20 object-contain' />
+                      )}
                     </div>
 
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 mb-4'>
