@@ -34,6 +34,7 @@ import { useEffect, useState } from 'react';
 import { FiSidebar, FiX } from 'react-icons/fi';
 import { VscListFilter, VscSearch } from 'react-icons/vsc';
 import { toast } from 'sonner';
+import InvoiceCards from './InvoiceCards';
 import InvoicePreview2 from './InvoicePreview2';
 import { InvoiceTable } from './InvoiceTable';
 
@@ -265,6 +266,9 @@ const Bills = () => {
             transition: { duration: 0.3, ease: 'easeInOut' },
           }}
         >
+          <div className='mb-4'>
+            <InvoiceCards />
+          </div>
           <div className='flex items-center justify-between w-full'>
             <div className='flex items-center gap-1 mb-4 h-9 w-full'>
               <div className='relative flex items-center max-w-xs w-full'>
@@ -467,7 +471,6 @@ const Bills = () => {
               </DropdownMenu>
             </div>
           </div>
-
           <InvoiceTable
             invoices={filteredInvoices}
             selectedInvoice={selectedInvoice}
@@ -561,7 +564,6 @@ const Bills = () => {
               />
             </motion.div>
           ))}
-
         <InvoiceSheet
           open={!!editingInvoice}
           onOpenChange={setEditingInvoice}
