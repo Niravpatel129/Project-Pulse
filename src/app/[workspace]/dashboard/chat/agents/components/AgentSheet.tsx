@@ -295,7 +295,7 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
           </DropdownMenuSub>
 
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger disabled className='opacity-50 cursor-not-allowed'>
               <Wrench className='mr-2 h-4 w-4' />
               Tools
             </DropdownMenuSubTrigger>
@@ -305,10 +305,8 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
                 return (
                   <DropdownMenuItem
                     key={tool.id}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleToolToggle(tool.id);
-                    }}
+                    disabled
+                    className='opacity-50 cursor-not-allowed'
                   >
                     <div className='flex items-center space-x-2'>
                       <ToolIcon className='h-4 w-4' />
@@ -322,33 +320,28 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
           </DropdownMenuSub>
 
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger disabled className='opacity-50 cursor-not-allowed'>
               <Settings2 className='mr-2 h-4 w-4' />
               Advanced Settings
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Memory</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger disabled className='opacity-50 cursor-not-allowed'>
+                  Memory
+                </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup
-                    value={settings.memory}
-                    onValueChange={(value) => {
-                      return handleSettingChange('memory', value);
-                    }}
-                  >
+                  <DropdownMenuRadioGroup value={settings.memory}>
                     <DropdownMenuRadioItem
                       value='enable'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Enable
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value='disable'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Disable
                     </DropdownMenuRadioItem>
@@ -357,27 +350,22 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
               </DropdownMenuSub>
 
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Streaming</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger disabled className='opacity-50 cursor-not-allowed'>
+                  Streaming
+                </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup
-                    value={settings.streaming}
-                    onValueChange={(value) => {
-                      return handleSettingChange('streaming', value);
-                    }}
-                  >
+                  <DropdownMenuRadioGroup value={settings.streaming}>
                     <DropdownMenuRadioItem
                       value='enable'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Enable
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value='disable'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Disable
                     </DropdownMenuRadioItem>
@@ -386,35 +374,29 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
               </DropdownMenuSub>
 
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Temperature</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger disabled className='opacity-50 cursor-not-allowed'>
+                  Temperature
+                </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup
-                    value={settings.temperature}
-                    onValueChange={(value) => {
-                      return handleSettingChange('temperature', value);
-                    }}
-                  >
+                  <DropdownMenuRadioGroup value={settings.temperature}>
                     <DropdownMenuRadioItem
                       value='low'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Low
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value='medium'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Medium
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value='high'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       High
                     </DropdownMenuRadioItem>
@@ -423,35 +405,29 @@ const AgentSheetMenu = ({ settings, onSettingsChange }: AgentSheetMenuProps) => 
               </DropdownMenuSub>
 
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Max Tokens</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger disabled className='opacity-50 cursor-not-allowed'>
+                  Max Tokens
+                </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup
-                    value={settings.maxTokens}
-                    onValueChange={(value) => {
-                      return handleSettingChange('maxTokens', value);
-                    }}
-                  >
+                  <DropdownMenuRadioGroup value={settings.maxTokens}>
                     <DropdownMenuRadioItem
                       value='short'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Short
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value='medium'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Medium
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value='long'
-                      onSelect={(e) => {
-                        return e.preventDefault();
-                      }}
+                      disabled
+                      className='opacity-50 cursor-not-allowed'
                     >
                       Long
                     </DropdownMenuRadioItem>
@@ -491,8 +467,8 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
     outputStructure: 'enable',
     examples: 'enable',
     tools: [],
-    memory: 'enable',
-    streaming: 'enable',
+    memory: 'disable',
+    streaming: 'disable',
     temperature: 'medium',
     maxTokens: 'medium',
   });
@@ -536,8 +512,8 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
               ?.tools?.map((t) => {
                 return t.id;
               }) || [],
-          memory: 'enable',
-          streaming: 'enable',
+          memory: 'disable',
+          streaming: 'disable',
           temperature: 'medium',
           maxTokens: 'medium',
         };
@@ -552,8 +528,8 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
           outputStructure: 'enable',
           examples: 'enable',
           tools: [],
-          memory: 'enable',
-          streaming: 'enable',
+          memory: 'disable',
+          streaming: 'disable',
           temperature: 'medium',
           maxTokens: 'medium',
         });
@@ -856,7 +832,13 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
             {currentSections.map((section) => {
               const SectionIcon = getSectionIcon(section.type);
               return (
-                <Accordion key={section.id} type='single' collapsible className='w-full'>
+                <Accordion
+                  key={section.id}
+                  type='single'
+                  collapsible
+                  className='w-full'
+                  defaultValue={section.id}
+                >
                   <AccordionItem value={section.id} className='border-none'>
                     <AccordionTrigger className='py-3 hover:no-underline px-1'>
                       <div className='flex items-center'>
