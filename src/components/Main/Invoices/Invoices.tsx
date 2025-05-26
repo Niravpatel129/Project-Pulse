@@ -184,7 +184,6 @@ export default function Invoices({
       </motion.div>
       <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
         <AnimatePresence mode='popLayout'>
-          {console.log('filteredInvoices:', filteredInvoices)}
           {filteredInvoices?.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
