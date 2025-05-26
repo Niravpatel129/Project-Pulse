@@ -423,7 +423,7 @@ const InvoicePage = () => {
                               )}
                           </span>
                         </div>
-                        {invoice.status === 'Paid' && (
+                        {invoice.status !== 'Paid' && (
                           <button
                             onClick={() => {
                               return setShowPayment(true);
