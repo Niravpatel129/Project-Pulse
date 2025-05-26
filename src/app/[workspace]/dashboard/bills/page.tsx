@@ -321,7 +321,7 @@ const Bills = () => {
               <div className='relative flex items-center max-w-xs w-full'>
                 <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
                 <Input
-                  className='rounded-none pl-7 pr-10 border-slate-100'
+                  className='rounded-none pl-7 pr-10 border-slate-100 dark:border-[#232428]'
                   placeholder='Search or filter'
                   value={searchQuery}
                   onChange={(e) => {
@@ -462,7 +462,7 @@ const Bills = () => {
                   return (
                     <div
                       key={`${type}-${value}`}
-                      className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors'
+                      className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors dark:bg-[#1c1c1c] dark:border'
                       onClick={() => {
                         return removeFilter(type as 'dueDate' | 'customer' | 'status');
                       }}

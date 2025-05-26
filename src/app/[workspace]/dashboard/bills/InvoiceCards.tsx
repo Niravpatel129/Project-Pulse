@@ -65,18 +65,18 @@ const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => 
             <div className='flex gap-1 mt-1'>
               {currencies.map((currency) => {
                 return (
-                  <button
+                  <div
                     key={currency.currency}
                     onMouseEnter={(e) => {
                       e.stopPropagation();
                       setSelectedCurrency(currency.currency);
                     }}
-                    className={`px-2 py-0.5 text-xs rounded ${
+                    className={`px-2 py-0.5 text-xs rounded cursor-pointer ${
                       selectedCurrency === currency.currency
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted hover:bg-muted/80'
                     }`}
-                  ></button>
+                  ></div>
                 );
               })}
             </div>
