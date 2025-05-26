@@ -13,7 +13,7 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "react-hooks/exhaustive-deps": "warn",
       "react/no-array-index-key": "warn",
@@ -23,6 +23,7 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "off",
       "react/no-array-index-key": "off",
       "arrow-body-style": ["error", "always"],
+      "@next/next/no-img-element": "warn",
     },
   },
 ];
