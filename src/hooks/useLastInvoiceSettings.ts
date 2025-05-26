@@ -51,8 +51,6 @@ export function useLastInvoiceSettings(open?: boolean) {
     refetchOnMount: true, // Refetch when component mounts
   });
 
-  console.log('🚀 Transformed settings:', settingsResponse?.data?.invoiceSettings);
-
   const settings = settingsResponse?.data?.invoiceSettings;
 
   return {

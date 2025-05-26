@@ -13,7 +13,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { Check, ChevronDown, Info, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 
 interface Agent {
@@ -30,18 +30,52 @@ interface Agent {
   updatedAt: string;
 }
 
+const LOCAL_STORAGE_SELECTED_AGENTS_KEY = 'selectedChatAgents';
+
 export function ChatHeader() {
   const { clearConversation, selectedAgents, setSelectedAgents } = useChat();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data: agents = [] } = useQuery<Agent[]>({
+  const { data: agents = [], isSuccess: agentsLoaded } = useQuery<Agent[]>({
     queryKey: ['agents'],
     queryFn: async () => {
       const response = await newRequest.get('/agents');
       return response.data.data.agents;
     },
   });
+
+  // Load selected agents from localStorage on mount or when agents list is updated
+  useEffect(() => {
+    if (typeof window !== 'undefined' && agentsLoaded && agents.length > 0) {
+      const storedAgentsJson = localStorage.getItem(LOCAL_STORAGE_SELECTED_AGENTS_KEY);
+      if (storedAgentsJson) {
+        try {
+          const parsedAgents: Agent[] = JSON.parse(storedAgentsJson);
+          // Filter parsedAgents to ensure they are still valid and exist in the current agents list
+          const validStoredAgents = parsedAgents.filter((storedAgent) => {
+            return agents.some((currentAgent) => {
+              return currentAgent._id === storedAgent._id;
+            });
+          });
+          setSelectedAgents(validStoredAgents);
+        } catch (error) {
+          console.error('Failed to parse selected agents from localStorage:', error);
+          localStorage.removeItem(LOCAL_STORAGE_SELECTED_AGENTS_KEY); // Clear corrupted data
+        }
+      }
+    }
+  }, [agentsLoaded, agents, setSelectedAgents]);
+
+  // Save selected agents to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // This effect runs after the initial load effect, so it's safe to save.
+      // If selectedAgents is populated from localStorage, this will save that state.
+      // If user deselects all, it will save an empty array.
+      localStorage.setItem(LOCAL_STORAGE_SELECTED_AGENTS_KEY, JSON.stringify(selectedAgents));
+    }
+  }, [selectedAgents]);
 
   const toggleAgent = (agent: Agent) => {
     setSelectedAgents((prev: Agent[]) => {

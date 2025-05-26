@@ -283,6 +283,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       const streamMessageId = `ai-${userMessage.id}`;
       const streamingMessages = new Map(); // Track streaming messages for each agent
+      const agentTurns = new Map(); // Track which turn each agent is on
 
       setMessages((prev) => {
         return [...prev, userMessage];
@@ -311,39 +312,51 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
           onStart: () => {},
           onChunk: (data) => {
-            if (data.content) {
-              const agentId = data.agent?.id;
-              if (!agentId) return;
+            const agentId = data.agent?.id;
+            const agentName = data.agent?.name;
+            const currentTurn = data.turn || 0;
+            const messageId = `${streamMessageId}-${agentId}-${currentTurn}`;
+            console.log('onChunk:', {
+              agentId,
+              agentName,
+              currentTurn,
+              messageId,
+              content: data.content,
+              type: data.type,
+            });
 
-              // Initialize streaming message for this agent if not exists
-              if (!streamingMessages.has(agentId)) {
-                const newStreamingMessage: Message = {
-                  id: `${streamMessageId}-${agentId}`,
-                  content: '',
-                  role: 'assistant',
-                  timestamp: new Date(),
-                  isStreaming: true,
-                  agent: data.agent,
-                };
-                streamingMessages.set(agentId, newStreamingMessage);
-                setMessages((prev) => {
-                  return [...prev, newStreamingMessage];
+            if (data.type === 'chunk') {
+              setMessages((prev) => {
+                const exists = prev.some((msg) => {
+                  return msg.id === messageId;
                 });
-              }
-
-              // Update content for this agent's message
-              const currentContent =
-                contentAccumulatorRef.current[`${streamMessageId}-${agentId}`] || '';
-              contentAccumulatorRef.current[`${streamMessageId}-${agentId}`] =
-                currentContent + data.content;
-
+                if (!exists) {
+                  return [
+                    ...prev,
+                    {
+                      id: messageId,
+                      content: data.content,
+                      role: 'assistant' as const,
+                      timestamp: new Date(),
+                      isStreaming: true,
+                      agent: data.agent,
+                    },
+                  ];
+                }
+                return prev.map((msg) => {
+                  return msg.id === messageId
+                    ? { ...msg, content: msg.content + data.content }
+                    : msg;
+                });
+              });
+            } else if (data.type === 'agent_end') {
               setMessages((prev) => {
                 return prev.map((msg) => {
-                  return msg.id === `${streamMessageId}-${agentId}`
+                  return msg.id === messageId
                     ? {
                         ...msg,
-                        content: contentAccumulatorRef.current[`${streamMessageId}-${agentId}`],
-                        agent: data.agent,
+                        content: data.content || msg.content,
+                        isStreaming: false,
                       }
                     : msg;
                 });
@@ -381,19 +394,20 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               });
             });
 
+            // Update conversation with all messages
             queryClient.setQueryData(['chat-conversations'], (oldData: any) => {
               if (!oldData) return oldData;
               return oldData.map((conv: any) => {
                 if (conv.id === data.sessionId) {
-                  // Get the last message content from any agent
-                  const lastMessageContent = Array.from(streamingMessages.values())
+                  // Get all messages from all agents
+                  const allMessages = Array.from(streamingMessages.values())
                     .map((msg) => {
                       return msg.content;
                     })
                     .join('\n\n');
                   return {
                     ...conv,
-                    lastMessage: lastMessageContent,
+                    lastMessage: allMessages,
                     timestamp: new Date(),
                   };
                 }

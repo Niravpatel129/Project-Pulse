@@ -140,7 +140,7 @@ export const streamRequest = ({
             .read()
             .then(({ done, value }) => {
               if (done) {
-                onEnd?.({});
+                onEnd?.({ type: 'end_of_stream' });
                 return;
               }
 
@@ -163,23 +163,37 @@ export const streamRequest = ({
                     if (data.choices && data.choices[0]) {
                       const choice = data.choices[0];
 
-                      // Handle start of stream
-                      if (choice.delta && !choice.finish_reason) {
+                      // Handle start of stream and chunk updates
+                      if (choice.delta) {
                         onChunk?.({
                           content: choice.delta.content || '',
                           type: 'chunk',
                           agent: data.agent,
+                          turn: data.turn,
+                          object: data.object,
+                          id: data.id,
+                          created: data.created,
+                          model: data.model,
+                          finish_reason: choice.finish_reason,
+                          ...data,
                         });
                       }
 
-                      // Handle end of stream
+                      // Handle end of agent's completion (but do not close the stream)
                       if (choice.finish_reason) {
-                        onEnd?.({
+                        onChunk?.({
                           content: choice.message?.content || '',
-                          type: 'end',
+                          type: 'agent_end',
                           agent: data.agent,
+                          turn: data.turn,
+                          object: data.object,
+                          id: data.id,
+                          created: data.created,
+                          model: data.model,
+                          finish_reason: choice.finish_reason,
+                          ...data,
                         });
-                        return;
+                        // Do not return here; keep reading for more agents
                       }
                     }
                   } catch (e) {
