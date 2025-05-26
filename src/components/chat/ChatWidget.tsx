@@ -82,7 +82,12 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         updateSession(currentSession.id, {
           title,
           lastMessage: lastMessage.content,
-          messages,
+          messages: messages.map((msg) => {
+            return {
+              ...msg,
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+            };
+          }),
           timestamp: new Date(),
         });
       } else {
@@ -90,7 +95,12 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           id: Date.now().toString(),
           title,
           lastMessage: lastMessage.content,
-          messages,
+          messages: messages.map((msg) => {
+            return {
+              ...msg,
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+            };
+          }),
           timestamp: new Date(),
         });
       }

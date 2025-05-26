@@ -1,4 +1,5 @@
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
+import CreateInvoiceDialog from '@/components/InvoicesList/CreateInvoiceDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -351,8 +352,12 @@ export default function AppSidebar() {
         </Sidebar>
       </SidebarToggleContext.Provider>
 
-      {/* <CreateInvoiceDialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} /> */}
-      <InvoiceSheet open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
+      {process.env.NODE_ENV !== 'development' && (
+        <CreateInvoiceDialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
+      )}
+      {process.env.NODE_ENV === 'development' && (
+        <InvoiceSheet open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
+      )}
     </>
   );
 }
