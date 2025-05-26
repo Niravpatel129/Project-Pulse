@@ -220,7 +220,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
-        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+        <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
           <AuthProvider>
             <ClientLayout>
               {children}

@@ -116,6 +116,29 @@ const InvoicePage = () => {
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', '#ffffff');
     }
+    // Force background color
+    document.body.style.backgroundColor = '#ffffff';
+    document.documentElement.style.backgroundColor = '#ffffff';
+  }, []);
+
+  // Add script to prevent dark mode flash
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.innerHTML = `
+      (function() {
+        try {
+          const darkMode = localStorage.getItem('theme') === 'dark';
+          if (!darkMode) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    `;
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
   }, []);
 
   const {
@@ -188,16 +211,18 @@ const InvoicePage = () => {
   }
 
   return (
-    <div className='dotted-bg min-h-screen w-full'>
+    <div className='dotted-bg min-h-screen w-full bg-white'>
       <div className='flex flex-col w-full max-w-full py-6 mx-auto' style={{ maxWidth: '750px' }}>
         <div className='flex justify-between items-center mb-4'>
           <div className='flex items-center space-x-2'>
-            <span className='truncate text-sm'>{invoice.customer?.name || invoice.to}</span>
+            <span className='truncate text-sm text-gray-900'>
+              {invoice.customer?.name || invoice.to}
+            </span>
           </div>
           <div className='flex items-center space-x-2'>
             <Badge
               variant='outline'
-              className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#00C969] bg-[#DDF1E4] dark:text-[#00C969] dark:bg-[#00C969]/10'
+              className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#00C969] bg-[#DDF1E4]'
             >
               <span className='line-clamp-1 truncate inline-block capitalize'>
                 {invoice.status}
@@ -207,7 +232,7 @@ const InvoicePage = () => {
         </div>
 
         <div className='pb-24 md:pb-0'>
-          <Card className='shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)]'>
+          <Card className='shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)] bg-white'>
             <CardContent className='p-4 sm:p-6 md:p-8'>
               <AnimatePresence mode='wait'>
                 {!showPayment ? (
@@ -220,7 +245,7 @@ const InvoicePage = () => {
                   >
                     <div className='flex justify-between'>
                       <div className='mb-2'>
-                        <h2 className='text-[21px] font-medium font-mono mb-1 w-fit min-w-[100px]'>
+                        <h2 className='text-[21px] font-medium font-mono mb-1 w-fit min-w-[100px] text-gray-900'>
                           {invoice.invoiceTitle}
                         </h2>
                         <div className='flex flex-col gap-0.5'>
@@ -229,7 +254,7 @@ const InvoicePage = () => {
                               <span className='truncate font-mono text-[11px] text-[#878787]'>
                                 Invoice No:
                               </span>
-                              <span className='text-[11px] font-mono flex-shrink-0'>
+                              <span className='text-[11px] font-mono flex-shrink-0 text-gray-900'>
                                 {invoice.invoiceNumber}
                               </span>
                             </div>
@@ -240,7 +265,7 @@ const InvoicePage = () => {
                                 <span className='truncate font-mono text-[11px] text-[#878787]'>
                                   Issue Date:
                                 </span>
-                                <span className='text-[11px] font-mono flex-shrink-0'>
+                                <span className='text-[11px] font-mono flex-shrink-0 text-gray-900'>
                                   {formatDate(invoice?.issueDate, invoice?.settings?.dateFormat)}
                                 </span>
                               </div>
@@ -252,7 +277,7 @@ const InvoicePage = () => {
                                 <span className='truncate font-mono text-[11px] text-[#878787]'>
                                   Due Date:
                                 </span>
-                                <span className='text-[11px] font-mono flex-shrink-0'>
+                                <span className='text-[11px] font-mono flex-shrink-0 text-gray-900'>
                                   {formatDate(invoice?.dueDate, invoice?.settings?.dateFormat)}
                                 </span>
                               </div>
@@ -276,7 +301,7 @@ const InvoicePage = () => {
                         <p className='text-[11px] text-[#878787] font-mono mb-2 block'>From</p>
                         <div className='font-mono leading-4'>
                           <p>
-                            <span className='text-[11px]'>{invoice.from}</span>
+                            <span className='text-[11px] text-gray-900'>{invoice.from}</span>
                           </p>
                         </div>
                       </div>
@@ -284,14 +309,14 @@ const InvoicePage = () => {
                         <p className='text-[11px] text-[#878787] font-mono mb-2 block'>To</p>
                         <div className='font-mono leading-4'>
                           <p>
-                            <span className='text-[11px]'>{invoice.to}</span>
+                            <span className='text-[11px] text-gray-900'>{invoice.to}</span>
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div className='mt-5 font-mono'>
-                      <div className='grid grid-cols-[1.5fr_15%_15%_15%] gap-4 items-end relative group mb-2 w-full pb-1 border-b border-border'>
+                      <div className='grid grid-cols-[1.5fr_15%_15%_15%] gap-4 items-end relative group mb-2 w-full pb-1 border-b border-gray-200'>
                         <div className='text-[11px] text-[#878787]'>Description</div>
                         <div className='text-[11px] text-[#878787]'>Quantity</div>
                         <div className='text-[11px] text-[#878787]'>Price</div>
@@ -306,19 +331,23 @@ const InvoicePage = () => {
                             <div className='self-start'>
                               <div className='font-mono leading-4'>
                                 <p>
-                                  <span className='text-[11px]'>{item.description}</span>
+                                  <span className='text-[11px] text-gray-900'>
+                                    {item.description}
+                                  </span>
                                 </p>
                               </div>
                             </div>
-                            <div className='text-[11px] self-start'>{item.quantity}</div>
-                            <div className='text-[11px] self-start'>
+                            <div className='text-[11px] self-start text-gray-900'>
+                              {item.quantity}
+                            </div>
+                            <div className='text-[11px] self-start text-gray-900'>
                               {formatCurrency(
                                 item.price,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
                               )}
                             </div>
-                            <div className='text-[11px] text-right self-start'>
+                            <div className='text-[11px] text-right self-start text-gray-900'>
                               {formatCurrency(
                                 item.total,
                                 invoice.settings.currency,
@@ -383,9 +412,9 @@ const InvoicePage = () => {
                             </span>
                           </div>
                         )}
-                        <div className='flex justify-between items-center py-4 mt-2 border-t border-border'>
+                        <div className='flex justify-between items-center py-4 mt-2 border-t border-gray-200'>
                           <span className='text-[11px] text-[#878787] font-mono'>Total</span>
-                          <span className='text-right font-mono text-[21px]'>
+                          <span className='text-right font-mono text-[21px] text-gray-900'>
                             {invoice?.totals?.total !== undefined &&
                               formatCurrency(
                                 invoice.totals.total,
@@ -411,14 +440,14 @@ const InvoicePage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className='flex flex-col items-center justify-center py-12 min-h-[600px]'
+                    className='flex flex-col items-center justify-center py-12 min-h-[600px] bg-white'
                   >
                     <div className='text-center mb-8'>
-                      <h2 className='text-2xl font-mono mb-4'>Payment Details</h2>
+                      <h2 className='text-2xl font-mono mb-4 text-gray-900'>Payment Details</h2>
                       {invoice.requireDeposit && (
                         <div className='mb-4'>
                           <p className='text-[11px] text-[#878787] mb-2'>Required Deposit</p>
-                          <div className='text-2xl font-mono mb-2'>
+                          <div className='text-2xl font-mono mb-2 text-gray-900'>
                             {formatCurrency(
                               (invoice.totals.total * invoice.depositPercentage) / 100,
                               invoice.settings.currency,
@@ -431,7 +460,7 @@ const InvoicePage = () => {
                         </div>
                       )}
                       <p className='text-[11px] text-[#878787] mb-6'>Total Amount Due</p>
-                      <div className='text-4xl font-mono mb-8'>
+                      <div className='text-4xl font-mono mb-8 text-gray-900'>
                         {formatCurrency(
                           invoice.totals.total,
                           invoice.settings.currency,
@@ -558,7 +587,7 @@ const InvoicePage = () => {
           className='fixed inset-x-0 -bottom-1 flex justify-center'
           style={{ opacity: 1, filter: 'blur(0px)', transform: 'translateY(-24px)' }}
         >
-          <div className='backdrop-filter backdrop-blur-lg bg-[#F6F6F3]/80 rounded-full pl-2 pr-4 py-3 h-10 flex items-center justify-center border-[0.5px] border-border'>
+          <div className='backdrop-filter backdrop-blur-lg bg-[#F6F6F3]/80 rounded-full pl-2 pr-4 py-3 h-10 flex items-center justify-center border-[0.5px] border-gray-200'>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
