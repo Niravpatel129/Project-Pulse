@@ -43,7 +43,7 @@ const InvoiceCard: FC<InvoiceCardProps> = ({ status, currencies, onFilter }) => 
         return onFilter?.(status.toLowerCase());
       }}
     >
-      <div className='border bg-background text-card-foreground rounded-lg h-full'>
+      <div className='border bg-background text-card-foreground rounded-lg h-full pb-6'>
         <div className='flex flex-col space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 relative'>
           <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
             {selectedAmount
@@ -236,7 +236,7 @@ const InvoiceCards: FC<InvoiceCardsProps> = ({
     <div className='flex flex-wrap gap-2 sm:gap-4'>
       {cards.map((card, index) => {
         return (
-          <div key={index} className='flex-1 min-w-[200px] sm:min-w-[300px] h-[155px]'>
+          <div key={index} className='flex-1 min-w-[200px] sm:min-w-[300px]'>
             <InvoiceCard {...card} onFilter={onFilter} />
           </div>
         );
