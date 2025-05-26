@@ -159,17 +159,26 @@ export const streamRequest = ({
                   try {
                     const data = JSON.parse(eventData.substring(6));
 
-                    if (data.type === 'start') {
-                      onStart?.(data);
-                    } else if (data.type === 'chunk' || data.type === 'text') {
-                      onChunk?.(data);
-                    } else if (data.type === 'end') {
-                      onEnd?.(data);
-                      return;
-                    } else if (data.type === 'error') {
-                      onError?.(data);
-                      reader.cancel();
-                      return;
+                    // Handle OpenAI streaming format
+                    if (data.choices && data.choices[0]) {
+                      const choice = data.choices[0];
+
+                      // Handle start of stream
+                      if (choice.delta && !choice.finish_reason) {
+                        onChunk?.({
+                          content: choice.delta.content || '',
+                          type: 'chunk',
+                        });
+                      }
+
+                      // Handle end of stream
+                      if (choice.finish_reason) {
+                        onEnd?.({
+                          content: choice.message?.content || '',
+                          type: 'end',
+                        });
+                        return;
+                      }
                     }
                   } catch (e) {
                     console.error('Error parsing SSE data:', e);
