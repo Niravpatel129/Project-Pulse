@@ -151,19 +151,18 @@ const InvoicePage = () => {
     invoiceId,
     currency: invoice?.settings?.currency || 'USD',
   });
-  console.log('🚀 invoice:', invoice);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (invoice?.status !== 'paid') {
-        setShowPayment(true);
-      }
-    }, 2000);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     if (invoice?.status !== 'paid') {
+  //       setShowPayment(true);
+  //     }
+  //   }, 2000);
 
-    return () => {
-      return clearTimeout(timer);
-    };
-  }, [invoice?.status]);
+  //   return () => {
+  //     return clearTimeout(timer);
+  //   };
+  // }, [invoice?.status]);
 
   if (isLoading) {
     return (
