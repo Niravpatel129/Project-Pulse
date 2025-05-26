@@ -1,6 +1,5 @@
 'use client';
 import { StripePaymentForm } from '@/components/StripePaymentForm';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -175,10 +174,6 @@ const InvoicePage = () => {
       <div className='flex flex-col w-full max-w-full py-6 mx-auto' style={{ maxWidth: '750px' }}>
         <div className='flex justify-between items-center mb-4'>
           <div className='flex items-center space-x-2'>
-            <Avatar className='size-5'>
-              <AvatarImage src={invoice.logo} />
-              <AvatarFallback>m</AvatarFallback>
-            </Avatar>
             <span className='truncate text-sm'>{invoice.customer?.name || invoice.to}</span>
           </div>
           <div className='flex items-center space-x-2'>
