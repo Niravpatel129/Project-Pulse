@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
@@ -35,6 +36,7 @@ import {
   SearchCode,
   Settings2,
   Sparkles,
+  Wand2,
   Wrench,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -470,6 +472,13 @@ interface AgentSheetProps {
   existingAgent?: Agent;
 }
 
+const PROMPT_EXAMPLES = {
+  system_prompt: 'Create a technical support agent',
+  instructions: 'Steps for handling refunds',
+  output_structure: 'Format as email with signature',
+  examples: 'Show customer service examples',
+};
+
 const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -487,6 +496,8 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
     temperature: 'medium',
     maxTokens: 'medium',
   });
+  const [isGenerating, setIsGenerating] = useState<{ [key: string]: boolean }>({});
+  const [promptInput, setPromptInput] = useState<{ [key: string]: string }>({});
 
   // Reset form when sheet opens
   useEffect(() => {
@@ -766,6 +777,27 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
     );
   };
 
+  const generateAIContent = async (sectionId: string, sectionType: SectionType, prompt: string) => {
+    try {
+      setIsGenerating((prev) => {
+        return { ...prev, [sectionId]: true };
+      });
+      const response = await newRequest.post('/ai/generate', {
+        type: sectionType,
+        prompt,
+      });
+
+      const generatedContent = response.data.content;
+      updateSectionContent(sectionId, generatedContent);
+    } catch (error) {
+      toast.error('Failed to generate content');
+    } finally {
+      setIsGenerating((prev) => {
+        return { ...prev, [sectionId]: false };
+      });
+    }
+  };
+
   return (
     <Sheet
       open={open}
@@ -826,18 +858,18 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
               return (
                 <Accordion key={section.id} type='single' collapsible className='w-full'>
                   <AccordionItem value={section.id} className='border-none'>
-                    <AccordionTrigger className='py-3  hover:no-underline px-1'>
+                    <AccordionTrigger className='py-3 hover:no-underline px-1'>
                       <div className='flex items-center'>
                         <SectionIcon className='h-5 w-5 text-primary mr-2' />
                         <h4 className='text-[13px] font-semibold'>{section.title}</h4>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className=' pb-4 p-1'>
+                    <AccordionContent className='pb-4 p-1'>
                       {section.type === 'system_prompt' ||
                       section.type === 'instructions' ||
                       section.type === 'output_structure' ||
                       section.type === 'examples' ? (
-                        <div className=''>
+                        <div className='relative'>
                           <Textarea
                             placeholder={`Enter ${section.title.toLowerCase()} here...`}
                             value={
@@ -849,8 +881,62 @@ const AgentSheet = ({ open, onOpenChange, existingAgent }: AgentSheetProps) => {
                               return updateSectionContent(section.id, e.target.value);
                             }}
                             rows={5}
-                            className='text-[11px]'
+                            className='text-[11px] pr-10'
                           />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                size='icon'
+                                variant='ghost'
+                                className='absolute bottom-2 right-2 h-6 w-6'
+                                disabled={isGenerating[section.id]}
+                              >
+                                <Wand2
+                                  className={`h-4 w-4 ${
+                                    isGenerating[section.id] ? 'animate-spin' : ''
+                                  }`}
+                                />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className='w-80 p-4'>
+                              <div className='space-y-4'>
+                                <h4 className='font-medium text-sm'>Generate with AI</h4>
+                                <Input
+                                  placeholder={PROMPT_EXAMPLES[section.type] || 'Enter a prompt...'}
+                                  value={promptInput[section.id] || ''}
+                                  onChange={(e) => {
+                                    return setPromptInput((prev) => {
+                                      return { ...prev, [section.id]: e.target.value };
+                                    });
+                                  }}
+                                  className='text-sm'
+                                />
+                                <Button
+                                  className='w-full'
+                                  onClick={() => {
+                                    if (promptInput[section.id]) {
+                                      generateAIContent(
+                                        section.id,
+                                        section.type,
+                                        promptInput[section.id],
+                                      );
+                                      setPromptInput((prev) => {
+                                        return { ...prev, [section.id]: '' };
+                                      });
+                                    }
+                                  }}
+                                  disabled={!promptInput[section.id] || isGenerating[section.id]}
+                                >
+                                  <Wand2
+                                    className={`h-4 w-4 mr-2 ${
+                                      isGenerating[section.id] ? 'animate-spin' : ''
+                                    }`}
+                                  />
+                                  Generate
+                                </Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       ) : section.type === 'tools' ? (
                         <div className='space-y-2'>
