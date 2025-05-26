@@ -228,7 +228,28 @@ const InvoiceCards: FC<InvoiceCardsProps> = ({
   const { data: summaryData, isLoading, error } = useInvoiceSummary();
 
   if (isLoading) {
-    return <div className='flex gap-2 sm:gap-4'>Loading...</div>;
+    return (
+      <div className='flex gap-2 sm:gap-4'>
+        {[...Array(4)].map((_, index) => {
+          return (
+            <div key={index} className='w-[calc(25%-6px)] min-w-0'>
+              <div className='border bg-background text-card-foreground rounded-lg h-full pb-6'>
+                <div className='flex flex-col space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2'>
+                  <div className='h-8 bg-muted animate-pulse rounded' />
+                  <div className='h-4 w-16 bg-muted animate-pulse rounded' />
+                </div>
+                <div className='px-4 md:px-6'>
+                  <div className='flex flex-col gap-1 sm:gap-2'>
+                    <div className='h-5 w-20 bg-muted animate-pulse rounded' />
+                    <div className='h-4 w-24 bg-muted animate-pulse rounded' />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   if (error) {
