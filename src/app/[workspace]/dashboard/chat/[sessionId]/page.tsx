@@ -11,7 +11,6 @@ import { useEffect, useMemo } from 'react';
 export default function ChatSession() {
   const params = useParams();
   const sessionId = params.sessionId as string;
-  console.log('🚀 sessionId:', sessionId);
   const {
     messages,
     isTyping,

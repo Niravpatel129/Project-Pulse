@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, RefreshCcw, RotateCcw } from 'lucide-react';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface ChatSettingsProps {
@@ -104,11 +104,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   // });
 
   // Handle error outside of query
-  useEffect(() => {
-    if (error) {
-      toast.error('Failed to load settings. Using defaults.');
-    }
-  }, [error]);
 
   // Local state for form values
   const [contextSettings, setContextSettings] = useState('');
@@ -223,14 +218,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
       setIsRefreshing(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className='flex items-center justify-center h-full p-6'>
-        <div className='animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary'></div>
-      </div>
-    );
-  }
 
   return (
     <div className='flex flex-col h-full relative bg-white'>
