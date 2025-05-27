@@ -149,7 +149,7 @@ export function AddCustomerDialog({
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries();
       onOpenChange(false);
       resetCustomerForm();
       toast.success('Customer added successfully');
