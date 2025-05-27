@@ -1,3 +1,4 @@
+import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,6 +9,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
 
 const TABLE_HEADERS = [
   { label: 'Invoice', className: 'px-4 py-3' },
@@ -177,6 +179,9 @@ export const InvoiceTable = ({
   isLoading,
   visibleColumns,
 }: InvoiceTableProps) => {
+  const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any>(null);
+
   if (isLoading) {
     return <InvoiceSkeleton />;
   }
@@ -264,9 +269,16 @@ export const InvoiceTable = ({
                 {visibleColumns['Customer'] && (
                   <td className='px-4 py-3'>
                     <div className='flex flex-col'>
-                      <span className='text-[#121212] dark:text-white font-medium'>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingCustomer(invoice.customer);
+                          setIsEditCustomerDialogOpen(true);
+                        }}
+                        className='text-[#121212] dark:text-white font-medium hover:underline text-left'
+                      >
                         {invoice.customer?.name || '-'}
-                      </span>
+                      </button>
                       <span className='text-xs text-muted-foreground'>
                         {invoice.customer?.email || '-'}
                       </span>
@@ -345,6 +357,28 @@ export const InvoiceTable = ({
           })}
         </tbody>
       </table>
+
+      <AddCustomerDialog
+        open={isEditCustomerDialogOpen}
+        onOpenChange={setIsEditCustomerDialogOpen}
+        initialData={editingCustomer}
+        onEdit={(updatedCustomer) => {
+          // Update the customer in the invoice
+          const updatedInvoices = invoices.map((invoice) => {
+            if (invoice.customer?._id === updatedCustomer._id) {
+              return {
+                ...invoice,
+                customer: updatedCustomer,
+              };
+            }
+            return invoice;
+          });
+          // You'll need to add a prop to handle invoice updates
+          // onInvoicesUpdate?.(updatedInvoices);
+          setIsEditCustomerDialogOpen(false);
+          setEditingCustomer(null);
+        }}
+      />
     </div>
   );
 };
