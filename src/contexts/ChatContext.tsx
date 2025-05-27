@@ -44,6 +44,10 @@ export type Message = {
     size: number;
     url: string;
   }[];
+  images?: {
+    url: string;
+    alt?: string;
+  }[];
 };
 
 export type ChatSession = {
@@ -77,13 +81,19 @@ export type ChatContextType = {
   messages: Message[];
   isTyping: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  handleSend: (content: string, attachments?: File[]) => void;
+  handleSend: (
+    content: string,
+    attachments?: File[],
+    images?: { url: string; alt?: string }[],
+  ) => void;
   handleActionCardClick: (title: string) => void;
   handleAttach: () => void;
   handleVoiceMessage: () => void;
   clearConversation: () => Promise<void>;
   selectedAgents: Agent[];
   setSelectedAgents: (agents: Agent[] | ((prev: Agent[]) => Agent[])) => void;
+  isImageSearchOpen: boolean;
+  setIsImageSearchOpen: (open: boolean) => void;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -93,6 +103,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const isChatRoute = pathname?.startsWith('/dashboard/chat');
@@ -254,9 +265,57 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     [currentSession],
   );
 
+  // Add keyboard shortcut handler for Ctrl+F
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        setIsImageSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      return window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleSend = useCallback(
-    async (content: string, attachments?: File[]) => {
-      if (!content.trim() && (!attachments || attachments.length === 0)) return;
+    async (content: string, attachments?: File[], images?: { url: string; alt?: string }[]) => {
+      if (
+        !content.trim() &&
+        (!attachments || attachments.length === 0) &&
+        (!images || images.length === 0)
+      )
+        return;
+
+      // Convert image URLs to base64
+      const base64Images = images?.map(async (image) => {
+        if (image.url.startsWith('data:')) {
+          return image; // Already in base64 format
+        }
+
+        try {
+          const response = await fetch(image.url);
+          const blob = await response.blob();
+          return new Promise<{ url: string; alt?: string }>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve({
+                url: reader.result as string,
+                alt: image.alt,
+              });
+            };
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.error('Error converting image to base64:', error);
+          return image; // Return original image if conversion fails
+        }
+      });
+
+      // Wait for all base64 conversions to complete
+      const processedImages = base64Images ? await Promise.all(base64Images) : undefined;
 
       // Create user message
       const userMessage: Message = {
@@ -264,6 +323,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         content,
         role: 'user',
         timestamp: new Date(),
+        images: processedImages,
       };
 
       // Handle attachments if any
@@ -314,6 +374,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             message: content,
             sessionId: sessionId || undefined,
             attachments: userMessage.attachments,
+            images: processedImages,
             agents: selectedAgents.map((agent) => {
               return agent._id;
             }),
@@ -600,6 +661,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       clearConversation,
       selectedAgents,
       setSelectedAgents,
+      isImageSearchOpen,
+      setIsImageSearchOpen,
     };
   }, [
     sessions,
@@ -621,6 +684,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     handleVoiceMessage,
     clearConversation,
     selectedAgents,
+    isImageSearchOpen,
+    setIsImageSearchOpen,
   ]);
 
   return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;

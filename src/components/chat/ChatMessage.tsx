@@ -18,6 +18,10 @@ interface Message {
       arguments: string;
     };
   }[];
+  images?: {
+    url: string;
+    alt?: string;
+  }[];
 }
 
 interface ChatMessageProps {
@@ -47,11 +51,34 @@ function ToolCall({ tool }: { tool: Message['tool_calls'][0] }) {
   );
 }
 
+function MessageImages({ images }: { images: Message['images'] }) {
+  if (!images || images.length === 0) return null;
+
+  return (
+    <div className='mt-2 grid grid-cols-2 gap-2'>
+      {images.map((image, index) => {
+        return (
+          <div
+            key={`${image.url}-${index}`}
+            className='relative aspect-video rounded-md overflow-hidden'
+          >
+            <img
+              src={image.url}
+              alt={image.alt || 'Message image'}
+              className='w-full h-full object-cover'
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageProps) {
   console.log('🚀 message:', message);
   const isUser = message.role === 'user';
 
-  if (message.content === '' && !message.tool_calls) {
+  if (message.content === '' && !message.tool_calls && !message.images) {
     return null;
   }
 
@@ -71,6 +98,7 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
           {message.content && (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           )}
+          {message.images && <MessageImages images={message.images} />}
           {message.tool_calls?.map((tool) => {
             return <ToolCall key={tool.id} tool={tool} />;
           })}
