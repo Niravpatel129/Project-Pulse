@@ -18,7 +18,8 @@ function formatCurrency(amount: number, currency: string = 'CAD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
@@ -51,7 +52,6 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   onCancel,
   onDelete,
 }) => {
-  console.log('🚀 selectedInvoice:', selectedInvoice);
   const [activityOpen, setActivityOpen] = useState(true);
   const [noteOpen, setNoteOpen] = useState(!!selectedInvoice?.internalNote);
   const [internalNote, setInternalNote] = useState(selectedInvoice?.internalNote || '');
