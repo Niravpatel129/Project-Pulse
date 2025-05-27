@@ -69,7 +69,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   const updateInternalNoteMutation = useMutation({
     mutationFn: async (note: string) => {
       const response = await newRequest.patch(`/invoices2/${selectedInvoice._id}/internal-note`, {
-        a: note,
+        internalNote: note,
       });
       return response.data;
     },
