@@ -27,7 +27,7 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
               {isEditing ? 'Updated' : 'Created'}
             </h1>
             <p className='text-sm text-neutral-500 leading-relaxed'>
-              Your invoice was {isEditing ? 'updated' : 'created'} and sent successfully
+              Your invoice was {isEditing ? 'updated' : 'created'} successfully
             </p>
           </div>
 
