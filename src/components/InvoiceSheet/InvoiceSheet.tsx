@@ -340,10 +340,7 @@ const InvoiceSheet = ({
   }, [lastInvoiceSettings, existingInvoice]);
 
   const formatNumber = (value: number) => {
-    if (invoiceSettings.decimals === 'yes') {
-      return value.toFixed(2);
-    }
-    return Math.round(value).toString();
+    return value.toFixed(2);
   };
 
   const handleUpdateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
