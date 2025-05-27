@@ -262,7 +262,7 @@ const InvoiceSheet = ({
       return new Date(existingInvoice.dueDate);
     }
     const date = new Date();
-    date.setDate(date.getDate() + 30);
+    date.setDate(date.getDate() + 7);
     return date;
   });
 
@@ -280,7 +280,7 @@ const InvoiceSheet = ({
           ? new Date(existingInvoice.dueDate)
           : (() => {
               const date = new Date();
-              date.setDate(date.getDate() + 30);
+              date.setDate(date.getDate() + 7);
               return date;
             })(),
       );
@@ -616,7 +616,7 @@ const InvoiceSheet = ({
     setIssueDate(new Date());
     setDueDate(() => {
       const date = new Date();
-      date.setDate(date.getDate() + 30);
+      date.setDate(date.getDate() + 7);
       return date;
     });
     setItems([
