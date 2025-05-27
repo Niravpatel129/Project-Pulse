@@ -156,6 +156,19 @@ export function AddCustomerDialog({
     },
   });
 
+  const updateClientMutation = useMutation({
+    mutationFn: async (clientData: any) => {
+      const response = await newRequest.put(`/clients/${initialData.id}`, clientData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      onOpenChange(false);
+      resetCustomerForm();
+      toast.success('Customer updated successfully');
+    },
+  });
+
   const handleCreateCustomer = () => {
     if (!newCustomer.name) return;
 
@@ -178,15 +191,11 @@ export function AddCustomerDialog({
       internalNotes: newCustomer.internalNotes,
     };
 
-    if (onEdit) {
-      onEdit(newCustomer);
-      onOpenChange(false);
-      resetCustomerForm();
-      toast.success(initialData ? 'Customer updated successfully' : 'Customer added successfully');
-      return;
+    if (initialData) {
+      updateClientMutation.mutate(clientData);
+    } else {
+      createClientMutation.mutate(clientData);
     }
-
-    createClientMutation.mutate(clientData);
   };
 
   return (

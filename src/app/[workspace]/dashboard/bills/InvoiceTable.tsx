@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
@@ -181,6 +182,7 @@ export const InvoiceTable = ({
 }: InvoiceTableProps) => {
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const queryClient = useQueryClient();
 
   if (isLoading) {
     return <InvoiceSkeleton />;
@@ -272,15 +274,48 @@ export const InvoiceTable = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setEditingCustomer(invoice.customer);
+                          console.log('Customer data:', invoice.customer);
+                          setEditingCustomer({
+                            id: invoice.customer.id._id,
+                            name: invoice.customer.id.user.name,
+                            contactEmail: invoice.customer.id.user.email,
+                            contactName: `${invoice.customer.id.contact?.firstName || ''} ${
+                              invoice.customer.id.contact?.lastName || ''
+                            }`.trim(),
+                            contactPhone: invoice.customer.id.phone || '',
+                            mobile: invoice.customer.id.mobile || '',
+                            fax: invoice.customer.id.fax || '',
+                            tollFree: invoice.customer.id.tollFree || '',
+                            taxId: invoice.customer.id.taxId || '',
+                            accountNumber: invoice.customer.id.accountNumber || '',
+                            address: {
+                              street: invoice.customer.id.address?.street || '',
+                              city: invoice.customer.id.address?.city || '',
+                              state: invoice.customer.id.address?.state || '',
+                              country: invoice.customer.id.address?.country || '',
+                              zip: invoice.customer.id.address?.zip || '',
+                            },
+                            shippingAddress: {
+                              street: invoice.customer.id.shippingAddress?.street || '',
+                              city: invoice.customer.id.shippingAddress?.city || '',
+                              state: invoice.customer.id.shippingAddress?.state || '',
+                              country: invoice.customer.id.shippingAddress?.country || '',
+                              zip: invoice.customer.id.shippingAddress?.zip || '',
+                            },
+                            website: invoice.customer.id.website || '',
+                            internalNotes: invoice.customer.id.internalNotes || '',
+                            customFields: invoice.customer.id.customFields || {},
+                            type: 'Individual',
+                            status: invoice.customer.id.isActive ? 'Active' : 'Inactive',
+                          });
                           setIsEditCustomerDialogOpen(true);
                         }}
                         className='text-[#121212] dark:text-white font-medium hover:underline text-left'
                       >
-                        {invoice.customer?.name || '-'}
+                        {invoice.customer?.id?.user?.name || '-'}
                       </button>
                       <span className='text-xs text-muted-foreground'>
-                        {invoice.customer?.email || '-'}
+                        {invoice.customer?.id?.user?.email || '-'}
                       </span>
                     </div>
                   </td>
@@ -365,7 +400,7 @@ export const InvoiceTable = ({
         onEdit={(updatedCustomer) => {
           // Update the customer in the invoice
           const updatedInvoices = invoices.map((invoice) => {
-            if (invoice.customer?._id === updatedCustomer._id) {
+            if (invoice.customer?.id === updatedCustomer.id) {
               return {
                 ...invoice,
                 customer: updatedCustomer,
@@ -373,8 +408,10 @@ export const InvoiceTable = ({
             }
             return invoice;
           });
-          // You'll need to add a prop to handle invoice updates
-          // onInvoicesUpdate?.(updatedInvoices);
+
+          // Invalidate the invoices query to trigger a refetch
+          queryClient.invalidateQueries({ queryKey: ['invoices'] });
+
           setIsEditCustomerDialogOpen(false);
           setEditingCustomer(null);
         }}
