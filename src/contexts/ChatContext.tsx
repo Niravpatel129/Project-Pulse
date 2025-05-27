@@ -151,6 +151,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           role: msg.role,
           timestamp: new Date(response.data.conversation.lastActive),
           agent: msg.agent,
+          images: msg.images || [],
         };
       });
     },
@@ -174,6 +175,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               content: msg.content,
               role: msg.role,
               timestamp: new Date(response.data.conversation.lastActive),
+              images: msg.images || [],
             };
           });
         },
@@ -605,6 +607,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             role: msg.role,
             timestamp: new Date(conversation.lastActive),
             agent: msg.agent,
+            images: msg.images || [],
           };
         });
 
