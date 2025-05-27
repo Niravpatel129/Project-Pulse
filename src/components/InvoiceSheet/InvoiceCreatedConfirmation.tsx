@@ -24,7 +24,7 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
           {/* Header */}
           <div className='space-y-3'>
             <h1 className='text-2xl font-medium text-neutral-900 tracking-tight'>
-              {isEditing ? 'Updated & Sent' : 'Created & Sent'}
+              {isEditing ? 'Updated' : 'Created'}
             </h1>
             <p className='text-sm text-neutral-500 leading-relaxed'>
               Your invoice was {isEditing ? 'updated' : 'created'} and sent successfully
