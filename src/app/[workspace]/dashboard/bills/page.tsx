@@ -196,7 +196,14 @@ const Bills = () => {
         // 1. It's not paid
         // 2. It has a due date
         // 3. The due date is in the past
-        if (invoice.status?.toLowerCase() === 'paid' || !invoice.dueDate || dueDate >= today) {
+        // and not cancelled or draft
+        if (
+          invoice.status?.toLowerCase() === 'paid' ||
+          !invoice.dueDate ||
+          dueDate >= today ||
+          invoice.status?.toLowerCase() === 'cancelled' ||
+          invoice.status?.toLowerCase() === 'draft'
+        ) {
           return false;
         }
       } else {
