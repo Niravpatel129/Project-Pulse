@@ -589,7 +589,7 @@ const Bills = () => {
             </Sheet>
           ) : (
             <motion.div
-              className='fixed right-0 top-[53px] h-[calc(100vh-55px)] w-[600px] bg-white dark:bg-[#1A1A1A]'
+              className='fixed right-0 z-10 top-[53px] h-[calc(100vh-55px)] w-[600px] bg-white dark:bg-[#1A1A1A]'
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}

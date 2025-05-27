@@ -189,12 +189,14 @@ const PaymentScoreCard: FC = () => {
   const { score, text, numericScore } = calculatePaymentScore();
 
   return (
-    <div className='border bg-background text-card-foreground rounded-lg h-full'>
+    <div className='border bg-background text-card-foreground rounded-lg h-full relative'>
       <div className='space-y-1 sm:space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 flex flex-col xl:flex-row justify-between'>
         <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
           {score}
         </h3>
-        <PaymentScoreVisualizer score={numericScore} paymentStatus={score} />
+        <div className='hidden xl:block'>
+          <PaymentScoreVisualizer score={numericScore} paymentStatus={score} />
+        </div>
       </div>
       <div className='px-4 sm:px-6 flex-col gap-1 sm:gap-2 hidden md:flex'>
         <div className='text-sm sm:text-base'>Payment score</div>
