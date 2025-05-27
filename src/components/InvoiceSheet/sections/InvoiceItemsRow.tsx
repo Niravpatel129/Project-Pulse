@@ -81,7 +81,7 @@ const InvoiceItemsRow = ({
   }, []);
 
   const handleQuantityChange = (delta: number) => {
-    const newQuantity = Math.max(1, Math.min(MAX_QUANTITY, item.quantity + delta));
+    const newQuantity = Math.max(0.01, Math.min(MAX_QUANTITY, item.quantity + delta));
     onUpdate(item.id, 'quantity', newQuantity);
   };
 
@@ -170,9 +170,9 @@ const InvoiceItemsRow = ({
                 return setIsQuantityFocused(false);
               }}
               onChange={(e) => {
-                const value = e.target.value.replace(/[^\d]/g, '');
-                const numValue = value ? parseInt(value) : 0;
-                onUpdate(item.id, 'quantity', Math.min(MAX_QUANTITY, numValue));
+                const value = e.target.value.replace(/[^\d.]/g, '');
+                const numValue = value ? parseFloat(value) : 0;
+                onUpdate(item.id, 'quantity', Math.min(MAX_QUANTITY, Math.max(0.01, numValue)));
               }}
             />
             <button
@@ -190,12 +190,7 @@ const InvoiceItemsRow = ({
       {/* Price */}
       <div className='w-[80px] flex items-center'>
         <SeamlessInput
-          className={`p-0 !text-[11px] font-mono w-full relative rounded-none border-b-2 border-transparent focus:border-[#dadad8] focus-visible:border-[#dadad8] active:border-[#dadad8] ${
-            !isPriceFocused && !item.price
-              ? 'bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'
-              : ''
-          }`}
-          placeholder=''
+          className={`p-0 !text-[11px] font-mono w-full relative rounded-none text-right ${!isPriceFocused}`}
           value={item.price}
           onFocus={() => {
             return setIsPriceFocused(true);
@@ -205,12 +200,16 @@ const InvoiceItemsRow = ({
           }}
           onChange={(e) => {
             const value = e.target.value.replace(/[^\d.]/g, '');
-            const numValue = parseFloat(value);
-            if (!isNaN(numValue)) {
-              onUpdate(item.id, 'price', Math.min(MAX_PRICE, numValue).toString());
-            } else {
-              onUpdate(item.id, 'price', value);
+            // Ensure only one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+              return;
             }
+            // Limit to 2 decimal places
+            if (parts[1] && parts[1].length > 2) {
+              return;
+            }
+            onUpdate(item.id, 'price', value);
           }}
         />
       </div>
