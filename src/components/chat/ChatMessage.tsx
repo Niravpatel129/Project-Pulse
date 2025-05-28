@@ -116,7 +116,7 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
   // Check if message has content either directly or in parts
   const hasContent =
     message.content ||
-    (message.parts && message.parts.some((part) => part.type === 'text' && part.content)) ||
+    (message.parts && message.parts.length > 0) ||
     message.tool_calls ||
     message.images;
 
@@ -143,14 +143,9 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
         >
           {message.parts ? (
             <>
-              {combinedText && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{combinedText}</ReactMarkdown>
-              )}
-              {message.parts
-                .filter((part) => part.type !== 'text')
-                .map((part, index) => (
-                  <MessagePart key={`${part.type}-${index}`} part={part} />
-                ))}
+              {message.parts.map((part, index) => (
+                <MessagePart key={`${part.type}-${index}`} part={part} />
+              ))}
             </>
           ) : (
             message.content && (

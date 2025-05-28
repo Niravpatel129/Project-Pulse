@@ -358,7 +358,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
           onStart: () => {},
           onChunk: (data) => {
-            const messageId = `${streamMessageId}-${data.type}`;
+            const messageId = streamMessageId; // Use a single message ID for all types
             console.log('onChunk:', data);
 
             // Update sessionId if it's provided in the stream
@@ -395,7 +395,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                       timestamp: new Date(msg.timestamp),
                       agent: msg.agent,
                       images: msg.images || [],
-                      content: firstTextPart?.content || '', // Set content from first text part
+                      content: firstTextPart?.content || '',
                       parts: msg.parts?.map((part) => {
                         return {
                           type: part.type,
@@ -428,165 +428,54 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               return;
             }
 
-            if (data.type === 'text') {
-              setMessages((prev) => {
-                const exists = prev.some((msg) => {
-                  return msg.id === messageId;
-                });
-                if (!exists) {
-                  return [
-                    ...prev,
-                    {
-                      id: messageId,
-                      role: 'assistant' as const,
-                      timestamp: new Date(),
-                      isStreaming: true,
-                      agent: data.agent,
-                      content: data.choices[0].delta.content, // Set content for backward compatibility
-                      parts: [
-                        {
-                          type: 'text',
-                          content: data.choices[0].delta.content,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    },
-                  ];
+            setMessages((prev) => {
+              const exists = prev.some((msg) => {
+                return msg.id === messageId;
+              });
+              if (!exists) {
+                return [
+                  ...prev,
+                  {
+                    id: messageId,
+                    role: 'assistant',
+                    timestamp: new Date(),
+                    isStreaming: true,
+                    agent: data.agent,
+                    content: data.type === 'text' ? data.content : '',
+                    parts: [
+                      {
+                        type: data.type,
+                        content: data.content,
+                        step: data.step,
+                        timestamp: new Date(),
+                      },
+                    ],
+                  },
+                ];
+              }
+              return prev.map((msg) => {
+                if (msg.id === messageId) {
+                  let newContent = msg.content || '';
+                  if (data.type === 'text') {
+                    newContent += data.content;
+                  }
+                  return {
+                    ...msg,
+                    content: newContent,
+                    parts: [
+                      ...(msg.parts || []),
+                      {
+                        type: data.type,
+                        content: data.content,
+                        step: data.step,
+                        timestamp: new Date(),
+                      },
+                    ],
+                  };
                 }
-                return prev.map((msg) => {
-                  if (msg.id === messageId) {
-                    const newContent = msg.content + data.choices[0].delta.content;
-                    return {
-                      ...msg,
-                      content: newContent, // Update content for backward compatibility
-                      parts: [
-                        ...(msg.parts || []),
-                        {
-                          type: 'text',
-                          content: data.choices[0].delta.content,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    };
-                  }
-                  return msg;
-                });
+                return msg;
               });
-            } else if (
-              data.type === 'reasoning' ||
-              data.type === 'action' ||
-              data.type === 'status'
-            ) {
-              setMessages((prev) => {
-                const exists = prev.some((msg) => {
-                  return msg.id === messageId;
-                });
-                if (!exists) {
-                  return [
-                    ...prev,
-                    {
-                      id: messageId,
-                      role: 'assistant' as const,
-                      timestamp: new Date(),
-                      isStreaming: true,
-                      agent: data.agent,
-                      content: data.content, // Set content for backward compatibility
-                      parts: [
-                        {
-                          type: data.type,
-                          content: data.content,
-                          step: data.step,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    },
-                  ];
-                }
-                return prev.map((msg) => {
-                  if (msg.id === messageId) {
-                    return {
-                      ...msg,
-                      parts: [
-                        ...(msg.parts || []),
-                        {
-                          type: data.type,
-                          content: data.content,
-                          step: data.step,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    };
-                  }
-                  return msg;
-                });
-              });
-            } else if (data.type === 'tool_result') {
-              setMessages((prev) => {
-                const exists = prev.some((msg) => {
-                  return msg.id === messageId;
-                });
-                if (!exists) {
-                  return [
-                    ...prev,
-                    {
-                      id: messageId,
-                      content: '',
-                      role: 'assistant' as const,
-                      timestamp: new Date(),
-                      isStreaming: true,
-                      tool_calls: data.choices[0].message.tool_calls,
-                      parts: [
-                        {
-                          type: 'tool_call',
-                          content: JSON.stringify(data.choices[0].message.tool_calls[0]),
-                          step: data.choices[0].message.tool_calls[0].function.name,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    },
-                  ];
-                }
-                return prev.map((msg) => {
-                  if (msg.id === messageId) {
-                    return {
-                      ...msg,
-                      tool_calls: data.choices[0].message.tool_calls,
-                      parts: [
-                        ...(msg.parts || []),
-                        {
-                          type: 'tool_call',
-                          content: JSON.stringify(data.choices[0].message.tool_calls[0]),
-                          step: data.choices[0].message.tool_calls[0].function.name,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    };
-                  }
-                  return msg;
-                });
-              });
-            } else if (data.type === 'completion') {
-              setMessages((prev) => {
-                return prev.map((msg) => {
-                  if (msg.id === messageId) {
-                    return {
-                      ...msg,
-                      content: data.choices[0].message.content,
-                      isStreaming: false,
-                      parts: [
-                        ...(msg.parts || []),
-                        {
-                          type: 'text',
-                          content: data.choices[0].message.content,
-                          timestamp: new Date(),
-                        },
-                      ],
-                    };
-                  }
-                  return msg;
-                });
-              });
-            }
+            });
           },
           onEnd: (data) => {
             setMessages((prev) => {

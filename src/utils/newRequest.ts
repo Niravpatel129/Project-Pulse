@@ -162,16 +162,11 @@ export const streamRequest = ({
                     // Handle different message types
                     if (data.type === 'error') {
                       onChunk?.(data);
-                    } else if (data.type === 'text' && data.choices?.[0]?.delta?.content) {
+                    } else if (data.type === 'text') {
                       onChunk?.({
                         type: 'text',
-                        choices: [
-                          {
-                            delta: { content: data.choices[0].delta.content },
-                            finish_reason: null,
-                          },
-                        ],
-                        id: data.id,
+                        content: data.content,
+                        timestamp: data.timestamp,
                         conversationId: data.conversationId,
                         conversation: data.conversation,
                       });
