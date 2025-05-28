@@ -1,6 +1,6 @@
 'use client';
 
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 
 interface DateTooltipProps {
@@ -16,7 +16,14 @@ export function DateTooltip({
   format: dateFormat = 'MMM d, yyyy',
   tooltipFormat = 'MMM d, yyyy h:mm a',
 }: DateTooltipProps) {
+  // Convert string to Date if needed and validate
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const isValidDate = isValid(dateObj);
+
+  // If date is invalid, just render children without tooltip
+  if (!isValidDate) {
+    return <>{children}</>;
+  }
 
   return (
     <TooltipProvider delayDuration={100}>
