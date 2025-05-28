@@ -25,7 +25,7 @@ export async function generateMetadata({
     const response = await newRequest.get(`/invoices2/${id}`);
     const invoice = response.data.data.invoice;
 
-    const ogImageUrl = `/api/og?title=${encodeURIComponent(
+    const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/og?title=${encodeURIComponent(
       invoice.invoiceTitle || 'Invoice',
     )}&invoiceNumber=${encodeURIComponent(invoice.invoiceNumber)}&customerName=${encodeURIComponent(
       invoice.customer?.name || invoice.to,
@@ -35,15 +35,19 @@ export async function generateMetadata({
       title: `${invoice.invoiceTitle || 'Invoice'} - ${invoice.customer?.name || invoice.to}`,
       description: `Invoice ${invoice.invoiceNumber} for ${invoice.customer?.name || invoice.to}`,
       openGraph: {
-        title: `${invoice.invoiceTitle || 'Invoice'} - ${invoice.customer?.name || invoice.to}`,
-        description: `Invoice ${invoice.invoiceNumber} for ${invoice.customer?.name || invoice.to}`,
+        title: `Invoice ${invoice.invoiceNumber} | ${invoice.invoiceTitle || 'Invoice'} - ${
+          invoice.customer?.name || invoice.to
+        }`,
+        description: `View invoice details for ${
+          invoice.customer?.name || invoice.to
+        }. Invoice number: ${invoice.invoiceNumber}`,
         type: 'website',
         images: [
           {
             url: ogImageUrl,
             width: 1200,
             height: 630,
-            alt: 'Invoice Preview',
+            alt: `Invoice ${invoice.invoiceNumber} for ${invoice.customer?.name || invoice.to}`,
           },
         ],
       },
