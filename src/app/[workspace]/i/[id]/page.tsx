@@ -601,10 +601,10 @@ const InvoicePage = () => {
           </Card>
         </div>
         <div
-          className='fixed inset-x-0 -bottom-1 flex justify-center'
+          className='fixed inset-x-0 bottom-0 flex justify-center items-center'
           style={{ opacity: 1, filter: 'blur(0px)', transform: 'translateY(-24px)' }}
         >
-          <div className='backdrop-filter backdrop-blur-lg bg-[#F6F6F3]/80 rounded-full pl-2 pr-4 py-3 h-10 flex items-center justify-center border-[0.5px] border-gray-200'>
+          <div className='backdrop-filter backdrop-blur-lg bg-[#F6F6F3]/80 rounded-full px-3 py-3 h-10 flex items-center gap-2 border-[0.5px] border-gray-200'>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
