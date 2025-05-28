@@ -20,13 +20,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
-import {
-  RiChat1Fill,
-  RiFileListFill,
-  RiMoneyDollarCircleFill,
-  RiSettingsFill,
-  RiUserFill,
-} from 'react-icons/ri';
+import { RiChat1Fill, RiFileListFill, RiSettingsFill } from 'react-icons/ri';
 
 // Custom hook for media queries
 function useMediaQuery(query: string) {
@@ -118,20 +112,20 @@ export default function AppSidebar() {
           //   icon: RiFileListFill,
           // },
           {
-            name: 'Bills',
+            name: 'Invoices',
             href: '/dashboard/bills',
             icon: RiFileListFill,
           },
-          {
-            name: 'Payments',
-            href: '/dashboard/payments',
-            icon: RiMoneyDollarCircleFill,
-          },
-          {
-            name: 'Customers',
-            href: '/dashboard/customers',
-            icon: RiUserFill,
-          },
+          // {
+          //   name: 'Payments',
+          //   href: '/dashboard/payments',
+          //   icon: RiMoneyDollarCircleFill,
+          // },
+          // {
+          //   name: 'Customers',
+          //   href: '/dashboard/customers',
+          //   icon: RiUserFill,
+          // },
         ],
       },
       {
