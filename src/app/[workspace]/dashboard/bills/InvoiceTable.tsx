@@ -44,6 +44,10 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 
+interface ColumnMeta {
+  className?: string;
+}
+
 const TABLE_HEADERS = [
   { id: 'invoice', label: 'Invoice', className: 'px-4 py-3' },
   { id: 'status', label: 'Status', className: 'px-4 py-3' },
@@ -259,7 +263,7 @@ export const InvoiceTable = ({
       id: header.id,
       accessorKey: header.id,
       header: header.label,
-      meta: { className: header.className },
+      meta: { className: header.className } as ColumnMeta,
       cell: ({ row }: { row: { original: Invoice } }) => {
         const invoice = row.original;
         switch (header.id) {
