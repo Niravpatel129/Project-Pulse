@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import React from 'react';
 
 type Props = {
+  children: React.ReactNode;
   params: { id: string; workspace: string };
 };
 
@@ -52,6 +53,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function InvoiceLayout({ children }: { children: React.ReactNode }) {
+export default function InvoiceLayout({ children }: Props) {
   return <div className='w-full'>{children}</div>;
 }
