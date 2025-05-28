@@ -1,4 +1,5 @@
 import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/FileUploadManagerModal';
+import { DateTooltip } from '@/components/ui/date-tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { XIcon } from 'lucide-react';
@@ -199,11 +200,15 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           <div className='grid grid-cols-2 gap-y-2 text-xs text-gray-500 dark:text-gray-400'>
             <div>Due date</div>
             <div className='text-right text-gray-900 dark:text-gray-100 font-medium'>
-              {formatDate(selectedInvoice.dueDate)}
+              <DateTooltip date={selectedInvoice.dueDate}>
+                <span>{formatDate(selectedInvoice.dueDate)}</span>
+              </DateTooltip>
             </div>
             <div>Issue date</div>
             <div className='text-right text-gray-900 dark:text-gray-100 font-medium'>
-              {formatDate(selectedInvoice.issueDate)}
+              <DateTooltip date={selectedInvoice.issueDate}>
+                <span>{formatDate(selectedInvoice.issueDate)}</span>
+              </DateTooltip>
             </div>
             <div>Invoice no.</div>
             <div className='text-right text-gray-900 dark:text-gray-100 font-medium'>
@@ -374,9 +379,11 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                 <div className='flex-1'>
                   <div className='flex items-center justify-between'>
                     <span>Created</span>
-                    <span className='text-gray-900 dark:text-gray-100'>
-                      {formatDate(selectedInvoice.createdAt)}
-                    </span>
+                    <DateTooltip date={selectedInvoice.createdAt}>
+                      <span className='text-gray-900 dark:text-gray-100'>
+                        {formatDate(selectedInvoice.createdAt)}
+                      </span>
+                    </DateTooltip>
                   </div>
                 </div>
               </div>
@@ -388,9 +395,11 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                   <div className='flex-1'>
                     <div className='flex items-center justify-between'>
                       <span>Paid</span>
-                      <span className='text-gray-900 dark:text-gray-100'>
-                        {formatDate(selectedInvoice.paidAt)}
-                      </span>
+                      <DateTooltip date={selectedInvoice.paidAt}>
+                        <span className='text-gray-900 dark:text-gray-100'>
+                          {formatDate(selectedInvoice.paidAt)}
+                        </span>
+                      </DateTooltip>
                     </div>
                   </div>
                 </div>
@@ -403,7 +412,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                   <div className='flex-1'>
                     <div className='flex items-center justify-between'>
                       <span>Cancelled</span>
-                      <span>{formatDate(selectedInvoice.statusChangedAt)}</span>
+                      <DateTooltip date={selectedInvoice.statusChangedAt}>
+                        <span>{formatDate(selectedInvoice.statusChangedAt)}</span>
+                      </DateTooltip>
                     </div>
                   </div>
                 </div>
@@ -433,25 +444,27 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                         >
                           Seen
                         </span>
-                        <span
-                          className={
-                            selectedInvoice.statusHistory?.some((history) => {
-                              return history.status === 'seen';
-                            })
-                              ? 'text-gray-900 dark:text-gray-100'
-                              : 'text-gray-400 dark:text-gray-500'
-                          }
-                        >
-                          {selectedInvoice.statusHistory?.some((history) => {
-                            return history.status === 'seen';
-                          })
-                            ? formatDate(
+                        {selectedInvoice.statusHistory?.some((history) => {
+                          return history.status === 'seen';
+                        }) ? (
+                          <DateTooltip
+                            date={
+                              selectedInvoice.statusHistory.find((history) => {
+                                return history.status === 'seen';
+                              })?.changedAt
+                            }
+                          >
+                            <span className='text-gray-900 dark:text-gray-100'>
+                              {formatDate(
                                 selectedInvoice.statusHistory.find((history) => {
                                   return history.status === 'seen';
                                 })?.changedAt,
-                              )
-                            : '--'}
-                        </span>
+                              )}
+                            </span>
+                          </DateTooltip>
+                        ) : (
+                          <span className='text-gray-400 dark:text-gray-500'>--</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -474,17 +487,15 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                         >
                           Paid
                         </span>
-                        <span
-                          className={
-                            selectedInvoice.status === 'paid'
-                              ? 'text-gray-900 dark:text-gray-100'
-                              : 'text-gray-400 dark:text-gray-500'
-                          }
-                        >
-                          {selectedInvoice.status === 'paid'
-                            ? formatDate(selectedInvoice.paidAt)
-                            : '--'}
-                        </span>
+                        {selectedInvoice.status === 'paid' ? (
+                          <DateTooltip date={selectedInvoice.paidAt}>
+                            <span className='text-gray-900 dark:text-gray-100'>
+                              {formatDate(selectedInvoice.paidAt)}
+                            </span>
+                          </DateTooltip>
+                        ) : (
+                          <span className='text-gray-400 dark:text-gray-500'>--</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -599,7 +610,10 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                               {file.originalName}
                             </div>
                             <div className='text-[10px] text-gray-500 dark:text-gray-400'>
-                              Added {formatDate(file.createdAt)}
+                              Added{' '}
+                              <DateTooltip date={file.createdAt}>
+                                {formatDate(file.createdAt)}
+                              </DateTooltip>
                             </div>
                           </div>
                           <div className='flex items-center gap-1'>
