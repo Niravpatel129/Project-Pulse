@@ -9,7 +9,6 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const response = await newRequest.get(`/invoices2/${params.id}`);
-    console.log('🚀 response:', response);
     const invoice = response.data.data.invoice;
 
     return {
