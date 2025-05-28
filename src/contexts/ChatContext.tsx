@@ -160,31 +160,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     gcTime: 5 * 60 * 1000,
   });
 
-  // Prefetch chat history for all conversations
-  useEffect(() => {
-    if (!isChatRoute) return; // Only prefetch on chat route
-
-    conversations.forEach((conv) => {
-      queryClient.prefetchQuery({
-        queryKey: ['chat-history', conv.id],
-        queryFn: async () => {
-          const response = await newRequest.get(`/new-ai/chat/history/${conv.id}`);
-          return response.data.conversation.messages.map((msg: any) => {
-            return {
-              id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              content: msg.content,
-              role: msg.role,
-              timestamp: new Date(response.data.conversation.lastActive),
-              images: msg.images || [],
-            };
-          });
-        },
-        staleTime: 30000,
-        gcTime: 5 * 60 * 1000,
-      });
-    });
-  }, [conversations, queryClient, isChatRoute]);
-
   // Update sessions when conversations data changes
   useEffect(() => {
     if (!isChatRoute) return; // Only update sessions on chat route
