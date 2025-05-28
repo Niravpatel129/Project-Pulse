@@ -165,6 +165,7 @@ const InvoicePage = () => {
     },
     enabled: !!invoiceId,
   });
+  console.log('🚀 invoice:', invoice);
 
   const {
     stripePromise,
@@ -306,7 +307,9 @@ const InvoicePage = () => {
                         <p className='text-[11px] text-[#878787] font-mono mb-2 block'>From</p>
                         <div className='font-mono leading-4'>
                           <p>
-                            <span className='text-[11px] text-gray-900'>{invoice.from}</span>
+                            <span className='text-[11px] text-gray-900 whitespace-pre-line'>
+                              {invoice.from}
+                            </span>
                           </p>
                         </div>
                       </div>
@@ -314,7 +317,9 @@ const InvoicePage = () => {
                         <p className='text-[11px] text-[#878787] font-mono mb-2 block'>To</p>
                         <div className='font-mono leading-4'>
                           <p>
-                            <span className='text-[11px] text-gray-900'>{invoice.to}</span>
+                            <span className='text-[11px] text-gray-900 whitespace-pre-line'>
+                              {invoice.to}
+                            </span>
                           </p>
                         </div>
                       </div>
