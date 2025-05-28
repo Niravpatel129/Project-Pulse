@@ -124,9 +124,9 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
     return null;
   }
 
-  // Get the main content from parts if available
-  const mainContent =
-    message.parts?.find((part) => part.type === 'text')?.content || message.content;
+  // Get all text parts and combine them
+  const textParts = message.parts?.filter((part) => part.type === 'text') || [];
+  const combinedText = textParts.map((part) => part.content).join('');
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -141,13 +141,22 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
               : 'bg-gray-100 dark:bg-[#141414] text-gray-900 dark:text-gray-100'
           }`}
         >
-          {message.parts
-            ? message.parts.map((part, index) => {
-                return <MessagePart key={`${part.type}-${index}`} part={part} />;
-              })
-            : mainContent && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{mainContent}</ReactMarkdown>
+          {message.parts ? (
+            <>
+              {combinedText && (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{combinedText}</ReactMarkdown>
               )}
+              {message.parts
+                .filter((part) => part.type !== 'text')
+                .map((part, index) => (
+                  <MessagePart key={`${part.type}-${index}`} part={part} />
+                ))}
+            </>
+          ) : (
+            message.content && (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            )
+          )}
           {message.images && <MessageImages images={message.images} />}
           {message.tool_calls?.map((tool) => {
             return <ToolCall key={tool.id} tool={tool} />;
