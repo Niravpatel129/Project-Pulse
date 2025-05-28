@@ -4,7 +4,11 @@ import React from 'react';
 
 type Props = {
   children: React.ReactNode;
-  params: { id: string; workspace: string };
+  params: {
+    id: string;
+    workspace: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
