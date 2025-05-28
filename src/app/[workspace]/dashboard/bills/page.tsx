@@ -464,6 +464,7 @@ const Bills = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+
               {/* Active Filters */}
               <div className='flex items-center gap-2 h-full'>
                 {Object.entries(activeFilters).map(([type, value]) => {

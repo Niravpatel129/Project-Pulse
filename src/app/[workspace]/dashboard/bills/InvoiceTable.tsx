@@ -7,19 +7,51 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import {
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 
 const TABLE_HEADERS = [
-  { label: 'Invoice', className: 'px-4 py-3' },
-  { label: 'Status', className: 'px-4 py-3' },
-  { label: 'Due Date', className: 'px-4 py-3' },
-  { label: 'Customer', className: 'px-4 py-3' },
-  { label: 'Amount', className: 'px-4 py-3' },
-  { label: 'Issue Date', className: 'px-4 py-3' },
-  { label: 'Actions', className: 'px-2 py-3 w-[80px]' },
+  { id: 'invoice', label: 'Invoice', className: 'px-4 py-3' },
+  { id: 'status', label: 'Status', className: 'px-4 py-3' },
+  { id: 'dueDate', label: 'Due Date', className: 'px-4 py-3' },
+  { id: 'customer', label: 'Customer', className: 'px-4 py-3' },
+  { id: 'amount', label: 'Amount', className: 'px-4 py-3' },
+  { id: 'issueDate', label: 'Issue Date', className: 'px-4 py-3' },
+  { id: 'actions', label: 'Actions', className: 'px-4 py-3 w-[80px]' },
 ];
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -30,74 +62,45 @@ function formatCurrency(amount: number, currency: string = 'CAD') {
   }).format(amount);
 }
 
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr);
-  return date.toLocaleString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function getRelativeTime(dateStr: string) {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffTime = date.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    return `overdue ${Math.abs(diffDays)} days`;
-  } else if (diffDays === 0) {
-    return 'due today';
-  } else if (diffDays === 1) {
-    return 'due tomorrow';
-  } else if (diffDays < 7) {
-    return `in ${diffDays} days`;
-  } else if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return `in ${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
-  } else {
-    const months = Math.floor(diffDays / 30);
-    return `in ${months} ${months === 1 ? 'month' : 'months'}`;
-  }
-}
-
-function formatDateTime(dateStr: string) {
-  const date = new Date(dateStr);
-  return date.toLocaleString('en-US', {
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
   });
 }
 
+function getRelativeTime(date: string) {
+  const now = new Date();
+  const then = new Date(date);
+  const diff = then.getTime() - now.getTime();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) return 'Due today';
+  if (days === 1) return 'Due tomorrow';
+  if (days === -1) return 'Due yesterday';
+  if (days > 0) return `Due in ${days} days`;
+  return `${Math.abs(days)} days overdue`;
+}
+
 function getStatusBadge(status: string) {
-  if (status === 'Overdue')
-    return (
-      <span className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
-        Overdue
-      </span>
-    );
-  if (status === 'Draft' || status === 'draft')
-    return (
-      <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
-        Draft
-      </span>
-    );
-  if (status === 'Paid' || status === 'paid')
-    return (
-      <span className='bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
-        Paid
-      </span>
-    );
-  if (status === 'Cancelled' || status === 'cancelled')
-    return (
-      <span className='bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
-        Cancelled
-      </span>
-    );
+  const statusColors = {
+    draft: 'bg-gray-100 text-gray-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+    paid: 'bg-green-100 text-green-800',
+    overdue: 'bg-red-100 text-red-800',
+    cancelled: 'bg-gray-100 text-gray-800',
+    open: 'bg-yellow-100 text-yellow-800',
+    sent: 'bg-blue-100 text-blue-800',
+  };
+
   return (
-    <span className='bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide'>
-      Unpaid
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        statusColors[status as keyof typeof statusColors] || 'bg-gray-100'
+      }`}
+    >
+      {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 }
@@ -124,30 +127,13 @@ export const InvoiceSkeleton = () => {
           {[...Array(5)].map((_, index) => {
             return (
               <tr key={index} className='h-[57px] divide-x divide-slate-100 dark:divide-[#232428]'>
-                <td className='px-4 py-3'>
-                  <Skeleton className='h-4 w-24' />
-                </td>
-                <td className='px-4 py-3'>
-                  <Skeleton className='h-5 w-16 rounded-full' />
-                </td>
-                <td className='px-4 py-3'>
-                  <div className='space-y-1'>
-                    <Skeleton className='h-4 w-20' />
-                    <Skeleton className='h-3 w-16' />
-                  </div>
-                </td>
-                <td className='px-4 py-3'>
-                  <Skeleton className='h-4 w-32' />
-                </td>
-                <td className='px-4 py-3'>
-                  <Skeleton className='h-4 w-20' />
-                </td>
-                <td className='px-4 py-3'>
-                  <Skeleton className='h-4 w-16' />
-                </td>
-                <td className='px-2 py-3'>
-                  <Skeleton className='h-8 w-8 rounded-md' />
-                </td>
+                {TABLE_HEADERS.map((header, cellIndex) => {
+                  return (
+                    <td key={cellIndex} className={header.className}>
+                      <Skeleton className='h-4 w-24' />
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}
@@ -158,16 +144,91 @@ export const InvoiceSkeleton = () => {
 };
 
 interface InvoiceTableProps {
-  invoices: any[];
-  selectedInvoice: any;
-  setSelectedInvoice: (invoice: any) => void;
-  setEditingInvoice: (invoice: any) => void;
+  invoices: Invoice[];
+  selectedInvoice: Invoice | null;
+  setSelectedInvoice: (invoice: Invoice) => void;
+  setEditingInvoice: (invoice: Invoice) => void;
   onMarkAsPaid: (invoiceId: string, paymentDate: Date) => void;
   onCancel: (invoiceId: string) => void;
   onDelete: (invoiceId: string) => void;
   isLoading: boolean;
   visibleColumns: Record<string, boolean>;
 }
+
+interface Invoice {
+  _id: string;
+  invoiceNumber: string;
+  status: string;
+  dueDate?: string;
+  customer?: {
+    id: {
+      _id: string;
+      user: {
+        name: string;
+        email: string;
+      };
+      contact?: {
+        firstName?: string;
+        lastName?: string;
+      };
+      phone?: string;
+      mobile?: string;
+      fax?: string;
+      tollFree?: string;
+      taxId?: string;
+      accountNumber?: string;
+      address?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        zip?: string;
+      };
+      shippingAddress?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        zip?: string;
+      };
+      website?: string;
+      internalNotes?: string;
+      customFields?: Record<string, any>;
+      isActive: boolean;
+    };
+  };
+  totals?: {
+    total: number;
+  };
+  currency: string;
+  issueDate?: string;
+}
+
+const DraggableHeader = ({ header, column }: { header: any; column: any }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: column.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 1 : 0,
+  };
+
+  return (
+    <TableHead
+      ref={setNodeRef}
+      style={style}
+      className={`${header.column.columnDef.meta?.className} text-left text-[#121212] dark:text-slate-300 tracking-wide font-medium cursor-grab active:cursor-grabbing py-[18px]`}
+      {...attributes}
+      {...listeners}
+    >
+      {flexRender(header.column.columnDef.header, header.getContext())}
+    </TableHead>
+  );
+};
 
 export const InvoiceTable = ({
   invoices,
@@ -182,7 +243,190 @@ export const InvoiceTable = ({
 }: InvoiceTableProps) => {
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnOrder, setColumnOrder] = useLocalStorage(
+    'invoice-column-order',
+    TABLE_HEADERS.map((header) => {
+      return header.id;
+    }),
+  );
   const queryClient = useQueryClient();
+
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
+
+  const columns = TABLE_HEADERS.map((header) => {
+    return {
+      id: header.id,
+      accessorKey: header.id,
+      header: header.label,
+      meta: { className: header.className },
+      cell: ({ row }: { row: { original: Invoice } }) => {
+        const invoice = row.original;
+        switch (header.id) {
+          case 'invoice':
+            return (
+              <div className='flex flex-col gap-1'>
+                <span className='text-[#121212] dark:text-white font-medium'>
+                  {invoice.invoiceNumber}
+                </span>
+              </div>
+            );
+          case 'status':
+            return getStatusBadge(invoice.status);
+          case 'dueDate':
+            return invoice.dueDate ? (
+              <div className='h-full'>
+                <span className='font-medium'>{formatDate(invoice.dueDate)}</span>
+                <div className='text-xs text-muted-foreground'>
+                  {getRelativeTime(invoice.dueDate)}
+                </div>
+              </div>
+            ) : (
+              '-'
+            );
+          case 'customer':
+            return (
+              <div className='flex flex-col'>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingCustomer({
+                      id: invoice.customer.id._id,
+                      name: invoice.customer.id.user.name,
+                      contactEmail: invoice.customer.id.user.email,
+                      contactName: `${invoice.customer.id.contact?.firstName || ''} ${
+                        invoice.customer.id.contact?.lastName || ''
+                      }`.trim(),
+                      contactPhone: invoice.customer.id.phone || '',
+                      mobile: invoice.customer.id.mobile || '',
+                      fax: invoice.customer.id.fax || '',
+                      tollFree: invoice.customer.id.tollFree || '',
+                      taxId: invoice.customer.id.taxId || '',
+                      accountNumber: invoice.customer.id.accountNumber || '',
+                      address: {
+                        street: invoice.customer.id.address?.street || '',
+                        city: invoice.customer.id.address?.city || '',
+                        state: invoice.customer.id.address?.state || '',
+                        country: invoice.customer.id.address?.country || '',
+                        zip: invoice.customer.id.address?.zip || '',
+                      },
+                      shippingAddress: {
+                        street: invoice.customer.id.shippingAddress?.street || '',
+                        city: invoice.customer.id.shippingAddress?.city || '',
+                        state: invoice.customer.id.shippingAddress?.state || '',
+                        country: invoice.customer.id.shippingAddress?.country || '',
+                        zip: invoice.customer.id.shippingAddress?.zip || '',
+                      },
+                      website: invoice.customer.id.website || '',
+                      internalNotes: invoice.customer.id.internalNotes || '',
+                      customFields: invoice.customer.id.customFields || {},
+                      type: 'Individual',
+                      status: invoice.customer.id.isActive ? 'Active' : 'Inactive',
+                    });
+                    setIsEditCustomerDialogOpen(true);
+                  }}
+                  className='text-[#121212] dark:text-white font-medium hover:underline text-left'
+                >
+                  {invoice.customer?.id?.user?.name || '-'}
+                </button>
+                <span className='text-xs text-muted-foreground'>
+                  {invoice.customer?.id?.user?.email || '-'}
+                </span>
+              </div>
+            );
+          case 'amount':
+            return (
+              <span className='text-[#121212] dark:text-white font-medium'>
+                {formatCurrency(invoice.totals?.total || 0, invoice.currency)}
+              </span>
+            );
+          case 'issueDate':
+            return (
+              <span className='text-[#121212] dark:text-slate-300 font-medium'>
+                {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
+              </span>
+            );
+          case 'actions':
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    className='h-8 w-8 p-0'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <MoreHorizontal className='h-4 w-4' />
+                    <span className='sr-only'>Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingInvoice(invoice);
+                    }}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMarkAsPaid(invoice._id, new Date());
+                    }}
+                  >
+                    Mark as paid
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCancel(invoice._id);
+                    }}
+                  >
+                    Cancel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(invoice._id);
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          default:
+            return null;
+        }
+      },
+    };
+  });
+
+  const table = useReactTable({
+    data: invoices,
+    columns,
+    state: {
+      sorting,
+      columnOrder,
+    },
+    onSortingChange: setSorting,
+    onColumnOrderChange: setColumnOrder,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      setColumnOrder((columns) => {
+        const oldIndex = columns.indexOf(active.id as string);
+        const newIndex = columns.indexOf(over?.id as string);
+        return arrayMove(columns, oldIndex, newIndex);
+      });
+    }
+  };
 
   if (isLoading) {
     return <InvoiceSkeleton />;
@@ -200,7 +444,7 @@ export const InvoiceTable = ({
         <Button
           variant='outline'
           onClick={() => {
-            return setEditingInvoice({});
+            return setEditingInvoice({} as any);
           }}
         >
           Create invoice
@@ -211,194 +455,63 @@ export const InvoiceTable = ({
 
   return (
     <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
-      <table className='min-w-full text-sm'>
-        <thead>
-          <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428] !font-normal'>
-            {TABLE_HEADERS.map((header, index) => {
-              if (!visibleColumns[header.label]) return null;
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToHorizontalAxis]}
+      >
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => {
               return (
-                <th
-                  key={index}
-                  className={`${header.className} text-left text-[#121212] dark:text-slate-300 tracking-wide font-medium`}
+                <TableRow
+                  key={headerGroup.id}
+                  className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428] !font-normal'
                 >
-                  {header.label}
-                </th>
+                  <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+                    {headerGroup.headers.map((header) => {
+                      if (!visibleColumns[header.column.columnDef.header as string]) return null;
+                      return (
+                        <DraggableHeader key={header.id} header={header} column={header.column} />
+                      );
+                    })}
+                  </SortableContext>
+                </TableRow>
               );
             })}
-          </tr>
-        </thead>
-        <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
-          {invoices.map((invoice: any) => {
-            return (
-              <motion.tr
-                key={invoice._id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
-                  selectedInvoice?._id === invoice._id ? 'bg-slate-50 dark:bg-[#232428]' : ''
-                }`}
-                onClick={() => {
-                  return setSelectedInvoice(invoice);
-                }}
-              >
-                {visibleColumns['Invoice'] && (
-                  <td className='px-4 py-3'>
-                    <div className='flex flex-col gap-1'>
-                      <span className='text-[#121212] dark:text-white font-medium'>
-                        {invoice.invoiceNumber}
-                      </span>
-                    </div>
-                  </td>
-                )}
-                {visibleColumns['Status'] && (
-                  <td className='px-4 py-3'>{getStatusBadge(invoice.status)}</td>
-                )}
-                {visibleColumns['Due Date'] && (
-                  <td className='px-4 py-3 text-[#121212] dark:text-slate-300 h-full'>
-                    {invoice.dueDate ? (
-                      <div className='h-full'>
-                        <span className='font-medium'>{formatDate(invoice.dueDate)}</span>
-                        <div className='text-xs text-muted-foreground'>
-                          {getRelativeTime(invoice.dueDate)}
-                        </div>
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                )}
-                {visibleColumns['Customer'] && (
-                  <td className='px-4 py-3'>
-                    <div className='flex flex-col'>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Customer data:', invoice.customer);
-                          setEditingCustomer({
-                            id: invoice.customer.id._id,
-                            name: invoice.customer.id.user.name,
-                            contactEmail: invoice.customer.id.user.email,
-                            contactName: `${invoice.customer.id.contact?.firstName || ''} ${
-                              invoice.customer.id.contact?.lastName || ''
-                            }`.trim(),
-                            contactPhone: invoice.customer.id.phone || '',
-                            mobile: invoice.customer.id.mobile || '',
-                            fax: invoice.customer.id.fax || '',
-                            tollFree: invoice.customer.id.tollFree || '',
-                            taxId: invoice.customer.id.taxId || '',
-                            accountNumber: invoice.customer.id.accountNumber || '',
-                            address: {
-                              street: invoice.customer.id.address?.street || '',
-                              city: invoice.customer.id.address?.city || '',
-                              state: invoice.customer.id.address?.state || '',
-                              country: invoice.customer.id.address?.country || '',
-                              zip: invoice.customer.id.address?.zip || '',
-                            },
-                            shippingAddress: {
-                              street: invoice.customer.id.shippingAddress?.street || '',
-                              city: invoice.customer.id.shippingAddress?.city || '',
-                              state: invoice.customer.id.shippingAddress?.state || '',
-                              country: invoice.customer.id.shippingAddress?.country || '',
-                              zip: invoice.customer.id.shippingAddress?.zip || '',
-                            },
-                            website: invoice.customer.id.website || '',
-                            internalNotes: invoice.customer.id.internalNotes || '',
-                            customFields: invoice.customer.id.customFields || {},
-                            type: 'Individual',
-                            status: invoice.customer.id.isActive ? 'Active' : 'Inactive',
-                          });
-                          setIsEditCustomerDialogOpen(true);
-                        }}
-                        className='text-[#121212] dark:text-white font-medium hover:underline text-left'
-                      >
-                        {invoice.customer?.id?.user?.name || '-'}
-                      </button>
-                      <span className='text-xs text-muted-foreground'>
-                        {invoice.customer?.id?.user?.email || '-'}
-                      </span>
-                    </div>
-                  </td>
-                )}
-                {visibleColumns['Amount'] && (
-                  <td className='px-4 py-3'>
-                    <span className='text-[#121212] dark:text-white font-medium'>
-                      {formatCurrency(invoice.totals?.total || 0, invoice.currency)}
-                    </span>
-                  </td>
-                )}
-                {visibleColumns['Issue Date'] && (
-                  <td className='px-4 py-3'>
-                    <span className='text-[#121212] dark:text-slate-300 font-medium'>
-                      {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
-                    </span>
-                  </td>
-                )}
-                {visibleColumns['Actions'] && (
-                  <td className='px-2 py-3'>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          className='h-8 w-8 p-0'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          <MoreHorizontal className='h-4 w-4' />
-                          <span className='sr-only'>Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingInvoice(invoice);
-                          }}
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onMarkAsPaid(invoice._id, new Date());
-                          }}
-                        >
-                          Mark as paid
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onCancel(invoice._id);
-                          }}
-                        >
-                          Cancel
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(invoice._id);
-                          }}
-                          className='text-red-600'
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                )}
-              </motion.tr>
-            );
-          })}
-        </tbody>
-      </table>
-
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => {
+              return (
+                <TableRow
+                  key={row.id}
+                  className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
+                    selectedInvoice?._id === row.original._id ? 'bg-slate-50 dark:bg-[#232428]' : ''
+                  }`}
+                  onClick={() => {
+                    return setSelectedInvoice(row.original);
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    if (!visibleColumns[cell.column.columnDef.header as string]) return null;
+                    return (
+                      <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </DndContext>
       <AddCustomerDialog
         open={isEditCustomerDialogOpen}
         onOpenChange={setIsEditCustomerDialogOpen}
         initialData={editingCustomer}
         onEdit={(updatedCustomer) => {
-          // Update the customer in the invoice
           const updatedInvoices = invoices.map((invoice) => {
             if (invoice.customer?.id === updatedCustomer.id) {
               return {
@@ -409,7 +522,6 @@ export const InvoiceTable = ({
             return invoice;
           });
 
-          // Invalidate the invoices query to trigger a refetch
           queryClient.invalidateQueries({ queryKey: ['invoices'] });
 
           setIsEditCustomerDialogOpen(false);
