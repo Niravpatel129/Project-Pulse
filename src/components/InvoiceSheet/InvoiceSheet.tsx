@@ -774,7 +774,7 @@ const InvoiceSheet = ({
                   <div className='w-[60px] text-center text-[11px] text-muted-foreground'>
                     Quantity
                   </div>
-                  <div className='w-[80px] text-[11px] text-muted-foreground'>Price</div>
+                  <div className='w-[80px] text-[11px] text-muted-foreground text-right'>Price</div>
                   <div className='w-[80px] text-right text-[11px] text-muted-foreground'>Total</div>
                 </div>
                 {/* Items */}
