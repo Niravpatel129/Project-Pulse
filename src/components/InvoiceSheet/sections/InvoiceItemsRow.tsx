@@ -81,7 +81,7 @@ const InvoiceItemsRow = ({
   }, []);
 
   const handleQuantityChange = (delta: number) => {
-    const newQuantity = Math.max(0.01, Math.min(MAX_QUANTITY, item.quantity + delta));
+    const newQuantity = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity + delta)));
     onUpdate(item.id, 'quantity', newQuantity);
   };
 
@@ -170,9 +170,9 @@ const InvoiceItemsRow = ({
                 return setIsQuantityFocused(false);
               }}
               onChange={(e) => {
-                const value = e.target.value.replace(/[^\d.]/g, '');
-                const numValue = value ? parseFloat(value) : 0;
-                onUpdate(item.id, 'quantity', Math.min(MAX_QUANTITY, Math.max(0.01, numValue)));
+                const value = e.target.value.replace(/[^\d]/g, '');
+                const numValue = value ? parseInt(value, 10) : 1;
+                onUpdate(item.id, 'quantity', Math.min(MAX_QUANTITY, Math.max(1, numValue)));
               }}
             />
             <button
