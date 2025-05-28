@@ -27,6 +27,7 @@ function formatCurrency(amount: number, currency: string = 'CAD') {
 function formatDate(dateStr?: string) {
   if (!dateStr) return '--';
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '--';
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric' });
 }
 
