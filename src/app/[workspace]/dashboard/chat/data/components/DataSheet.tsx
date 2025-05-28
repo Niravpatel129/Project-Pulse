@@ -11,11 +11,14 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-interface DataEntry {
+interface DataSheetEntry {
   _id: string;
-  name: string;
+  title: string;
   content: string;
   createdAt: string;
   updatedAt: string;
@@ -24,28 +27,60 @@ interface DataEntry {
 interface DataSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existingData: DataEntry | null;
+  existingData: DataSheetEntry | null;
 }
 
 const DataSheet: React.FC<DataSheetProps> = ({ open, onOpenChange, existingData }) => {
-  const [name, setName] = useState('');
+  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (existingData) {
-      setName(existingData.name);
+      setTitle(existingData.title);
       setContent(existingData.content);
     } else {
-      setName('');
+      setTitle('');
       setContent('');
     }
   }, [existingData]);
 
+  const saveDataMutation = useMutation({
+    mutationFn: async (data: { title: string; content: string }) => {
+      const payload = {
+        data: {
+          title: data.title,
+          text: data.content,
+          metadata: {
+            type: 'workspace_data',
+            source: 'manual_entry',
+          },
+        },
+        storeText: true,
+      };
+
+      if (existingData) {
+        const response = await newRequest.put(`/new-ai/embed/${existingData._id}`, payload);
+        return response.data;
+      } else {
+        const response = await newRequest.post('/new-ai/embed', payload);
+        return response.data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['embeddings'] });
+      toast.success(existingData ? 'Data updated successfully' : 'Data created successfully');
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to save data');
+      console.error('Error saving data:', error);
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement API call to save data
-    console.log('Saving data:', { name, content });
-    onOpenChange(false);
+    saveDataMutation.mutate({ title, content });
   };
 
   return (
@@ -61,14 +96,14 @@ const DataSheet: React.FC<DataSheetProps> = ({ open, onOpenChange, existingData 
         </SheetHeader>
         <form onSubmit={handleSubmit} className='space-y-6 mt-6'>
           <div className='space-y-2'>
-            <Label htmlFor='name'>Name</Label>
+            <Label htmlFor='title'>Title</Label>
             <Input
-              id='name'
-              value={name}
+              id='title'
+              value={title}
               onChange={(e) => {
-                return setName(e.target.value);
+                return setTitle(e.target.value);
               }}
-              placeholder='Enter a name for this data'
+              placeholder='Enter a title for this data'
               required
             />
           </div>
@@ -91,10 +126,13 @@ const DataSheet: React.FC<DataSheetProps> = ({ open, onOpenChange, existingData 
               onClick={() => {
                 return onOpenChange(false);
               }}
+              disabled={saveDataMutation.isPending}
             >
               Cancel
             </Button>
-            <Button type='submit'>Save</Button>
+            <Button type='submit' disabled={saveDataMutation.isPending}>
+              {saveDataMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
           </div>
         </form>
       </SheetContent>

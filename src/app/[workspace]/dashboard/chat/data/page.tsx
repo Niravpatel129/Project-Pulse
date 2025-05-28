@@ -2,58 +2,99 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
 import DataSheet from './components/DataSheet';
 import DataTable from './components/DataTable';
 
 // Types
-interface DataEntry {
+interface EmbeddingDataEntry {
   _id: string;
-  name: string;
-  content: string;
-  workspace?: string;
-  createdBy?: string;
+  title: string;
+  description?: string;
+  text?: string;
+  metadata: {
+    type: 'workspace_data' | 'user_data' | 'project_data' | 'custom' | 'document';
+    source?: string;
+    category?: string;
+    tags?: string[];
+    customFields?: Record<string, any>;
+  };
+  status: 'active' | 'archived' | 'deleted';
+  workspace: string;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
-  __v?: number;
 }
 
-// Mock Data
-const mockData: DataEntry[] = [
-  {
-    _id: uuidv4(),
-    name: 'Customer Support FAQ',
-    content: 'Q: How do I reset my password?\nA: Click on the "Forgot Password" link...',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: uuidv4(),
-    name: 'Product Documentation',
-    content: 'Our product features include...',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+interface DataSheetEntry {
+  _id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+interface PaginatedResponse {
+  status: number;
+  data: {
+    embeddings: EmbeddingDataEntry[];
+    pagination: Pagination;
+  };
+  message: string;
+}
 
 const DataPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDataSheetOpen, setIsDataSheetOpen] = useState(false);
-  const [selectedData, setSelectedData] = useState<DataEntry | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingData, setEditingData] = useState<EmbeddingDataEntry | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
-  const handleCreateData = () => {
-    setSelectedData(null);
-    setIsDataSheetOpen(true);
+  const { data, isLoading, error } = useQuery<PaginatedResponse>({
+    queryKey: ['embeddings', currentPage],
+    queryFn: async () => {
+      const response = await newRequest.get(`/new-ai/embeddings?page=${currentPage}&limit=10`);
+      return response.data;
+    },
+  });
+
+  const handleEditData = (data: EmbeddingDataEntry) => {
+    setEditingData(data);
+    setIsSheetOpen(true);
   };
 
-  const handleEditData = (data: DataEntry) => {
-    setSelectedData(data);
-    setIsDataSheetOpen(true);
+  const handleSheetClose = () => {
+    setIsSheetOpen(false);
+    setEditingData(null);
   };
+
+  // Convert EmbeddingDataEntry to DataSheetEntry
+  const convertToDataSheetEntry = (data: EmbeddingDataEntry): DataSheetEntry => {
+    return {
+      _id: data._id,
+      title: data.title,
+      content: data.text || data.description || '',
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+  };
+
+  if (error) {
+    toast.error('Failed to load data');
+    console.error('Error loading data:', error);
+  }
 
   return (
     <div className='container mx-auto py-8 px-4 sm:px-6 lg:px-8'>
@@ -74,7 +115,12 @@ const DataPage = () => {
             <p className='text-muted-foreground mt-1'>Manage and store data for your AI agents.</p>
           </div>
         </div>
-        <Button onClick={handleCreateData} className='mt-4 sm:mt-0'>
+        <Button
+          onClick={() => {
+            return setIsSheetOpen(true);
+          }}
+          className='mt-4 sm:mt-0'
+        >
           <Plus className='mr-2 h-4 w-4' /> Add New Data
         </Button>
       </div>
@@ -94,11 +140,17 @@ const DataPage = () => {
         </div>
       </div>
 
-      <DataTable searchQuery={searchQuery} onEditData={handleEditData} mockData={mockData} />
+      <DataTable
+        searchQuery={searchQuery}
+        onEditData={handleEditData}
+        data={data?.data.embeddings ?? []}
+        isLoading={isLoading}
+        pagination={data?.data.pagination}
+      />
       <DataSheet
-        open={isDataSheetOpen}
-        onOpenChange={setIsDataSheetOpen}
-        existingData={selectedData}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        existingData={editingData ? convertToDataSheetEntry(editingData) : null}
       />
     </div>
   );
