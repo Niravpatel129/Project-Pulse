@@ -29,6 +29,12 @@ export type Message = {
     name: string;
     icon?: string;
   };
+  parts?: {
+    type: 'text' | 'reasoning' | 'action' | 'tool_call' | 'status';
+    content: string;
+    step?: string;
+    timestamp: Date;
+  }[];
   tool_calls?: {
     id: string;
     type: string;
@@ -271,41 +277,20 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       )
         return;
 
-      // Convert image URLs to base64
-      const base64Images = images?.map(async (image) => {
-        if (image.url.startsWith('data:')) {
-          return image; // Already in base64 format
-        }
-
-        try {
-          const response = await fetch(image.url);
-          const blob = await response.blob();
-          return new Promise<{ url: string; alt?: string }>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              resolve({
-                url: reader.result as string,
-                alt: image.alt,
-              });
-            };
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.error('Error converting image to base64:', error);
-          return image; // Return original image if conversion fails
-        }
-      });
-
-      // Wait for all base64 conversions to complete
-      const processedImages = base64Images ? await Promise.all(base64Images) : undefined;
-
       // Create user message
       const userMessage: Message = {
         id: Date.now().toString(),
         content,
         role: 'user',
         timestamp: new Date(),
-        images: processedImages,
+        parts: [
+          {
+            type: 'text',
+            content,
+            timestamp: new Date(),
+          },
+        ],
+        images,
       };
 
       // Handle attachments if any
@@ -356,27 +341,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             message: content,
             sessionId: sessionId || undefined,
             attachments: userMessage.attachments,
-            images: processedImages,
+            images: images,
             agents: selectedAgents.map((agent) => {
               return agent._id;
             }),
           },
           onStart: () => {},
           onChunk: (data) => {
-            const agentId = data.agent?.id;
-            const agentName = data.agent?.name;
-            const currentTurn = data.turn || 0;
-            const messageId = `${streamMessageId}-${agentId}-${currentTurn}`;
-            console.log('onChunk:', {
-              agentId,
-              agentName,
-              currentTurn,
-              messageId,
-              content: data.content,
-              type: data.type,
-              tool_calls: data.tool_calls,
-              sessionId: data.sessionId,
-            });
+            const messageId = `${streamMessageId}-${data.type}`;
+            console.log('onChunk:', data);
 
             // Update sessionId if it's provided in the stream
             if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
@@ -397,7 +370,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
             }
 
-            if (data.type === 'tool_call') {
+            if (data.type === 'error') {
+              console.error('Stream error:', data.error);
+              setMessages((prev) => {
+                return prev.filter((msg) => {
+                  return msg.id !== streamMessageId;
+                });
+              });
+              setIsTyping(false);
+              return;
+            }
+
+            if (data.type === 'text') {
               setMessages((prev) => {
                 const exists = prev.some((msg) => {
                   return msg.id === messageId;
@@ -407,20 +391,43 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     ...prev,
                     {
                       id: messageId,
-                      content: '',
+                      content: data.choices[0].delta.content,
                       role: 'assistant' as const,
                       timestamp: new Date(),
                       isStreaming: true,
-                      agent: data.agent,
-                      tool_calls: data.tool_calls,
+                      parts: [
+                        {
+                          type: 'text',
+                          content: data.choices[0].delta.content,
+                          timestamp: new Date(),
+                        },
+                      ],
                     },
                   ];
                 }
                 return prev.map((msg) => {
-                  return msg.id === messageId ? { ...msg, tool_calls: data.tool_calls } : msg;
+                  if (msg.id === messageId) {
+                    const newContent = msg.content + data.choices[0].delta.content;
+                    return {
+                      ...msg,
+                      content: newContent,
+                      parts: [
+                        {
+                          type: 'text',
+                          content: newContent,
+                          timestamp: new Date(),
+                        },
+                      ],
+                    };
+                  }
+                  return msg;
                 });
               });
-            } else if (data.type === 'chunk') {
+            } else if (
+              data.type === 'reasoning' ||
+              data.type === 'action' ||
+              data.type === 'status'
+            ) {
               setMessages((prev) => {
                 const exists = prev.some((msg) => {
                   return msg.id === messageId;
@@ -434,26 +441,99 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                       role: 'assistant' as const,
                       timestamp: new Date(),
                       isStreaming: true,
-                      agent: data.agent,
+                      parts: [
+                        {
+                          type: data.type,
+                          content: data.content,
+                          step: data.step,
+                          timestamp: new Date(),
+                        },
+                      ],
                     },
                   ];
                 }
                 return prev.map((msg) => {
-                  return msg.id === messageId
-                    ? { ...msg, content: msg.content + data.content }
-                    : msg;
+                  if (msg.id === messageId) {
+                    return {
+                      ...msg,
+                      parts: [
+                        ...(msg.parts || []),
+                        {
+                          type: data.type,
+                          content: data.content,
+                          step: data.step,
+                          timestamp: new Date(),
+                        },
+                      ],
+                    };
+                  }
+                  return msg;
                 });
               });
-            } else if (data.type === 'agent_end') {
+            } else if (data.type === 'tool_result') {
+              setMessages((prev) => {
+                const exists = prev.some((msg) => {
+                  return msg.id === messageId;
+                });
+                if (!exists) {
+                  return [
+                    ...prev,
+                    {
+                      id: messageId,
+                      content: '',
+                      role: 'assistant' as const,
+                      timestamp: new Date(),
+                      isStreaming: true,
+                      tool_calls: data.choices[0].message.tool_calls,
+                      parts: [
+                        {
+                          type: 'tool_call',
+                          content: JSON.stringify(data.choices[0].message.tool_calls[0]),
+                          step: data.choices[0].message.tool_calls[0].function.name,
+                          timestamp: new Date(),
+                        },
+                      ],
+                    },
+                  ];
+                }
+                return prev.map((msg) => {
+                  if (msg.id === messageId) {
+                    return {
+                      ...msg,
+                      tool_calls: data.choices[0].message.tool_calls,
+                      parts: [
+                        ...(msg.parts || []),
+                        {
+                          type: 'tool_call',
+                          content: JSON.stringify(data.choices[0].message.tool_calls[0]),
+                          step: data.choices[0].message.tool_calls[0].function.name,
+                          timestamp: new Date(),
+                        },
+                      ],
+                    };
+                  }
+                  return msg;
+                });
+              });
+            } else if (data.type === 'completion') {
               setMessages((prev) => {
                 return prev.map((msg) => {
-                  return msg.id === messageId
-                    ? {
-                        ...msg,
-                        content: data.content || msg.content,
-                        isStreaming: false,
-                      }
-                    : msg;
+                  if (msg.id === messageId) {
+                    return {
+                      ...msg,
+                      content: data.choices[0].message.content,
+                      isStreaming: false,
+                      parts: [
+                        ...(msg.parts || []),
+                        {
+                          type: 'text',
+                          content: data.choices[0].message.content,
+                          timestamp: new Date(),
+                        },
+                      ],
+                    };
+                  }
+                  return msg;
                 });
               });
             }

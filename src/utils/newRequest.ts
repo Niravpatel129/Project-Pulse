@@ -159,60 +159,67 @@ export const streamRequest = ({
                   try {
                     const data = JSON.parse(eventData.substring(6));
 
-                    // Handle OpenAI streaming format
-                    if (data.choices && data.choices[0]) {
-                      const choice = data.choices[0];
-
-                      // Handle tool calls
-                      if (choice.message?.tool_calls) {
-                        onChunk?.({
-                          type: 'tool_call',
-                          tool_calls: choice.message.tool_calls,
-                          agent: data.agent,
-                          turn: data.turn,
-                          object: data.object,
-                          id: data.id,
-                          created: data.created,
-                          model: data.model,
-                          sessionId: data.sessionId,
-                          ...data,
-                        });
-                      }
-
-                      // Handle start of stream and chunk updates
-                      if (choice.delta) {
-                        onChunk?.({
-                          content: choice.delta.content || '',
-                          type: 'chunk',
-                          agent: data.agent,
-                          turn: data.turn,
-                          object: data.object,
-                          id: data.id,
-                          created: data.created,
-                          model: data.model,
-                          sessionId: data.sessionId,
-                          finish_reason: choice.finish_reason,
-                          ...data,
-                        });
-                      }
-
-                      // Handle end of agent's completion (but do not close the stream)
-                      if (choice.finish_reason) {
-                        onChunk?.({
-                          content: choice.message?.content || '',
-                          type: 'agent_end',
-                          agent: data.agent,
-                          turn: data.turn,
-                          object: data.object,
-                          id: data.id,
-                          created: data.created,
-                          model: data.model,
-                          sessionId: data.sessionId,
-                          finish_reason: choice.finish_reason,
-                          ...data,
-                        });
-                        // Do not return here; keep reading for more agents
-                      }
+                    // Handle different message types
+                    if (data.type === 'error') {
+                      onChunk?.(data);
+                    } else if (data.type === 'text' && data.choices?.[0]?.delta?.content) {
+                      onChunk?.({
+                        type: 'text',
+                        choices: [
+                          {
+                            delta: { content: data.choices[0].delta.content },
+                            finish_reason: null,
+                          },
+                        ],
+                        id: data.id,
+                        sessionId: data.sessionId,
+                      });
+                    } else if (
+                      data.type === 'reasoning' ||
+                      data.type === 'action' ||
+                      data.type === 'status'
+                    ) {
+                      onChunk?.({
+                        type: data.type,
+                        content: data.content,
+                        step: data.step,
+                        timestamp: data.timestamp,
+                        sessionId: data.sessionId,
+                      });
+                    } else if (
+                      data.type === 'tool_result' &&
+                      data.choices?.[0]?.message?.tool_calls
+                    ) {
+                      onChunk?.({
+                        type: 'tool_result',
+                        choices: [
+                          {
+                            message: {
+                              role: 'assistant',
+                              content: null,
+                              tool_calls: data.choices[0].message.tool_calls,
+                            },
+                            finish_reason: 'tool_calls',
+                          },
+                        ],
+                        id: data.id,
+                        sessionId: data.sessionId,
+                      });
+                    } else if (data.type === 'completion' && data.choices?.[0]?.message) {
+                      onChunk?.({
+                        type: 'completion',
+                        choices: [
+                          {
+                            message: {
+                              role: 'assistant',
+                              content: data.choices[0].message.content,
+                            },
+                            finish_reason: 'stop',
+                          },
+                        ],
+                        id: data.id,
+                        sessionId: data.sessionId,
+                      });
                     }
                   } catch (e) {
                     console.error('Error parsing SSE data:', e);

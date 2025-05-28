@@ -10,6 +10,12 @@ interface Message {
     id: string;
     name: string;
   };
+  parts?: {
+    type: 'text' | 'reasoning' | 'action' | 'tool_call' | 'status';
+    content: string;
+    step?: string;
+    timestamp: Date;
+  }[];
   tool_calls?: {
     id: string;
     type: string;
@@ -74,11 +80,38 @@ function MessageImages({ images }: { images: Message['images'] }) {
   );
 }
 
+function MessagePart({ part }: { part: Message['parts'][0] }) {
+  switch (part.type) {
+    case 'text':
+      return <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.content}</ReactMarkdown>;
+    case 'reasoning':
+      return <div className='text-sm text-gray-500 dark:text-gray-400 italic'>{part.content}</div>;
+    case 'action':
+      return (
+        <div className='text-sm text-blue-500 dark:text-blue-400'>
+          {part.step && <span className='font-semibold'>{part.step}: </span>}
+          {part.content}
+        </div>
+      );
+    case 'status':
+      return <div className='text-sm text-gray-500 dark:text-gray-400'>{part.content}</div>;
+    case 'tool_call':
+      try {
+        const toolCall = JSON.parse(part.content);
+        return <ToolCall tool={toolCall} />;
+      } catch (e) {
+        return null;
+      }
+    default:
+      return null;
+  }
+}
+
 export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageProps) {
   console.log('🚀 message:', message);
   const isUser = message.role === 'user';
 
-  if (message.content === '' && !message.tool_calls && !message.images) {
+  if (message.content === '' && !message.tool_calls && !message.images && !message.parts) {
     return null;
   }
 
@@ -95,9 +128,13 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
               : 'bg-gray-100 dark:bg-[#141414] text-gray-900 dark:text-gray-100'
           }`}
         >
-          {message.content && (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-          )}
+          {message.parts
+            ? message.parts.map((part, index) => {
+                return <MessagePart key={`${part.type}-${index}`} part={part} />;
+              })
+            : message.content && (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+              )}
           {message.images && <MessageImages images={message.images} />}
           {message.tool_calls?.map((tool) => {
             return <ToolCall key={tool.id} tool={tool} />;
