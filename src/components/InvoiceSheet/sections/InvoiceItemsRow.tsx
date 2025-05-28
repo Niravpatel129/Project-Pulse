@@ -65,6 +65,7 @@ const InvoiceItemsRow = ({
   const [isQuantityFocused, setIsQuantityFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const quantityRef = useRef<HTMLDivElement>(null);
+  const priceInputRef = useRef<HTMLInputElement>(null);
   const currencySymbol = getCurrencySymbol(currency);
 
   useEffect(() => {
@@ -188,32 +189,49 @@ const InvoiceItemsRow = ({
         )}
       </div>
       {/* Price */}
-      <div className='w-[80px] flex items-center'>
-        <SeamlessInput
-          className={`p-0 !text-[11px] font-mono w-full relative rounded-none text-left ${
-            !isPriceFocused ? '' : 'border-b border-primary'
-          }`}
-          value={item.price}
-          onFocus={() => {
-            return setIsPriceFocused(true);
-          }}
-          onBlur={() => {
-            return setIsPriceFocused(false);
-          }}
-          onChange={(e) => {
-            const value = e.target.value.replace(/[^\d.]/g, '');
-            // Ensure only one decimal point
-            const parts = value.split('.');
-            if (parts.length > 2) {
-              return;
+      <div
+        className='w-[80px] flex items-center'
+        onClick={() => {
+          setIsPriceFocused(true);
+          setTimeout(() => {
+            if (priceInputRef.current) {
+              const length = priceInputRef.current.value.length;
+              priceInputRef.current.focus();
+              priceInputRef.current.setSelectionRange(length, length);
             }
-            // Limit to 2 decimal places
-            if (parts[1] && parts[1].length > 2) {
-              return;
-            }
-            onUpdate(item.id, 'price', value);
-          }}
-        />
+          }, 0);
+        }}
+      >
+        {!isPriceFocused && !item.price ? (
+          <div className='w-full bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'></div>
+        ) : (
+          <SeamlessInput
+            ref={priceInputRef}
+            className={`p-0 !text-[11px] font-mono w-full relative rounded-none text-left ${
+              !isPriceFocused ? '' : 'border-b border-primary'
+            }`}
+            value={item.price}
+            onFocus={() => {
+              return setIsPriceFocused(true);
+            }}
+            onBlur={() => {
+              return setIsPriceFocused(false);
+            }}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^\d.]/g, '');
+              // Ensure only one decimal point
+              const parts = value.split('.');
+              if (parts.length > 2) {
+                return;
+              }
+              // Limit to 2 decimal places
+              if (parts[1] && parts[1].length > 2) {
+                return;
+              }
+              onUpdate(item.id, 'price', value);
+            }}
+          />
+        )}
       </div>
       {/* Total */}
       <div className='w-[80px] flex items-center justify-end'>
