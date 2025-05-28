@@ -165,7 +165,6 @@ const InvoicePage = () => {
     },
     enabled: !!invoiceId,
   });
-  console.log('🚀 invoice:', invoice);
 
   const {
     stripePromise,
