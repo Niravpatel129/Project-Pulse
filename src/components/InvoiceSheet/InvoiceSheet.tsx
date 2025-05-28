@@ -340,7 +340,10 @@ const InvoiceSheet = ({
   }, [lastInvoiceSettings, existingInvoice]);
 
   const formatNumber = (value: number) => {
-    return value.toFixed(2);
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   const handleUpdateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
