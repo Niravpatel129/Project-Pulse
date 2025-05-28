@@ -2,8 +2,7 @@ import { newRequest } from '@/utils/newRequest';
 import { Metadata } from 'next';
 import React from 'react';
 
-type Props = {
-  children: React.ReactNode;
+type MetadataProps = {
   params: {
     id: string;
     workspace: string;
@@ -11,7 +10,11 @@ type Props = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+type LayoutProps = {
+  children: React.ReactNode;
+};
+
+export async function generateMetadata({ params }: MetadataProps): Promise<Metadata> {
   const id = params.id;
 
   try {
@@ -56,6 +59,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function InvoiceLayout({ children }: Props) {
+export default function InvoiceLayout({ children }: LayoutProps) {
   return <div className='w-full'>{children}</div>;
 }
