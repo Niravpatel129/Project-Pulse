@@ -123,6 +123,14 @@ export function ChatHeader() {
             >
               Manage Agents
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                router.push('/dashboard/chat/data');
+                setIsOpen(false);
+              }}
+            >
+              Manage Data
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {agents.map((agent) => {
               const isSelected = selectedAgents.some((a) => {

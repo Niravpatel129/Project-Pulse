@@ -188,9 +188,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // Update sessions when conversations data changes
   useEffect(() => {
     if (!isChatRoute) return; // Only update sessions on chat route
-    setSessions(conversations);
+
+    // Only update if the conversations data has actually changed
+    const hasChanged = JSON.stringify(conversations) !== JSON.stringify(sessions);
+    if (hasChanged) {
+      setSessions(conversations);
+    }
     setIsLoadingSessions(isLoadingConversations);
-  }, [conversations, isLoadingConversations, isChatRoute]);
+  }, [conversations, isLoadingConversations, isChatRoute, sessions]);
 
   // Update messages when chat history changes
   useEffect(() => {
