@@ -172,7 +172,8 @@ export const streamRequest = ({
                           },
                         ],
                         id: data.id,
-                        sessionId: data.sessionId,
+                        conversationId: data.conversationId,
+                        conversation: data.conversation,
                       });
                     } else if (
                       data.type === 'reasoning' ||
@@ -184,7 +185,8 @@ export const streamRequest = ({
                         content: data.content,
                         step: data.step,
                         timestamp: data.timestamp,
-                        sessionId: data.sessionId,
+                        conversationId: data.conversationId,
+                        conversation: data.conversation,
                       });
                     } else if (
                       data.type === 'tool_result' &&
@@ -203,7 +205,8 @@ export const streamRequest = ({
                           },
                         ],
                         id: data.id,
-                        sessionId: data.sessionId,
+                        conversationId: data.conversationId,
+                        conversation: data.conversation,
                       });
                     } else if (data.type === 'completion' && data.choices?.[0]?.message) {
                       onChunk?.({
@@ -218,7 +221,8 @@ export const streamRequest = ({
                           },
                         ],
                         id: data.id,
-                        sessionId: data.sessionId,
+                        conversationId: data.conversationId,
+                        conversation: data.conversation,
                       });
                     }
                   } catch (e) {

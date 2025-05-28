@@ -9,6 +9,7 @@ interface Message {
   agent?: {
     id: string;
     name: string;
+    icon?: string;
   };
   parts?: {
     type: 'text' | 'reasoning' | 'action' | 'tool_call' | 'status';
@@ -28,6 +29,7 @@ interface Message {
     url: string;
     alt?: string;
   }[];
+  isStreaming?: boolean;
 }
 
 interface ChatMessageProps {
@@ -111,9 +113,20 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
   console.log('🚀 message:', message);
   const isUser = message.role === 'user';
 
-  if (message.content === '' && !message.tool_calls && !message.images && !message.parts) {
+  // Check if message has content either directly or in parts
+  const hasContent =
+    message.content ||
+    (message.parts && message.parts.some((part) => part.type === 'text' && part.content)) ||
+    message.tool_calls ||
+    message.images;
+
+  if (!hasContent) {
     return null;
   }
+
+  // Get the main content from parts if available
+  const mainContent =
+    message.parts?.find((part) => part.type === 'text')?.content || message.content;
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -132,14 +145,14 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
             ? message.parts.map((part, index) => {
                 return <MessagePart key={`${part.type}-${index}`} part={part} />;
               })
-            : message.content && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            : mainContent && (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{mainContent}</ReactMarkdown>
               )}
           {message.images && <MessageImages images={message.images} />}
           {message.tool_calls?.map((tool) => {
             return <ToolCall key={tool.id} tool={tool} />;
           })}
-          {!isUser && isTyping && isLatestMessage && <TypingAnimation />}
+          {!isUser && (isTyping || message.isStreaming) && isLatestMessage && <TypingAnimation />}
         </div>
         <div
           className={`text-xs text-gray-400 dark:text-gray-500 mt-1 ${

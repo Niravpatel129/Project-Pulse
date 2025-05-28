@@ -20,7 +20,7 @@ type StreamEndData = {
 
 export type Message = {
   id: string;
-  content: string;
+  content?: string;
   role: 'user' | 'assistant';
   timestamp: Date;
   isStreaming?: boolean;
@@ -151,17 +151,28 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (!sessionId) return [];
       const response = await newRequest.get(`/new-ai/chat/history/${sessionId}`);
       return response.data.conversation.messages.map((msg: any) => {
+        const firstTextPart = msg.parts?.find((part: any) => {
+          return part.type === 'text';
+        });
         return {
           id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          content: msg.content,
           role: msg.role,
-          timestamp: new Date(response.data.conversation.lastActive),
+          timestamp: new Date(msg.timestamp),
           agent: msg.agent,
           images: msg.images || [],
+          content: firstTextPart?.content || '', // Set content from first text part
+          parts: msg.parts?.map((part: any) => {
+            return {
+              type: part.type,
+              content: part.content,
+              step: part.step,
+              timestamp: new Date(part.timestamp),
+            };
+          }),
         };
       });
     },
-    enabled: !!sessionId && isChatRoute, // Only run query on chat route and when sessionId exists
+    enabled: !!sessionId && isChatRoute,
     staleTime: 30000,
     gcTime: 5 * 60 * 1000,
   });
@@ -180,7 +191,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Update messages when chat history changes
   useEffect(() => {
-    if (!isChatRoute) return; // Only update messages on chat route
+    if (!isChatRoute) return;
     if (chatHistory) {
       setMessages(chatHistory);
     }
@@ -280,9 +291,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       // Create user message
       const userMessage: Message = {
         id: Date.now().toString(),
-        content,
         role: 'user',
         timestamp: new Date(),
+        content, // Set content for backward compatibility
         parts: [
           {
             type: 'text',
@@ -323,7 +334,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       setMessages((prev) => {
         return [...prev, userMessage];
       });
-
       setIsTyping(true);
 
       if (abortControllerRef.current) {
@@ -352,9 +362,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             console.log('onChunk:', data);
 
             // Update sessionId if it's provided in the stream
-            if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-              setSessionId(data.sessionId);
-              localStorage.setItem('chatSessionId', data.sessionId);
+            if (data.conversationId && (!sessionId || sessionId !== data.conversationId)) {
+              setSessionId(data.conversationId);
+              localStorage.setItem('chatSessionId', data.conversationId);
 
               const url = new URL(window.location.href);
               const pathParts = url.pathname.split('/');
@@ -363,11 +373,48 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                   return !part.match(/^[0-9a-f]{24}$/);
                 })
                 .join('/');
-              url.pathname = `${basePath}/${data.sessionId}`;
+              url.pathname = `${basePath}/${data.conversationId}`;
               window.history.pushState({}, '', url.toString());
 
               queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
-              queryClient.invalidateQueries({ queryKey: ['chat-history', data.sessionId] });
+              queryClient.invalidateQueries({ queryKey: ['chat-history', data.conversationId] });
+            }
+
+            // Update conversation data if provided
+            if (data.conversation) {
+              const { messages, title, lastActive } = data.conversation;
+              if (messages && messages.length > 0) {
+                setMessages(
+                  messages.map((msg) => {
+                    const firstTextPart = msg.parts?.find((part: any) => {
+                      return part.type === 'text';
+                    });
+                    return {
+                      id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                      role: msg.role,
+                      timestamp: new Date(msg.timestamp),
+                      agent: msg.agent,
+                      images: msg.images || [],
+                      content: firstTextPart?.content || '', // Set content from first text part
+                      parts: msg.parts?.map((part) => {
+                        return {
+                          type: part.type,
+                          content: part.content,
+                          step: part.step,
+                          timestamp: new Date(part.timestamp),
+                        };
+                      }),
+                    };
+                  }),
+                );
+              }
+              if (title) {
+                updateSession(data.conversationId, {
+                  title,
+                  lastMessage: messages[messages.length - 1]?.parts?.[0]?.content || '',
+                  timestamp: new Date(lastActive),
+                });
+              }
             }
 
             if (data.type === 'error') {
@@ -391,10 +438,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     ...prev,
                     {
                       id: messageId,
-                      content: data.choices[0].delta.content,
                       role: 'assistant' as const,
                       timestamp: new Date(),
                       isStreaming: true,
+                      agent: data.agent,
+                      content: data.choices[0].delta.content, // Set content for backward compatibility
                       parts: [
                         {
                           type: 'text',
@@ -410,11 +458,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     const newContent = msg.content + data.choices[0].delta.content;
                     return {
                       ...msg,
-                      content: newContent,
+                      content: newContent, // Update content for backward compatibility
                       parts: [
+                        ...(msg.parts || []),
                         {
                           type: 'text',
-                          content: newContent,
+                          content: data.choices[0].delta.content,
                           timestamp: new Date(),
                         },
                       ],
@@ -437,10 +486,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     ...prev,
                     {
                       id: messageId,
-                      content: data.content,
                       role: 'assistant' as const,
                       timestamp: new Date(),
                       isStreaming: true,
+                      agent: data.agent,
+                      content: data.content, // Set content for backward compatibility
                       parts: [
                         {
                           type: data.type,
@@ -539,45 +589,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             }
           },
           onEnd: (data) => {
-            // Update all streaming messages to not streaming
             setMessages((prev) => {
               return prev.map((msg) => {
-                return msg.isStreaming
-                  ? {
-                      ...msg,
-                      isStreaming: false,
-                    }
-                  : msg;
+                return {
+                  ...msg,
+                  isStreaming: false,
+                };
               });
             });
-
-            // Update conversation with all messages
-            queryClient.setQueryData(['chat-conversations'], (oldData: any) => {
-              if (!oldData) return oldData;
-              return oldData.map((conv: any) => {
-                if (conv.id === data.sessionId) {
-                  // Get all messages from all agents
-                  const allMessages = Array.from(streamingMessages.values())
-                    .map((msg) => {
-                      return msg.content;
-                    })
-                    .join('\n\n');
-                  return {
-                    ...conv,
-                    lastMessage: allMessages,
-                    timestamp: new Date(),
-                  };
-                }
-                return conv;
-              });
-            });
-
             setIsTyping(false);
             abortControllerRef.current = null;
           },
           onError: (error) => {
             console.error('Error in stream:', error);
-            // Remove all streaming messages on error
             setMessages((prev) => {
               return prev.filter((msg) => {
                 return !msg.isStreaming;
@@ -661,13 +685,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         // Map the messages to our Message type
         const history = conversation.messages.map((msg: any) => {
+          const firstTextPart = msg.parts?.find((part: any) => {
+            return part.type === 'text';
+          });
           return {
             id: `${msg.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            content: msg.content,
             role: msg.role,
-            timestamp: new Date(conversation.lastActive),
+            timestamp: new Date(msg.timestamp),
             agent: msg.agent,
             images: msg.images || [],
+            content: firstTextPart?.content || '', // Set content from first text part
+            parts: msg.parts?.map((part: any) => {
+              return {
+                type: part.type,
+                content: part.content,
+                step: part.step,
+                timestamp: new Date(part.timestamp),
+              };
+            }),
           };
         });
 
@@ -675,7 +710,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.id === sessionId) {
           updateSession(sessionId, {
             title: conversation.title,
-            lastMessage: history[history.length - 1]?.content || '',
+            lastMessage: history[history.length - 1]?.parts?.[0]?.content || '',
             timestamp: new Date(conversation.lastActive),
           });
         }
