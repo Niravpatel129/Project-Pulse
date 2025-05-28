@@ -1,5 +1,6 @@
 import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
 import { Button } from '@/components/ui/button';
+import { DateTooltip } from '@/components/ui/date-tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -280,7 +281,9 @@ export const InvoiceTable = ({
           case 'dueDate':
             return invoice.dueDate ? (
               <div className='h-full'>
-                <span className='font-medium'>{formatDate(invoice.dueDate)}</span>
+                <DateTooltip date={invoice.dueDate}>
+                  <span className='font-medium'>{formatDate(invoice.dueDate)}</span>
+                </DateTooltip>
                 <div className='text-xs text-muted-foreground'>
                   {getRelativeTime(invoice.dueDate)}
                 </div>
@@ -346,9 +349,11 @@ export const InvoiceTable = ({
             );
           case 'issueDate':
             return (
-              <span className='text-[#121212] dark:text-slate-300 font-medium'>
-                {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
-              </span>
+              <DateTooltip date={invoice.issueDate}>
+                <span className='text-[#121212] dark:text-slate-300 font-medium'>
+                  {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
+                </span>
+              </DateTooltip>
             );
           case 'actions':
             return (
