@@ -97,10 +97,11 @@ const SortableInvoiceItem = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    outline: 'none',
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style} {...attributes} className='focus:outline-none'>
       <InvoiceItemsRow
         item={item}
         onUpdate={onUpdate}
