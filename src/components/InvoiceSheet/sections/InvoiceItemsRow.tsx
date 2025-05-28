@@ -203,7 +203,7 @@ const InvoiceItemsRow = ({
         }}
       >
         {!isPriceFocused && !item.price ? (
-          <div className='w-full bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px]'></div>
+          <div className='w-full bg-[repeating-linear-gradient(-60deg,#DBDBDB,#DBDBDB_1px,transparent_1px,transparent_5px)] dark:bg-[repeating-linear-gradient(-60deg,#2C2C2C,#2C2C2C_1px,transparent_1px,transparent_5px)] h-[24px] cursor-text'></div>
         ) : (
           <SeamlessInput
             ref={priceInputRef}
