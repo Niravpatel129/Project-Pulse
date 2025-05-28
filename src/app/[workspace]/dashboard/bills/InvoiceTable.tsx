@@ -294,48 +294,9 @@ export const InvoiceTable = ({
           case 'customer':
             return (
               <div className='flex flex-col'>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingCustomer({
-                      id: invoice.customer.id._id,
-                      name: invoice.customer.id.user.name,
-                      contactEmail: invoice.customer.id.user.email,
-                      contactName: `${invoice.customer.id.contact?.firstName || ''} ${
-                        invoice.customer.id.contact?.lastName || ''
-                      }`.trim(),
-                      contactPhone: invoice.customer.id.phone || '',
-                      mobile: invoice.customer.id.mobile || '',
-                      fax: invoice.customer.id.fax || '',
-                      tollFree: invoice.customer.id.tollFree || '',
-                      taxId: invoice.customer.id.taxId || '',
-                      accountNumber: invoice.customer.id.accountNumber || '',
-                      address: {
-                        street: invoice.customer.id.address?.street || '',
-                        city: invoice.customer.id.address?.city || '',
-                        state: invoice.customer.id.address?.state || '',
-                        country: invoice.customer.id.address?.country || '',
-                        zip: invoice.customer.id.address?.zip || '',
-                      },
-                      shippingAddress: {
-                        street: invoice.customer.id.shippingAddress?.street || '',
-                        city: invoice.customer.id.shippingAddress?.city || '',
-                        state: invoice.customer.id.shippingAddress?.state || '',
-                        country: invoice.customer.id.shippingAddress?.country || '',
-                        zip: invoice.customer.id.shippingAddress?.zip || '',
-                      },
-                      website: invoice.customer.id.website || '',
-                      internalNotes: invoice.customer.id.internalNotes || '',
-                      customFields: invoice.customer.id.customFields || {},
-                      type: 'Individual',
-                      status: invoice.customer.id.isActive ? 'Active' : 'Inactive',
-                    });
-                    setIsEditCustomerDialogOpen(true);
-                  }}
-                  className='text-[#121212] dark:text-white font-medium hover:underline text-left'
-                >
+                <span className='text-[#121212] dark:text-white font-medium text-left'>
                   {invoice.customer?.id?.user?.name || '-'}
-                </button>
+                </span>
                 <span className='text-xs text-muted-foreground'>
                   {invoice.customer?.id?.user?.email || '-'}
                 </span>
