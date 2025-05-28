@@ -8,8 +8,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const resolvedParams = await Promise.resolve(params);
-  const id = resolvedParams.id;
+  const id = params.id;
 
   try {
     const response = await newRequest.get(`/invoices2/${id}`);
