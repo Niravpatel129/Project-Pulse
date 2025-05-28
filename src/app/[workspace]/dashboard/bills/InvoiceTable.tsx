@@ -500,7 +500,13 @@ export const InvoiceTable = ({
                   {row.getVisibleCells().map((cell) => {
                     if (!visibleColumns[cell.column.columnDef.header as string]) return null;
                     return (
-                      <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
+                      <TableCell
+                        key={cell.id}
+                        className={
+                          (cell.column.columnDef.meta as { className?: string } | undefined)
+                            ?.className
+                        }
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     );
