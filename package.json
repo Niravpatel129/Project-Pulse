@@ -71,6 +71,7 @@
     "@trpc/server": "^11.1.2",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
+    "@vercel/og": "^0.6.8",
     "ag-grid-community": "^33.2.3",
     "ag-grid-enterprise": "^33.2.3",
     "ag-grid-react": "^33.2.3",
