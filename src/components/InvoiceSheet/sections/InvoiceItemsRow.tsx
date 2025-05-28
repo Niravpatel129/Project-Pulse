@@ -190,7 +190,9 @@ const InvoiceItemsRow = ({
       {/* Price */}
       <div className='w-[80px] flex items-center'>
         <SeamlessInput
-          className={`p-0 !text-[11px] font-mono w-full relative rounded-none text-right ${!isPriceFocused}`}
+          className={`p-0 !text-[11px] font-mono w-full relative rounded-none text-left ${
+            !isPriceFocused ? '' : 'border-b border-primary'
+          }`}
           value={item.price}
           onFocus={() => {
             return setIsPriceFocused(true);
