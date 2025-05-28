@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     return {
       title: {
-        template: `%s - ${workspaceName}`,
+        template: `%s`,
         default: `${workspaceName}`,
       },
       description: `Manage your ${workspaceName} workspace with Pulse - Streamline workflows and collaborate effectively.`,
@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Fallback to default metadata if API call fails
     return {
       title: {
-        template: `%s - ${workspace}`,
+        template: `%s`,
         default: `${workspace}`,
       },
       description: `Manage your ${workspace} workspace with Pulse - Streamline workflows and collaborate effectively.`,
