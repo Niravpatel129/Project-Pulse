@@ -2,7 +2,7 @@ import { newRequest } from '@/utils/newRequest';
 import { Metadata } from 'next';
 import React from 'react';
 
-type MetadataProps = {
+type Props = {
   params: {
     id: string;
     workspace: string;
@@ -14,8 +14,12 @@ type LayoutProps = {
   children: React.ReactNode;
 };
 
-export async function generateMetadata({ params }: MetadataProps): Promise<Metadata> {
-  const id = params.id;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string; workspace: string }>;
+}): Promise<Metadata> {
+  const { id, workspace } = await params;
 
   try {
     const response = await newRequest.get(`/invoices2/${id}`);
