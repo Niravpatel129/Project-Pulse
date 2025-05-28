@@ -56,7 +56,7 @@ const DataSheet: React.FC<DataSheetProps> = ({ open, onOpenChange, existingData 
             source: 'manual_entry',
           },
         },
-        storeText: true,
+        storeText: false,
       };
 
       if (existingData) {
