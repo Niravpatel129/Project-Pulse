@@ -94,7 +94,7 @@ const formatDate = (date: string, format: string) => {
 
 const formatCurrency = (amount: number, currency: string, decimals: string) => {
   const formattedAmount = decimals === 'yes' ? amount.toFixed(2) : Math.round(amount).toString();
-  return `${currency}${formattedAmount}`;
+  return `${currency} ${formattedAmount}`;
 };
 
 const InvoicePage = () => {
@@ -340,19 +340,9 @@ const InvoicePage = () => {
                             <div className='text-[11px] self-start text-gray-900'>
                               {item.quantity}
                             </div>
-                            <div className='text-[11px] self-start text-gray-900'>
-                              {formatCurrency(
-                                item.price,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
-                            </div>
+                            <div className='text-[11px] self-start text-gray-900'>{item.price}</div>
                             <div className='text-[11px] text-right self-start text-gray-900'>
-                              {formatCurrency(
-                                item.total,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
+                              {item.total}
                             </div>
                           </div>
                         );
@@ -364,23 +354,14 @@ const InvoicePage = () => {
                         <div className='flex justify-between items-center py-1'>
                           <span className='text-[11px] text-[#878787] font-mono'>Subtotal</span>
                           <span className='text-right font-mono text-[11px] text-[#878787]'>
-                            {invoice?.totals?.subtotal !== undefined &&
-                              formatCurrency(
-                                invoice.totals.subtotal,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
+                            {invoice?.totals?.subtotal !== undefined && invoice.totals.subtotal}
                           </span>
                         </div>
                         {invoice?.settings?.discount?.enabled && invoice?.totals?.discount > 0 && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>Discount</span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
-                              {formatCurrency(
-                                invoice.totals.discount,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
+                              {invoice.totals.discount}
                             </span>
                           </div>
                         )}
@@ -390,11 +371,7 @@ const InvoicePage = () => {
                               Sales Tax ({invoice.settings.salesTax.rate}%)
                             </span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
-                              {formatCurrency(
-                                invoice.totals.taxAmount,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
+                              {invoice.totals.taxAmount}
                             </span>
                           </div>
                         )}
@@ -404,11 +381,7 @@ const InvoicePage = () => {
                               VAT ({invoice.settings.vat.rate}%)
                             </span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
-                              {formatCurrency(
-                                invoice.totals.vatAmount,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
+                              {invoice.totals.vatAmount}
                             </span>
                           </div>
                         )}
