@@ -124,9 +124,18 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
     return null;
   }
 
-  // Get all text parts and combine them
-  const textParts = message.parts?.filter((part) => part.type === 'text') || [];
-  const combinedText = textParts.map((part) => part.content).join('');
+  // Group parts by type to handle text parts together
+  const groupedParts =
+    message.parts?.reduce((acc, part) => {
+      if (part.type === 'text') {
+        if (!acc.text) acc.text = [];
+        acc.text.push(part);
+      } else {
+        if (!acc.other) acc.other = [];
+        acc.other.push(part);
+      }
+      return acc;
+    }, {} as { text?: typeof message.parts; other?: typeof message.parts }) || {};
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -143,7 +152,14 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
         >
           {message.parts ? (
             <>
-              {message.parts.map((part, index) => (
+              {/* Render text parts as a single sentence */}
+              {groupedParts.text && groupedParts.text.length > 0 && (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {groupedParts.text.map((part) => part.content).join('')}
+                </ReactMarkdown>
+              )}
+              {/* Render other parts */}
+              {groupedParts.other?.map((part, index) => (
                 <MessagePart key={`${part.type}-${index}`} part={part} />
               ))}
             </>
