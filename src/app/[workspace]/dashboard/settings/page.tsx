@@ -28,7 +28,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
+import { AtSign, CreditCard, Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -52,6 +52,20 @@ interface TeamMember {
   };
   role: string;
   _id: string;
+}
+
+// Add new interface for email integration
+interface EmailIntegration {
+  id: string;
+  type: 'gmail' | 'custom';
+  email: string;
+  status: 'connected' | 'pending' | 'failed';
+  provider?: string;
+  dnsRecords?: {
+    type: string;
+    name: string;
+    value: string;
+  }[];
 }
 
 export default function SettingsPage() {
@@ -242,6 +256,79 @@ export default function SettingsPage() {
     },
   });
 
+  const [emailIntegrations, setEmailIntegrations] = useState<EmailIntegration[]>([]);
+  const [isAddingEmail, setIsAddingEmail] = useState(false);
+  const [selectedIntegrationType, setSelectedIntegrationType] = useState<'gmail' | 'custom'>(
+    'gmail',
+  );
+  const [newEmail, setNewEmail] = useState('');
+
+  // Fetch email integrations
+  const { data: emailIntegrationsData } = useQuery<EmailIntegration[]>({
+    queryKey: ['email-integrations'],
+    queryFn: async () => {
+      const response = await newRequest.get(`/workspaces/email-integrations`);
+      return response.data;
+    },
+  });
+
+  useEffect(() => {
+    if (emailIntegrationsData) {
+      setEmailIntegrations(emailIntegrationsData);
+    }
+  }, [emailIntegrationsData]);
+
+  // Connect Gmail mutation
+  const connectGmailMutation = useMutation({
+    mutationFn: () => {
+      return newRequest.post(`/workspaces/email-integrations/gmail`);
+    },
+    onSuccess: (response) => {
+      // Handle OAuth redirect URL
+      window.location.href = response.data.authUrl;
+    },
+    onError: (error) => {
+      console.error('Failed to connect Gmail:', error);
+      toast.error('Failed to connect Gmail account');
+    },
+  });
+
+  // Add custom email mutation
+  const addCustomEmailMutation = useMutation({
+    mutationFn: (email: string) => {
+      return newRequest.post(`/workspaces/email-integrations/custom`, { email });
+    },
+    onSuccess: (response) => {
+      setEmailIntegrations([...emailIntegrations, response.data]);
+      setNewEmail('');
+      setIsAddingEmail(false);
+      toast.success('Custom email added successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to add custom email:', error);
+      toast.error('Failed to add custom email');
+    },
+  });
+
+  // Remove email integration mutation
+  const removeEmailIntegrationMutation = useMutation({
+    mutationFn: (id: string) => {
+      return newRequest.delete(`/workspaces/email-integrations/${id}`);
+    },
+    onSuccess: (_, id) => {
+      setEmailIntegrations(
+        emailIntegrations.filter((e) => {
+          return e.id !== id;
+        }),
+      );
+      toast.success('Email integration removed successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to remove email integration:', error);
+      toast.error('Failed to remove email integration');
+    },
+  });
+
   const handleSaveBasicSettings = () => {
     // Prepare update data with all form fields
     const updateData: any = {
@@ -421,7 +508,13 @@ export default function SettingsPage() {
                 <Users className='mr-2 h-4 w-4' />
                 Team
               </TabsTrigger>
-
+              <TabsTrigger
+                value='email'
+                className='data-[state=active]:bg-black data-[state=active]:text-white'
+              >
+                <Mail className='mr-2 h-4 w-4' />
+                Email
+              </TabsTrigger>
               <TabsTrigger
                 value='integrations'
                 className='data-[state=active]:bg-black data-[state=active]:text-white'
@@ -868,6 +961,115 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
+          {/* Email Integration Tab */}
+          <TabsContent value='email' className='space-y-6'>
+            <Card className='bg-white dark:bg-[#181818] border-[#E4E4E7] dark:border-[#232428]'>
+              <CardHeader>
+                <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center'>
+                  <div>
+                    <CardTitle className='text-[#3F3F46] dark:text-white'>
+                      Email Integration
+                    </CardTitle>
+                    <CardDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                      Connect your email accounts to send emails from your workspace
+                    </CardDescription>
+                  </div>
+                  <div className='flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0'>
+                    <Button
+                      onClick={() => {
+                        return setIsAddingEmail(true);
+                      }}
+                      className='bg-black hover:bg-black/90 text-white'
+                    >
+                      <Mail className='mr-2 h-4 w-4' />
+                      Add Email
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='space-y-6'>
+                  {emailIntegrations.length === 0 ? (
+                    <div className='text-center py-6 text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                      No email integrations added yet. Add one to get started!
+                    </div>
+                  ) : (
+                    <div className='space-y-4'>
+                      {emailIntegrations.map((integration) => {
+                        return (
+                          <div
+                            key={integration.id}
+                            className='flex flex-col p-4 border border-[#E4E4E7] dark:border-[#232428] rounded-lg'
+                          >
+                            <div className='flex items-center justify-between mb-4'>
+                              <div className='flex items-center gap-2'>
+                                {integration.type === 'gmail' ? (
+                                  <ImageIcon className='h-4 w-4 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
+                                ) : (
+                                  <AtSign className='h-4 w-4 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
+                                )}
+                                <span className='font-medium text-[#3F3F46] dark:text-white'>
+                                  {integration.email}
+                                </span>
+                                <Badge
+                                  className={
+                                    integration.status === 'connected'
+                                      ? 'bg-green-100 text-green-800'
+                                      : integration.status === 'pending'
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }
+                                >
+                                  {integration.status.charAt(0).toUpperCase() +
+                                    integration.status.slice(1)}
+                                </Badge>
+                              </div>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => {
+                                  return removeEmailIntegrationMutation.mutate(integration.id);
+                                }}
+                                disabled={removeEmailIntegrationMutation.isPending}
+                                className='text-[#3F3F46]/60 hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white'
+                              >
+                                <XCircle className='h-4 w-4 text-destructive' />
+                              </Button>
+                            </div>
+                            {integration.type === 'custom' && integration.status === 'pending' && (
+                              <div className='space-y-2 bg-[#F4F4F5] dark:bg-[#232323] p-4 rounded-md'>
+                                <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>
+                                  DNS Configuration Required
+                                </p>
+                                <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b] mb-2'>
+                                  Add these DNS records to verify your email domain:
+                                </p>
+                                <div className='space-y-2'>
+                                  {integration.dnsRecords?.map((record, index) => {
+                                    return (
+                                      <div
+                                        key={index}
+                                        className='flex items-center gap-4 text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'
+                                      >
+                                        <span className='font-medium w-16'>{record.type}</span>
+                                        <span className='font-medium w-48'>{record.name}</span>
+                                        <span className='font-mono'>{record.value}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value='billing' className='p-6'></TabsContent>
 
           <TabsContent value='integrations' className='p-6'>
@@ -998,6 +1200,290 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Add Email Integration Dialog */}
+      <Dialog open={isAddingEmail} onOpenChange={setIsAddingEmail}>
+        <DialogContent className='sm:max-w-2xl bg-white dark:bg-[#181818] text-[#3F3F46] dark:text-white border-[#E4E4E7] dark:border-[#232428]'>
+          <DialogHeader>
+            <DialogTitle className='text-[#3F3F46] dark:text-white'>
+              Set Up Email Sending
+            </DialogTitle>
+            <DialogDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+              Choose how you want to send emails from your workspace
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-6 py-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div
+                className={`relative flex flex-col p-6 border rounded-lg transition-all duration-200 ${
+                  selectedIntegrationType === 'gmail'
+                    ? 'border-black dark:border-white bg-black/5 dark:bg-white/5'
+                    : 'border-[#E4E4E7] dark:border-[#232428] hover:border-black/20 dark:hover:border-white/20'
+                } cursor-pointer`}
+                onClick={() => {
+                  return setSelectedIntegrationType('gmail');
+                }}
+              >
+                {selectedIntegrationType === 'gmail' && (
+                  <div className='absolute top-4 right-4'>
+                    <div className='h-5 w-5 rounded-full bg-black dark:bg-white flex items-center justify-center'>
+                      <svg
+                        className='h-3 w-3 text-white dark:text-black'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={3}
+                          d='M5 13l4 4L19 7'
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                <div className='flex items-center gap-3 mb-4'>
+                  <div
+                    className={`p-2 rounded-lg ${
+                      selectedIntegrationType === 'gmail'
+                        ? 'bg-black dark:bg-white'
+                        : 'bg-[#F4F4F5] dark:bg-[#232323]'
+                    }`}
+                  >
+                    <ImageIcon
+                      className={`h-6 w-6 ${
+                        selectedIntegrationType === 'gmail'
+                          ? 'text-white dark:text-black'
+                          : 'text-[#3F3F46] dark:text-white'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <h4 className='font-medium text-[#3F3F46] dark:text-white'>
+                      Google Workspace / Gmail
+                    </h4>
+                    <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                      Recommended for most teams
+                    </p>
+                  </div>
+                </div>
+                <div className='space-y-3'>
+                  <div className='flex items-center gap-2 text-sm text-[#3F3F46] dark:text-white'>
+                    <svg
+                      className='h-4 w-4 text-green-500'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                    <span>Quick setup with Google OAuth</span>
+                  </div>
+                  <div className='flex items-center gap-2 text-sm text-[#3F3F46] dark:text-white'>
+                    <svg
+                      className='h-4 w-4 text-green-500'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                    <span>No DNS configuration needed</span>
+                  </div>
+                  <div className='flex items-center gap-2 text-sm text-[#3F3F46] dark:text-white'>
+                    <svg
+                      className='h-4 w-4 text-green-500'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                    <span>Works with any Google account</span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={`relative flex flex-col p-6 border rounded-lg transition-all duration-200 ${
+                  selectedIntegrationType === 'custom'
+                    ? 'border-black dark:border-white bg-black/5 dark:bg-white/5'
+                    : 'border-[#E4E4E7] dark:border-[#232428] hover:border-black/20 dark:hover:border-white/20'
+                } cursor-pointer`}
+                onClick={() => {
+                  return setSelectedIntegrationType('custom');
+                }}
+              >
+                {selectedIntegrationType === 'custom' && (
+                  <div className='absolute top-4 right-4'>
+                    <div className='h-5 w-5 rounded-full bg-black dark:bg-white flex items-center justify-center'>
+                      <svg
+                        className='h-3 w-3 text-white dark:text-black'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={3}
+                          d='M5 13l4 4L19 7'
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                <div className='flex items-center gap-3 mb-4'>
+                  <div
+                    className={`p-2 rounded-lg ${
+                      selectedIntegrationType === 'custom'
+                        ? 'bg-black dark:bg-white'
+                        : 'bg-[#F4F4F5] dark:bg-[#232323]'
+                    }`}
+                  >
+                    <AtSign
+                      className={`h-6 w-6 ${
+                        selectedIntegrationType === 'custom'
+                          ? 'text-white dark:text-black'
+                          : 'text-[#3F3F46] dark:text-white'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <h4 className='font-medium text-[#3F3F46] dark:text-white'>
+                      Custom Domain Email
+                    </h4>
+                    <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                      For professional branding
+                    </p>
+                  </div>
+                </div>
+                <div className='space-y-3'>
+                  <div className='flex items-center gap-2 text-sm text-[#3F3F46] dark:text-white'>
+                    <svg
+                      className='h-4 w-4 text-green-500'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                    <span>Professional email addresses</span>
+                  </div>
+                  <div className='flex items-center gap-2 text-sm text-[#3F3F46] dark:text-white'>
+                    <svg
+                      className='h-4 w-4 text-green-500'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                    <span>Higher sending limits</span>
+                  </div>
+                  <div className='flex items-center gap-2 text-sm text-[#3F3F46] dark:text-white'>
+                    <svg
+                      className='h-4 w-4 text-green-500'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                    <span>Better email deliverability</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {selectedIntegrationType === 'custom' && (
+              <div className='space-y-2 p-4 bg-[#F4F4F5] dark:bg-[#232323] rounded-lg'>
+                <Label htmlFor='custom-email' className='text-[#3F3F46] dark:text-white'>
+                  Your Email Address
+                </Label>
+                <Input
+                  id='custom-email'
+                  type='email'
+                  value={newEmail}
+                  onChange={(e) => {
+                    return setNewEmail(e.target.value);
+                  }}
+                  placeholder='support@yourdomain.com'
+                  className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'
+                />
+                <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b] mt-1'>
+                  This will be the email address you&apos;ll use to send emails from your workspace
+                </p>
+              </div>
+            )}
+          </div>
+          <div className='flex justify-end gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsAddingEmail(false);
+              }}
+              className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedIntegrationType === 'gmail') {
+                  connectGmailMutation.mutate();
+                } else {
+                  addCustomEmailMutation.mutate(newEmail);
+                }
+              }}
+              disabled={
+                (selectedIntegrationType === 'custom' && !newEmail.trim()) ||
+                connectGmailMutation.isPending ||
+                addCustomEmailMutation.isPending
+              }
+              className='bg-black hover:bg-black/90 text-white'
+            >
+              {selectedIntegrationType === 'gmail'
+                ? connectGmailMutation.isPending
+                  ? 'Connecting...'
+                  : 'Continue with Google'
+                : addCustomEmailMutation.isPending
+                ? 'Adding...'
+                : 'Add Custom Email'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
