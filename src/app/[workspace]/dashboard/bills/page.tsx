@@ -113,7 +113,7 @@ const Bills = () => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
           fetchNextPage();
         }
       },
@@ -129,7 +129,7 @@ const Bills = () => {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
 
   // Update selectedInvoice when invoices data changes
   useEffect(() => {
@@ -143,7 +143,78 @@ const Bills = () => {
     }
   }, [invoicesList, selectedInvoice]);
 
-  const invoiceList = invoicesList;
+  const handleFilterChange = (type: 'dueDate' | 'customer' | 'status', value: string | null) => {
+    // Reset the page when filters change
+    setInvoicesList([]);
+    setActiveFilters((prev) => {
+      if (value === null) {
+        const { [type]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [type]: value };
+    });
+  };
+
+  // Remove client-side filtering since it's now handled by the server
+  const filteredInvoices = invoicesList;
+
+  // Calculate Open invoices (status: 'unpaid' or 'open')
+  const openInvoices = invoicesList.filter((inv: any) => {
+    return inv.status?.toLowerCase() === 'unpaid' || inv.status?.toLowerCase() === 'open';
+  });
+  const openAmount = openInvoices.reduce((sum: number, inv: any) => {
+    return sum + (inv.totals?.total || 0);
+  }, 0);
+
+  // Calculate Overdue invoices
+  const overdueInvoices = invoicesList.filter((inv: any) => {
+    if (inv.status?.toLowerCase() === 'paid' || !inv.dueDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(inv.dueDate);
+    return dueDate < today;
+  });
+  const overdueAmount = overdueInvoices.reduce((sum: number, inv: any) => {
+    return sum + (inv.totals?.total || 0);
+  }, 0);
+
+  // Calculate Paid invoices
+  const paidInvoices = invoicesList.filter((inv: any) => {
+    return inv.status?.toLowerCase() === 'paid';
+  });
+  const paidAmount = paidInvoices.reduce((sum: number, inv: any) => {
+    return sum + (inv.totals?.total || 0);
+  }, 0);
+
+  const onRefresh = () => {
+    // Add any additional refresh logic here if needed
+  };
+
+  const handleConfirmAction = () => {
+    if (!pendingAction) return;
+
+    if (pendingAction.type === 'delete') {
+      deleteInvoiceMutation.mutate(pendingAction.invoiceId);
+    } else {
+      cancelInvoiceMutation.mutate(pendingAction.invoiceId);
+    }
+
+    setShowConfirmDialog(false);
+    setPendingAction(null);
+  };
+
+  const removeFilter = (type: 'dueDate' | 'customer' | 'status') => {
+    handleFilterChange(type, null);
+  };
+
+  const toggleColumn = (column: string) => {
+    setVisibleColumns((prev) => {
+      return {
+        ...prev,
+        [column]: !prev[column],
+      };
+    });
+  };
 
   const markAsPaidMutation = useMutation({
     mutationFn: async ({ invoiceId, paymentDate }: { invoiceId: string; paymentDate: Date }) => {
@@ -191,153 +262,6 @@ const Bills = () => {
       toast.error(error.message || 'Failed to delete invoice');
     },
   });
-
-  // Filter invoices based on active filters
-  const filteredInvoices = invoiceList.filter((invoice: any) => {
-    // Search query filter
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch =
-        invoice.invoiceNumber?.toLowerCase().includes(searchLower) ||
-        invoice.customer?.name?.toLowerCase().includes(searchLower) ||
-        invoice.customer?.email?.toLowerCase().includes(searchLower) ||
-        invoice.status?.toLowerCase().includes(searchLower) ||
-        invoice.totals?.total?.toString().includes(searchQuery);
-
-      if (!matchesSearch) return false;
-    }
-
-    // Due Date filter
-    if (activeFilters.dueDate) {
-      const dueDate = new Date(invoice.dueDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      switch (activeFilters.dueDate) {
-        case 'today':
-          const tomorrow = new Date(today);
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          if (dueDate < today || dueDate >= tomorrow) return false;
-          break;
-        case 'this_week':
-          const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() - today.getDay());
-          const weekEnd = new Date(weekStart);
-          weekEnd.setDate(weekStart.getDate() + 7);
-          if (dueDate < weekStart || dueDate >= weekEnd) return false;
-          break;
-        case 'this_month':
-          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-          if (dueDate < monthStart || dueDate > monthEnd) return false;
-          break;
-      }
-    }
-
-    // Customer filter
-    if (activeFilters.customer && activeFilters.customer !== 'all') {
-      if (invoice.customer?.name !== activeFilters.customer) return false;
-    }
-
-    // Status filter
-    if (activeFilters.status) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dueDate = new Date(invoice.dueDate);
-
-      if (activeFilters.status === 'overdue') {
-        // An invoice is overdue if:
-        // 1. It's not paid
-        // 2. It has a due date
-        // 3. The due date is in the past
-        // and not cancelled or draft
-        if (
-          invoice.status?.toLowerCase() === 'paid' ||
-          !invoice.dueDate ||
-          dueDate >= today ||
-          invoice.status?.toLowerCase() === 'cancelled' ||
-          invoice.status?.toLowerCase() === 'draft'
-        ) {
-          return false;
-        }
-      } else {
-        // For other statuses, check exact match
-        if (invoice.status?.toLowerCase() !== activeFilters.status.toLowerCase()) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  });
-
-  // Calculate Open invoices (status: 'unpaid' or 'open')
-  const openInvoices = filteredInvoices.filter((inv: any) => {
-    return inv.status?.toLowerCase() === 'unpaid' || inv.status?.toLowerCase() === 'open';
-  });
-  const openAmount = openInvoices.reduce((sum: number, inv: any) => {
-    return sum + (inv.totals?.total || 0);
-  }, 0);
-
-  // Calculate Overdue invoices
-  const overdueInvoices = invoiceList.filter((inv: any) => {
-    if (inv.status?.toLowerCase() === 'paid' || !inv.dueDate) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(inv.dueDate);
-    return dueDate < today;
-  });
-  const overdueAmount = overdueInvoices.reduce((sum: number, inv: any) => {
-    return sum + (inv.totals?.total || 0);
-  }, 0);
-
-  // Calculate Paid invoices
-  const paidInvoices = invoiceList.filter((inv: any) => {
-    return inv.status?.toLowerCase() === 'paid';
-  });
-  const paidAmount = paidInvoices.reduce((sum: number, inv: any) => {
-    return sum + (inv.totals?.total || 0);
-  }, 0);
-
-  const onRefresh = () => {
-    // Add any additional refresh logic here if needed
-  };
-
-  const handleConfirmAction = () => {
-    if (!pendingAction) return;
-
-    if (pendingAction.type === 'delete') {
-      deleteInvoiceMutation.mutate(pendingAction.invoiceId);
-    } else {
-      cancelInvoiceMutation.mutate(pendingAction.invoiceId);
-    }
-
-    setShowConfirmDialog(false);
-    setPendingAction(null);
-  };
-
-  const handleFilterChange = (type: 'dueDate' | 'customer' | 'status', value: string | null) => {
-    setActiveFilters((prev) => {
-      if (value === null) {
-        const { [type]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [type]: value };
-    });
-  };
-
-  const removeFilter = (type: 'dueDate' | 'customer' | 'status') => {
-    handleFilterChange(type, null);
-  };
-
-  const toggleColumn = (column: string) => {
-    setVisibleColumns((prev) => {
-      return {
-        ...prev,
-        [column]: !prev[column],
-      };
-    });
-  };
 
   if (error) return <div>Error loading invoices</div>;
 
@@ -447,10 +371,10 @@ const Bills = () => {
                         >
                           All Customers
                         </DropdownMenuItem>
-                        {invoiceList &&
+                        {invoicesList &&
                           Array.from(
                             new Set(
-                              invoiceList
+                              invoicesList
                                 .map((inv) => {
                                   return inv.customer?.name;
                                 })
