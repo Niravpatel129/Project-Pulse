@@ -155,13 +155,17 @@ export function ChatMessage({ message, isTyping, isLatestMessage }: ChatMessageP
               {/* Render text parts as a single sentence */}
               {groupedParts.text && groupedParts.text.length > 0 && (
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {groupedParts.text.map((part) => part.content).join('')}
+                  {groupedParts.text
+                    .map((part) => {
+                      return part.content;
+                    })
+                    .join('')}
                 </ReactMarkdown>
               )}
               {/* Render other parts */}
-              {groupedParts.other?.map((part, index) => (
-                <MessagePart key={`${part.type}-${index}`} part={part} />
-              ))}
+              {groupedParts.other?.map((part, index) => {
+                return <MessagePart key={`${part.type}-${index}`} part={part} />;
+              })}
             </>
           ) : (
             message.content && (
