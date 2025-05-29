@@ -318,7 +318,7 @@ export const InvoiceTable = ({
             );
           case 'actions':
             return (
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant='ghost'
