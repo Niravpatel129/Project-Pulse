@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
-  content: string;
+  content?: string;
   role: 'user' | 'assistant';
   timestamp: Date;
   agent?: {
