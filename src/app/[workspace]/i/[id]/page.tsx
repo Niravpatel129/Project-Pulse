@@ -383,7 +383,6 @@ const InvoicePage = () => {
                                 invoice.totals.subtotal,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
-                                true,
                               )}
                           </span>
                         </div>
@@ -395,7 +394,6 @@ const InvoicePage = () => {
                                 invoice.totals.discount,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
-                                true,
                               )}
                             </span>
                           </div>
@@ -410,7 +408,6 @@ const InvoicePage = () => {
                                 invoice.totals.taxAmount,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
-                                true,
                               )}
                             </span>
                           </div>
@@ -425,7 +422,6 @@ const InvoicePage = () => {
                                 invoice.totals.vatAmount,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
-                                true,
                               )}
                             </span>
                           </div>
