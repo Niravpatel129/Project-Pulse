@@ -159,7 +159,10 @@ const InvoicePage = () => {
 
       const invoice = response.data.data.invoice;
 
-      handleSelectPayment(invoice?.totals.total || 0, 'full');
+      // only trigger payment if the invoice is not paid
+      if (invoice.status !== 'paid') {
+        handleSelectPayment(invoice?.totals.total || 0, 'full');
+      }
 
       return invoice;
     },
