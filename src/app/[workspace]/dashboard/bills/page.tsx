@@ -28,10 +28,10 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Calendar, FilterIcon, Ticket, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FiSidebar, FiX } from 'react-icons/fi';
 import { VscListFilter, VscSearch } from 'react-icons/vsc';
 import { toast } from 'sonner';
@@ -65,18 +65,85 @@ const Bills = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [invoicesList, setInvoicesList] = useState<any[]>([]);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   const {
     data: invoices,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ['invoices'],
-    queryFn: async () => {
-      const response = await newRequest.get('/invoices2');
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['invoices', activeFilters, searchQuery],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await newRequest.get('/invoices2', {
+        params: {
+          page: pageParam,
+          limit: 10,
+          ...activeFilters,
+          search: searchQuery,
+        },
+      });
       return response.data;
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.pages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
   });
+
+  // Update invoicesList when new data arrives
+  useEffect(() => {
+    if (invoices?.pages) {
+      const allInvoices = invoices.pages.flatMap((page) => {
+        return page.data.invoices;
+      });
+      setInvoicesList(allInvoices);
+    }
+  }, [invoices?.pages]);
+
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 },
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Update selectedInvoice when invoices data changes
+  useEffect(() => {
+    if (selectedInvoice && invoicesList) {
+      const updatedInvoice = invoicesList.find((inv: any) => {
+        return inv._id === selectedInvoice._id;
+      });
+      if (updatedInvoice) {
+        setSelectedInvoice(updatedInvoice);
+      }
+    }
+  }, [invoicesList, selectedInvoice]);
+
+  const invoiceList = invoicesList;
 
   const markAsPaidMutation = useMutation({
     mutationFn: async ({ invoiceId, paymentDate }: { invoiceId: string; paymentDate: Date }) => {
@@ -124,20 +191,6 @@ const Bills = () => {
       toast.error(error.message || 'Failed to delete invoice');
     },
   });
-
-  // Update selectedInvoice when invoices data changes
-  useEffect(() => {
-    if (selectedInvoice && invoices?.data?.invoices) {
-      const updatedInvoice = invoices.data.invoices.find((inv: any) => {
-        return inv._id === selectedInvoice._id;
-      });
-      if (updatedInvoice) {
-        setSelectedInvoice(updatedInvoice);
-      }
-    }
-  }, [invoices?.data?.invoices, selectedInvoice]);
-
-  const invoiceList = invoices?.data?.invoices || [];
 
   // Filter invoices based on active filters
   const filteredInvoices = invoiceList.filter((invoice: any) => {
@@ -552,6 +605,15 @@ const Bills = () => {
             isLoading={isLoading}
             visibleColumns={visibleColumns}
           />
+          {/* Loading indicator and observer target */}
+          <div ref={observerTarget} className='h-10 flex items-center justify-center'>
+            {isFetchingNextPage && (
+              <div className='flex items-center gap-2'>
+                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 dark:border-white'></div>
+                <span className='text-sm text-gray-500 dark:text-gray-400'>Loading more...</span>
+              </div>
+            )}
+          </div>
         </motion.div>
         {selectedInvoice &&
           (isMobile ? (
