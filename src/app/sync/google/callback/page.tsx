@@ -119,7 +119,7 @@ function GoogleCallbackContent() {
           <CardTitle className='text-center'>
             {status === 'loading' && 'Connecting to Google Services'}
             {status === 'success' && 'Connection Successful'}
-            {status === 'error' && 'Connection Failed'}
+            {status === 'error' && ''}
           </CardTitle>
         </CardHeader>
         <CardContent className='text-center bg-background'>
@@ -139,7 +139,7 @@ function GoogleCallbackContent() {
               </p>
             </div>
           )}
-          {status === 'error' && <p className='text-muted-foreground'>{message}</p>}
+          {/* {status === 'error' && <p className='text-muted-foreground'>{message}</p>} */}
         </CardContent>
         {status === 'error' && !window.opener && (
           <CardFooter className='flex justify-center'>
