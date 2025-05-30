@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { XIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import InvoicePreviewActions from './InvoicePreviewActions';
-import SendInvoiceDialog from './SendInvoiceDialog';
+import { SendInvoiceDialog } from './SendInvoiceDialog';
 
 interface InvoicePreview2Props {
   selectedInvoice?: any;
