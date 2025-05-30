@@ -107,7 +107,7 @@ asd`);
         <div className='flex flex-col lg:flex-row flex-1 min-h-0'>
           {/* Form Section */}
           <div className={`flex-1 ${showPreview ? 'hidden lg:block' : 'block'} overflow-y-auto`}>
-            <div className='max-w-3xl mx-auto w-full p-6'>
+            <div className='max-w-3xl mx-auto w-full px-6'>
               <div className='space-y-6'>
                 <div className='space-y-1.5'>
                   <Label
@@ -171,22 +171,6 @@ asd`);
                       Enter an email address.
                     </p>
                   )}
-                </div>
-
-                <div className='py-1'>
-                  <p className='text-xs text-gray-500 dark:text-gray-400 leading-tight'>
-                    Changes made here will only be applied to this individual email. To edit the
-                    default template for future use, go to{' '}
-                    <a
-                      href='#'
-                      className='text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium'
-                    >
-                      Email templates
-                    </a>
-                    <span className='inline-flex items-center justify-center ml-1 px-1 py-0.5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded'>
-                      New
-                    </span>
-                  </p>
                 </div>
 
                 <div className='space-y-1.5'>
@@ -260,9 +244,9 @@ asd`);
 
           {/* Preview Section */}
           <div
-            className={`w-full lg:w-[400px] xl:w-[480px] bg-gray-50 dark:bg-neutral-800 ${
+            className={`w-full lg:w-[400px] xl:w-[480px]   ${
               showPreview ? 'block' : 'hidden lg:block'
-            } overflow-y-auto border-l border-gray-100 dark:border-neutral-800`}
+            } overflow-y-auto`}
           >
             <div className='p-6'>
               <div className='space-y-4'>
