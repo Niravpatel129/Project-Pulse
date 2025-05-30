@@ -280,12 +280,72 @@ export default function SettingsPage() {
 
   // Connect Gmail mutation
   const connectGmailMutation = useMutation({
-    mutationFn: () => {
-      return newRequest.post(`/workspaces/email-integrations/gmail`);
-    },
-    onSuccess: (response) => {
-      // Handle OAuth redirect URL
-      window.location.href = response.data.authUrl;
+    mutationFn: async () => {
+      const response = await newRequest.get('/gmail/auth-url');
+
+      let authUrl = response.data.authUrl;
+
+      if (authUrl) {
+        const url = new URL(authUrl);
+        if (!url.searchParams.has('response_type')) {
+          url.searchParams.append('response_type', 'code');
+        }
+
+        if (!url.searchParams.has('state')) {
+          url.searchParams.append('state', 'gmail_auth');
+        }
+
+        // Add the proper redirect URI
+        if (!url.searchParams.has('redirect_uri')) {
+          url.searchParams.append('redirect_uri', 'https://www.hourblock.com/sync/google/callback');
+        }
+
+        authUrl = url.toString();
+
+        // Create a popup window for authentication
+        const width = 600;
+        const height = 600;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+
+        const popup = window.open(
+          authUrl,
+          'gmailAuth',
+          `width=${width},height=${height},left=${left},top=${top}`,
+        );
+
+        // Set up message listener for communication from the popup
+        const messageHandler = (event: MessageEvent) => {
+          // Validate origin for security
+          if (event.origin !== window.location.origin) return;
+
+          // Handle the auth success message
+          if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
+            window.removeEventListener('message', messageHandler);
+            // Refresh email integrations after successful connection
+            queryClient.invalidateQueries({ queryKey: ['email-integrations'] });
+          }
+
+          // Handle auth error message
+          if (event.data?.type === 'GMAIL_AUTH_ERROR') {
+            window.removeEventListener('message', messageHandler);
+            console.error('Gmail auth error:', event.data.error);
+            toast.error('Failed to connect Gmail account');
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        // Also check if popup was closed manually
+        const checkPopupClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkPopupClosed);
+            window.removeEventListener('message', messageHandler);
+          }
+        }, 500);
+      } else {
+        throw new Error('No authorization URL provided');
+      }
     },
     onError: (error) => {
       console.error('Failed to connect Gmail:', error);
