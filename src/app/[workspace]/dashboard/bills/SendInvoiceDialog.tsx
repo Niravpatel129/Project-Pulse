@@ -12,6 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Eye, EyeOff, HelpCircle, Plus } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
@@ -33,6 +40,7 @@ export function SendInvoiceDialog({
   const [open, setOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [toEmail, setToEmail] = useState('customer@email.com');
+  const [fromEmail, setFromEmail] = useState('testingnirav@gmail.com');
   const [subject, setSubject] = useState('Invoice #8 from asd');
   const [message, setMessage] = useState(`Hi asd,
 
@@ -44,8 +52,9 @@ Thank you,
 asd`);
 
   const handleClose = useCallback(() => {
-    return setOpen(false);
-  }, []);
+    setOpen(false);
+    onClose();
+  }, [onClose]);
   const isEmailValid = useMemo(() => {
     return toEmail.includes('@') && toEmail.includes('.');
   }, [toEmail]);
@@ -116,28 +125,16 @@ asd`);
                   >
                     From
                   </Label>
-                  <div className='relative'>
-                    <Input
-                      id='from'
-                      value='testingnirav@gmail.com'
-                      readOnly
-                      className='h-9 sm:h-10 pr-8 border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-neutral-700'
-                    />
-                    <div className='absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none'>
-                      <svg
-                        className='h-4 w-4 text-gray-400 dark:text-gray-500'
-                        xmlns='http://www.w3.org/2000/svg'
-                        viewBox='0 0 20 20'
-                        fill='currentColor'
-                      >
-                        <path
-                          fillRule='evenodd'
-                          d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z'
-                          clipRule='evenodd'
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                  <Select value={fromEmail} onValueChange={setFromEmail}>
+                    <SelectTrigger className='h-9 sm:h-10 border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-neutral-700'>
+                      <SelectValue placeholder='Select email' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='testingnirav@gmail.com'>testingnirav@gmail.com</SelectItem>
+                      <SelectItem value='nirav@example.com'>nirav@example.com</SelectItem>
+                      <SelectItem value='support@example.com'>support@example.com</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className='space-y-1.5'>
@@ -248,7 +245,7 @@ asd`);
               showPreview ? 'block' : 'hidden lg:block'
             } overflow-y-auto`}
           >
-            <div className='p-6'>
+            <div className='px-6'>
               <div className='space-y-4'>
                 <div className='flex items-start justify-between'>
                   <div>
