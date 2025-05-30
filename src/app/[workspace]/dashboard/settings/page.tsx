@@ -1381,30 +1381,11 @@ export default function SettingsPage() {
                   selectedIntegrationType === 'custom'
                     ? 'border-black dark:border-white bg-black/5 dark:bg-white/5'
                     : 'border-[#E4E4E7] dark:border-[#232428] hover:border-black/20 dark:hover:border-white/20'
-                } cursor-pointer`}
+                } cursor-not-allowed opacity-60`}
                 onClick={() => {
-                  return setSelectedIntegrationType('custom');
+                  return; // Disable click handler
                 }}
               >
-                {selectedIntegrationType === 'custom' && (
-                  <div className='absolute top-4 right-4'>
-                    <div className='h-5 w-5 rounded-full bg-black dark:bg-white flex items-center justify-center'>
-                      <svg
-                        className='h-3 w-3 text-white dark:text-black'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={3}
-                          d='M5 13l4 4L19 7'
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                )}
                 <div className='flex items-center gap-3 mb-4'>
                   <div
                     className={`p-2 rounded-lg ${
@@ -1480,11 +1461,19 @@ export default function SettingsPage() {
                     <span>Better email deliverability</span>
                   </div>
                 </div>
+                <div className='absolute bottom-4 right-4'>
+                  <Badge
+                    variant='secondary'
+                    className='bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                  >
+                    Coming Soon
+                  </Badge>
+                </div>
               </div>
             </div>
 
             {selectedIntegrationType === 'custom' && (
-              <div className='space-y-2 p-4 bg-[#F4F4F5] dark:bg-[#232323] rounded-lg'>
+              <div className='space-y-2 p-4 bg-[#F4F4F5] dark:bg-[#232323] rounded-lg opacity-60 pointer-events-none'>
                 <Label htmlFor='custom-email' className='text-[#3F3F46] dark:text-white'>
                   Your Email Address
                 </Label>
