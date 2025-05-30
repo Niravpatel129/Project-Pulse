@@ -166,11 +166,11 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           {selectedInvoice.status === 'open' || selectedInvoice.status === 'draft' ? (
             <button
               onClick={() => {
-                return setEditingInvoice(selectedInvoice);
+                return console.log('send');
               }}
               className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
             >
-              <span className='inline-flex items-center justify-center gap-1.5'>Edit</span>
+              <span className='inline-flex items-center justify-center gap-1.5'>Send</span>
             </button>
           ) : (
             // Status Message
@@ -193,6 +193,9 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             onMarkAsPaid={onMarkAsPaid || (() => {})}
             onCancel={onCancel || (() => {})}
             onDelete={onDelete || (() => {})}
+            handleEdit={() => {
+              return setEditingInvoice(selectedInvoice);
+            }}
           />
         </div>
 

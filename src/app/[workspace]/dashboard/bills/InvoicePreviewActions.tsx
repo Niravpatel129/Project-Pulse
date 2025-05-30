@@ -16,6 +16,7 @@ interface InvoicePreviewActionsProps {
   onMarkAsPaid: (invoiceId: string, paymentDate: Date) => void;
   onCancel: (invoiceId: string) => void;
   onDelete: (invoiceId: string) => void;
+  handleEdit: () => void;
 }
 
 const InvoicePreviewActions = ({
@@ -23,6 +24,7 @@ const InvoicePreviewActions = ({
   onMarkAsPaid,
   onCancel,
   onDelete,
+  handleEdit,
 }: InvoicePreviewActionsProps) => {
   const handleDownload = async () => {
     try {
@@ -62,7 +64,7 @@ const InvoicePreviewActions = ({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           className='w-9 h-9 flex items-center justify-center rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
@@ -80,6 +82,7 @@ const InvoicePreviewActions = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownload}>Download</DropdownMenuItem>
         {invoice.status?.toLowerCase() !== 'cancelled' &&
           invoice.status?.toLowerCase() !== 'paid' &&
