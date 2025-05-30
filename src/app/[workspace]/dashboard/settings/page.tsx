@@ -1031,6 +1031,85 @@ export default function SettingsPage() {
                                     : 'Inactive'}
                                 </Badge>
                               </div>
+                              {integration.isExpired && (
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => {
+                                    // Trigger Gmail auth flow
+                                    const width = 600;
+                                    const height = 600;
+                                    const left = window.screenX + (window.outerWidth - width) / 2;
+                                    const top = window.screenY + (window.outerHeight - height) / 2;
+
+                                    newRequest
+                                      .get('/gmail/auth-url')
+                                      .then((response) => {
+                                        let authUrl = response.data.authUrl;
+                                        if (authUrl) {
+                                          const url = new URL(authUrl);
+                                          if (!url.searchParams.has('response_type')) {
+                                            url.searchParams.append('response_type', 'code');
+                                          }
+                                          if (!url.searchParams.has('state')) {
+                                            url.searchParams.append('state', 'gmail_auth');
+                                          }
+                                          if (!url.searchParams.has('redirect_uri')) {
+                                            url.searchParams.append(
+                                              'redirect_uri',
+                                              'https://www.hourblock.com/sync/google/callback',
+                                            );
+                                          }
+                                          authUrl = url.toString();
+
+                                          const popup = window.open(
+                                            authUrl,
+                                            'gmailAuth',
+                                            `width=${width},height=${height},left=${left},top=${top}`,
+                                          );
+
+                                          // Set up message listener for communication from the popup
+                                          const messageHandler = (event: MessageEvent) => {
+                                            if (event.origin !== window.location.origin) return;
+
+                                            if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
+                                              window.removeEventListener('message', messageHandler);
+                                              queryClient.invalidateQueries({
+                                                queryKey: ['gmail-status'],
+                                              });
+                                              toast.success(
+                                                'Gmail account reconnected successfully',
+                                              );
+                                            }
+
+                                            if (event.data?.type === 'GMAIL_AUTH_ERROR') {
+                                              window.removeEventListener('message', messageHandler);
+                                              console.error('Gmail auth error:', event.data.error);
+                                              toast.error('Failed to reconnect Gmail account');
+                                            }
+                                          };
+
+                                          window.addEventListener('message', messageHandler);
+
+                                          // Check if popup was closed manually
+                                          const checkPopupClosed = setInterval(() => {
+                                            if (popup?.closed) {
+                                              clearInterval(checkPopupClosed);
+                                              window.removeEventListener('message', messageHandler);
+                                            }
+                                          }, 500);
+                                        }
+                                      })
+                                      .catch((error) => {
+                                        console.error('Failed to get auth URL:', error);
+                                        toast.error('Failed to start Gmail reconnection');
+                                      });
+                                  }}
+                                  className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
+                                >
+                                  Reconnect
+                                </Button>
+                              )}
                             </div>
                             {integration.lastSynced && (
                               <div className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
