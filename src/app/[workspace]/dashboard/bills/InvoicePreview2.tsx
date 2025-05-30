@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { XIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import InvoicePreviewActions from './InvoicePreviewActions';
+import SendInvoiceDialog from './SendInvoiceDialog';
 
 interface InvoicePreview2Props {
   selectedInvoice?: any;
@@ -58,6 +59,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   const [noteOpen, setNoteOpen] = useState(!!selectedInvoice?.internalNote);
   const [internalNote, setInternalNote] = useState(selectedInvoice?.internalNote || '');
   const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [attachments, setAttachments] = useState<any[]>([]);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const queryClient = useQueryClient();
@@ -166,7 +168,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           {selectedInvoice.status === 'open' || selectedInvoice.status === 'draft' ? (
             <button
               onClick={() => {
-                return console.log('send');
+                return setIsSendDialogOpen(true);
               }}
               className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
             >
@@ -681,6 +683,14 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
         handleAddFileToProject={handleAddFileToProject}
         initialFiles={attachments}
         onDeleteFile={handleDeleteAttachment}
+      />
+
+      <SendInvoiceDialog
+        isOpen={isSendDialogOpen}
+        onClose={() => {
+          return setIsSendDialogOpen(false);
+        }}
+        invoice={selectedInvoice}
       />
     </div>
   );
