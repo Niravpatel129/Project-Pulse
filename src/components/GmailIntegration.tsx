@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface GmailIntegrationProps {
@@ -113,9 +112,6 @@ export function GmailIntegration({ onSuccess }: GmailIntegrationProps) {
   if (isLoading) {
     return (
       <div className='flex items-center gap-3 mb-4'>
-        <div className='p-2 rounded-lg bg-[#F4F4F5] dark:bg-[#232323]'>
-          <ImageIcon className='h-6 w-6 text-[#3F3F46] dark:text-white' />
-        </div>
         <div>
           <h4 className='font-medium text-[#3F3F46] dark:text-white'>Google Workspace / Gmail</h4>
           <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>Loading status...</p>
@@ -129,9 +125,6 @@ export function GmailIntegration({ onSuccess }: GmailIntegrationProps) {
 
   return (
     <div className='flex items-center gap-3 mb-4'>
-      <div className='p-2 rounded-lg bg-[#F4F4F5] dark:bg-[#232323]'>
-        <ImageIcon className='h-6 w-6 text-[#3F3F46] dark:text-white' />
-      </div>
       <div>
         <h4 className='font-medium text-[#3F3F46] dark:text-white'>Google Workspace / Gmail</h4>
         <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>

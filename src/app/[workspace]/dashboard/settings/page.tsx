@@ -1011,7 +1011,6 @@ export default function SettingsPage() {
                           >
                             <div className='flex items-center justify-between mb-4'>
                               <div className='flex items-center gap-2'>
-                                <ImageIcon className='h-4 w-4 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
                                 <span className='font-medium text-[#3F3F46] dark:text-white'>
                                   {integration.email}
                                 </span>
