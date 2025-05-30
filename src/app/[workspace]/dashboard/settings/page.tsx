@@ -747,7 +747,7 @@ export default function SettingsPage() {
                             className='flex items-center justify-between p-4 border border-[#E4E4E7] dark:border-[#232428] rounded-lg hover:bg-[#F4F4F5] dark:hover:bg-[#252525] transition-colors'
                           >
                             <div className='flex items-center gap-4'>
-                              <Avatar>
+                              {/* <Avatar>
                                 <AvatarImage
                                   src={
                                     member?.user?.avatar ||
@@ -757,7 +757,7 @@ export default function SettingsPage() {
                                 <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#232323]'>
                                   {getInitials(member.user.name || member.user.email)}
                                 </AvatarFallback>
-                              </Avatar>
+                              </Avatar> */}
                               <div>
                                 <p className='font-medium text-[#3F3F46] dark:text-white'>
                                   {member.user.name || member.user.email}
