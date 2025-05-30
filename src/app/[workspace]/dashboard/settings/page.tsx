@@ -68,6 +68,20 @@ interface EmailIntegration {
   }[];
 }
 
+interface GmailStatus {
+  connected: boolean;
+  message: string;
+  primaryEmail: string | null;
+  integrations: Array<{
+    email: string;
+    isPrimary: boolean;
+    isActive: boolean;
+    lastSynced: string;
+    isExpired: boolean;
+    connectedAt: string;
+  }>;
+}
+
 export default function SettingsPage() {
   const params = useParams();
   const queryClient = useQueryClient();
@@ -263,6 +277,15 @@ export default function SettingsPage() {
   );
   const [newEmail, setNewEmail] = useState('');
 
+  // Fetch Gmail status
+  const { data: gmailStatus } = useQuery<GmailStatus>({
+    queryKey: ['gmail-status'],
+    queryFn: async () => {
+      const response = await newRequest.get('/gmail/status');
+      return response.data;
+    },
+  });
+
   // Fetch email integrations
   const { data: emailIntegrationsData } = useQuery<EmailIntegration[]>({
     queryKey: ['email-integrations'],
@@ -277,81 +300,6 @@ export default function SettingsPage() {
       setEmailIntegrations(emailIntegrationsData);
     }
   }, [emailIntegrationsData]);
-
-  // Connect Gmail mutation
-  const connectGmailMutation = useMutation({
-    mutationFn: async () => {
-      const response = await newRequest.get('/gmail/auth-url');
-
-      let authUrl = response.data.authUrl;
-
-      if (authUrl) {
-        const url = new URL(authUrl);
-        if (!url.searchParams.has('response_type')) {
-          url.searchParams.append('response_type', 'code');
-        }
-
-        if (!url.searchParams.has('state')) {
-          url.searchParams.append('state', 'gmail_auth');
-        }
-
-        // Add the proper redirect URI
-        if (!url.searchParams.has('redirect_uri')) {
-          url.searchParams.append('redirect_uri', 'https://www.hourblock.com/sync/google/callback');
-        }
-
-        authUrl = url.toString();
-
-        // Create a popup window for authentication
-        const width = 600;
-        const height = 600;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-
-        const popup = window.open(
-          authUrl,
-          'gmailAuth',
-          `width=${width},height=${height},left=${left},top=${top}`,
-        );
-
-        // Set up message listener for communication from the popup
-        const messageHandler = (event: MessageEvent) => {
-          // Validate origin for security
-          if (event.origin !== window.location.origin) return;
-
-          // Handle the auth success message
-          if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
-            window.removeEventListener('message', messageHandler);
-            // Refresh email integrations after successful connection
-            queryClient.invalidateQueries({ queryKey: ['email-integrations'] });
-          }
-
-          // Handle auth error message
-          if (event.data?.type === 'GMAIL_AUTH_ERROR') {
-            window.removeEventListener('message', messageHandler);
-            console.error('Gmail auth error:', event.data.error);
-            toast.error('Failed to connect Gmail account');
-          }
-        };
-
-        window.addEventListener('message', messageHandler);
-
-        // Also check if popup was closed manually
-        const checkPopupClosed = setInterval(() => {
-          if (popup?.closed) {
-            clearInterval(checkPopupClosed);
-            window.removeEventListener('message', messageHandler);
-          }
-        }, 500);
-      } else {
-        throw new Error('No authorization URL provided');
-      }
-    },
-    onError: (error) => {
-      console.error('Failed to connect Gmail:', error);
-      toast.error('Failed to connect Gmail account');
-    },
-  });
 
   // Add custom email mutation
   const addCustomEmailMutation = useMutation({
@@ -1049,75 +997,44 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className='space-y-6'>
-                  {emailIntegrations.length === 0 ? (
+                  {!gmailStatus?.connected && !gmailStatus?.integrations?.length ? (
                     <div className='text-center py-6 text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                       No email integrations added yet. Add one to get started!
                     </div>
                   ) : (
                     <div className='space-y-4'>
-                      {emailIntegrations.map((integration) => {
+                      {gmailStatus?.integrations?.map((integration) => {
                         return (
                           <div
-                            key={integration.id}
+                            key={integration.email}
                             className='flex flex-col p-4 border border-[#E4E4E7] dark:border-[#232428] rounded-lg'
                           >
                             <div className='flex items-center justify-between mb-4'>
                               <div className='flex items-center gap-2'>
-                                {integration.type === 'gmail' ? (
-                                  <ImageIcon className='h-4 w-4 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
-                                ) : (
-                                  <AtSign className='h-4 w-4 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
-                                )}
+                                <ImageIcon className='h-4 w-4 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
                                 <span className='font-medium text-[#3F3F46] dark:text-white'>
                                   {integration.email}
                                 </span>
                                 <Badge
                                   className={
-                                    integration.status === 'connected'
+                                    integration.isActive && !integration.isExpired
                                       ? 'bg-green-100 text-green-800'
-                                      : integration.status === 'pending'
+                                      : integration.isExpired
                                       ? 'bg-yellow-100 text-yellow-800'
                                       : 'bg-red-100 text-red-800'
                                   }
                                 >
-                                  {integration.status.charAt(0).toUpperCase() +
-                                    integration.status.slice(1)}
+                                  {integration.isActive && !integration.isExpired
+                                    ? 'Connected'
+                                    : integration.isExpired
+                                    ? 'Expired'
+                                    : 'Inactive'}
                                 </Badge>
                               </div>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => {
-                                  return removeEmailIntegrationMutation.mutate(integration.id);
-                                }}
-                                disabled={removeEmailIntegrationMutation.isPending}
-                                className='text-[#3F3F46]/60 hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white'
-                              >
-                                <XCircle className='h-4 w-4 text-destructive' />
-                              </Button>
                             </div>
-                            {integration.type === 'custom' && integration.status === 'pending' && (
-                              <div className='space-y-2 bg-[#F4F4F5] dark:bg-[#232323] p-4 rounded-md'>
-                                <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>
-                                  DNS Configuration Required
-                                </p>
-                                <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b] mb-2'>
-                                  Add these DNS records to verify your email domain:
-                                </p>
-                                <div className='space-y-2'>
-                                  {integration.dnsRecords?.map((record, index) => {
-                                    return (
-                                      <div
-                                        key={index}
-                                        className='flex items-center gap-4 text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'
-                                      >
-                                        <span className='font-medium w-16'>{record.type}</span>
-                                        <span className='font-medium w-48'>{record.name}</span>
-                                        <span className='font-mono'>{record.value}</span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
+                            {integration.lastSynced && (
+                              <div className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                                Last synced: {new Date(integration.lastSynced).toLocaleString()}
                               </div>
                             )}
                           </div>
@@ -1521,22 +1438,19 @@ export default function SettingsPage() {
             <Button
               onClick={() => {
                 if (selectedIntegrationType === 'gmail') {
-                  connectGmailMutation.mutate();
+                  // Gmail integration logic
                 } else {
                   addCustomEmailMutation.mutate(newEmail);
                 }
               }}
               disabled={
                 (selectedIntegrationType === 'custom' && !newEmail.trim()) ||
-                connectGmailMutation.isPending ||
                 addCustomEmailMutation.isPending
               }
               className='bg-black hover:bg-black/90 text-white'
             >
               {selectedIntegrationType === 'gmail'
-                ? connectGmailMutation.isPending
-                  ? 'Connecting...'
-                  : 'Continue with Google'
+                ? 'Continue with Google'
                 : addCustomEmailMutation.isPending
                 ? 'Adding...'
                 : 'Add Custom Email'}
