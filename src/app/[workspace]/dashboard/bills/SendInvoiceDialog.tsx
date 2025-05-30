@@ -75,7 +75,7 @@ asd`);
       <DialogContent className='w-screen h-screen max-w-none p-0 border-0 bg-white dark:bg-neutral-900 flex flex-col'>
         {/* Proper Dialog Header */}
         <DialogHeader className='px-6 py-4 border-b border-gray-100 dark:border-neutral-800 flex-shrink-0'>
-          <div className='flex items-center justify-between max-w-7xl mx-auto w-full'>
+          <div className='flex items-center justify-between max-w-7xl w-full'>
             <DialogTitle className='text-lg font-medium text-gray-900 dark:text-gray-100'>
               Send invoice
             </DialogTitle>
@@ -106,8 +106,8 @@ asd`);
         {/* Main Content */}
         <div className='flex flex-col lg:flex-row flex-1 min-h-0'>
           {/* Form Section */}
-          <div className={`flex-1 ${showPreview ? 'hidden lg:block' : 'block'} overflow-y-auto`}>
-            <div className='max-w-3xl mx-auto w-full px-6'>
+          <div className={`w-1/2 ${showPreview ? 'hidden lg:block' : 'block'} overflow-y-auto`}>
+            <div className='w-full px-6'>
               <div className='space-y-6'>
                 <div className='space-y-1.5'>
                   <Label
@@ -244,7 +244,7 @@ asd`);
 
           {/* Preview Section */}
           <div
-            className={`w-full lg:w-[400px] xl:w-[480px]   ${
+            className={`w-full lg:w-1/2 ${
               showPreview ? 'block' : 'hidden lg:block'
             } overflow-y-auto`}
           >
