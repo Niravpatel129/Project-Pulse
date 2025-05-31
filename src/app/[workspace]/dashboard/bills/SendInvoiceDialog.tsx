@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -192,11 +191,6 @@ ${invoice.from.split('\n')[0]}`);
         }
       }}
     >
-      <DialogTrigger asChild>
-        <Button className='bg-black hover:bg-neutral-800 text-white font-medium rounded-none w-32 h-10'>
-          Send Invoice
-        </Button>
-      </DialogTrigger>
       <DialogContent className='w-screen h-screen max-w-none p-0 border-0 bg-white dark:bg-neutral-900 flex flex-col'>
         {/* Proper Dialog Header */}
         <DialogHeader className='px-8 py-5 border-b border-gray-100 dark:border-neutral-800 flex-shrink-0'>
