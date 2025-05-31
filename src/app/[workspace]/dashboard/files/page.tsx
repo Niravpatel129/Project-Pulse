@@ -287,20 +287,18 @@ const Files = () => {
               <FolderIcon className='h-4 w-4 text-blue-500' />
               <span>Workspace Files</span>
             </button>
-            {activeSection === 'workspace' && (
-              <div className='mt-2'>
-                {fakeFiles.workspace.map((item, index) => {
-                  return (
-                    <FileTreeItem
-                      key={index}
-                      item={item}
-                      expandedFolders={expandedFolders}
-                      onToggleFolder={toggleFolder}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            <div className='mt-2'>
+              {fakeFiles.workspace.map((item, index) => {
+                return (
+                  <FileTreeItem
+                    key={index}
+                    item={item}
+                    expandedFolders={expandedFolders}
+                    onToggleFolder={toggleFolder}
+                  />
+                );
+              })}
+            </div>
           </div>
 
           {/* My Folder Section */}
@@ -320,20 +318,18 @@ const Files = () => {
               <FolderLockIcon className='h-4 w-4 text-yellow-500' />
               <span>My Folder</span>
             </button>
-            {activeSection === 'private' && (
-              <div className='mt-2'>
-                {fakeFiles.private.map((item, index) => {
-                  return (
-                    <FileTreeItem
-                      key={index}
-                      item={item}
-                      expandedFolders={expandedFolders}
-                      onToggleFolder={toggleFolder}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            <div className='mt-2'>
+              {fakeFiles.private.map((item, index) => {
+                return (
+                  <FileTreeItem
+                    key={index}
+                    item={item}
+                    expandedFolders={expandedFolders}
+                    onToggleFolder={toggleFolder}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
