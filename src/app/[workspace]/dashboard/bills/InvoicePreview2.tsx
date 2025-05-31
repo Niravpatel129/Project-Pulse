@@ -168,6 +168,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           {selectedInvoice.status === 'open' || selectedInvoice.status === 'draft' ? (
             <button
               onClick={() => {
+                console.log('🚀 selectedInvoice:', selectedInvoice);
                 return setIsSendDialogOpen(true);
               }}
               className='flex-1 py-2 rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
@@ -182,7 +183,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                   ? 'Canceled'
                   : selectedInvoice.status.charAt(0).toUpperCase() +
                     selectedInvoice.status.slice(1)}{' '}
-                on {formatDate(selectedInvoice.statusChangedAt)}
+                on {formatDate(selectedInvoice.updatedAt)}
               </div>
               <div className='text-xs text-gray-500 dark:text-gray-400'>
                 {selectedInvoice.statusHistory?.[0]?.reason ||
