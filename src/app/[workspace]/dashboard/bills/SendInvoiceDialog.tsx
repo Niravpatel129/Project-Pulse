@@ -436,17 +436,6 @@ ${invoice.from.split('\n')[0]}`);
                           );
                         })}
                       </div>
-
-                      <div className='mt-4 pt-3 border-t border-gray-100 dark:border-neutral-800 text-center space-y-1'>
-                        <p className='text-xs text-gray-400 dark:text-gray-500'>Invoice 8</p>
-                        <a
-                          href='#'
-                          className='text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300'
-                        >
-                          View invoice
-                        </a>
-                        <p className='text-xs text-gray-400 dark:text-gray-500'>{customerName}</p>
-                      </div>
                     </div>
                   </div>
                 </div>
