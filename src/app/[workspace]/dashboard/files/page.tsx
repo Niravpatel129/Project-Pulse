@@ -1,20 +1,41 @@
 'use client';
 import { cn } from '@/lib/utils';
 import {
+  Calendar,
   ChevronRight,
+  ChevronRightIcon,
+  Code,
+  File,
   FileAudioIcon,
   FileCodeIcon,
   FileIcon,
   FileImageIcon,
+  FileText,
   FileTextIcon,
   FileVideoIcon,
   FolderIcon,
   FolderLockIcon,
+  Image,
+  Music,
+  Video,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 
-// Fake file data with nested structure
-const fakeFiles = {
+interface FileItem {
+  name: string;
+  type: string;
+  size?: string;
+  items?: number;
+  lastModified: string;
+  children?: FileItem[];
+}
+
+type FileSection = {
+  [key: string]: FileItem[];
+};
+
+const fakeFiles: FileSection = {
   workspace: [
     {
       name: 'Project Documentation',
@@ -188,25 +209,18 @@ const getFileIcon = (type: string) => {
   }
 };
 
-interface FileItem {
-  name: string;
-  type: string;
-  size?: string;
-  items?: number;
-  lastModified: string;
-  children?: FileItem[];
-}
-
 const FileTreeItem = ({
   item,
   level = 0,
   expandedFolders,
   onToggleFolder,
+  onNavigateToFolder,
 }: {
   item: FileItem;
   level?: number;
   expandedFolders: string[];
   onToggleFolder: (name: string) => void;
+  onNavigateToFolder: (name: string) => void;
 }) => {
   const isExpanded = expandedFolders.includes(item.name);
   const hasChildren = item.children && item.children.length > 0;
@@ -215,22 +229,38 @@ const FileTreeItem = ({
     <div>
       <div
         className={cn(
-          'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm cursor-pointer',
+          'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
           'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
           'text-foreground',
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
-        onClick={() => {
-          return hasChildren && onToggleFolder(item.name);
-        }}
       >
         {hasChildren && (
-          <ChevronRight
-            className={cn('h-4 w-4 transition-transform', isExpanded ? 'rotate-90' : '')}
-          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFolder(item.name);
+            }}
+            className='p-0.5 hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] rounded-sm transition-colors'
+          >
+            <ChevronRight
+              className={cn('h-4 w-4 transition-transform', isExpanded ? 'rotate-90' : '')}
+            />
+          </button>
         )}
-        {getFileIcon(item.type)}
-        <span className='truncate'>{item.name}</span>
+        <button
+          onClick={() => {
+            return onNavigateToFolder(item.name);
+          }}
+          className={cn(
+            'flex items-center gap-2 flex-1',
+            'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
+            'rounded-md px-1 py-0.5',
+          )}
+        >
+          {getFileIcon(item.type)}
+          <span className='truncate'>{item.name}</span>
+        </button>
       </div>
       {hasChildren && isExpanded && (
         <div>
@@ -242,6 +272,7 @@ const FileTreeItem = ({
                 level={level + 1}
                 expandedFolders={expandedFolders}
                 onToggleFolder={onToggleFolder}
+                onNavigateToFolder={onNavigateToFolder}
               />
             );
           })}
@@ -251,9 +282,146 @@ const FileTreeItem = ({
   );
 };
 
+const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => void }) => {
+  if (!file) return null;
+
+  const getPreviewContent = () => {
+    switch (file.type) {
+      case 'image':
+        return (
+          <div className='flex items-center justify-center h-48 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex flex-col items-center gap-2'>
+              <Image className='h-8 w-8 text-gray-400' aria-hidden='true' />
+              <span className='text-sm text-gray-500'>Image Preview</span>
+            </div>
+          </div>
+        );
+      case 'text':
+        return (
+          <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex items-center gap-2 mb-2'>
+              <FileText className='h-4 w-4 text-gray-400' />
+              <span className='text-sm font-medium'>Text Preview</span>
+            </div>
+            <div className='text-sm text-gray-600 dark:text-gray-300'>
+              {file.name} - {file.size}
+            </div>
+          </div>
+        );
+      case 'code':
+        return (
+          <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex items-center gap-2 mb-2'>
+              <Code className='h-4 w-4 text-gray-400' />
+              <span className='text-sm font-medium'>Code Preview</span>
+            </div>
+            <div className='text-sm text-gray-600 dark:text-gray-300'>
+              {file.name} - {file.size}
+            </div>
+          </div>
+        );
+      case 'pdf':
+        return (
+          <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex items-center gap-2 mb-2'>
+              <File className='h-4 w-4 text-gray-400' />
+              <span className='text-sm font-medium'>PDF Preview</span>
+            </div>
+            <div className='text-sm text-gray-600 dark:text-gray-300'>
+              {file.name} - {file.size}
+            </div>
+          </div>
+        );
+      case 'audio':
+        return (
+          <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex items-center gap-2 mb-2'>
+              <Music className='h-4 w-4 text-gray-400' />
+              <span className='text-sm font-medium'>Audio Preview</span>
+            </div>
+            <div className='text-sm text-gray-600 dark:text-gray-300'>
+              {file.name} - {file.size}
+            </div>
+          </div>
+        );
+      case 'video':
+        return (
+          <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex items-center gap-2 mb-2'>
+              <Video className='h-4 w-4 text-gray-400' />
+              <span className='text-sm font-medium'>Video Preview</span>
+            </div>
+            <div className='text-sm text-gray-600 dark:text-gray-300'>
+              {file.name} - {file.size}
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-lg'>
+            <div className='flex items-center gap-2 mb-2'>
+              <File className='h-4 w-4 text-gray-400' />
+              <span className='text-sm font-medium'>File Preview</span>
+            </div>
+            <div className='text-sm text-gray-600 dark:text-gray-300'>
+              {file.name} - {file.size}
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className='w-80 border-l border-border bg-[#f5f5f7] dark:bg-[#1c1c1e]'>
+      <div className='flex items-center justify-between p-4 border-b border-border'>
+        <div className='flex items-center gap-2'>
+          {getFileIcon(file.type)}
+          <h3 className='font-medium'>{file.name}</h3>
+        </div>
+        <button
+          onClick={onClose}
+          className='p-1 hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] rounded-md transition-colors'
+        >
+          <X className='h-4 w-4 text-muted-foreground' />
+        </button>
+      </div>
+
+      <div className='p-4'>
+        <div className='mb-4'>
+          <div className='text-sm text-muted-foreground'>
+            {file.type === 'folder' ? `${file.items} items` : file.size}
+          </div>
+        </div>
+
+        <div className='space-y-4'>
+          <div className='space-y-2'>
+            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+              <Calendar className='h-4 w-4' />
+              <span>Modified: {new Date(file.lastModified).toLocaleDateString()}</span>
+            </div>
+            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+              <FileText className='h-4 w-4' />
+              <span>Type: {file.type.charAt(0).toUpperCase() + file.type.slice(1)}</span>
+            </div>
+          </div>
+
+          {file.type !== 'folder' && (
+            <div className='mt-4'>
+              <h4 className='text-sm font-medium mb-2'>Preview</h4>
+              {getPreviewContent()}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Files = () => {
   const [activeSection, setActiveSection] = useState<'workspace' | 'private'>('workspace');
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
+  const [currentPath, setCurrentPath] = useState<string[]>([]);
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
 
   const toggleFolder = (folderName: string) => {
     setExpandedFolders((prev) => {
@@ -263,6 +431,96 @@ const Files = () => {
           })
         : [...prev, folderName];
     });
+  };
+
+  const navigateToFolder = (folderName: string) => {
+    const existingIndex = currentPath.indexOf(folderName);
+    if (existingIndex !== -1) {
+      setCurrentPath(currentPath.slice(0, existingIndex + 1));
+    } else {
+      const current = fakeFiles[activeSection];
+      let found = false;
+      let newPath: string[] = [];
+
+      const findFolder = (items: FileItem[], targetName: string, path: string[] = []): boolean => {
+        for (const item of items) {
+          if (item.name === targetName && item.type === 'folder') {
+            newPath = [...path, item.name];
+            return true;
+          }
+          if (item.children) {
+            if (findFolder(item.children, targetName, [...path, item.name])) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      if (findFolder(current, folderName)) {
+        setCurrentPath(newPath);
+        found = true;
+      }
+
+      if (!found) {
+        setCurrentPath((prev) => {
+          return [...prev, folderName];
+        });
+      }
+    }
+
+    if (!expandedFolders.includes(folderName)) {
+      setExpandedFolders((prev) => {
+        return [...prev, folderName];
+      });
+    }
+  };
+
+  const navigateToBreadcrumb = (index: number) => {
+    if (index === -1) {
+      setCurrentPath([]);
+      return;
+    }
+    setCurrentPath(currentPath.slice(0, index + 1));
+  };
+
+  const getCurrentFolderContents = () => {
+    let current = fakeFiles[activeSection];
+    for (const folder of currentPath) {
+      const found = current.find((item) => {
+        return item.name === folder && item.type === 'folder';
+      });
+      if (found && found.children) {
+        current = found.children;
+      }
+    }
+    return current;
+  };
+
+  const getBreadcrumbPath = () => {
+    const path = [activeSection === 'workspace' ? 'Workspace' : 'Private'];
+    let current = fakeFiles[activeSection];
+
+    for (const folder of currentPath) {
+      const found = current.find((item) => {
+        return item.name === folder && item.type === 'folder';
+      });
+      if (found) {
+        path.push(found.name);
+        if (found.children) {
+          current = found.children;
+        }
+      }
+    }
+
+    return path;
+  };
+
+  const handleSectionChange = (section: 'workspace' | 'private') => {
+    setActiveSection(section);
+    setCurrentPath([]);
+    setExpandedFolders([]);
+    setSelectedFile(null);
   };
 
   return (
@@ -275,7 +533,7 @@ const Files = () => {
             <h3 className='text-xs font-medium text-muted-foreground mb-2 px-2'>WORKSPACE</h3>
             <button
               onClick={() => {
-                return setActiveSection('workspace');
+                return handleSectionChange('workspace');
               }}
               className={cn(
                 'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
@@ -295,6 +553,7 @@ const Files = () => {
                     item={item}
                     expandedFolders={expandedFolders}
                     onToggleFolder={toggleFolder}
+                    onNavigateToFolder={navigateToFolder}
                   />
                 );
               })}
@@ -306,7 +565,7 @@ const Files = () => {
             <h3 className='text-xs font-medium text-muted-foreground mb-2 px-2'>PRIVATE</h3>
             <button
               onClick={() => {
-                return setActiveSection('private');
+                return handleSectionChange('private');
               }}
               className={cn(
                 'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
@@ -326,6 +585,7 @@ const Files = () => {
                     item={item}
                     expandedFolders={expandedFolders}
                     onToggleFolder={toggleFolder}
+                    onNavigateToFolder={navigateToFolder}
                   />
                 );
               })}
@@ -347,6 +607,29 @@ const Files = () => {
           </p>
         </div>
 
+        {/* Breadcrumbs */}
+        <div className='flex items-center gap-1 mb-4 text-sm'>
+          {getBreadcrumbPath().map((folder, index) => {
+            return (
+              <div key={index} className='flex items-center'>
+                {index > 0 && <ChevronRightIcon className='h-4 w-4 text-muted-foreground mx-1' />}
+                <button
+                  onClick={() => {
+                    return navigateToBreadcrumb(index - 1);
+                  }}
+                  className={cn(
+                    'text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300',
+                    'px-1 py-0.5 rounded-sm hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
+                    index === 0 && 'font-medium',
+                  )}
+                >
+                  {folder}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
         {/* File Browser */}
         <div className='bg-white dark:bg-[#1c1c1e] rounded-lg border border-border'>
           {/* Column Headers */}
@@ -358,21 +641,29 @@ const Files = () => {
 
           {/* File List */}
           <div className='divide-y divide-border'>
-            {fakeFiles[activeSection].map((file, index) => {
+            {getCurrentFolderContents().map((file, index) => {
               return (
                 <div
                   key={index}
                   className={cn(
-                    'grid grid-cols-12 gap-4 px-4 py-2 text-sm',
+                    'grid grid-cols-12 gap-4 px-4 py-2 text-sm group',
                     'hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors',
                     'cursor-pointer',
+                    selectedFile?.name === file.name && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
                   )}
                   onClick={() => {
-                    return file.type === 'folder' && toggleFolder(file.name);
+                    if (file.type === 'folder') {
+                      navigateToFolder(file.name);
+                    } else {
+                      setSelectedFile(file);
+                    }
                   }}
                 >
                   <div className='col-span-6 flex items-center gap-2'>
-                    {getFileIcon(file.type)}
+                    <div className='relative w-8 h-8 flex items-center justify-center'>
+                      {getFileIcon(file.type)}
+                      <div className='absolute inset-0 bg-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity' />
+                    </div>
                     <span className='truncate'>{file.name}</span>
                     {file.type === 'folder' && (
                       <ChevronRight
@@ -395,6 +686,16 @@ const Files = () => {
           </div>
         </div>
       </div>
+
+      {/* File Preview Panel */}
+      {selectedFile && (
+        <FilePreview
+          file={selectedFile}
+          onClose={() => {
+            return setSelectedFile(null);
+          }}
+        />
+      )}
     </div>
   );
 };
