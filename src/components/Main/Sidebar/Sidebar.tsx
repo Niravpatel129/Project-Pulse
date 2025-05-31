@@ -20,7 +20,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
-import { RiChat1Fill, RiFileListFill, RiRobotFill, RiSettingsFill } from 'react-icons/ri';
+import {
+  RiChat1Fill,
+  RiFileListFill,
+  RiFolderFill,
+  RiRobotFill,
+  RiSettingsFill,
+} from 'react-icons/ri';
 
 // Custom hook for media queries
 function useMediaQuery(query: string) {
@@ -73,6 +79,7 @@ export default function AppSidebar() {
 
   // Check if we're on the invoice page
   const isInvoicePage = pathname.includes('/i/');
+  const isFilesPage = pathname.includes('/dashboard/files');
 
   // Set mounted state after hydration
   useEffect(() => {
@@ -84,12 +91,12 @@ export default function AppSidebar() {
     setIsChatView(pathname.startsWith('/dashboard/chat'));
   }, [pathname]);
 
-  // Close sidebar when screen size is tablet
+  // Close sidebar when screen size is tablet or on files page
   useEffect(() => {
-    if (isTablet && state !== 'collapsed') {
+    if ((isTablet || isFilesPage) && state !== 'collapsed') {
       setOpen(false);
     }
-  }, [isTablet, state, setOpen]);
+  }, [isTablet, isFilesPage, state, setOpen]);
 
   const getInitials = (name?: string) => {
     if (!name) return '';
@@ -149,7 +156,7 @@ export default function AppSidebar() {
           {
             name: 'File Manager',
             href: '/dashboard/files',
-            icon: RiFileListFill,
+            icon: RiFolderFill,
           },
           {
             name: 'Settings',
