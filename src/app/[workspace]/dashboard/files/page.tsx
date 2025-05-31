@@ -1,5 +1,5 @@
 const Files = () => {
-  return <div>Files</div>;
+  return <div className='flex min-h-screen w-full bg-background'>Files</div>;
 };
 
 export default Files;
