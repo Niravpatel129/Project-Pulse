@@ -183,7 +183,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                   ? 'Canceled'
                   : selectedInvoice.status.charAt(0).toUpperCase() +
                     selectedInvoice.status.slice(1)}{' '}
-                on {formatDate(selectedInvoice.updatedAt)}
+                on {formatDate(selectedInvoice.statusChangedAt)}
               </div>
               <div className='text-xs text-gray-500 dark:text-gray-400'>
                 {selectedInvoice.statusHistory?.[0]?.reason ||
