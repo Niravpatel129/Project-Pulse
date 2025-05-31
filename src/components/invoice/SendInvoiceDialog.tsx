@@ -14,8 +14,6 @@ import { Link as LinkIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 
-type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'open';
-
 interface ClientAddress {
   street: string;
   city: string;

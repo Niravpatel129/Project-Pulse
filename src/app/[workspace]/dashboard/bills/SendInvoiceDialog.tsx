@@ -461,7 +461,7 @@ ${invoice.from.split('\n')[0]}`);
               <Button
                 onClick={handleSend}
                 disabled={!isEmailValid || isSending}
-                className='h-11 px-6 text-sm font-medium bg-black hover:bg-neutral-800 disabled:bg-gray-200 dark:disabled:bg-neutral-800 disabled:text-gray-400 dark:disabled:text-gray-500 text-white rounded-none w-36'
+                className='h-11 px-6 text-sm font-medium bg-black hover:bg-neutral-800 disabled:bg-gray-200 dark:disabled:bg-neutral-800 disabled:text-gray-400 dark:disabled:text-gray-500 text-white rounded-none w-36 dark:bg-white dark:text-black dark:border-black dark:hover:bg-neutral-200'
               >
                 {isSending ? (
                   <>
