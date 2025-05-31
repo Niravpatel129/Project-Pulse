@@ -23,7 +23,7 @@ import {
   FolderIcon,
   FolderLockIcon,
   FolderPlus,
-  Image,
+  Image as ImageIcon,
   Music,
   Video,
   X,
@@ -299,7 +299,7 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
         return (
           <div className='flex items-center justify-center h-48 bg-gray-100 dark:bg-gray-800 rounded-lg'>
             <div className='flex flex-col items-center gap-2'>
-              <Image className='h-8 w-8 text-gray-400' aria-hidden='true' />
+              <ImageIcon className='h-8 w-8 text-gray-400' aria-hidden='true' />
               <span className='text-sm text-gray-500'>Image Preview</span>
             </div>
           </div>
