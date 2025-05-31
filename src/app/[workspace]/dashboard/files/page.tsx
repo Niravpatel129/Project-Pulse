@@ -425,7 +425,7 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
   );
 };
 
-const EmptyFolderState = () => {
+const EmptyFolderState = ({ onCreateNew }: { onCreateNew: (type: 'file' | 'folder') => void }) => {
   return (
     <div className='flex flex-col items-center justify-center py-16 px-4 text-center'>
       <div className='w-16 h-16 mb-4 rounded-full bg-[#f5f5f7] dark:bg-[#2c2c2e] flex items-center justify-center'>
@@ -438,7 +438,7 @@ const EmptyFolderState = () => {
       <div className='flex items-center gap-2'>
         <button
           onClick={() => {
-            return createNewItem('folder');
+            return onCreateNew('folder');
           }}
           className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
         >
@@ -447,7 +447,7 @@ const EmptyFolderState = () => {
         </button>
         <button
           onClick={() => {
-            return createNewItem('file');
+            return onCreateNew('file');
           }}
           className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
         >
@@ -805,7 +805,7 @@ const Files = () => {
                   </div>
                 )}
                 {getCurrentFolderContents().length === 0 ? (
-                  <EmptyFolderState />
+                  <EmptyFolderState onCreateNew={createNewItem} />
                 ) : (
                   getCurrentFolderContents().map((file, index) => {
                     return (
