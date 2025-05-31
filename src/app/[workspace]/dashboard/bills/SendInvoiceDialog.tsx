@@ -113,6 +113,9 @@ ${invoice.from.split('\n')[0]}`);
     }) => {
       return newRequest.post(`/invoices2/${invoice._id}/send`, data);
     },
+    onMutate: () => {
+      setIsSending(true);
+    },
     onSuccess: () => {
       toast.success('Invoice sent successfully!');
       handleClose();
@@ -120,6 +123,9 @@ ${invoice.from.split('\n')[0]}`);
     onError: (error) => {
       console.error('Failed to send invoice:', error);
       toast.error('Failed to send invoice. Please try again.');
+    },
+    onSettled: () => {
+      setIsSending(false);
     },
   });
 
