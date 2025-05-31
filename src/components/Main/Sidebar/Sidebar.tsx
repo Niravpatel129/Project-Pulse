@@ -147,6 +147,11 @@ export default function AppSidebar() {
         name: 'Management',
         items: [
           {
+            name: 'File Manager',
+            href: '/dashboard/files',
+            icon: RiFileListFill,
+          },
+          {
             name: 'Settings',
             href: '/dashboard/settings',
             icon: RiSettingsFill,
