@@ -110,6 +110,7 @@ ${invoice.from.split('\n')[0]}`);
       message: string;
       sendCopy: boolean;
       attachPdf: boolean;
+      paymentUrl: string;
     }) => {
       return newRequest.post(`/invoices2/${invoice._id}/send`, data);
     },
@@ -139,16 +140,18 @@ ${invoice.from.split('\n')[0]}`);
       message,
       sendCopy,
       attachPdf,
+      paymentUrl: `https://${window.location.host}/i/${invoice._id}`,
     });
   }, [
+    isEmailValid,
+    sendInvoiceMutation,
     toEmail,
     fromEmail,
     subject,
     message,
     sendCopy,
     attachPdf,
-    isEmailValid,
-    sendInvoiceMutation,
+    invoice._id,
   ]);
 
   const customerName = useMemo(() => {

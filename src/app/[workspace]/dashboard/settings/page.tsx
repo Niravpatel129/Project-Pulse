@@ -28,7 +28,17 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AtSign, CreditCard, Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
+import {
+  AtSign,
+  CreditCard,
+  Edit,
+  ImageIcon,
+  Loader2,
+  Mail,
+  Settings,
+  Users,
+  XCircle,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -336,6 +346,8 @@ export default function SettingsPage() {
       toast.error('Failed to remove email integration');
     },
   });
+
+  const [isConnectingGmail, setIsConnectingGmail] = useState(false);
 
   const handleSaveBasicSettings = () => {
     // Prepare update data with all form fields
@@ -1035,6 +1047,7 @@ export default function SettingsPage() {
                                   variant='outline'
                                   size='sm'
                                   onClick={() => {
+                                    setIsConnectingGmail(true);
                                     // Gmail integration logic
                                     const width = 600;
                                     const height = 600;
@@ -1077,12 +1090,14 @@ export default function SettingsPage() {
                                                 queryKey: ['gmail-status'],
                                               });
                                               setIsAddingEmail(false);
+                                              setIsConnectingGmail(false);
                                               toast.success('Gmail account connected successfully');
                                             }
 
                                             if (event.data?.type === 'GMAIL_AUTH_ERROR') {
                                               window.removeEventListener('message', messageHandler);
                                               console.error('Gmail auth error:', event.data.error);
+                                              setIsConnectingGmail(false);
                                               toast.error('Failed to connect Gmail account');
                                             }
                                           };
@@ -1094,18 +1109,27 @@ export default function SettingsPage() {
                                             if (popup?.closed) {
                                               clearInterval(checkPopupClosed);
                                               window.removeEventListener('message', messageHandler);
+                                              setIsConnectingGmail(false);
                                             }
                                           }, 500);
                                         }
                                       })
                                       .catch((error) => {
                                         console.error('Failed to get auth URL:', error);
+                                        setIsConnectingGmail(false);
                                         toast.error('Failed to start Gmail connection');
                                       });
                                   }}
                                   className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
                                 >
-                                  Reconnect
+                                  {isConnectingGmail ? (
+                                    <>
+                                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                      Connecting...
+                                    </>
+                                  ) : (
+                                    'Reconnect'
+                                  )}
                                 </Button>
                               )}
                             </div>
@@ -1505,6 +1529,7 @@ export default function SettingsPage() {
               onClick={() => {
                 console.log('selectedIntegrationType', selectedIntegrationType);
                 if (selectedIntegrationType === 'gmail') {
+                  setIsConnectingGmail(true);
                   // Gmail integration logic
                   const width = 600;
                   const height = 600;
@@ -1547,12 +1572,14 @@ export default function SettingsPage() {
                               queryKey: ['gmail-status'],
                             });
                             setIsAddingEmail(false);
+                            setIsConnectingGmail(false);
                             toast.success('Gmail account connected successfully');
                           }
 
                           if (event.data?.type === 'GMAIL_AUTH_ERROR') {
                             window.removeEventListener('message', messageHandler);
                             console.error('Gmail auth error:', event.data.error);
+                            setIsConnectingGmail(false);
                             toast.error('Failed to connect Gmail account');
                           }
                         };
@@ -1564,12 +1591,14 @@ export default function SettingsPage() {
                           if (popup?.closed) {
                             clearInterval(checkPopupClosed);
                             window.removeEventListener('message', messageHandler);
+                            setIsConnectingGmail(false);
                           }
                         }, 500);
                       }
                     })
                     .catch((error) => {
                       console.error('Failed to get auth URL:', error);
+                      setIsConnectingGmail(false);
                       toast.error('Failed to start Gmail connection');
                     });
                 } else {
@@ -1578,15 +1607,25 @@ export default function SettingsPage() {
               }}
               disabled={
                 (selectedIntegrationType === 'custom' && !newEmail.trim()) ||
-                addCustomEmailMutation.isPending
+                addCustomEmailMutation.isPending ||
+                isConnectingGmail
               }
               className='bg-black hover:bg-black/90 text-white'
             >
-              {selectedIntegrationType === 'gmail'
-                ? 'Continue with Google'
-                : addCustomEmailMutation.isPending
-                ? 'Adding...'
-                : 'Add Custom Email'}
+              {selectedIntegrationType === 'gmail' ? (
+                isConnectingGmail ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Connecting...
+                  </>
+                ) : (
+                  'Continue with Google'
+                )
+              ) : addCustomEmailMutation.isPending ? (
+                'Adding...'
+              ) : (
+                'Add Custom Email'
+              )}
             </Button>
           </div>
         </DialogContent>
