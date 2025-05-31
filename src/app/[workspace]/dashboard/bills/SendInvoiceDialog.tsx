@@ -20,8 +20,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Eye, EyeOff, HelpCircle, Plus } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Eye, EyeOff, HelpCircle, Loader2, Plus } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 export function SendInvoiceDialog({
   isOpen,
@@ -50,20 +51,77 @@ If you have any questions, feel free to reach out.
 
 Thank you,
 asd`);
+  const [isSending, setIsSending] = useState(false);
+  const [sendCopy, setSendCopy] = useState(false);
+  const [attachPdf, setAttachPdf] = useState(true);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // Auto-save draft
+  useEffect(() => {
+    const saveDraft = () => {
+      localStorage.setItem(
+        'invoiceDraft',
+        JSON.stringify({
+          toEmail,
+          fromEmail,
+          subject,
+          message,
+          sendCopy,
+          attachPdf,
+        }),
+      );
+      setDraftSaved(true);
+      setTimeout(() => {
+        return setDraftSaved(false);
+      }, 2000);
+    };
+
+    const debounceTimer = setTimeout(saveDraft, 1000);
+    return () => {
+      return clearTimeout(debounceTimer);
+    };
+  }, [toEmail, fromEmail, subject, message, sendCopy, attachPdf]);
+
+  // Load draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('invoiceDraft');
+    if (savedDraft) {
+      const draft = JSON.parse(savedDraft);
+      setToEmail(draft.toEmail);
+      setFromEmail(draft.fromEmail);
+      setSubject(draft.subject);
+      setMessage(draft.message);
+      setSendCopy(draft.sendCopy);
+      setAttachPdf(draft.attachPdf);
+    }
+  }, []);
 
   const handleClose = useCallback(() => {
     setOpen(false);
     onClose();
   }, [onClose]);
+
   const isEmailValid = useMemo(() => {
-    return toEmail.includes('@') && toEmail.includes('.');
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail);
   }, [toEmail]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!isEmailValid) return;
-    console.log('Sending invoice to:', toEmail);
-    setOpen(false);
-  }, [toEmail, isEmailValid]);
+
+    setIsSending(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => {
+        return setTimeout(resolve, 1500);
+      });
+      toast.success('Invoice sent successfully!');
+      handleClose();
+    } catch (error) {
+      toast.error('Failed to send invoice. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
+  }, [toEmail, isEmailValid, handleClose]);
 
   const customerName = useMemo(() => {
     const match = message.match(/Hi\s+(\w+),/);
@@ -73,6 +131,26 @@ asd`);
   const togglePreview = useCallback(() => {
     setShowPreview(!showPreview);
   }, [showPreview]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        handleSend();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      return window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleClose, handleSend]);
+
+  const messageLength = message.length;
+  const maxLength = 1000;
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
@@ -89,7 +167,9 @@ asd`);
               Send invoice
             </DialogTitle>
             <div className='flex items-center gap-3'>
-              {/* Mobile Preview Toggle */}
+              {draftSaved && (
+                <span className='text-xs text-gray-500 dark:text-gray-400'>Draft saved</span>
+              )}
               <Button
                 variant='outline'
                 size='sm'
@@ -115,7 +195,11 @@ asd`);
         {/* Main Content */}
         <div className='flex flex-col lg:flex-row flex-1 min-h-0'>
           {/* Form Section */}
-          <div className={`w-1/2 ${showPreview ? 'hidden lg:block' : 'block'} overflow-y-auto`}>
+          <div
+            className={`w-full lg:w-1/2 ${
+              showPreview ? 'hidden lg:block' : 'block'
+            } overflow-y-auto`}
+          >
             <div className='w-full px-6'>
               <div className='space-y-6'>
                 <div className='space-y-1.5'>
@@ -165,7 +249,7 @@ asd`);
                   </div>
                   {!isEmailValid && toEmail.length > 0 && (
                     <p className='text-xs text-red-500 dark:text-red-400'>
-                      Enter an email address.
+                      Please enter a valid email address
                     </p>
                   )}
                 </div>
@@ -188,17 +272,24 @@ asd`);
                 </div>
 
                 <div className='space-y-1.5'>
-                  <Label
-                    htmlFor='message'
-                    className='text-sm font-medium text-gray-700 dark:text-gray-200'
-                  >
-                    Message
-                  </Label>
+                  <div className='flex justify-between items-center'>
+                    <Label
+                      htmlFor='message'
+                      className='text-sm font-medium text-gray-700 dark:text-gray-200'
+                    >
+                      Message
+                    </Label>
+                    <span className='text-xs text-gray-500 dark:text-gray-400'>
+                      {messageLength}/{maxLength}
+                    </span>
+                  </div>
                   <Textarea
                     id='message'
                     value={message}
                     onChange={(e) => {
-                      return setMessage(e.target.value);
+                      if (e.target.value.length <= maxLength) {
+                        setMessage(e.target.value);
+                      }
                     }}
                     className='min-h-[120px] sm:min-h-[160px] border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-neutral-700 resize-none'
                   />
@@ -212,6 +303,10 @@ asd`);
                     <div className='flex items-start'>
                       <Checkbox
                         id='copy'
+                        checked={sendCopy}
+                        onCheckedChange={(checked) => {
+                          return setSendCopy(checked as boolean);
+                        }}
                         className='mt-0.5 h-4 w-4 border-gray-300 dark:border-neutral-600 rounded'
                       />
                       <Label
@@ -224,6 +319,10 @@ asd`);
                     <div className='flex items-start'>
                       <Checkbox
                         id='pdf'
+                        checked={attachPdf}
+                        onCheckedChange={(checked) => {
+                          return setAttachPdf(checked as boolean);
+                        }}
                         className='mt-0.5 h-4 w-4 border-gray-300 dark:border-neutral-600 rounded'
                       />
                       <Label
@@ -337,10 +436,17 @@ asd`);
               </Button>
               <Button
                 onClick={handleSend}
-                disabled={!isEmailValid}
+                disabled={!isEmailValid || isSending}
                 className='h-10 px-3 text-sm font-medium bg-black hover:bg-neutral-800 disabled:bg-gray-200 dark:disabled:bg-neutral-800 disabled:text-gray-400 dark:disabled:text-gray-500 text-white rounded-none w-32'
               >
-                Send
+                {isSending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
               </Button>
             </div>
           </div>
