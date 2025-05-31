@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Eye, EyeOff, HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -54,19 +54,24 @@ export function SendInvoiceDialog({
   onClose: () => void;
   invoice: any;
 }) {
+  console.log('🚀 invoice:', invoice);
   const [open, setOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [toEmail, setToEmail] = useState('customer@email.com');
+  const [toEmail, setToEmail] = useState(invoice.customer?.email || '');
   const [fromEmail, setFromEmail] = useState('testingnirav@gmail.com');
-  const [subject, setSubject] = useState('Invoice #8 from asd');
-  const [message, setMessage] = useState(`Hi asd,
+  const [subject, setSubject] = useState(
+    `Invoice ${invoice.invoiceNumber} from ${invoice.from.split('\n')[0]}`,
+  );
+  const [message, setMessage] = useState(`Hi ${invoice.customer?.name},
 
-Here's Invoice #8 for the amount of $1,200.00.
+Here's Invoice ${invoice.invoiceNumber} for the amount of ${
+    invoice.settings?.currency
+  } ${invoice.totals?.total.toFixed(2)}.
 
 If you have any questions, feel free to reach out.
 
 Thank you,
-asd`);
+${invoice.from.split('\n')[0]}`);
   const [isSending, setIsSending] = useState(false);
   const [sendCopy, setSendCopy] = useState(false);
   const [attachPdf, setAttachPdf] = useState(true);
@@ -96,23 +101,49 @@ asd`);
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail);
   }, [toEmail]);
 
-  const handleSend = useCallback(async () => {
-    if (!isEmailValid) return;
-
-    setIsSending(true);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 1500);
-      });
+  // Add mutation for sending invoice
+  const sendInvoiceMutation = useMutation({
+    mutationFn: (data: {
+      to: string;
+      from: string;
+      subject: string;
+      message: string;
+      sendCopy: boolean;
+      attachPdf: boolean;
+    }) => {
+      return newRequest.post(`/invoices2/${invoice._id}/send`, data);
+    },
+    onSuccess: () => {
       toast.success('Invoice sent successfully!');
       handleClose();
-    } catch (error) {
+    },
+    onError: (error) => {
+      console.error('Failed to send invoice:', error);
       toast.error('Failed to send invoice. Please try again.');
-    } finally {
-      setIsSending(false);
-    }
-  }, [toEmail, isEmailValid, handleClose]);
+    },
+  });
+
+  const handleSend = useCallback(() => {
+    if (!isEmailValid) return;
+
+    sendInvoiceMutation.mutate({
+      to: toEmail,
+      from: fromEmail,
+      subject,
+      message,
+      sendCopy,
+      attachPdf,
+    });
+  }, [
+    toEmail,
+    fromEmail,
+    subject,
+    message,
+    sendCopy,
+    attachPdf,
+    isEmailValid,
+    sendInvoiceMutation,
+  ]);
 
   const customerName = useMemo(() => {
     const match = message.match(/Hi\s+(\w+),/);
@@ -368,17 +399,17 @@ asd`);
                     <div className='bg-white dark:bg-neutral-900 rounded-md border border-gray-200 dark:border-neutral-700 p-4 shadow-sm'>
                       <div className='text-center mb-4'>
                         <h2 className='text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-1 border-b border-gray-200 dark:border-neutral-700 pb-2 mb-4'>
-                          {customerName}
+                          {invoice.customer?.name}
                         </h2>
                         <div className='space-y-0.5'>
                           <p className='text-sm text-gray-600 dark:text-gray-300'>
                             Invoice for{' '}
                             <span className='font-medium text-gray-900 dark:text-gray-100'>
-                              $1,200.00
+                              {invoice.settings?.currency} {invoice.totals?.total.toFixed(2)}
                             </span>{' '}
                             due by{' '}
                             <span className='font-medium text-gray-900 dark:text-gray-100'>
-                              May 29, 2025
+                              {new Date(invoice.dueDate).toLocaleDateString()}
                             </span>
                           </p>
                         </div>
