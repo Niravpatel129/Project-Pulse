@@ -425,6 +425,40 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
   );
 };
 
+const EmptyFolderState = () => {
+  return (
+    <div className='flex flex-col items-center justify-center py-16 px-4 text-center'>
+      <div className='w-16 h-16 mb-4 rounded-full bg-[#f5f5f7] dark:bg-[#2c2c2e] flex items-center justify-center'>
+        <FolderIcon className='h-8 w-8 text-muted-foreground' />
+      </div>
+      <h3 className='text-lg font-medium mb-1'>This folder is empty</h3>
+      <p className='text-sm text-muted-foreground mb-6'>
+        Add files or create a new folder to get started
+      </p>
+      <div className='flex items-center gap-2'>
+        <button
+          onClick={() => {
+            return createNewItem('folder');
+          }}
+          className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
+        >
+          <FolderPlus className='h-4 w-4' />
+          <span>New Folder</span>
+        </button>
+        <button
+          onClick={() => {
+            return createNewItem('file');
+          }}
+          className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
+        >
+          <FilePlus className='h-4 w-4' />
+          <span>New File</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Files = () => {
   const [activeSection, setActiveSection] = useState<'workspace' | 'private'>('workspace');
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
@@ -770,48 +804,52 @@ const Files = () => {
                     </div>
                   </div>
                 )}
-                {getCurrentFolderContents().map((file, index) => {
-                  return (
-                    <div
-                      key={index}
-                      className={cn(
-                        'grid grid-cols-12 gap-4 px-4 py-2 text-sm group',
-                        'hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors',
-                        'cursor-pointer',
-                        selectedFile?.name === file.name && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
-                      )}
-                      onClick={() => {
-                        if (file.type === 'folder') {
-                          navigateToFolder(file.name);
-                        } else {
-                          setSelectedFile(file);
-                        }
-                      }}
-                    >
-                      <div className='col-span-6 flex items-center gap-2'>
-                        <div className='relative w-8 h-8 flex items-center justify-center'>
-                          {getFileIcon(file.type)}
-                          <div className='absolute inset-0 bg-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity' />
-                        </div>
-                        <span className='truncate'>{file.name}</span>
-                        {file.type === 'folder' && (
-                          <ChevronRight
-                            className={cn(
-                              'h-4 w-4 transition-transform',
-                              expandedFolders.includes(file.name) ? 'rotate-90' : '',
-                            )}
-                          />
+                {getCurrentFolderContents().length === 0 ? (
+                  <EmptyFolderState />
+                ) : (
+                  getCurrentFolderContents().map((file, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className={cn(
+                          'grid grid-cols-12 gap-4 px-4 py-2 text-sm group',
+                          'hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors',
+                          'cursor-pointer',
+                          selectedFile?.name === file.name && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
                         )}
+                        onClick={() => {
+                          if (file.type === 'folder') {
+                            navigateToFolder(file.name);
+                          } else {
+                            setSelectedFile(file);
+                          }
+                        }}
+                      >
+                        <div className='col-span-6 flex items-center gap-2'>
+                          <div className='relative w-8 h-8 flex items-center justify-center'>
+                            {getFileIcon(file.type)}
+                            <div className='absolute inset-0 bg-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity' />
+                          </div>
+                          <span className='truncate'>{file.name}</span>
+                          {file.type === 'folder' && (
+                            <ChevronRight
+                              className={cn(
+                                'h-4 w-4 transition-transform',
+                                expandedFolders.includes(file.name) ? 'rotate-90' : '',
+                              )}
+                            />
+                          )}
+                        </div>
+                        <div className='col-span-3 text-muted-foreground'>
+                          {file.type === 'folder' ? `${file.items} items` : file.size}
+                        </div>
+                        <div className='col-span-3 text-muted-foreground'>
+                          {new Date(file.lastModified).toLocaleDateString()}
+                        </div>
                       </div>
-                      <div className='col-span-3 text-muted-foreground'>
-                        {file.type === 'folder' ? `${file.items} items` : file.size}
-                      </div>
-                      <div className='col-span-3 text-muted-foreground'>
-                        {new Date(file.lastModified).toLocaleDateString()}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </ContextMenuTrigger>
