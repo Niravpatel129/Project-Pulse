@@ -20,9 +20,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
 import { Eye, EyeOff, HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+
+interface GmailStatus {
+  connected: boolean;
+  message: string;
+  primaryEmail: string | null;
+  integrations: Array<{
+    email: string;
+    isPrimary: boolean;
+    isActive: boolean;
+    lastSynced: string;
+    isExpired: boolean;
+    connectedAt: string;
+  }>;
+}
 
 export function SendInvoiceDialog({
   isOpen,
@@ -54,6 +70,22 @@ asd`);
   const [isSending, setIsSending] = useState(false);
   const [sendCopy, setSendCopy] = useState(false);
   const [attachPdf, setAttachPdf] = useState(true);
+
+  // Fetch Gmail status
+  const { data: gmailStatus } = useQuery<GmailStatus>({
+    queryKey: ['gmail-status'],
+    queryFn: async () => {
+      const response = await newRequest.get('/gmail/status');
+      return response.data;
+    },
+  });
+
+  // Set initial from email to primary email if available
+  useEffect(() => {
+    if (gmailStatus?.primaryEmail) {
+      setFromEmail(gmailStatus.primaryEmail);
+    }
+  }, [gmailStatus?.primaryEmail]);
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -178,11 +210,19 @@ asd`);
                         <SelectValue placeholder='Select email' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='testingnirav@gmail.com'>
-                          testingnirav@gmail.com
-                        </SelectItem>
-                        <SelectItem value='nirav@example.com'>nirav@example.com</SelectItem>
-                        <SelectItem value='support@example.com'>support@example.com</SelectItem>
+                        {gmailStatus?.integrations?.map((integration) => {
+                          return (
+                            <SelectItem
+                              key={integration.email}
+                              value={integration.email}
+                              disabled={!integration.isActive || integration.isExpired}
+                            >
+                              {integration.email}
+                              {integration.isPrimary && ' (Primary)'}
+                              {integration.isExpired && ' (Expired)'}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
