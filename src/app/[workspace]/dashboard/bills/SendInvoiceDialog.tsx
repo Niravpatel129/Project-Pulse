@@ -112,7 +112,14 @@ asd`);
   const maxLength = 1000;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button className='bg-black hover:bg-neutral-800 text-white font-medium rounded-none w-32 h-10'>
           Send Invoice
