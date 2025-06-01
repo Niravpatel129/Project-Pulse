@@ -21,16 +21,10 @@ import {
   Copy,
   Download,
   File,
-  FileAudioIcon,
-  FileCodeIcon,
-  FileIcon,
-  FileImageIcon,
   FilePlus,
   FileText,
   FileTextIcon,
-  FileVideoIcon,
   FolderIcon,
-  FolderLockIcon,
   FolderPlus,
   Image as ImageIcon,
   Loader2,
@@ -40,27 +34,8 @@ import {
   Video,
   X,
 } from 'lucide-react';
-
-const getFileIcon = (type: string) => {
-  switch (type) {
-    case 'folder':
-      return <FolderIcon className='h-4 w-4 text-blue-500' />;
-    case 'text':
-      return <FileTextIcon className='h-4 w-4 text-gray-500' />;
-    case 'pdf':
-      return <FileIcon className='h-4 w-4 text-red-500' />;
-    case 'image':
-      return <FileImageIcon className='h-4 w-4 text-green-500' />;
-    case 'code':
-      return <FileCodeIcon className='h-4 w-4 text-purple-500' />;
-    case 'audio':
-      return <FileAudioIcon className='h-4 w-4 text-yellow-500' />;
-    case 'video':
-      return <FileVideoIcon className='h-4 w-4 text-orange-500' />;
-    default:
-      return <FileIcon className='h-4 w-4 text-gray-500' />;
-  }
-};
+import { Sidebar } from './components/Sidebar';
+import { getFileIcon } from './utils/fileIcons';
 
 const FileTreeItem = ({
   item,
@@ -443,94 +418,20 @@ const Files = () => {
 
   return (
     <div className='flex min-h-screen w-full bg-background'>
-      {/* Custom macOS-inspired Sidebar */}
-      <div className='w-64 border-r border-border bg-[#f5f5f7] dark:bg-[#1c1c1e] p-4'>
-        <div className='space-y-6'>
-          {/* Workspace Files Section */}
-          <div>
-            <h3 className='text-xs font-medium text-muted-foreground mb-2 px-2'>WORKSPACE</h3>
-            <button
-              onClick={() => {
-                return handleSectionChange('workspace');
-              }}
-              className={cn(
-                'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
-                'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
-                activeSection === 'workspace' ? 'bg-[#e5e5e7] dark:bg-[#2c2c2e]' : '',
-                'text-foreground',
-              )}
-            >
-              <FolderIcon className='h-4 w-4 text-blue-500' />
-              <span>Workspace Files</span>
-            </button>
-            <div className='mt-2'>
-              {isLoading ? (
-                <div className='flex items-center justify-center py-4'>
-                  <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
-                </div>
-              ) : (
-                workspaceItems.map((item, index) => {
-                  return (
-                    <FileTreeItem
-                      key={index}
-                      item={item}
-                      expandedFolders={expandedFolders}
-                      onToggleFolder={toggleFolder}
-                      onNavigateToFolder={navigateToFolder}
-                      onDelete={handleDeleteItem}
-                      onDuplicate={handleDuplicateFile}
-                      onDownload={handleDownloadFile}
-                      currentPath={currentPath}
-                    />
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* My Folder Section */}
-          <div>
-            <h3 className='text-xs font-medium text-muted-foreground mb-2 px-2'>PRIVATE</h3>
-            <button
-              onClick={() => {
-                return handleSectionChange('private');
-              }}
-              className={cn(
-                'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
-                'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
-                activeSection === 'private' ? 'bg-[#e5e5e7] dark:bg-[#2c2c2e]' : '',
-                'text-foreground',
-              )}
-            >
-              <FolderLockIcon className='h-4 w-4 text-yellow-500' />
-              <span>My Folder</span>
-            </button>
-            <div className='mt-2'>
-              {isLoading ? (
-                <div className='flex items-center justify-center py-4'>
-                  <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
-                </div>
-              ) : (
-                privateItems.map((item, index) => {
-                  return (
-                    <FileTreeItem
-                      key={index}
-                      item={item}
-                      expandedFolders={expandedFolders}
-                      onToggleFolder={toggleFolder}
-                      onNavigateToFolder={navigateToFolder}
-                      onDelete={handleDeleteItem}
-                      onDuplicate={handleDuplicateFile}
-                      onDownload={handleDownloadFile}
-                      currentPath={currentPath}
-                    />
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <Sidebar
+        activeSection={activeSection}
+        expandedFolders={expandedFolders}
+        currentPath={currentPath}
+        isLoading={isLoading}
+        workspaceItems={workspaceItems}
+        privateItems={privateItems}
+        handleSectionChange={handleSectionChange}
+        toggleFolder={toggleFolder}
+        navigateToFolder={navigateToFolder}
+        handleDeleteItem={handleDeleteItem}
+        handleDuplicateFile={handleDuplicateFile}
+        handleDownloadFile={handleDownloadFile}
+      />
 
       {/* Main Content Area */}
       <div className='flex-1 p-6'>
