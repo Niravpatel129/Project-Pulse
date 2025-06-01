@@ -651,7 +651,7 @@ const Files = () => {
                             className={cn(
                               'grid grid-cols-12 gap-4 px-4 py-2 text-sm group',
                               'hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors',
-                              'cursor-pointer',
+                              'cursor-pointer items-center',
                               selectedFile?.name === file.name && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
                             )}
                             onClick={() => {
