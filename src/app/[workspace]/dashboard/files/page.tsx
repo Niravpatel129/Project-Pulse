@@ -52,8 +52,6 @@ import { getFileIcon } from './utils/fileIcons';
 
 // Function to generate a short ID from MongoDB ID
 const generateShortId = (mongoId: string): string => {
-  // Take first 8 characters of the MongoDB ID
-  // This gives us 16^8 = ~4.3 billion possible combinations
   return mongoId.slice(0, 8);
 };
 
