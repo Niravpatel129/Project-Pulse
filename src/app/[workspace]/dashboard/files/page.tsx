@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useFileManager, type FileItem } from '@/hooks/useFileManager';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ import {
   FolderPlus,
   Image as ImageIcon,
   Loader2,
+  Mail,
   MoreVertical,
   Music,
   Trash2,
@@ -403,6 +405,8 @@ const Files = () => {
 
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newFileName, setNewFileName] = useState('');
+  const [isEmailPopoverOpen, setIsEmailPopoverOpen] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('workspace@example.com'); // This should be dynamic based on your workspace
 
   // Filter file structure items by section
   const workspaceItems =
@@ -493,14 +497,69 @@ const Files = () => {
                 <FolderPlus className='h-4 w-4' />
                 <span>New Folder</span>
               </button>
-              <label className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors cursor-pointer'>
-                <FilePlus className='h-4 w-4' />
-                <span>New File</span>
-                <input type='file' className='hidden' onChange={handleFileInputChange} />
-              </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'>
+                    <FilePlus className='h-4 w-4' />
+                    <span>New File</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return (
+                        document.querySelector('input[type="file"]') as HTMLInputElement
+                      )?.click();
+                    }}
+                  >
+                    <FilePlus className='h-4 w-4 mr-2' />
+                    Upload File
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setIsEmailPopoverOpen(true);
+                    }}
+                  >
+                    <Mail className='h-4 w-4 mr-2' />
+                    Add File Via Email
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <input type='file' className='hidden' onChange={handleFileInputChange} />
             </div>
           </div>
         </div>
+
+        {/* Email Popover */}
+        <Popover open={isEmailPopoverOpen} onOpenChange={setIsEmailPopoverOpen}>
+          <PopoverContent className='w-80'>
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <h4 className='font-medium text-sm'>Add File Via Email</h4>
+                <p className='text-sm text-muted-foreground'>
+                  Send files to this email address and they will appear in your workspace
+                </p>
+              </div>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <Input value={emailAddress} readOnly className='font-mono text-sm' />
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      navigator.clipboard.writeText(emailAddress);
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+                <p className='text-xs text-muted-foreground'>
+                  Files sent to this address will be automatically added to your workspace
+                </p>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Breadcrumbs */}
         <div className='flex items-center gap-1 mb-4 text-sm'>
