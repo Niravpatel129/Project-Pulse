@@ -40,7 +40,7 @@ export const FileTreeItem = ({
     <div>
       <div
         className={cn(
-          'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm group',
+          'flex items-center px-2 py-1.5 rounded-md text-sm group',
           'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
           'text-foreground',
           isSelected && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
