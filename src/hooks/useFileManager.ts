@@ -58,23 +58,17 @@ export const useFileManager = () => {
     (searchParams.get('section') as 'workspace' | 'private') || 'workspace',
   );
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
-  const [currentPath, setCurrentPath] = useState<string[]>(() => {
-    const pathParam = searchParams.get('path');
-    return pathParam ? JSON.parse(pathParam) : [];
-  });
+  const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState<'file' | 'folder' | null>(null);
   const [newItemName, setNewItemName] = useState('');
 
-  // Update URL when section or path changes
+  // Update URL when section changes
   useEffect(() => {
     const params = new URLSearchParams();
     params.set('section', activeSection);
-    if (currentPath.length > 0) {
-      params.set('path', JSON.stringify(currentPath));
-    }
     router.push(`?${params.toString()}`);
-  }, [activeSection, currentPath, router]);
+  }, [activeSection, router]);
 
   const {
     files,
