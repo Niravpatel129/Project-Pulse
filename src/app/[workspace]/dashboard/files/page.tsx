@@ -5,6 +5,12 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useFileManager, type FileItem } from '@/hooks/useFileManager';
 import { cn } from '@/lib/utils';
 import {
@@ -12,6 +18,8 @@ import {
   ChevronRight,
   ChevronRightIcon,
   Code,
+  Copy,
+  Download,
   File,
   FileAudioIcon,
   FileCodeIcon,
@@ -26,7 +34,9 @@ import {
   FolderPlus,
   Image as ImageIcon,
   Loader2,
+  MoreVertical,
   Music,
+  Trash2,
   Video,
   X,
 } from 'lucide-react';
@@ -58,12 +68,18 @@ const FileTreeItem = ({
   expandedFolders,
   onToggleFolder,
   onNavigateToFolder,
+  onDelete,
+  onDuplicate,
+  onDownload,
 }: {
   item: FileItem;
   level?: number;
   expandedFolders: string[];
   onToggleFolder: (name: string) => void;
   onNavigateToFolder: (name: string) => void;
+  onDelete?: (id: string) => void;
+  onDuplicate?: (id: string) => void;
+  onDownload?: (id: string) => void;
 }) => {
   const isExpanded = expandedFolders.includes(item.name);
   const hasChildren = item.children && item.children.length > 0;
@@ -72,7 +88,7 @@ const FileTreeItem = ({
     <div>
       <div
         className={cn(
-          'flex items-center gap- px-2 py-1.5 rounded-md text-sm',
+          'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm group',
           'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
           'text-foreground',
         )}
@@ -106,6 +122,47 @@ const FileTreeItem = ({
             {item.name}
           </span>
         </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            asChild
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          >
+            <button className='p-1 hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] rounded-sm transition-colors opacity-0 group-hover:opacity-100'>
+              <MoreVertical className='h-4 w-4 text-muted-foreground' />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            {item.type !== 'folder' && (
+              <DropdownMenuItem
+                onClick={() => {
+                  return onDownload?.(item._id);
+                }}
+              >
+                <Download className='h-4 w-4 mr-2' />
+                Download
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem
+              onClick={() => {
+                return onDuplicate?.(item._id);
+              }}
+            >
+              <Copy className='h-4 w-4 mr-2' />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                return onDelete?.(item._id);
+              }}
+              className='text-red-600 dark:text-red-400'
+            >
+              <Trash2 className='h-4 w-4 mr-2' />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       {hasChildren && isExpanded && (
         <div>
@@ -118,6 +175,9 @@ const FileTreeItem = ({
                 expandedFolders={expandedFolders}
                 onToggleFolder={onToggleFolder}
                 onNavigateToFolder={onNavigateToFolder}
+                onDelete={onDelete}
+                onDuplicate={onDuplicate}
+                onDownload={onDownload}
               />
             );
           })}
@@ -331,6 +391,28 @@ const Files = () => {
     e.target.value = '';
   };
 
+  const handleDuplicateFile = async (fileId: string) => {
+    try {
+      // For files, we'll use moveItem to create a copy in the same location
+      await handleMoveItem(fileId);
+    } catch (error) {
+      console.error('Error duplicating file:', error);
+    }
+  };
+
+  const handleDownloadFile = async (fileId: string) => {
+    try {
+      const file = getCurrentFolderContents().find((f) => {
+        return f._id === fileId;
+      });
+      if (file?.fileDetails?.downloadURL) {
+        window.open(file.fileDetails.downloadURL, '_blank');
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
+
   return (
     <div className='flex min-h-screen w-full bg-background'>
       {/* Custom macOS-inspired Sidebar */}
@@ -367,6 +449,9 @@ const Files = () => {
                       expandedFolders={expandedFolders}
                       onToggleFolder={toggleFolder}
                       onNavigateToFolder={navigateToFolder}
+                      onDelete={handleDeleteItem}
+                      onDuplicate={handleDuplicateFile}
+                      onDownload={handleDownloadFile}
                     />
                   );
                 })
@@ -405,6 +490,9 @@ const Files = () => {
                       expandedFolders={expandedFolders}
                       onToggleFolder={toggleFolder}
                       onNavigateToFolder={navigateToFolder}
+                      onDelete={handleDeleteItem}
+                      onDuplicate={handleDuplicateFile}
+                      onDownload={handleDownloadFile}
                     />
                   );
                 })
