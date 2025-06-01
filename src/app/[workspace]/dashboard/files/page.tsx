@@ -495,9 +495,10 @@ const Files = () => {
             <div className='bg-white dark:bg-[#1c1c1e] rounded-lg border border-border'>
               {/* Column Headers */}
               <div className='grid grid-cols-12 gap-4 px-4 py-2 border-b border-border text-sm text-muted-foreground'>
-                <div className='col-span-6'>Name</div>
+                <div className='col-span-5'>Name</div>
                 <div className='col-span-3'>Size</div>
                 <div className='col-span-3'>Last Modified</div>
+                <div className='col-span-1 text-right'>Actions</div>
               </div>
 
               {/* File List */}
@@ -510,7 +511,7 @@ const Files = () => {
                   <>
                     {isCreatingNew && (
                       <div className='grid grid-cols-12 gap-4 px-4 py-2 text-sm group hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors'>
-                        <div className='col-span-6 flex items-center gap-2'>
+                        <div className='col-span-5 flex items-center gap-2'>
                           <div className='relative w-8 h-8 flex items-center justify-center'>
                             {isCreatingNew === 'folder' ? (
                               <FolderIcon className='h-4 w-4 text-blue-500' />
@@ -537,6 +538,7 @@ const Files = () => {
                         <div className='col-span-3 text-muted-foreground'>
                           {new Date().toLocaleDateString()}
                         </div>
+                        <div className='col-span-1'></div>
                       </div>
                     )}
                     {getCurrentFolderContents().length === 0 ? (
@@ -562,8 +564,12 @@ const Files = () => {
                                 setSelectedFile(file);
                               }
                             }}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              setSelectedFile(file);
+                            }}
                           >
-                            <div className='col-span-6 flex items-center gap-2'>
+                            <div className='col-span-5 flex items-center gap-2'>
                               <div className='relative w-8 h-8 flex items-center justify-center'>
                                 {getFileIcon(file.type)}
                                 <div className='absolute inset-0 bg-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity' />
@@ -583,6 +589,52 @@ const Files = () => {
                             </div>
                             <div className='col-span-3 text-muted-foreground'>
                               {new Date(file.lastModified).toLocaleDateString()}
+                            </div>
+                            <div className='col-span-1 flex justify-end'>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    className='p-1 hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] rounded-sm transition-colors'
+                                    onClick={(e) => {
+                                      return e.stopPropagation();
+                                    }}
+                                  >
+                                    <MoreVertical className='h-4 w-4 text-muted-foreground' />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align='end'>
+                                  {file.type !== 'folder' && (
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownloadFile(file._id);
+                                      }}
+                                    >
+                                      <Download className='h-4 w-4 mr-2' />
+                                      Download
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDuplicateFile(file._id);
+                                    }}
+                                  >
+                                    <Copy className='h-4 w-4 mr-2' />
+                                    Duplicate
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteItem(file._id);
+                                    }}
+                                    className='text-red-600 dark:text-red-400'
+                                  >
+                                    <Trash2 className='h-4 w-4 mr-2' />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         );
@@ -616,8 +668,9 @@ const Files = () => {
                   onClick={() => {
                     return handleDeleteItem(selectedFile._id);
                   }}
+                  className='text-red-600 dark:text-red-400'
                 >
-                  <X className='h-4 w-4 mr-2' />
+                  <Trash2 className='h-4 w-4 mr-2' />
                   Delete
                 </ContextMenuItem>
               </>
