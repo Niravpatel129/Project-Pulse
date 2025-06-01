@@ -55,6 +55,7 @@ interface UploadFileParams {
   files: File[];
   parentId?: string;
   section: 'workspace' | 'private';
+  path?: string[];
 }
 
 export const useFileManagerApi = (
@@ -109,14 +110,32 @@ export const useFileManagerApi = (
 
   // Upload file mutation
   const uploadFile = useMutation({
-    mutationFn: async ({ files, parentId, section }: UploadFileParams) => {
+    mutationFn: async ({ files, parentId, section, path }: UploadFileParams) => {
       const formData = new FormData();
       files.forEach((file) => {
         formData.append('files', file);
       });
-      if (parentId) {
-        formData.append('parentId', parentId);
+
+      // If we have a path, we need to find the parentId
+      if (path && path.length > 0) {
+        // Get the current files to find the parent folder
+        const response = await newRequest.get<FilesResponse>(
+          `/file-manager?section=${section}&path=${JSON.stringify(path.slice(0, -1))}`,
+        );
+
+        if (response.data.success) {
+          const parentFolder = response.data.items.find((item) => {
+            return item.name === path[path.length - 1] && item.type === 'folder';
+          });
+          if (parentFolder) {
+            formData.append('parentId', parentFolder._id);
+          }
+        }
+      } else {
+        // If no path, use the provided parentId or null
+        formData.append('parentId', parentId || '');
       }
+
       formData.append('section', section);
 
       const response = await newRequest.post('/file-manager/upload', formData, {

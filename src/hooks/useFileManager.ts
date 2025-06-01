@@ -287,12 +287,14 @@ export const useFileManager = () => {
   const handleFileUpload = async (file: File) => {
     try {
       const currentFolder = getCurrentFolder();
-      const currentFolderId = currentFolder?._id;
+      // If we're in root directory, set parentId to null, otherwise use the current folder's ID
+      const parentId = currentPath.length === 0 ? null : currentFolder?._id;
 
       await uploadFile.mutateAsync({
         files: [file],
-        parentId: currentFolderId,
+        parentId,
         section: activeSection,
+        path: currentPath,
       });
     } catch (error) {
       console.error('Error uploading file:', error);
