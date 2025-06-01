@@ -68,6 +68,7 @@ export const FileTreeItem = ({
             'flex items-center gap-2 flex-1 min-w-0 text-left',
             'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
             'rounded-md px-1 py-0.5',
+            item.type !== 'folder' && (level === 0 ? 'pl-6' : 'pl-3'),
           )}
         >
           <div className='w-5 h-5 flex items-center justify-center'>{getFileIcon(item.type)}</div>
@@ -118,7 +119,7 @@ export const FileTreeItem = ({
         </DropdownMenu>
       </div>
       {hasChildren && isExpanded && (
-        <div>
+        <div className='pl-2'>
           {item.children.map((child, index) => {
             return (
               <FileTreeItem
