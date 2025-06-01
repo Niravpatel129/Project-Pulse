@@ -70,6 +70,16 @@ export const useFileManager = () => {
     router.push(`?${params.toString()}`);
   }, [activeSection, router]);
 
+  // Handle initial path from URL
+  useEffect(() => {
+    const pathParam = searchParams.get('path');
+    if (pathParam) {
+      const pathArray = pathParam.split('/').filter(Boolean);
+      setCurrentPath(pathArray);
+      setExpandedFolders(pathArray);
+    }
+  }, [searchParams]);
+
   const {
     files,
     isLoading: isFilesLoading,
@@ -189,9 +199,13 @@ export const useFileManager = () => {
         const newExpanded = new Set([...prev, ...newPath]);
         return Array.from(newExpanded);
       });
+      // Update URL with the new path
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('path', newPath.join('/'));
+      router.push(`?${params.toString()}`);
     } else {
       const current = files?.[activeSection] || [];
-      let found = false;
+      const found = false;
       let newPath: string[] = [];
 
       const findFolder = (items: FileItem[], targetName: string, path: string[] = []): boolean => {
@@ -209,26 +223,17 @@ export const useFileManager = () => {
         return false;
       };
 
-      if (findFolder(current, folderName)) {
+      findFolder(current, folderName);
+      if (newPath.length > 0) {
         setCurrentPath(newPath);
-        // Keep all folders in the new path expanded
         setExpandedFolders((prev) => {
           const newExpanded = new Set([...prev, ...newPath]);
           return Array.from(newExpanded);
         });
-        found = true;
-      }
-
-      if (!found) {
-        setCurrentPath((prev) => {
-          const newPath = [...prev, folderName];
-          // Keep all folders in the new path expanded
-          setExpandedFolders((prev) => {
-            const newExpanded = new Set([...prev, ...newPath]);
-            return Array.from(newExpanded);
-          });
-          return newPath;
-        });
+        // Update URL with the new path
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('path', newPath.join('/'));
+        router.push(`?${params.toString()}`);
       }
     }
   };
