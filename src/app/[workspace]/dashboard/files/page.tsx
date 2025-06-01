@@ -22,10 +22,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFileManager, type FileItem } from '@/hooks/useFileManager';
 import { cn } from '@/lib/utils';
 import {
   Calendar,
+  Check,
   ChevronRight,
   ChevronRightIcon,
   Code,
@@ -406,6 +408,7 @@ const Files = () => {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newFileName, setNewFileName] = useState('');
   const [isEmailPopoverOpen, setIsEmailPopoverOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [emailAddress, setEmailAddress] = useState('workspace@example.com'); // This should be dynamic based on your workspace
 
   // Filter file structure items by section
@@ -525,6 +528,48 @@ const Files = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className='relative w-[300px]'>
+                      <Input
+                        value={`${activeSection}${
+                          currentPath.length > 0 ? '.' + currentPath.join('.') : ''
+                        }@hourblock.com`}
+                        readOnly
+                        className='w-full font-mono text-sm pr-20 cursor-help'
+                      />
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            `${activeSection}${
+                              currentPath.length > 0 ? '.' + currentPath.join('.') : ''
+                            }@hourblock.com`,
+                          );
+                          setIsCopied(true);
+                          setTimeout(() => {
+                            return setIsCopied(false);
+                          }, 2000);
+                        }}
+                        className={cn(
+                          'absolute right-1 top-1/2 -translate-y-1/2 h-7 transition-all duration-200',
+                          isCopied ? 'bg-green-500 hover:bg-green-600 text-white' : '',
+                        )}
+                      >
+                        {isCopied ? <Check className='h-4 w-4' /> : 'Copy'}
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side='bottom' className='max-w-[300px]'>
+                    <p className='text-sm'>
+                      Send files to this email address and they will automatically appear in this
+                      folder. The address updates as you navigate through folders.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <input type='file' className='hidden' onChange={handleFileInputChange} />
             </div>
           </div>
