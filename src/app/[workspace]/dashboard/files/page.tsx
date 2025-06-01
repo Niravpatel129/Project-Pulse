@@ -46,7 +46,7 @@ import {
   Trash2,
   Video,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { getFileIcon } from './utils/fileIcons';
 
@@ -410,6 +410,39 @@ const Files = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [emailAddress, setEmailAddress] = useState('workspace@example.com'); // This should be dynamic based on your workspace
 
+  // Get the current folder's ID for email address
+  const getCurrentFolderId = () => {
+    if (currentPath.length === 0) return null;
+
+    // Start from the root of the file structure
+    let currentFolder = fileStructure?.find((item) => {
+      return item.name === currentPath[0];
+    });
+
+    // Traverse through the path to find the current folder
+    for (let i = 1; i < currentPath.length; i++) {
+      if (!currentFolder?.children) return null;
+      currentFolder = currentFolder.children.find((item) => {
+        return item.name === currentPath[i];
+      });
+    }
+
+    return currentFolder?._id || null;
+  };
+
+  // Generate email address based on current state
+  const generateEmailAddress = () => {
+    const workspaceId = fileStructure?.[0]?.workspaceId || 'workspace';
+    const parentId = getCurrentFolderId();
+    const section = activeSection === 'workspace' ? 'ws' : 'pv';
+    return `${section}-${workspaceId}${parentId ? `-${parentId}` : ''}@hourblock.com`;
+  };
+
+  // Update email address when relevant state changes
+  useEffect(() => {
+    setEmailAddress(generateEmailAddress());
+  }, [activeSection, currentPath, fileStructure]);
+
   // Filter file structure items by section
   const workspaceItems =
     fileStructure?.filter((item) => {
@@ -515,9 +548,7 @@ const Files = () => {
                   <TooltipTrigger asChild>
                     <div className='relative w-[300px]'>
                       <Input
-                        value={`${activeSection}${
-                          currentPath.length > 0 ? '.' + currentPath.join('.') : ''
-                        }@hourblock.com`}
+                        value={emailAddress}
                         readOnly
                         className='w-full font-mono text-sm pr-20 cursor-help'
                       />
@@ -525,11 +556,7 @@ const Files = () => {
                         variant='outline'
                         size='sm'
                         onClick={() => {
-                          navigator.clipboard.writeText(
-                            `${activeSection}${
-                              currentPath.length > 0 ? '.' + currentPath.join('.') : ''
-                            }@hourblock.com`,
-                          );
+                          navigator.clipboard.writeText(emailAddress);
                           setIsCopied(true);
                           setTimeout(() => {
                             return setIsCopied(false);
