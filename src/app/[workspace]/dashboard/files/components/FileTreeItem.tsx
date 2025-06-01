@@ -71,7 +71,9 @@ export const FileTreeItem = ({
             item.type !== 'folder' && (level === 0 ? 'pl-6' : 'pl-3'),
           )}
         >
-          <div className='w-5 h-5 flex items-center justify-center'>{getFileIcon(item.type)}</div>
+          <div className='w-5 h-5 flex items-center justify-center'>
+            {getFileIcon(item.type, item.fileDetails?.contentType)}
+          </div>
           <span className='truncate w-[calc(256px-4rem)] text-left' title={item.name}>
             {item.name}
           </span>
