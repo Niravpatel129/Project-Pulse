@@ -63,13 +63,6 @@ export const useFileManager = () => {
   const [isCreatingNew, setIsCreatingNew] = useState<'file' | 'folder' | null>(null);
   const [newItemName, setNewItemName] = useState('');
 
-  // Update URL when section changes
-  useEffect(() => {
-    const params = new URLSearchParams();
-    params.set('section', activeSection);
-    router.push(`?${params.toString()}`);
-  }, [activeSection, router]);
-
   // Handle initial path from URL
   useEffect(() => {
     const pathParam = searchParams.get('path');
@@ -188,6 +181,21 @@ export const useFileManager = () => {
     });
   };
 
+  const handleSectionChange = (section: 'workspace' | 'private', path: string[] = []) => {
+    setActiveSection(section);
+    setCurrentPath(path);
+    setExpandedFolders(path);
+    setSelectedFile(null);
+
+    // Update URL with both section and path
+    const params = new URLSearchParams();
+    params.set('section', section);
+    if (path.length > 0) {
+      params.set('path', path.join('/'));
+    }
+    router.push(`?${params.toString()}`);
+  };
+
   const navigateToFolder = (folderName: string) => {
     // Find the folder in the file structure
     const findFolderPath = (
@@ -210,20 +218,22 @@ export const useFileManager = () => {
     const found = findFolderPath(fileStructure || [], folderName);
 
     if (found) {
-      // If the folder is in a different section, switch to that section first
+      // If the folder is in a different section, switch to that section with the new path
       if (found.section !== activeSection) {
-        handleSectionChange(found.section);
+        handleSectionChange(found.section, found.path);
+      } else {
+        // If in the same section, just update the path
+        setCurrentPath(found.path);
+        setExpandedFolders((prev) => {
+          const newExpanded = new Set([...prev, ...found.path]);
+          return Array.from(newExpanded);
+        });
+        // Update URL with the new path
+        const params = new URLSearchParams();
+        params.set('section', activeSection);
+        params.set('path', found.path.join('/'));
+        router.push(`?${params.toString()}`);
       }
-
-      setCurrentPath(found.path);
-      setExpandedFolders((prev) => {
-        const newExpanded = new Set([...prev, ...found.path]);
-        return Array.from(newExpanded);
-      });
-      // Update URL with the new path
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('path', found.path.join('/'));
-      router.push(`?${params.toString()}`);
     }
   };
 
@@ -254,13 +264,6 @@ export const useFileManager = () => {
     }
 
     return path;
-  };
-
-  const handleSectionChange = (section: 'workspace' | 'private') => {
-    setActiveSection(section);
-    setCurrentPath([]);
-    setExpandedFolders([]);
-    setSelectedFile(null);
   };
 
   // Helper to get the current folder object based on currentPath
