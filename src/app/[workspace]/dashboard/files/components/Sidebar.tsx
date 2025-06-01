@@ -32,6 +32,8 @@ export const Sidebar = ({
   handleDuplicateFile,
   handleDownloadFile,
 }: SidebarProps) => {
+  const isRootLevel = currentPath.length === 0;
+
   return (
     <div className='w-64 border-r border-border bg-[#f5f5f7] dark:bg-[#1c1c1e] p-4'>
       <div className='space-y-6'>
@@ -45,7 +47,7 @@ export const Sidebar = ({
             className={cn(
               'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
               'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
-              activeSection === 'workspace' ? 'bg-[#e5e5e7] dark:bg-[#2c2c2e]' : '',
+              isRootLevel && activeSection === 'workspace' ? 'bg-[#e5e5e7] dark:bg-[#2c2c2e]' : '',
               'text-foreground',
             )}
           >
@@ -87,7 +89,7 @@ export const Sidebar = ({
             className={cn(
               'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
               'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
-              activeSection === 'private' ? 'bg-[#e5e5e7] dark:bg-[#2c2c2e]' : '',
+              isRootLevel && activeSection === 'private' ? 'bg-[#e5e5e7] dark:bg-[#2c2c2e]' : '',
               'text-foreground',
             )}
           >
