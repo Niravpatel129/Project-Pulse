@@ -409,13 +409,7 @@ const Files = () => {
         return f._id === fileId;
       });
       if (file?.fileDetails?.downloadURL) {
-        // Create a temporary link element
-        const link = document.createElement('a');
-        link.href = file.fileDetails.downloadURL;
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        window.open(file.fileDetails.downloadURL, '_blank');
       }
     } catch (error) {
       console.error('Error downloading file:', error);
