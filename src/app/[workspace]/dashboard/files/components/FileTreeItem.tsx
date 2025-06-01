@@ -70,7 +70,7 @@ export const FileTreeItem = ({
             'rounded-md px-1 py-0.5',
           )}
         >
-          {getFileIcon(item.type)}
+          <div className='w-5 h-5 flex items-center justify-center'>{getFileIcon(item.type)}</div>
           <span className='truncate w-[calc(256px-4rem)] text-left' title={item.name}>
             {item.name}
           </span>
