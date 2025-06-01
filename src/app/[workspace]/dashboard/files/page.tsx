@@ -41,7 +41,6 @@ import {
   FolderPlus,
   Image as ImageIcon,
   Loader2,
-  Mail,
   MoreVertical,
   Music,
   Trash2,
@@ -500,34 +499,17 @@ const Files = () => {
                 <FolderPlus className='h-4 w-4' />
                 <span>New Folder</span>
               </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'>
-                    <FilePlus className='h-4 w-4' />
-                    <span>New File</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      return (
-                        document.querySelector('input[type="file"]') as HTMLInputElement
-                      )?.click();
-                    }}
-                  >
-                    <FilePlus className='h-4 w-4 mr-2' />
-                    Upload File
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setIsEmailPopoverOpen(true);
-                    }}
-                  >
-                    <Mail className='h-4 w-4 mr-2' />
-                    Add File Via Email
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
+                onClick={() => {
+                  return (
+                    document.querySelector('input[type="file"]') as HTMLInputElement
+                  )?.click();
+                }}
+              >
+                <FilePlus className='h-4 w-4' />
+                <span>New File</span>
+              </button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
