@@ -105,6 +105,7 @@ export const useFileManagerApi = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['file-structure'] });
     },
   });
 
@@ -147,6 +148,7 @@ export const useFileManagerApi = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['file-structure'] });
     },
   });
 
@@ -160,6 +162,7 @@ export const useFileManagerApi = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['file-structure'] });
     },
   });
 
@@ -171,6 +174,7 @@ export const useFileManagerApi = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['file-structure'] });
     },
   });
 
