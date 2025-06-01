@@ -36,19 +36,31 @@ type FileSection = {
 };
 
 const transformBackendResponse = (items: any[]): FileItem[] => {
-  return items.map((item) => {
-    return {
-      ...item,
-      id: item._id,
-      items: item.children?.length || 0,
-      lastModified: new Date(item.updatedAt),
-      path: [], // This will be populated by the navigation logic
-      createdBy: {
-        name: item.createdBy?.name || '',
-        email: item.createdBy?.email || '',
-      },
-    };
-  });
+  return items
+    .map((item) => {
+      return {
+        ...item,
+        id: item._id,
+        items: item.children?.length || 0,
+        lastModified: new Date(item.updatedAt),
+        path: [], // This will be populated by the navigation logic
+        createdBy: {
+          name: item.createdBy?.name || '',
+          email: item.createdBy?.email || '',
+        },
+      };
+    })
+    .sort((a, b) => {
+      // If both are folders or both are files, sort by name
+      if (
+        (a.type === 'folder' && b.type === 'folder') ||
+        (a.type !== 'folder' && b.type !== 'folder')
+      ) {
+        return a.name.localeCompare(b.name);
+      }
+      // If one is a folder and one is a file, folder comes first
+      return a.type === 'folder' ? -1 : 1;
+    });
 };
 
 export const useFileManager = () => {
@@ -118,7 +130,18 @@ export const useFileManager = () => {
         current = found.children;
       }
     }
-    return current;
+    // Sort items: folders first, then files, both alphabetically by name
+    return [...current].sort((a, b) => {
+      // If both are folders or both are files, sort by name
+      if (
+        (a.type === 'folder' && b.type === 'folder') ||
+        (a.type !== 'folder' && b.type !== 'folder')
+      ) {
+        return a.name.localeCompare(b.name);
+      }
+      // If one is a folder and one is a file, folder comes first
+      return a.type === 'folder' ? -1 : 1;
+    });
   };
 
   const handleCreateItem = useCallback(async () => {

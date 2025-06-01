@@ -20,6 +20,8 @@ export const useFileStructureApi = () => {
 
       return response.data.items;
     },
+    staleTime: 30000, // Data will be considered fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Cache will be kept for 5 minutes
   });
 
   return {

@@ -90,6 +90,11 @@ export const useFileManagerApi = (
 
       return organizedFiles;
     },
+    staleTime: 30000, // Data will be considered fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Cache will be kept for 5 minutes
+    placeholderData: (previousData) => {
+      return previousData;
+    }, // Keep showing previous data while loading new data
   });
 
   // Create folder mutation
