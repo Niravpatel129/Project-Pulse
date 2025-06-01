@@ -71,6 +71,7 @@ const FileTreeItem = ({
   onDelete,
   onDuplicate,
   onDownload,
+  currentPath,
 }: {
   item: FileItem;
   level?: number;
@@ -80,9 +81,11 @@ const FileTreeItem = ({
   onDelete?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onDownload?: (id: string) => void;
+  currentPath: string[];
 }) => {
   const isExpanded = expandedFolders.includes(item.name);
   const hasChildren = item.children && item.children.length > 0;
+  const isSelected = currentPath.includes(item.name);
 
   return (
     <div>
@@ -91,6 +94,7 @@ const FileTreeItem = ({
           'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm group',
           'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
           'text-foreground',
+          isSelected && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
       >
@@ -178,6 +182,7 @@ const FileTreeItem = ({
                 onDelete={onDelete}
                 onDuplicate={onDuplicate}
                 onDownload={onDownload}
+                currentPath={currentPath}
               />
             );
           })}
@@ -475,6 +480,7 @@ const Files = () => {
                       onDelete={handleDeleteItem}
                       onDuplicate={handleDuplicateFile}
                       onDownload={handleDownloadFile}
+                      currentPath={currentPath}
                     />
                   );
                 })
@@ -516,6 +522,7 @@ const Files = () => {
                       onDelete={handleDeleteItem}
                       onDuplicate={handleDuplicateFile}
                       onDownload={handleDownloadFile}
+                      currentPath={currentPath}
                     />
                   );
                 })
