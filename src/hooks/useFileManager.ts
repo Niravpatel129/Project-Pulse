@@ -189,52 +189,41 @@ export const useFileManager = () => {
   };
 
   const navigateToFolder = (folderName: string) => {
-    const existingIndex = currentPath.indexOf(folderName);
-    if (existingIndex !== -1) {
-      // When navigating to a parent folder, keep all folders up to that point expanded
-      const newPath = currentPath.slice(0, existingIndex + 1);
-      setCurrentPath(newPath);
-      // Keep all folders in the new path expanded
+    // Find the folder in the file structure
+    const findFolderPath = (
+      items: FileItem[],
+      targetName: string,
+      currentPath: string[] = [],
+    ): { path: string[]; section: 'workspace' | 'private' } | null => {
+      for (const item of items) {
+        if (item.name === targetName && item.type === 'folder') {
+          return { path: [...currentPath, item.name], section: item.section };
+        }
+        if (item.children) {
+          const found = findFolderPath(item.children, targetName, [...currentPath, item.name]);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const found = findFolderPath(fileStructure || [], folderName);
+
+    if (found) {
+      // If the folder is in a different section, switch to that section first
+      if (found.section !== activeSection) {
+        handleSectionChange(found.section);
+      }
+
+      setCurrentPath(found.path);
       setExpandedFolders((prev) => {
-        const newExpanded = new Set([...prev, ...newPath]);
+        const newExpanded = new Set([...prev, ...found.path]);
         return Array.from(newExpanded);
       });
       // Update URL with the new path
       const params = new URLSearchParams(searchParams.toString());
-      params.set('path', newPath.join('/'));
+      params.set('path', found.path.join('/'));
       router.push(`?${params.toString()}`);
-    } else {
-      const current = files?.[activeSection] || [];
-      const found = false;
-      let newPath: string[] = [];
-
-      const findFolder = (items: FileItem[], targetName: string, path: string[] = []): boolean => {
-        for (const item of items) {
-          if (item.name === targetName && item.type === 'folder') {
-            newPath = [...path, item.name];
-            return true;
-          }
-          if (item.children) {
-            if (findFolder(item.children, targetName, [...path, item.name])) {
-              return true;
-            }
-          }
-        }
-        return false;
-      };
-
-      findFolder(current, folderName);
-      if (newPath.length > 0) {
-        setCurrentPath(newPath);
-        setExpandedFolders((prev) => {
-          const newExpanded = new Set([...prev, ...newPath]);
-          return Array.from(newExpanded);
-        });
-        // Update URL with the new path
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('path', newPath.join('/'));
-        router.push(`?${params.toString()}`);
-      }
     }
   };
 
