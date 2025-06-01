@@ -25,6 +25,7 @@ import {
   FolderLockIcon,
   FolderPlus,
   Image as ImageIcon,
+  Loader2,
   Music,
   Video,
   X,
@@ -312,8 +313,21 @@ const Files = () => {
     getBreadcrumbPath,
     handleSectionChange,
     setSelectedFile,
-    fakeFiles,
+    handleFileUpload,
+    handleMoveItem,
+    handleDeleteItem,
+    isLoading,
+    files,
   } = useFileManager();
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+    // Reset the input
+    e.target.value = '';
+  };
 
   return (
     <div className='flex min-h-screen w-full bg-background'>
@@ -338,17 +352,23 @@ const Files = () => {
               <span>Workspace Files</span>
             </button>
             <div className='mt-2'>
-              {fakeFiles.workspace.map((item, index) => {
-                return (
-                  <FileTreeItem
-                    key={index}
-                    item={item}
-                    expandedFolders={expandedFolders}
-                    onToggleFolder={toggleFolder}
-                    onNavigateToFolder={navigateToFolder}
-                  />
-                );
-              })}
+              {isLoading ? (
+                <div className='flex items-center justify-center py-4'>
+                  <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                </div>
+              ) : (
+                files?.workspace.map((item, index) => {
+                  return (
+                    <FileTreeItem
+                      key={index}
+                      item={item}
+                      expandedFolders={expandedFolders}
+                      onToggleFolder={toggleFolder}
+                      onNavigateToFolder={navigateToFolder}
+                    />
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -370,17 +390,23 @@ const Files = () => {
               <span>My Folder</span>
             </button>
             <div className='mt-2'>
-              {fakeFiles.private.map((item, index) => {
-                return (
-                  <FileTreeItem
-                    key={index}
-                    item={item}
-                    expandedFolders={expandedFolders}
-                    onToggleFolder={toggleFolder}
-                    onNavigateToFolder={navigateToFolder}
-                  />
-                );
-              })}
+              {isLoading ? (
+                <div className='flex items-center justify-center py-4'>
+                  <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                </div>
+              ) : (
+                files?.private.map((item, index) => {
+                  return (
+                    <FileTreeItem
+                      key={index}
+                      item={item}
+                      expandedFolders={expandedFolders}
+                      onToggleFolder={toggleFolder}
+                      onNavigateToFolder={navigateToFolder}
+                    />
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -410,15 +436,11 @@ const Files = () => {
                 <FolderPlus className='h-4 w-4' />
                 <span>New Folder</span>
               </button>
-              <button
-                onClick={() => {
-                  return createNewItem('file');
-                }}
-                className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
-              >
+              <label className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors cursor-pointer'>
                 <FilePlus className='h-4 w-4' />
                 <span>New File</span>
-              </button>
+                <input type='file' className='hidden' onChange={handleFileInputChange} />
+              </label>
             </div>
           </div>
         </div>
@@ -459,82 +481,90 @@ const Files = () => {
 
               {/* File List */}
               <div className='divide-y divide-border'>
-                {isCreatingNew && (
-                  <div className='grid grid-cols-12 gap-4 px-4 py-2 text-sm group hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors'>
-                    <div className='col-span-6 flex items-center gap-2'>
-                      <div className='relative w-8 h-8 flex items-center justify-center'>
-                        {isCreatingNew === 'folder' ? (
-                          <FolderIcon className='h-4 w-4 text-blue-500' />
-                        ) : (
-                          <FileTextIcon className='h-4 w-4 text-gray-500' />
-                        )}
-                      </div>
-                      <input
-                        type='text'
-                        value={newItemName}
-                        onChange={(e) => {
-                          return setNewItemName(e.target.value);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onBlur={handleCreateItem}
-                        autoFocus
-                        className='flex-1 bg-transparent border-none outline-none focus:ring-0'
-                        placeholder={`New ${isCreatingNew} name...`}
-                      />
-                    </div>
-                    <div className='col-span-3 text-muted-foreground'>
-                      {isCreatingNew === 'folder' ? '0 items' : '0 KB'}
-                    </div>
-                    <div className='col-span-3 text-muted-foreground'>
-                      {new Date().toLocaleDateString()}
-                    </div>
+                {isLoading ? (
+                  <div className='flex items-center justify-center py-8'>
+                    <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
                   </div>
-                )}
-                {getCurrentFolderContents().length === 0 ? (
-                  <EmptyFolderState onCreateNew={createNewItem} />
                 ) : (
-                  getCurrentFolderContents().map((file, index) => {
-                    return (
-                      <div
-                        key={index}
-                        className={cn(
-                          'grid grid-cols-12 gap-4 px-4 py-2 text-sm group',
-                          'hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors',
-                          'cursor-pointer',
-                          selectedFile?.name === file.name && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
-                        )}
-                        onClick={() => {
-                          if (file.type === 'folder') {
-                            navigateToFolder(file.name);
-                          } else {
-                            setSelectedFile(file);
-                          }
-                        }}
-                      >
+                  <>
+                    {isCreatingNew && (
+                      <div className='grid grid-cols-12 gap-4 px-4 py-2 text-sm group hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors'>
                         <div className='col-span-6 flex items-center gap-2'>
                           <div className='relative w-8 h-8 flex items-center justify-center'>
-                            {getFileIcon(file.type)}
-                            <div className='absolute inset-0 bg-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity' />
+                            {isCreatingNew === 'folder' ? (
+                              <FolderIcon className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <FileTextIcon className='h-4 w-4 text-gray-500' />
+                            )}
                           </div>
-                          <span className='truncate'>{file.name}</span>
-                          {file.type === 'folder' && (
-                            <ChevronRight
-                              className={cn(
-                                'h-4 w-4 transition-transform',
-                                expandedFolders.includes(file.name) ? 'rotate-90' : '',
-                              )}
-                            />
-                          )}
+                          <input
+                            type='text'
+                            value={newItemName}
+                            onChange={(e) => {
+                              return setNewItemName(e.target.value);
+                            }}
+                            onKeyDown={handleKeyDown}
+                            onBlur={handleCreateItem}
+                            autoFocus
+                            className='flex-1 bg-transparent border-none outline-none focus:ring-0'
+                            placeholder={`New ${isCreatingNew} name...`}
+                          />
                         </div>
                         <div className='col-span-3 text-muted-foreground'>
-                          {file.type === 'folder' ? `${file.items} items` : file.size}
+                          {isCreatingNew === 'folder' ? '0 items' : '0 KB'}
                         </div>
                         <div className='col-span-3 text-muted-foreground'>
-                          {new Date(file.lastModified).toLocaleDateString()}
+                          {new Date().toLocaleDateString()}
                         </div>
                       </div>
-                    );
-                  })
+                    )}
+                    {getCurrentFolderContents().length === 0 ? (
+                      <EmptyFolderState onCreateNew={createNewItem} />
+                    ) : (
+                      getCurrentFolderContents().map((file, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className={cn(
+                              'grid grid-cols-12 gap-4 px-4 py-2 text-sm group',
+                              'hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] transition-colors',
+                              'cursor-pointer',
+                              selectedFile?.name === file.name && 'bg-[#e5e5e7] dark:bg-[#2c2c2e]',
+                            )}
+                            onClick={() => {
+                              if (file.type === 'folder') {
+                                navigateToFolder(file.name);
+                              } else {
+                                setSelectedFile(file);
+                              }
+                            }}
+                          >
+                            <div className='col-span-6 flex items-center gap-2'>
+                              <div className='relative w-8 h-8 flex items-center justify-center'>
+                                {getFileIcon(file.type)}
+                                <div className='absolute inset-0 bg-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity' />
+                              </div>
+                              <span className='truncate'>{file.name}</span>
+                              {file.type === 'folder' && (
+                                <ChevronRight
+                                  className={cn(
+                                    'h-4 w-4 transition-transform',
+                                    expandedFolders.includes(file.name) ? 'rotate-90' : '',
+                                  )}
+                                />
+                              )}
+                            </div>
+                            <div className='col-span-3 text-muted-foreground'>
+                              {file.type === 'folder' ? `${file.items} items` : file.size}
+                            </div>
+                            <div className='col-span-3 text-muted-foreground'>
+                              {new Date(file.lastModified).toLocaleDateString()}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -550,12 +580,24 @@ const Files = () => {
             </ContextMenuItem>
             <ContextMenuItem
               onClick={() => {
-                return createNewItem('file');
+                return (document.querySelector('input[type="file"]') as HTMLInputElement)?.click();
               }}
             >
               <FilePlus className='h-4 w-4 mr-2' />
               New File
             </ContextMenuItem>
+            {selectedFile && (
+              <>
+                <ContextMenuItem
+                  onClick={() => {
+                    return handleDeleteItem(selectedFile.id);
+                  }}
+                >
+                  <X className='h-4 w-4 mr-2' />
+                  Delete
+                </ContextMenuItem>
+              </>
+            )}
           </ContextMenuContent>
         </ContextMenu>
       </div>
