@@ -17,12 +17,16 @@ interface FileItem {
     originalName?: string;
   };
   workspaceId: string;
-  createdBy: string;
+  createdBy: {
+    name: string;
+    email: string;
+  };
   section: 'workspace' | 'private';
   path: string[];
   status: 'active' | 'deleted';
   createdAt: Date;
   updatedAt: Date;
+  parent?: string | null;
 }
 
 interface FilesResponse {

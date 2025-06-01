@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useFileManagerApi } from './useFileManagerApi';
 
 interface FileItem {
@@ -17,16 +17,36 @@ interface FileItem {
     originalName?: string;
   };
   workspaceId: string;
-  createdBy: string;
+  createdBy: {
+    name: string;
+    email: string;
+  };
   section: 'workspace' | 'private';
   path: string[];
   status: 'active' | 'deleted';
   createdAt: Date;
   updatedAt: Date;
+  parent?: string | null;
 }
 
 type FileSection = {
   [key: string]: FileItem[];
+};
+
+const transformBackendResponse = (items: any[]): FileItem[] => {
+  return items.map((item) => {
+    return {
+      ...item,
+      id: item._id,
+      items: item.children?.length || 0,
+      lastModified: new Date(item.updatedAt),
+      path: [], // This will be populated by the navigation logic
+      createdBy: {
+        name: item.createdBy?.name || '',
+        email: item.createdBy?.email || '',
+      },
+    };
+  });
 };
 
 export const useFileManager = () => {
@@ -38,6 +58,16 @@ export const useFileManager = () => {
   const [newItemName, setNewItemName] = useState('');
 
   const { files, isLoading, createFolder, uploadFile, moveItem, deleteItem } = useFileManagerApi();
+
+  // Transform the files data when it's received
+  const transformedFiles = useMemo(() => {
+    if (!files) return { workspace: [], private: [] };
+
+    return {
+      workspace: transformBackendResponse(files.workspace || []),
+      private: transformBackendResponse(files.private || []),
+    };
+  }, [files]);
 
   const createNewItem = useCallback((type: 'file' | 'folder') => {
     setIsCreatingNew(type);
@@ -264,7 +294,7 @@ export const useFileManager = () => {
     handleMoveItem,
     handleDeleteItem,
     isLoading,
-    files,
+    files: transformedFiles,
   };
 };
 
