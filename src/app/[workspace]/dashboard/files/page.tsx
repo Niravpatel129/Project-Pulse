@@ -50,6 +50,13 @@ import { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { getFileIcon } from './utils/fileIcons';
 
+// Function to generate a short ID from MongoDB ID
+const generateShortId = (mongoId: string): string => {
+  // Take first 8 characters of the MongoDB ID
+  // This gives us 16^8 = ~4.3 billion possible combinations
+  return mongoId.slice(0, 8);
+};
+
 const FileTreeItem = ({
   item,
   level = 0,
@@ -435,7 +442,14 @@ const Files = () => {
     const workspaceId = fileStructure?.[0]?.workspaceId || 'workspace';
     const parentId = getCurrentFolderId();
     const section = activeSection === 'workspace' ? 'ws' : 'pv';
-    return `${section}-${workspaceId}${parentId ? `-${parentId}` : ''}@hourblock.com`;
+
+    // Use short IDs for both workspace and parent
+    const shortWorkspaceId = generateShortId(workspaceId);
+    const shortParentId = parentId ? generateShortId(parentId) : '';
+
+    return `${section}-${shortWorkspaceId}${
+      shortParentId ? `-${shortParentId}` : ''
+    }@hourblock.com`;
   };
 
   // Update email address when relevant state changes
