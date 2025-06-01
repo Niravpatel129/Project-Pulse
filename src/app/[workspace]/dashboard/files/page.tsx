@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useFileManager, type FileItem } from '@/hooks/useFileManager';
 import { cn } from '@/lib/utils';
 import {
@@ -41,7 +42,6 @@ import {
   Music,
   Trash2,
   Video,
-  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
@@ -180,6 +180,12 @@ const FileTreeItem = ({
 const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => void }) => {
   if (!file) return null;
 
+  const handleDownload = () => {
+    if (file.fileDetails?.downloadURL) {
+      window.open(file.fileDetails.downloadURL, '_blank');
+    }
+  };
+
   const getPreviewContent = () => {
     switch (file.type) {
       case 'image':
@@ -267,48 +273,57 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
   };
 
   return (
-    <div className='w-80 border-l border-border bg-[#f5f5f7] dark:bg-[#1c1c1e]'>
-      <div className='flex items-center justify-between p-4 border-b border-border'>
-        <div className='flex items-center gap-2'>
-          {getFileIcon(file.type)}
-          <h3 className='font-medium'>{file.name}</h3>
-        </div>
-        <button
-          onClick={onClose}
-          className='p-1 hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] rounded-md transition-colors'
-        >
-          <X className='h-4 w-4 text-muted-foreground' />
-        </button>
-      </div>
-
-      <div className='p-4'>
-        <div className='mb-4'>
-          <div className='text-sm text-muted-foreground'>
-            {file.type === 'folder' ? `${file.items} items` : file.size}
+    <Sheet open={!!file} onOpenChange={onClose}>
+      <SheetContent side='right' className='w-[400px] sm:w-[540px]'>
+        <SheetHeader>
+          <div className='flex items-center justify-between'>
+            <SheetTitle className='flex items-center gap-2'>
+              {getFileIcon(file.type)}
+              <span>{file.name}</span>
+            </SheetTitle>
+            {file.type !== 'folder' && (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleDownload}
+                className='flex items-center gap-2'
+              >
+                <Download className='h-4 w-4' />
+                <span>Download</span>
+              </Button>
+            )}
           </div>
-        </div>
+        </SheetHeader>
 
-        <div className='space-y-4'>
+        <div className='mt-6 space-y-6'>
           <div className='space-y-2'>
-            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-              <Calendar className='h-4 w-4' />
-              <span>Modified: {new Date(file.lastModified).toLocaleDateString()}</span>
-            </div>
-            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-              <FileText className='h-4 w-4' />
-              <span>Type: {file.type.charAt(0).toUpperCase() + file.type.slice(1)}</span>
+            <div className='text-sm text-muted-foreground'>
+              {file.type === 'folder' ? `${file.items} items` : file.size}
             </div>
           </div>
 
-          {file.type !== 'folder' && (
-            <div className='mt-4'>
-              <h4 className='text-sm font-medium mb-2'>Preview</h4>
-              {getPreviewContent()}
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                <Calendar className='h-4 w-4' />
+                <span>Modified: {new Date(file.lastModified).toLocaleDateString()}</span>
+              </div>
+              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                <FileText className='h-4 w-4' />
+                <span>Type: {file.type.charAt(0).toUpperCase() + file.type.slice(1)}</span>
+              </div>
             </div>
-          )}
+
+            {file.type !== 'folder' && (
+              <div className='mt-4'>
+                <h4 className='text-sm font-medium mb-2'>Preview</h4>
+                {getPreviewContent()}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -725,15 +740,13 @@ const Files = () => {
         </ContextMenu>
       </div>
 
-      {/* File Preview Panel */}
-      {selectedFile && (
-        <FilePreview
-          file={selectedFile}
-          onClose={() => {
-            return setSelectedFile(null);
-          }}
-        />
-      )}
+      {/* File Preview Sheet */}
+      <FilePreview
+        file={selectedFile}
+        onClose={() => {
+          return setSelectedFile(null);
+        }}
+      />
 
       {/* Rename Dialog */}
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
