@@ -51,6 +51,11 @@ interface MoveItemParams {
   newParentId?: string;
 }
 
+interface RenameItemParams {
+  itemId: string;
+  newName: string;
+}
+
 interface UploadFileParams {
   files: File[];
   parentId?: string;
@@ -183,6 +188,20 @@ export const useFileManagerApi = (
     },
   });
 
+  // Rename item mutation
+  const renameItem = useMutation({
+    mutationFn: async ({ itemId, newName }: RenameItemParams) => {
+      const response = await newRequest.put(`/file-manager/${itemId}/rename`, {
+        newName,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['file-structure'] });
+    },
+  });
+
   return {
     files,
     isLoading,
@@ -190,5 +209,6 @@ export const useFileManagerApi = (
     uploadFile,
     moveItem,
     deleteItem,
+    renameItem,
   };
 };

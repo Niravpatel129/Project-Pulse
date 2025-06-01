@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/button';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -6,11 +7,19 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { useFileManager, type FileItem } from '@/hooks/useFileManager';
 import { cn } from '@/lib/utils';
 import {
@@ -34,6 +43,7 @@ import {
   Video,
   X,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { getFileIcon } from './utils/fileIcons';
 
@@ -370,10 +380,14 @@ const Files = () => {
     handleFileUpload,
     handleMoveItem,
     handleDeleteItem,
+    handleRenameItem,
     isLoading,
     files,
     fileStructure,
   } = useFileManager();
+
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
 
   // Filter file structure items by section
   const workspaceItems =
@@ -414,6 +428,13 @@ const Files = () => {
     } catch (error) {
       console.error('Error downloading file:', error);
     }
+  };
+
+  const handleRename = async () => {
+    if (!selectedFile || !newFileName.trim()) return;
+    await handleRenameItem(selectedFile._id, newFileName.trim());
+    setIsRenameDialogOpen(false);
+    setNewFileName('');
   };
 
   return (
@@ -617,6 +638,17 @@ const Files = () => {
                                   <DropdownMenuItem
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      setSelectedFile(file);
+                                      setNewFileName(file.name);
+                                      setIsRenameDialogOpen(true);
+                                    }}
+                                  >
+                                    <FileText className='h-4 w-4 mr-2' />
+                                    Rename
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       handleDuplicateFile(file._id);
                                     }}
                                   >
@@ -666,6 +698,15 @@ const Files = () => {
               <>
                 <ContextMenuItem
                   onClick={() => {
+                    setNewFileName(selectedFile.name);
+                    setIsRenameDialogOpen(true);
+                  }}
+                >
+                  <FileText className='h-4 w-4 mr-2' />
+                  Rename
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
                     return handleDeleteItem(selectedFile._id);
                   }}
                   className='text-red-600 dark:text-red-400'
@@ -688,6 +729,36 @@ const Files = () => {
           }}
         />
       )}
+
+      {/* Rename Dialog */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle>Rename {selectedFile?.type === 'folder' ? 'Folder' : 'File'}</DialogTitle>
+          </DialogHeader>
+          <div className='grid gap-4 py-4'>
+            <Input
+              value={newFileName}
+              onChange={(e) => {
+                return setNewFileName(e.target.value);
+              }}
+              placeholder={`Enter new ${selectedFile?.type === 'folder' ? 'folder' : 'file'} name`}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsRenameDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleRename}>Rename</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

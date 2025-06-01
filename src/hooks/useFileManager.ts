@@ -96,6 +96,7 @@ export const useFileManager = () => {
     uploadFile,
     moveItem,
     deleteItem,
+    renameItem,
   } = useFileManagerApi(activeSection, currentPath);
 
   const { fileStructure, isLoading: isStructureLoading } = useFileStructureApi();
@@ -343,6 +344,14 @@ export const useFileManager = () => {
     }
   };
 
+  const handleRenameItem = async (itemId: string, newName: string) => {
+    try {
+      await renameItem.mutateAsync({ itemId, newName });
+    } catch (error) {
+      console.error('Error renaming item:', error);
+    }
+  };
+
   return {
     activeSection,
     expandedFolders,
@@ -364,6 +373,7 @@ export const useFileManager = () => {
     handleFileUpload,
     handleMoveItem,
     handleDeleteItem,
+    handleRenameItem,
     isLoading: isFilesLoading || isStructureLoading,
     files: transformedFiles,
     fileStructure: transformedFileStructure,
