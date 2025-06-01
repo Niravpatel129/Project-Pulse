@@ -3,8 +3,9 @@ import { useFileManagerApi } from './useFileManagerApi';
 
 interface FileItem {
   _id: string;
+  id?: string;
   name: string;
-  type: 'folder' | 'file';
+  type: 'folder' | 'image' | 'text' | 'code' | 'pdf' | 'audio' | 'video' | 'file';
   size?: string;
   items: number;
   lastModified: Date;

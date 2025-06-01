@@ -590,7 +590,7 @@ const Files = () => {
               <>
                 <ContextMenuItem
                   onClick={() => {
-                    return handleDeleteItem(selectedFile.id);
+                    return handleDeleteItem(selectedFile._id);
                   }}
                 >
                   <X className='h-4 w-4 mr-2' />
