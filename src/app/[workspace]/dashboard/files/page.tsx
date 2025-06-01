@@ -72,7 +72,7 @@ const FileTreeItem = ({
     <div>
       <div
         className={cn(
-          'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
+          'flex items-center gap- px-2 py-1.5 rounded-md text-sm',
           'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
           'text-foreground',
         )}
@@ -96,13 +96,15 @@ const FileTreeItem = ({
             return onNavigateToFolder(item.name);
           }}
           className={cn(
-            'flex items-center gap-2 flex-1',
+            'flex items-center gap-2 flex-1 min-w-0 text-left',
             'hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
             'rounded-md px-1 py-0.5',
           )}
         >
           {getFileIcon(item.type)}
-          <span className='truncate'>{item.name}</span>
+          <span className='truncate w-[calc(256px-4rem)] text-left' title={item.name}>
+            {item.name}
+          </span>
         </button>
       </div>
       {hasChildren && isExpanded && (
