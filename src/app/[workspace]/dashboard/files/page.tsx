@@ -585,6 +585,11 @@ const Files = () => {
                                 setSelectedFile(file);
                               }
                             }}
+                            onDoubleClick={() => {
+                              if (file.type !== 'folder') {
+                                handleDownloadFile(file._id);
+                              }
+                            }}
                             onContextMenu={(e) => {
                               e.preventDefault();
                               setSelectedFile(file);
