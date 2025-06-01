@@ -1,5 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFileManagerApi } from './useFileManagerApi';
+import { useFileStructureApi } from './useFileStructureApi';
 
 interface FileItem {
   _id: string;
@@ -50,14 +52,40 @@ const transformBackendResponse = (items: any[]): FileItem[] => {
 };
 
 export const useFileManager = () => {
-  const [activeSection, setActiveSection] = useState<'workspace' | 'private'>('workspace');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeSection, setActiveSection] = useState<'workspace' | 'private'>(
+    (searchParams.get('section') as 'workspace' | 'private') || 'workspace',
+  );
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
-  const [currentPath, setCurrentPath] = useState<string[]>([]);
+  const [currentPath, setCurrentPath] = useState<string[]>(() => {
+    const pathParam = searchParams.get('path');
+    return pathParam ? JSON.parse(pathParam) : [];
+  });
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState<'file' | 'folder' | null>(null);
   const [newItemName, setNewItemName] = useState('');
 
-  const { files, isLoading, createFolder, uploadFile, moveItem, deleteItem } = useFileManagerApi();
+  // Update URL when section or path changes
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('section', activeSection);
+    if (currentPath.length > 0) {
+      params.set('path', JSON.stringify(currentPath));
+    }
+    router.push(`?${params.toString()}`);
+  }, [activeSection, currentPath, router]);
+
+  const {
+    files,
+    isLoading: isFilesLoading,
+    createFolder,
+    uploadFile,
+    moveItem,
+    deleteItem,
+  } = useFileManagerApi(activeSection, currentPath);
+
+  const { fileStructure, isLoading: isStructureLoading } = useFileStructureApi();
 
   // Transform the files data when it's received
   const transformedFiles = useMemo(() => {
@@ -69,10 +97,32 @@ export const useFileManager = () => {
     };
   }, [files]);
 
+  // Transform the file structure data
+  const transformedFileStructure = useMemo(() => {
+    if (!fileStructure) return [];
+
+    return transformBackendResponse(fileStructure);
+  }, [fileStructure]);
+
   const createNewItem = useCallback((type: 'file' | 'folder') => {
     setIsCreatingNew(type);
     setNewItemName('');
   }, []);
+
+  const getCurrentFolderContents = () => {
+    if (!files) return [];
+
+    let current = files[activeSection] || [];
+    for (const folder of currentPath) {
+      const found = current.find((item) => {
+        return item.name === folder && item.type === 'folder';
+      });
+      if (found && found.children) {
+        current = found.children;
+      }
+    }
+    return current;
+  };
 
   const handleCreateItem = useCallback(async () => {
     if (!newItemName.trim()) {
@@ -93,6 +143,7 @@ export const useFileManager = () => {
           name: newItemName.trim(),
           parentId: currentFolderId,
           section: activeSection,
+          path: currentPath,
         });
       }
       // For files, we'll handle it through the uploadFile mutation
@@ -102,7 +153,14 @@ export const useFileManager = () => {
 
     setIsCreatingNew(null);
     setNewItemName('');
-  }, [newItemName, isCreatingNew, currentPath, createFolder, activeSection]);
+  }, [
+    newItemName,
+    isCreatingNew,
+    currentPath,
+    createFolder,
+    activeSection,
+    getCurrentFolderContents,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -187,21 +245,6 @@ export const useFileManager = () => {
       return;
     }
     setCurrentPath(currentPath.slice(0, index + 1));
-  };
-
-  const getCurrentFolderContents = () => {
-    if (!files) return [];
-
-    let current = files[activeSection] || [];
-    for (const folder of currentPath) {
-      const found = current.find((item) => {
-        return item.name === folder && item.type === 'folder';
-      });
-      if (found && found.children) {
-        current = found.children;
-      }
-    }
-    return current;
   };
 
   const getBreadcrumbPath = () => {
@@ -305,8 +348,9 @@ export const useFileManager = () => {
     handleFileUpload,
     handleMoveItem,
     handleDeleteItem,
-    isLoading,
+    isLoading: isFilesLoading || isStructureLoading,
     files: transformedFiles,
+    fileStructure: transformedFileStructure,
   };
 };
 

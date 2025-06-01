@@ -392,7 +392,18 @@ const Files = () => {
     handleDeleteItem,
     isLoading,
     files,
+    fileStructure,
   } = useFileManager();
+
+  // Filter file structure items by section
+  const workspaceItems =
+    fileStructure?.filter((item) => {
+      return item.section === 'workspace';
+    }) || [];
+  const privateItems =
+    fileStructure?.filter((item) => {
+      return item.section === 'private';
+    }) || [];
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -453,7 +464,7 @@ const Files = () => {
                   <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
                 </div>
               ) : (
-                files?.workspace.map((item, index) => {
+                workspaceItems.map((item, index) => {
                   return (
                     <FileTreeItem
                       key={index}
@@ -494,7 +505,7 @@ const Files = () => {
                   <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
                 </div>
               ) : (
-                files?.private.map((item, index) => {
+                privateItems.map((item, index) => {
                   return (
                     <FileTreeItem
                       key={index}

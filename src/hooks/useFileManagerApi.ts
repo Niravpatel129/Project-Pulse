@@ -43,6 +43,7 @@ interface CreateFolderParams {
   name: string;
   parentId?: string;
   section: 'workspace' | 'private';
+  path?: string[];
 }
 
 interface MoveItemParams {
@@ -56,17 +57,24 @@ interface UploadFileParams {
   section: 'workspace' | 'private';
 }
 
-export const useFileManagerApi = () => {
+export const useFileManagerApi = (
+  activeSection: 'workspace' | 'private',
+  currentPath: string[] = [],
+) => {
   const queryClient = useQueryClient();
 
   // Get files and folders
   const { data: files = { workspace: [], private: [] }, isLoading } = useQuery({
-    queryKey: ['files'],
+    queryKey: ['files', activeSection, currentPath],
     queryFn: async () => {
       // Get both workspace and private files
       const [workspaceResponse, privateResponse] = await Promise.all([
-        newRequest.get<FilesResponse>('/file-manager?section=workspace'),
-        newRequest.get<FilesResponse>('/file-manager?section=private'),
+        newRequest.get<FilesResponse>(
+          `/file-manager?section=workspace&path=${JSON.stringify(currentPath)}`,
+        ),
+        newRequest.get<FilesResponse>(
+          `/file-manager?section=private&path=${JSON.stringify(currentPath)}`,
+        ),
       ]);
 
       if (!workspaceResponse.data.success || !privateResponse.data.success) {
@@ -85,11 +93,12 @@ export const useFileManagerApi = () => {
 
   // Create folder mutation
   const createFolder = useMutation({
-    mutationFn: async ({ name, parentId, section }: CreateFolderParams) => {
+    mutationFn: async ({ name, parentId, section, path }: CreateFolderParams) => {
       const response = await newRequest.post('/file-manager/folders', {
         name,
         parentId,
         section,
+        path,
       });
       return response.data;
     },
