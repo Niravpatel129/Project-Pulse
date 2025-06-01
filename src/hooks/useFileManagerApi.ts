@@ -47,7 +47,7 @@ interface MoveItemParams {
 }
 
 interface UploadFileParams {
-  file: File;
+  files: File[];
   parentId?: string;
   section: 'workspace' | 'private';
 }
@@ -96,9 +96,11 @@ export const useFileManagerApi = () => {
 
   // Upload file mutation
   const uploadFile = useMutation({
-    mutationFn: async ({ file, parentId, section }: UploadFileParams) => {
+    mutationFn: async ({ files, parentId, section }: UploadFileParams) => {
       const formData = new FormData();
-      formData.append('file', file);
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
       if (parentId) {
         formData.append('parentId', parentId);
       }

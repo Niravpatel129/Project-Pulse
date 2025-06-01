@@ -190,17 +190,31 @@ export const useFileManager = () => {
     setSelectedFile(null);
   };
 
+  // Helper to get the current folder object based on currentPath
+  const getCurrentFolder = () => {
+    if (!files) return undefined;
+    let current = files[activeSection] || [];
+    let folder = undefined;
+    for (const folderName of currentPath) {
+      folder = current.find((item) => {
+        return item.name === folderName && item.type === 'folder';
+      });
+      if (folder && folder.children) {
+        current = folder.children;
+      } else {
+        break;
+      }
+    }
+    return folder;
+  };
+
   const handleFileUpload = async (file: File) => {
     try {
-      const currentFolderId =
-        currentPath.length > 0
-          ? getCurrentFolderContents().find((f) => {
-              return f.name === currentPath[currentPath.length - 1];
-            })?._id
-          : undefined;
+      const currentFolder = getCurrentFolder();
+      const currentFolderId = currentFolder?._id;
 
       await uploadFile.mutateAsync({
-        file,
+        files: [file],
         parentId: currentFolderId,
         section: activeSection,
       });
