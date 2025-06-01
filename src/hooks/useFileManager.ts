@@ -81,7 +81,11 @@ export const useFileManager = () => {
     if (pathParam) {
       const pathArray = pathParam.split('/').filter(Boolean);
       setCurrentPath(pathArray);
-      setExpandedFolders(pathArray);
+      // Don't reset expanded folders here, just add the new path
+      setExpandedFolders((prev) => {
+        const newExpanded = new Set([...prev, ...pathArray]);
+        return Array.from(newExpanded);
+      });
     }
   }, [searchParams]);
 
@@ -207,7 +211,7 @@ export const useFileManager = () => {
   const handleSectionChange = (section: 'workspace' | 'private', path: string[] = []) => {
     setActiveSection(section);
     setCurrentPath(path);
-    setExpandedFolders(path);
+    // Don't modify expanded folders here
     setSelectedFile(null);
 
     // Update URL with both section and path
@@ -247,10 +251,6 @@ export const useFileManager = () => {
       } else {
         // If in the same section, just update the path
         setCurrentPath(found.path);
-        setExpandedFolders((prev) => {
-          const newExpanded = new Set([...prev, ...found.path]);
-          return Array.from(newExpanded);
-        });
         // Update URL with the new path
         const params = new URLSearchParams();
         params.set('section', activeSection);
