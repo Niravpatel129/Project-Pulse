@@ -129,7 +129,14 @@ export const useFileManager = () => {
   const navigateToFolder = (folderName: string) => {
     const existingIndex = currentPath.indexOf(folderName);
     if (existingIndex !== -1) {
-      setCurrentPath(currentPath.slice(0, existingIndex + 1));
+      // When navigating to a parent folder, keep all folders up to that point expanded
+      const newPath = currentPath.slice(0, existingIndex + 1);
+      setCurrentPath(newPath);
+      // Keep all folders in the new path expanded
+      setExpandedFolders((prev) => {
+        const newExpanded = new Set([...prev, ...newPath]);
+        return Array.from(newExpanded);
+      });
     } else {
       const current = files?.[activeSection] || [];
       let found = false;
@@ -152,20 +159,25 @@ export const useFileManager = () => {
 
       if (findFolder(current, folderName)) {
         setCurrentPath(newPath);
+        // Keep all folders in the new path expanded
+        setExpandedFolders((prev) => {
+          const newExpanded = new Set([...prev, ...newPath]);
+          return Array.from(newExpanded);
+        });
         found = true;
       }
 
       if (!found) {
         setCurrentPath((prev) => {
-          return [...prev, folderName];
+          const newPath = [...prev, folderName];
+          // Keep all folders in the new path expanded
+          setExpandedFolders((prev) => {
+            const newExpanded = new Set([...prev, ...newPath]);
+            return Array.from(newExpanded);
+          });
+          return newPath;
         });
       }
-    }
-
-    if (!expandedFolders.includes(folderName)) {
-      setExpandedFolders((prev) => {
-        return [...prev, folderName];
-      });
     }
   };
 
