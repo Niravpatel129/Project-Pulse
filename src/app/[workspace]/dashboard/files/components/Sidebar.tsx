@@ -1,6 +1,6 @@
 import { type FileItem } from '@/hooks/useFileManager';
 import { cn } from '@/lib/utils';
-import { FolderIcon, FolderLockIcon, Loader2 } from 'lucide-react';
+import { FolderLockIcon, FolderMinus, Loader2 } from 'lucide-react';
 import { FileTreeItem } from './FileTreeItem';
 
 interface SidebarProps {
@@ -49,10 +49,10 @@ export const Sidebar = ({
               'text-foreground',
             )}
           >
-            <FolderIcon className='h-4 w-4 text-blue-500' />
+            <FolderMinus className='h-4 w-4 text-green-500' />
             <span>Workspace Files</span>
           </button>
-          <div className='mt-2'>
+          <div className=''>
             {isLoading ? (
               <div className='flex items-center justify-center py-4'>
                 <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
