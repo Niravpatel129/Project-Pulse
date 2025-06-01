@@ -322,7 +322,13 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
   );
 };
 
-const EmptyFolderState = ({ onCreateNew }: { onCreateNew: (type: 'file' | 'folder') => void }) => {
+const EmptyFolderState = ({
+  onCreateNew,
+  onFileUpload,
+}: {
+  onCreateNew: (type: 'file' | 'folder') => void;
+  onFileUpload: (file: File) => void;
+}) => {
   return (
     <div className='flex flex-col items-center justify-center py-16 px-4 text-center'>
       <div className='w-16 h-16 mb-4 rounded-full bg-[#f5f5f7] dark:bg-[#2c2c2e] flex items-center justify-center'>
@@ -342,15 +348,21 @@ const EmptyFolderState = ({ onCreateNew }: { onCreateNew: (type: 'file' | 'folde
           <FolderPlus className='h-4 w-4' />
           <span>New Folder</span>
         </button>
-        <button
-          onClick={() => {
-            return onCreateNew('file');
-          }}
-          className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors'
-        >
+        <label className='flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-[#e5e5e7] dark:bg-[#2c2c2e] hover:bg-[#d1d1d6] dark:hover:bg-[#3a3a3c] transition-colors cursor-pointer'>
           <FilePlus className='h-4 w-4' />
           <span>New File</span>
-        </button>
+          <input
+            type='file'
+            className='hidden'
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onFileUpload(file);
+              }
+              e.target.value = '';
+            }}
+          />
+        </label>
       </div>
     </div>
   );
@@ -609,7 +621,10 @@ const Files = () => {
                       </div>
                     )}
                     {getCurrentFolderContents().length === 0 ? (
-                      <EmptyFolderState onCreateNew={createNewItem} />
+                      <EmptyFolderState
+                        onCreateNew={createNewItem}
+                        onFileUpload={handleFileUpload}
+                      />
                     ) : (
                       getCurrentFolderContents().map((file, index) => {
                         return (
