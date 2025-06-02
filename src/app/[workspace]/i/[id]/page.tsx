@@ -200,7 +200,7 @@ const InvoicePage = () => {
       <div className='dotted-bg min-h-screen w-full flex items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D1D1F]'></div>
-          <span className='text-sm text-[#878787] font-mono'>Loading invoice...</span>
+          <span className='text-sm text-[#878787] font-mono bg-white'>Loading invoice...</span>
         </div>
       </div>
     );
