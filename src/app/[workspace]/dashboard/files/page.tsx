@@ -50,11 +50,6 @@ import { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { getFileIcon } from './utils/fileIcons';
 
-// Function to generate a short ID from MongoDB ID
-const generateShortId = (mongoId: string): string => {
-  return mongoId.slice(0, 8);
-};
-
 const FileTreeItem = ({
   item,
   level = 0,
@@ -436,7 +431,7 @@ const Files = () => {
     const section = activeSection === 'workspace' ? 'ws' : 'pv';
 
     // Use short IDs for both workspace and parent
-    const shortParentId = parentId ? generateShortId(parentId) : '';
+    const shortParentId = parentId ? parentId : '';
 
     return `${section}-${workspaceId}${shortParentId ? `-${shortParentId}` : ''}@hourblock.com`;
   };
