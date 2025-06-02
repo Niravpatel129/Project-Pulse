@@ -408,6 +408,7 @@ const Files = () => {
     files,
     fileStructure,
   } = useFileManager();
+  console.log('🚀 fileStructure:', fileStructure);
 
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newFileName, setNewFileName] = useState('');
@@ -437,17 +438,14 @@ const Files = () => {
 
   // Generate email address based on current state
   const generateEmailAddress = () => {
-    const workspaceId = fileStructure?.[0]?.workspaceId || 'workspace';
+    const workspaceId = fileStructure?.[0]?.workspaceShortid || 'workspace';
     const parentId = getCurrentFolderId();
     const section = activeSection === 'workspace' ? 'ws' : 'pv';
 
     // Use short IDs for both workspace and parent
-    const shortWorkspaceId = generateShortId(workspaceId);
     const shortParentId = parentId ? generateShortId(parentId) : '';
 
-    return `${section}-${shortWorkspaceId}${
-      shortParentId ? `-${shortParentId}` : ''
-    }@hourblock.com`;
+    return `${section}-${workspaceId}${shortParentId ? `-${shortParentId}` : ''}@hourblock.com`;
   };
 
   // Update email address when relevant state changes

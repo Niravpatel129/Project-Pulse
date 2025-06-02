@@ -19,6 +19,7 @@ interface FileItem {
     originalName?: string;
   };
   workspaceId: string;
+  workspaceShortid?: string;
   createdBy: {
     name: string;
     email: string;
