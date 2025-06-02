@@ -421,19 +421,12 @@ const Files = () => {
     if (currentPath.length === 0) return null;
 
     // Start from the root of the file structure
-    let currentFolder = fileStructure?.find((item) => {
+    const currentFolder = fileStructure?.find((item) => {
       return item.name === currentPath[0];
     });
+    console.log('🚀 currentFolder:', currentFolder);
 
-    // Traverse through the path to find the current folder
-    for (let i = 1; i < currentPath.length; i++) {
-      if (!currentFolder?.children) return null;
-      currentFolder = currentFolder.children.find((item) => {
-        return item.name === currentPath[i];
-      });
-    }
-
-    return currentFolder?._id || null;
+    return currentFolder?.shortid || null;
   };
 
   // Generate email address based on current state

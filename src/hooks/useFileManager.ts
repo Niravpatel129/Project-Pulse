@@ -11,6 +11,7 @@ interface FileItem {
   size?: string;
   items: number;
   lastModified: Date;
+  shortid?: string;
   children?: FileItem[];
   fileDetails?: {
     storagePath?: string;
