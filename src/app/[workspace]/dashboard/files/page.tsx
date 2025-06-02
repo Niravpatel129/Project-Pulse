@@ -284,27 +284,10 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
               {getFileIcon(file.type)}
               <span>{file.name}</span>
             </SheetTitle>
-            {file.type !== 'folder' && (
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleDownload}
-                className='flex items-center gap-2'
-              >
-                <Download className='h-4 w-4' />
-                <span>Download</span>
-              </Button>
-            )}
           </div>
         </SheetHeader>
 
         <div className='mt-6 space-y-6'>
-          <div className='space-y-2'>
-            <div className='text-sm text-muted-foreground'>
-              {file.type === 'folder' ? `${file.items} items` : file.size}
-            </div>
-          </div>
-
           <div className='space-y-4'>
             <div className='space-y-2'>
               <div className='flex items-center gap-2 text-sm text-muted-foreground'>
@@ -322,6 +305,17 @@ const FilePreview = ({ file, onClose }: { file: FileItem | null; onClose: () => 
                 <h4 className='text-sm font-medium mb-2'>Preview</h4>
                 {getPreviewContent()}
               </div>
+            )}
+            {file.type !== 'folder' && (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleDownload}
+                className='flex items-center gap-2'
+              >
+                <Download className='h-4 w-4' />
+                <span>Download</span>
+              </Button>
             )}
           </div>
         </div>
