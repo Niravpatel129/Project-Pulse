@@ -274,15 +274,28 @@ export const useFileManager = () => {
   };
 
   const getBreadcrumbPath = () => {
-    if (!files) return [activeSection === 'workspace' ? 'Workspace' : 'Private'];
+    if (!fileStructure) return [activeSection === 'workspace' ? 'Workspace' : 'Private'];
 
     const path = [activeSection === 'workspace' ? 'Workspace' : 'Private'];
-    let current = files[activeSection] || [];
+    let current = fileStructure.filter((item) => {
+      return item.section === activeSection;
+    });
 
     for (const folder of currentPath) {
-      const found = current.find((item) => {
-        return item.name === folder && item.type === 'folder';
-      });
+      const findFolder = (items: FileItem[]): FileItem | undefined => {
+        for (const item of items) {
+          if (item.name === folder && item.type === 'folder') {
+            return item;
+          }
+          if (item.children) {
+            const found = findFolder(item.children);
+            if (found) return found;
+          }
+        }
+        return undefined;
+      };
+
+      const found = findFolder(current);
       if (found) {
         path.push(found.name);
         if (found.children) {
