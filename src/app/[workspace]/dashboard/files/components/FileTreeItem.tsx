@@ -47,7 +47,7 @@ export const FileTreeItem = ({
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
       >
-        {hasChildren && (
+        {item.type === 'folder' && (
           <button
             onClick={(e) => {
               e.stopPropagation();
