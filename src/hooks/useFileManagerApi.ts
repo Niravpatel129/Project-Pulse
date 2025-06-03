@@ -1,5 +1,6 @@
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface FileItem {
   _id: string;
@@ -61,6 +62,7 @@ interface UploadFileParams {
   parentId?: string;
   section: 'workspace' | 'private';
   path?: string[];
+  signal?: AbortSignal;
 }
 
 export const useFileManagerApi = (
@@ -121,7 +123,7 @@ export const useFileManagerApi = (
 
   // Upload file mutation
   const uploadFile = useMutation({
-    mutationFn: async ({ files, parentId, section, path }: UploadFileParams) => {
+    mutationFn: async ({ files, parentId, section, path, signal }: UploadFileParams) => {
       const formData = new FormData();
       files.forEach((file) => {
         formData.append('files', file);
@@ -149,12 +151,50 @@ export const useFileManagerApi = (
 
       formData.append('section', section);
 
-      const response = await newRequest.post('/file-manager/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const toastId = toast.loading(
+        `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`,
+        {
+          description: 'Please wait while your files are being uploaded.',
         },
-      });
-      return response.data;
+      );
+
+      try {
+        const response = await newRequest.post('/file-manager/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          signal,
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 1),
+            );
+            toast.loading(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`, {
+              id: toastId,
+              description: `Progress: ${percentCompleted}%`,
+            });
+          },
+        });
+
+        toast.success('Upload complete!', {
+          id: toastId,
+          description: 'Your files have been successfully uploaded.',
+        });
+
+        return response.data;
+      } catch (error) {
+        if (error.name === 'CanceledError') {
+          toast.error('Upload cancelled', {
+            id: toastId,
+            description: 'The file upload was cancelled.',
+          });
+        } else {
+          toast.error('Upload failed', {
+            id: toastId,
+            description: 'There was an error uploading your files. Please try again.',
+          });
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });

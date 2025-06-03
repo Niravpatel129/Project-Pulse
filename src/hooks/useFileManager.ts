@@ -1,5 +1,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { useFileManagerApi } from './useFileManagerApi';
 import { useFileStructureApi } from './useFileStructureApi';
 
@@ -76,6 +77,7 @@ export const useFileManager = () => {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState<'file' | 'folder' | null>(null);
   const [newItemName, setNewItemName] = useState('');
+  const [uploadAbortController, setUploadAbortController] = useState<AbortController | null>(null);
 
   // Handle initial path from URL
   useEffect(() => {
@@ -316,14 +318,34 @@ export const useFileManager = () => {
       // If we're in root directory, set parentId to null, otherwise use the current folder's ID
       const parentId = currentPath.length === 0 ? null : currentFolder?._id;
 
+      // Create a new AbortController for this upload
+      const abortController = new AbortController();
+      setUploadAbortController(abortController);
+
       await uploadFile.mutateAsync({
         files: [file],
         parentId,
         section: activeSection,
         path: currentPath,
+        signal: abortController.signal,
       });
     } catch (error) {
-      console.error('Error uploading file:', error);
+      if (error.name === 'AbortError') {
+        toast.error('Upload cancelled', {
+          description: 'The file upload was cancelled.',
+        });
+      } else {
+        console.error('Error uploading file:', error);
+      }
+    } finally {
+      setUploadAbortController(null);
+    }
+  };
+
+  const cancelUpload = () => {
+    if (uploadAbortController) {
+      uploadAbortController.abort();
+      setUploadAbortController(null);
     }
   };
 
@@ -373,6 +395,8 @@ export const useFileManager = () => {
     handleSectionChange,
     setSelectedFile,
     handleFileUpload,
+    cancelUpload,
+    isUploading: !!uploadAbortController,
     handleMoveItem,
     handleDeleteItem,
     handleRenameItem,
