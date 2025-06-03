@@ -93,8 +93,6 @@ export default function FileUploadManagerModal({
   isOpen,
   onClose,
   handleAddFileToProject,
-  initialFiles,
-  onDeleteFile,
 }: {
   isOpen: boolean;
   onClose: () => void;
