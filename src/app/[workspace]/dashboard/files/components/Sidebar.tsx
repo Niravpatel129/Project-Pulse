@@ -35,7 +35,7 @@ export const Sidebar = ({
   const isRootLevel = currentPath.length === 0;
 
   return (
-    <div className='w-64 border-r border-border bg-[#f5f5f7] dark:bg-[#1c1c1e] p-4'>
+    <div className='w-64 border-l border-border bg-[#f5f5f7] dark:bg-[#1c1c1e] p-4'>
       <div className='space-y-6'>
         {/* Workspace Files Section */}
         <div>

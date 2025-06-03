@@ -485,21 +485,6 @@ const Files = () => {
 
   return (
     <div className='flex min-h-screen w-full bg-background'>
-      <Sidebar
-        activeSection={activeSection}
-        expandedFolders={expandedFolders}
-        currentPath={currentPath}
-        isLoading={isLoading}
-        workspaceItems={workspaceItems}
-        privateItems={privateItems}
-        handleSectionChange={handleSectionChange}
-        toggleFolder={toggleFolder}
-        navigateToFolder={navigateToFolder}
-        handleDeleteItem={handleDeleteItem}
-        handleDuplicateFile={handleDuplicateFile}
-        handleDownloadFile={handleDownloadFile}
-      />
-
       {/* Main Content Area */}
       <div className='flex-1 p-6'>
         <div className='mb-6'>
@@ -844,6 +829,21 @@ const Files = () => {
           </ContextMenuContent>
         </ContextMenu>
       </div>
+
+      <Sidebar
+        activeSection={activeSection}
+        expandedFolders={expandedFolders}
+        currentPath={currentPath}
+        isLoading={isLoading}
+        workspaceItems={workspaceItems}
+        privateItems={privateItems}
+        handleSectionChange={handleSectionChange}
+        toggleFolder={toggleFolder}
+        navigateToFolder={navigateToFolder}
+        handleDeleteItem={handleDeleteItem}
+        handleDuplicateFile={handleDuplicateFile}
+        handleDownloadFile={handleDownloadFile}
+      />
 
       {/* File Preview Sheet */}
       <FilePreview
