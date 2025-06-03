@@ -16,6 +16,7 @@ interface SidebarProps {
   handleDeleteItem: (id: string) => void;
   handleDuplicateFile: (id: string) => void;
   handleDownloadFile: (id: string) => void;
+  setSelectedFile: (file: FileItem | null) => void;
 }
 
 export const Sidebar = ({
@@ -31,6 +32,7 @@ export const Sidebar = ({
   handleDeleteItem,
   handleDuplicateFile,
   handleDownloadFile,
+  setSelectedFile,
 }: SidebarProps) => {
   const isRootLevel = currentPath.length === 0;
 
@@ -71,6 +73,7 @@ export const Sidebar = ({
                     onDelete={handleDeleteItem}
                     onDuplicate={handleDuplicateFile}
                     onDownload={handleDownloadFile}
+                    onSelectFile={setSelectedFile}
                     currentPath={currentPath}
                   />
                 );
@@ -113,6 +116,7 @@ export const Sidebar = ({
                     onDelete={handleDeleteItem}
                     onDuplicate={handleDuplicateFile}
                     onDownload={handleDownloadFile}
+                    onSelectFile={setSelectedFile}
                     currentPath={currentPath}
                   />
                 );

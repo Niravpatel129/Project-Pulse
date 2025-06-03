@@ -18,6 +18,7 @@ interface FileTreeItemProps {
   onDelete?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onDownload?: (id: string) => void;
+  onSelectFile?: (file: FileItem) => void;
   currentPath: string[];
 }
 
@@ -30,6 +31,7 @@ export const FileTreeItem = ({
   onDelete,
   onDuplicate,
   onDownload,
+  onSelectFile,
   currentPath,
 }: FileTreeItemProps) => {
   const isExpanded = expandedFolders.includes(item.name);
@@ -62,7 +64,11 @@ export const FileTreeItem = ({
         )}
         <button
           onClick={() => {
-            return onNavigateToFolder(item.name);
+            if (item.type === 'folder') {
+              onNavigateToFolder(item.name);
+            } else {
+              onSelectFile?.(item);
+            }
           }}
           className={cn(
             'flex items-center gap-2 flex-1 min-w-0 text-left',
@@ -134,6 +140,7 @@ export const FileTreeItem = ({
                 onDelete={onDelete}
                 onDuplicate={onDuplicate}
                 onDownload={onDownload}
+                onSelectFile={onSelectFile}
                 currentPath={currentPath}
               />
             );

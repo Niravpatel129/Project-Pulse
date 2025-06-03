@@ -847,6 +847,7 @@ const Files = () => {
         handleDeleteItem={handleDeleteItem}
         handleDuplicateFile={handleDuplicateFile}
         handleDownloadFile={handleDownloadFile}
+        setSelectedFile={setSelectedFile}
       />
 
       {/* File Preview Sheet */}
