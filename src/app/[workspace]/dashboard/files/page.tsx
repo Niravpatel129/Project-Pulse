@@ -397,7 +397,6 @@ const Files = () => {
     files,
     fileStructure,
   } = useFileManager();
-  console.log('🚀 fileStructure:', fileStructure);
 
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newFileName, setNewFileName] = useState('');

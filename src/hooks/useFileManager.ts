@@ -309,27 +309,59 @@ export const useFileManager = () => {
 
   // Helper to get the current folder object based on currentPath
   const getCurrentFolder = () => {
-    if (!files) return undefined;
-    let current = files[activeSection] || [];
+    if (!fileStructure) return undefined;
+
+    // If we're in root directory, return undefined
+    if (currentPath.length === 0) return undefined;
+
+    // Start from the root of the file structure
+    let current = fileStructure.filter((item) => {
+      return item.section === activeSection;
+    });
     let folder = undefined;
-    for (const folderName of currentPath) {
+
+    // Traverse the path to find the current folder
+    for (let i = 0; i < currentPath.length; i++) {
+      const folderName = currentPath[i];
       folder = current.find((item) => {
         return item.name === folderName && item.type === 'folder';
       });
-      if (folder && folder.children) {
+
+      if (!folder) break;
+
+      // If this is the last folder in the path, return it
+      if (i === currentPath.length - 1) {
+        return folder;
+      }
+
+      // Otherwise, continue traversing
+      if (folder.children) {
         current = folder.children;
       } else {
         break;
       }
     }
+
     return folder;
   };
 
   const handleFileUpload = async (file: File) => {
     try {
       const currentFolder = getCurrentFolder();
-      // If we're in root directory, set parentId to null, otherwise use the current folder's ID
-      const parentId = currentPath.length === 0 ? null : currentFolder?._id;
+      console.log('Current Path:', currentPath);
+      console.log('Current Folder:', currentFolder);
+
+      // Get the parentId from the current folder's _id
+      const parentId = currentFolder?._id;
+      console.log('Parent ID being passed:', parentId);
+
+      if (!parentId && currentPath.length > 0) {
+        console.error('Could not find parent folder ID for path:', currentPath);
+        toast.error('Upload failed', {
+          description: 'Could not determine the upload location. Please try again.',
+        });
+        return;
+      }
 
       // Create a new AbortController for this upload
       const abortController = new AbortController();
@@ -349,6 +381,9 @@ export const useFileManager = () => {
         });
       } else {
         console.error('Error uploading file:', error);
+        toast.error('Upload failed', {
+          description: 'There was an error uploading your file. Please try again.',
+        });
       }
     } finally {
       setUploadAbortController(null);

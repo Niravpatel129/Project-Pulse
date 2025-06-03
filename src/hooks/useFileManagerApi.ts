@@ -124,32 +124,24 @@ export const useFileManagerApi = (
   // Upload file mutation
   const uploadFile = useMutation({
     mutationFn: async ({ files, parentId, section, path, signal }: UploadFileParams) => {
+      console.log('UploadFile Mutation - Input:', { files, parentId, section, path });
+
       const formData = new FormData();
       files.forEach((file) => {
         formData.append('files', file);
       });
 
-      // If we have a path, we need to find the parentId
-      if (path && path.length > 0) {
-        // Get the current files to find the parent folder
-        const response = await newRequest.get<FilesResponse>(
-          `/file-manager?section=${section}&path=${JSON.stringify(path.slice(0, -1))}`,
-        );
-
-        if (response.data.success) {
-          const parentFolder = response.data.items.find((item) => {
-            return item.name === path[path.length - 1] && item.type === 'folder';
-          });
-          if (parentFolder) {
-            formData.append('parentId', parentFolder._id);
-          }
-        }
+      // Always append the parentId if it exists
+      if (parentId) {
+        console.log('Using provided parentId:', parentId);
+        formData.append('parentId', parentId);
       } else {
-        // If no path, use the provided parentId or null
-        formData.append('parentId', parentId || '');
+        console.log('No parentId provided, using empty string');
+        formData.append('parentId', '');
       }
 
       formData.append('section', section);
+      console.log('Final formData:', Object.fromEntries(formData.entries()));
 
       const toastId = toast.loading(
         `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`,
