@@ -595,16 +595,21 @@ const Files = () => {
         {/* Breadcrumbs */}
         <div className='flex items-center gap-1 mb-4 text-sm'>
           {getBreadcrumbPath().map((folder, index) => {
+            const isCurrentFolder = index === getBreadcrumbPath().length - 1;
             return (
               <div key={index} className='flex items-center'>
                 {index > 0 && <ChevronRightIcon className='h-4 w-4 text-muted-foreground mx-1' />}
                 <button
                   onClick={() => {
-                    return navigateToBreadcrumb(index - 1);
+                    if (!isCurrentFolder) {
+                      navigateToBreadcrumb(index - 1);
+                    }
                   }}
                   className={cn(
-                    'text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300',
-                    'px-1 py-0.5 rounded-sm hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e] transition-colors',
+                    'px-1 py-0.5 rounded-sm transition-colors',
+                    isCurrentFolder
+                      ? 'text-foreground cursor-default'
+                      : 'text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-[#e5e5e7] dark:hover:bg-[#2c2c2e]',
                     index === 0 && 'font-medium',
                   )}
                 >
