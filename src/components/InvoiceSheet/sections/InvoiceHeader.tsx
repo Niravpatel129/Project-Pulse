@@ -22,6 +22,9 @@ interface InvoiceHeaderProps {
   onDueDateChange: (date: Date) => void;
   invoiceTitle: string;
   onInvoiceTitleChange: (value: string) => void;
+  depositDueDate?: Date;
+  onDepositDueDateChange?: (date: Date) => void;
+  showDepositDueDate?: boolean;
 }
 
 export default function InvoiceHeader({
@@ -35,12 +38,16 @@ export default function InvoiceHeader({
   onDueDateChange,
   invoiceTitle,
   onInvoiceTitleChange,
+  depositDueDate,
+  onDepositDueDateChange,
+  showDepositDueDate = false,
 }: InvoiceHeaderProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
   const [logoPreview, setLogoPreview] = useState<string | null>(invoiceSettings?.logo || null);
   const [issueDateOpen, setIssueDateOpen] = useState(false);
   const [dueDateOpen, setDueDateOpen] = useState(false);
+  const [depositDueDateOpen, setDepositDueDateOpen] = useState(false);
 
   const formatDate = (date: Date) => {
     // Convert from MM/DD/YYYY or DD/MM/YYYY to date-fns format
@@ -221,6 +228,48 @@ export default function InvoiceHeader({
                   </Popover>
                 </div>
               </div>
+              {showDepositDueDate && depositDueDate && onDepositDueDateChange && (
+                <div className=''>
+                  <div className='flex space-x-1 items-center'>
+                    <div className='flex items-center'>
+                      <span
+                        className='text-xs text-[#878787] min-w-10 font-mono outline-none'
+                        id='template.deposit_due_date_label'
+                      >
+                        Deposit Due
+                      </span>
+                      <span className='text-xs text-[#878787] font-mono'>:</span>
+                    </div>
+                    <Popover modal open={depositDueDateOpen} onOpenChange={setDepositDueDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          className={cn(
+                            'text-primary text-xs font-mono whitespace-nowrap flex h-auto p-0 hover:bg-transparent',
+                          )}
+                        >
+                          <span className='flex overflow-hidden shadow-none focus:border-none active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 !text-[11px] border-none bg-transparent'>
+                            {formatDate(depositDueDate)}
+                          </span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-auto p-0' align='start'>
+                        <Calendar
+                          mode='single'
+                          selected={depositDueDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              onDepositDueDateChange(date);
+                              setDepositDueDateOpen(false);
+                            }
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>

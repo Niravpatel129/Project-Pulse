@@ -287,6 +287,15 @@ const InvoiceSheet = ({
     return date;
   });
 
+  const [depositDueDate, setDepositDueDate] = useState<Date>(() => {
+    if (existingInvoice?.depositDueDate) {
+      return new Date(existingInvoice.depositDueDate);
+    }
+    const date = new Date();
+    date.setDate(date.getDate() + 3); // Default to 3 days from now
+    return date;
+  });
+
   // Update form fields when existingInvoice changes
   useEffect(() => {
     if (existingInvoice) {
@@ -302,6 +311,15 @@ const InvoiceSheet = ({
           : (() => {
               const date = new Date();
               date.setDate(date.getDate() + 7);
+              return date;
+            })(),
+      );
+      setDepositDueDate(
+        existingInvoice.depositDueDate
+          ? new Date(existingInvoice.depositDueDate)
+          : (() => {
+              const date = new Date();
+              date.setDate(date.getDate() + 3);
               return date;
             })(),
       );
@@ -654,6 +672,11 @@ const InvoiceSheet = ({
       date.setDate(date.getDate() + 7);
       return date;
     });
+    setDepositDueDate(() => {
+      const date = new Date();
+      date.setDate(date.getDate() + 3);
+      return date;
+    });
     setItems([
       {
         id: uuidv4(),
@@ -791,6 +814,9 @@ const InvoiceSheet = ({
                 onInvoiceTitleChange={(title) => {
                   return setInvoiceTitle(title);
                 }}
+                depositDueDate={depositDueDate}
+                onDepositDueDateChange={setDepositDueDate}
+                showDepositDueDate={invoiceSettings.deposit.enabled}
               />
               <InvoiceFromTo
                 onCustomerSelect={(id) => {
