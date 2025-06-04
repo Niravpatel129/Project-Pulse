@@ -16,6 +16,10 @@ interface LastInvoiceSettings {
     enabled: boolean;
     amount: number;
   };
+  deposit: {
+    enabled: boolean;
+    amount: number;
+  };
   decimals: 'yes' | 'no';
   notes: string;
   logo: string;

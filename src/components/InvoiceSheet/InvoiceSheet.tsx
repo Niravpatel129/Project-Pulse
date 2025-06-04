@@ -870,6 +870,7 @@ const InvoiceSheet = ({
                 discount={invoiceSettings.discount.enabled ? 'enable' : 'disable'}
                 discountAmount={discountAmount}
                 onDiscountAmountChange={handleDiscountAmountChange}
+                deposit={invoiceSettings.deposit.enabled ? 'enable' : 'disable'}
                 depositAmount={depositAmount}
                 onDepositAmountChange={handleDepositAmountChange}
               />
