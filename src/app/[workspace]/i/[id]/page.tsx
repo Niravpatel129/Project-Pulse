@@ -475,25 +475,47 @@ const InvoicePage = () => {
                             <span className='text-[11px] text-[#878787] font-mono'>
                               Required Deposit ({invoice.settings.deposit.percentage}%)
                             </span>
-                            <span className='text-right font-mono text-[11px] text-[#878787]'>
-                              {formatCurrency(
-                                (invoice.totals.total * invoice.settings.deposit.percentage) / 100,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
+                            <div className='flex items-center gap-2'>
+                              <span className='text-right font-mono text-[11px] text-[#878787]'>
+                                {formatCurrency(
+                                  (invoice.totals.total * invoice.settings.deposit.percentage) /
+                                    100,
+                                  invoice.settings.currency,
+                                  invoice.settings.decimals,
+                                )}
+                              </span>
+                              {invoice.status === 'partially_paid' && (
+                                <span className='text-[11px] font-mono text-[#00C969] bg-[#DDF1E4] px-2 py-0.5 rounded-full'>
+                                  Paid
+                                </span>
                               )}
-                            </span>
+                            </div>
                           </div>
                         )}
                         <div className='flex justify-between items-center py-4 mt-2 border-t border-gray-200'>
                           <span className='text-[11px] text-[#878787] font-mono'>Total</span>
-                          <span className='text-right font-mono text-[21px] text-gray-900'>
-                            {invoice?.totals?.total !== undefined &&
-                              formatCurrency(
-                                invoice.totals.total,
-                                invoice.settings.currency,
-                                invoice.settings.decimals,
-                              )}
-                          </span>
+                          <div className='flex flex-col items-end'>
+                            <span className='text-right font-mono text-[21px] text-gray-900'>
+                              {invoice?.totals?.total !== undefined &&
+                                formatCurrency(
+                                  invoice.totals.total,
+                                  invoice.settings.currency,
+                                  invoice.settings.decimals,
+                                )}
+                            </span>
+                            {invoice.status === 'partially_paid' && (
+                              <span className='text-[11px] font-mono text-[#878787]'>
+                                Remaining:{' '}
+                                {formatCurrency(
+                                  invoice.totals.total -
+                                    (invoice.totals.total * invoice.settings.deposit.percentage) /
+                                      100,
+                                  invoice.settings.currency,
+                                  invoice.settings.decimals,
+                                )}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {invoice.status !== 'paid' && (
                           <button
@@ -520,32 +542,44 @@ const InvoicePage = () => {
                       <h2 className='text-2xl font-mono mb-4 text-gray-900'>Payment Details</h2>
                       {invoice.settings.deposit.enabled && (
                         <div className='mb-8'>
-                          <div className='flex items-center justify-center gap-2 mb-4'>
-                            <button
-                              onClick={() => {
-                                return setPaymentType('deposit');
-                              }}
-                              className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
-                                paymentType === 'deposit'
-                                  ? 'bg-[#1D1D1F] text-white'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              }`}
-                            >
-                              Pay Deposit
-                            </button>
-                            <button
-                              onClick={() => {
-                                return setPaymentType('full');
-                              }}
-                              className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
-                                paymentType === 'full'
-                                  ? 'bg-[#1D1D1F] text-white'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              }`}
-                            >
-                              Pay Full Amount
-                            </button>
-                          </div>
+                          {invoice.status === 'partially_paid' ? (
+                            <div className='text-sm text-[#878787] mb-4'>
+                              Deposit of{' '}
+                              {formatCurrency(
+                                (invoice.totals.total * invoice.settings.deposit.percentage) / 100,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}{' '}
+                              has been paid
+                            </div>
+                          ) : (
+                            <div className='flex items-center justify-center gap-2 mb-4'>
+                              <button
+                                onClick={() => {
+                                  return setPaymentType('deposit');
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
+                                  paymentType === 'deposit'
+                                    ? 'bg-[#1D1D1F] text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                              >
+                                Pay Deposit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  return setPaymentType('full');
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
+                                  paymentType === 'full'
+                                    ? 'bg-[#1D1D1F] text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                              >
+                                Pay Full Amount
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -553,6 +587,9 @@ const InvoicePage = () => {
                         {formatCurrency(
                           paymentType === 'deposit' && invoice.settings.deposit.enabled
                             ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
+                            : invoice.status === 'partially_paid'
+                            ? invoice.totals.total -
+                              (invoice.totals.total * invoice.settings.deposit.percentage) / 100
                             : invoice.totals.total,
                           invoice.settings.currency,
                           invoice.settings.decimals,
@@ -560,9 +597,12 @@ const InvoicePage = () => {
                         <p className='text-[11px] text-[#878787] mb-6'>
                           {paymentType === 'deposit' && invoice.settings.deposit.enabled
                             ? 'Deposit Amount Due'
+                            : invoice.status === 'partially_paid'
+                            ? 'Remaining Amount Due'
                             : 'Total Amount Due'}
                         </p>
                       </div>
+
                       <button
                         onClick={() => {
                           return setShowPayment(false);
