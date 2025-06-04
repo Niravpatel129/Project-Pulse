@@ -162,12 +162,6 @@ const InvoicePage = () => {
       );
 
       const invoice = response.data.data.invoice;
-
-      // only trigger payment if the invoice is not paid
-      if (invoice.status !== 'paid') {
-        handleSelectPayment(invoice?.totals.total || 0, 'full');
-      }
-
       return invoice;
     },
     enabled: !!invoiceId,
