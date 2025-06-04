@@ -54,6 +54,7 @@ interface InvoiceSettings {
   deposit: {
     enabled: boolean;
     percentage: number;
+    dueDate?: Date;
   };
   attachPdf: string;
   decimals: 'yes' | 'no';
@@ -168,6 +169,9 @@ const InvoiceSheet = ({
         deposit: {
           enabled: existingInvoice.settings.deposit?.enabled || false,
           percentage: existingInvoice.settings.deposit?.percentage || 50,
+          dueDate: existingInvoice.settings.deposit?.dueDate
+            ? new Date(existingInvoice.settings.deposit.dueDate)
+            : new Date(),
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings.decimals || 'yes',
@@ -194,6 +198,7 @@ const InvoiceSheet = ({
       deposit: {
         enabled: false,
         percentage: 50,
+        dueDate: new Date(),
       },
       attachPdf: 'disable',
       decimals: 'yes',
@@ -226,6 +231,7 @@ const InvoiceSheet = ({
           deposit: {
             enabled: lastInvoiceSettings.deposit?.enabled || false,
             percentage: lastInvoiceSettings.deposit?.percentage || prev.deposit.percentage,
+            ...(lastInvoiceSettings.deposit?.enabled && { dueDate: prev.deposit.dueDate }),
           },
           decimals: lastInvoiceSettings.decimals || prev.decimals,
           notes: lastInvoiceSettings.notes || prev.notes,
@@ -363,6 +369,9 @@ const InvoiceSheet = ({
         deposit: {
           enabled: existingInvoice.settings?.deposit?.enabled || false,
           percentage: existingInvoice.settings?.deposit?.percentage || 50,
+          dueDate: existingInvoice.settings?.deposit?.dueDate
+            ? new Date(existingInvoice.settings.deposit.dueDate)
+            : new Date(),
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings?.decimals || 'yes',
@@ -565,6 +574,10 @@ const InvoiceSheet = ({
       return client._id === selectedCustomer;
     });
 
+    console.log('Deposit enabled:', invoiceSettings.deposit.enabled);
+    console.log('Deposit due date:', depositDueDate);
+    console.log('Deposit percentage:', depositPercentage);
+
     // Prepare invoice data
     const invoiceData = {
       customer: {
@@ -611,12 +624,15 @@ const InvoiceSheet = ({
         deposit: {
           enabled: invoiceSettings.deposit.enabled,
           percentage: depositPercentage,
+          ...(invoiceSettings.deposit.enabled && { dueDate: depositDueDate }),
         },
         decimals: invoiceSettings.decimals,
       },
       notes: invoiceSettings.notes,
       logo: invoiceSettings.logo,
     };
+
+    console.log('Final payload deposit:', invoiceData.settings.deposit);
 
     if (existingInvoice) {
       updateInvoice.mutate(invoiceData);
@@ -753,6 +769,7 @@ const InvoiceSheet = ({
         deposit: {
           enabled: newSettings.deposit === 'enable',
           percentage: prev.deposit.percentage,
+          ...(newSettings.deposit === 'enable' && { dueDate: prev.deposit.dueDate }),
         },
         attachPdf: newSettings.attachPdf || prev.attachPdf,
         decimals: newSettings.decimals || prev.decimals,

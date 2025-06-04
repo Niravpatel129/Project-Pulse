@@ -46,6 +46,10 @@ interface Invoice {
   internalNote: string;
   logo: string;
   settings: {
+    deposit: {
+      enabled: boolean;
+      percentage: number;
+    };
     salesTax: {
       enabled: boolean;
       rate: number;
@@ -168,7 +172,7 @@ const InvoicePage = () => {
     },
     enabled: !!invoiceId,
   });
-    console.log('🚀 invoice:', invoice);
+  console.log('🚀 invoice:', invoice);
 
   const {
     stripePromise,
@@ -421,6 +425,20 @@ const InvoicePage = () => {
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
                               {formatCurrency(
                                 invoice.totals.vatAmount,
+                                invoice.settings.currency,
+                                invoice.settings.decimals,
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {invoice?.settings?.deposit?.enabled && (
+                          <div className='flex justify-between items-center py-1'>
+                            <span className='text-[11px] text-[#878787] font-mono'>
+                              Required Deposit ({invoice.depositPercentage}%)
+                            </span>
+                            <span className='text-right font-mono text-[11px] text-[#878787]'>
+                              {formatCurrency(
+                                (invoice.totals.total * invoice.depositPercentage) / 100,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
                               )}
