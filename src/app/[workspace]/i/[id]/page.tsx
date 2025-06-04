@@ -538,12 +538,12 @@ const InvoicePage = () => {
                     transition={{ duration: 0.5 }}
                     className='flex flex-col items-center justify-center py-12 min-h-[600px] bg-white'
                   >
-                    <div className='text-center mb-8'>
+                    <div className='text-center mb-0'>
                       <h2 className='text-2xl font-mono mb-4 text-gray-900'>Payment Details</h2>
                       {invoice.settings.deposit.enabled && (
-                        <div className='mb-8'>
+                        <div className='mb-3'>
                           {invoice.status === 'partially_paid' ? (
-                            <div className='text-sm text-[#878787] mb-4'>
+                            <div className='text-sm text-[#878787] mb-0'>
                               Deposit of{' '}
                               {formatCurrency(
                                 (invoice.totals.total * invoice.settings.deposit.percentage) / 100,
@@ -583,7 +583,7 @@ const InvoicePage = () => {
                         </div>
                       )}
 
-                      <div className='text-4xl font-mono mb-8 text-gray-900'>
+                      <div className='text-4xl font-mono mb-0 text-gray-900'>
                         {formatCurrency(
                           paymentType === 'deposit' && invoice.settings.deposit.enabled
                             ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
@@ -595,10 +595,10 @@ const InvoicePage = () => {
                           invoice.settings.decimals,
                         )}
                         <p className='text-[11px] text-[#878787] mb-6'>
-                          {paymentType === 'deposit' && invoice.settings.deposit.enabled
-                            ? 'Deposit Amount Due'
-                            : invoice.status === 'partially_paid'
+                          {invoice.status === 'partially_paid'
                             ? 'Remaining Amount Due'
+                            : paymentType === 'deposit' && invoice.settings.deposit.enabled
+                            ? 'Deposit Amount Due'
                             : 'Total Amount Due'}
                         </p>
                       </div>
