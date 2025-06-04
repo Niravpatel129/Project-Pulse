@@ -75,6 +75,22 @@ ${invoice.from.split('\n')[0]}`);
   const [sendCopy, setSendCopy] = useState(false);
   const [attachPdf, setAttachPdf] = useState(true);
 
+  // Update state values when invoice changes
+  useEffect(() => {
+    setToEmail(invoice.customer?.email || '');
+    setSubject(`Invoice ${invoice.invoiceNumber} from ${invoice.from.split('\n')[0]}`);
+    setMessage(`Hi ${invoice.customer?.name},
+
+Here's Invoice ${invoice.invoiceNumber} for the amount of ${
+      invoice.settings?.currency
+    } ${invoice.totals?.total.toFixed(2)}.
+
+If you have any questions, feel free to reach out.
+
+Thank you,
+${invoice.from.split('\n')[0]}`);
+  }, [invoice]);
+
   // Fetch Gmail status
   const { data: gmailStatus } = useQuery<GmailStatus>({
     queryKey: ['gmail-status'],
