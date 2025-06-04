@@ -36,10 +36,16 @@ export function formatRelativeTime(date: Date | string, addSuffix: boolean = tru
  * @param currency Currency code (default: 'USD')
  * @returns Formatted currency string
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
+export function formatCurrency(
+  amount: number,
+  currency: string = 'USD',
+  decimals: boolean = true,
+): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
+    minimumFractionDigits: decimals ? 2 : 0,
+    maximumFractionDigits: decimals ? 2 : 0,
   }).format(amount);
 }
 

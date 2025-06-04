@@ -1,3 +1,4 @@
+import { formatCurrency } from '@/lib/utils';
 import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -33,10 +34,17 @@ interface StripePaymentFormProps {
         enabled: boolean;
         rate: number;
       };
+      deposit: {
+        enabled: boolean;
+        percentage: number;
+        dueDate?: Date;
+      };
+      decimals: boolean;
     };
   };
   onBack: () => void;
   setIsLoading: (loading: boolean) => void;
+  paymentType: 'deposit' | 'full';
 }
 
 export function StripePaymentForm({
@@ -44,6 +52,7 @@ export function StripePaymentForm({
   invoice,
   onBack,
   setIsLoading,
+  paymentType,
 }: StripePaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -147,11 +156,14 @@ export function StripePaymentForm({
             </>
           ) : (
             <>
-              Pay {invoice.settings.currency}
-              {invoice.totals.total.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              Pay{' '}
+              {formatCurrency(
+                paymentType === 'deposit' && invoice.settings.deposit.enabled
+                  ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
+                  : invoice.totals.total,
+                invoice.settings.currency,
+                invoice.settings.decimals,
+              )}
               <Lock className='w-4 h-4' />
             </>
           )}

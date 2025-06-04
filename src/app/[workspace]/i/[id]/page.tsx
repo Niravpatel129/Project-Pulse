@@ -74,7 +74,6 @@ interface Invoice {
   createdAt: string;
   updatedAt: string;
   __v: number;
-  depositPercentage: number;
   paymentIntentId: string;
   paidAt: string;
 }
@@ -194,7 +193,7 @@ const InvoicePage = () => {
     if (invoice) {
       const amount =
         paymentType === 'deposit' && invoice.settings.deposit.enabled
-          ? (invoice.totals.total * invoice.depositPercentage) / 100
+          ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
           : invoice.totals.total;
       handleSelectPayment(amount, paymentType);
     }
@@ -459,11 +458,11 @@ const InvoicePage = () => {
                         {invoice?.settings?.deposit?.enabled && (
                           <div className='flex justify-between items-center py-1'>
                             <span className='text-[11px] text-[#878787] font-mono'>
-                              Required Deposit ({invoice.depositPercentage}%)
+                              Required Deposit ({invoice.settings.deposit.percentage}%)
                             </span>
                             <span className='text-right font-mono text-[11px] text-[#878787]'>
                               {formatCurrency(
-                                (invoice.totals.total * invoice.depositPercentage) / 100,
+                                (invoice.totals.total * invoice.settings.deposit.percentage) / 100,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
                               )}
@@ -538,7 +537,7 @@ const InvoicePage = () => {
                       <div className='text-4xl font-mono mb-8 text-gray-900'>
                         {formatCurrency(
                           paymentType === 'deposit' && invoice.settings.deposit.enabled
-                            ? (invoice.totals.total * invoice.depositPercentage) / 100
+                            ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
                             : invoice.totals.total,
                           invoice.settings.currency,
                           invoice.settings.decimals,
@@ -655,6 +654,7 @@ const InvoicePage = () => {
                             invoice={invoice}
                             onBack={handleBackToSelection}
                             setIsLoading={setIsLoading}
+                            paymentType={paymentType}
                           />
                         </Elements>
                       )}
