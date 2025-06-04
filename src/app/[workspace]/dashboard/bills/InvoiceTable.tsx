@@ -97,6 +97,7 @@ function getStatusBadge(status: string) {
     cancelled: 'bg-gray-100 text-gray-800',
     open: 'bg-yellow-100 text-yellow-800',
     sent: 'bg-blue-100 text-blue-800',
+    partially_paid: 'bg-purple-100 text-purple-800',
   };
 
   return (
@@ -105,7 +106,13 @@ function getStatusBadge(status: string) {
         statusColors[status as keyof typeof statusColors] || 'bg-gray-100'
       }`}
     >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {status
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map((word) => {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join(' ')}
     </span>
   );
 }
