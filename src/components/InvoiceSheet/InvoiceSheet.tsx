@@ -53,7 +53,7 @@ interface InvoiceSettings {
   };
   deposit: {
     enabled: boolean;
-    amount: number;
+    percentage: number;
   };
   attachPdf: string;
   decimals: 'yes' | 'no';
@@ -167,7 +167,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: existingInvoice.settings.deposit?.enabled || false,
-          amount: existingInvoice.settings.deposit?.amount || 50,
+          percentage: existingInvoice.settings.deposit?.percentage || 50,
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings.decimals || 'yes',
@@ -193,7 +193,7 @@ const InvoiceSheet = ({
       },
       deposit: {
         enabled: false,
-        amount: 50,
+        percentage: 50,
       },
       attachPdf: 'disable',
       decimals: 'yes',
@@ -225,7 +225,7 @@ const InvoiceSheet = ({
           },
           deposit: {
             enabled: lastInvoiceSettings.deposit?.enabled || false,
-            amount: lastInvoiceSettings.deposit?.amount || 50,
+            percentage: lastInvoiceSettings.deposit?.percentage || prev.deposit.percentage,
           },
           decimals: lastInvoiceSettings.decimals || prev.decimals,
           notes: lastInvoiceSettings.notes || prev.notes,
@@ -265,8 +265,8 @@ const InvoiceSheet = ({
   const [discountAmount, setDiscountAmount] = useState<number>(
     existingInvoice?.settings?.discount?.amount || 0,
   );
-  const [depositAmount, setDepositAmount] = useState<number>(
-    existingInvoice?.settings?.deposit?.amount || 0,
+  const [depositPercentage, setDepositPercentage] = useState<number>(
+    existingInvoice?.settings?.deposit?.percentage || 50,
   );
   const [selectedCustomer, setSelectedCustomer] = useState<string>(
     existingInvoice?.customer?.id || '',
@@ -344,7 +344,7 @@ const InvoiceSheet = ({
       setTaxRate(existingInvoice.settings?.salesTax?.rate || 13);
       setVatRate(existingInvoice.settings?.vat?.rate || 20);
       setDiscountAmount(existingInvoice.settings?.discount?.amount || 0);
-      setDepositAmount(existingInvoice.settings?.deposit?.amount || 0);
+      setDepositPercentage(existingInvoice.settings?.deposit?.percentage || 50);
       setInvoiceSettings({
         dateFormat: existingInvoice.settings?.dateFormat || 'DD/MM/YYYY',
         salesTax: {
@@ -362,7 +362,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: existingInvoice.settings?.deposit?.enabled || false,
-          amount: existingInvoice.settings?.deposit?.amount || 50,
+          percentage: existingInvoice.settings?.deposit?.percentage || 50,
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings?.decimals || 'yes',
@@ -379,7 +379,7 @@ const InvoiceSheet = ({
       setTaxRate(lastInvoiceSettings.salesTax?.rate || 13);
       setVatRate(lastInvoiceSettings.vat?.rate || 20);
       setDiscountAmount(lastInvoiceSettings.discount?.amount || 0);
-      setDepositAmount(lastInvoiceSettings.deposit?.amount || 0);
+      setDepositPercentage(lastInvoiceSettings.deposit?.percentage || 50);
       setInvoiceNumber(lastInvoiceSettings.newInvoiceNumber || 'INV-0001');
     }
   }, [lastInvoiceSettings, existingInvoice]);
@@ -472,8 +472,8 @@ const InvoiceSheet = ({
     setDiscountAmount(amount);
   };
 
-  const handleDepositAmountChange = (amount: number) => {
-    setDepositAmount(amount);
+  const handleDepositPercentageChange = (percentage: number) => {
+    setDepositPercentage(percentage);
   };
 
   const handleInvoiceSettingsChange = (newSettings: Partial<InvoiceSettings>) => {
@@ -610,7 +610,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: invoiceSettings.deposit.enabled,
-          amount: depositAmount,
+          percentage: depositPercentage,
         },
         decimals: invoiceSettings.decimals,
       },
@@ -690,7 +690,7 @@ const InvoiceSheet = ({
     setTaxRate(13);
     setVatRate(20);
     setDiscountAmount(0);
-    setDepositAmount(0);
+    setDepositPercentage(50);
   };
 
   const { data: invoiceNumberValidation, refetch: validateInvoiceNumber } = useQuery({
@@ -752,7 +752,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: newSettings.deposit === 'enable',
-          amount: newSettings.deposit === 'enable' ? 50 : prev.deposit.amount,
+          percentage: prev.deposit.percentage,
         },
         attachPdf: newSettings.attachPdf || prev.attachPdf,
         decimals: newSettings.decimals || prev.decimals,
@@ -898,8 +898,8 @@ const InvoiceSheet = ({
                 discountAmount={discountAmount}
                 onDiscountAmountChange={handleDiscountAmountChange}
                 deposit={invoiceSettings.deposit.enabled ? 'enable' : 'disable'}
-                depositAmount={depositAmount}
-                onDepositAmountChange={handleDepositAmountChange}
+                depositPercentage={depositPercentage}
+                onDepositPercentageChange={handleDepositPercentageChange}
               />
               <InvoiceNotes
                 notes={invoiceSettings.notes}

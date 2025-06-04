@@ -52,8 +52,8 @@ interface InvoiceTotalProps {
   discountAmount: number;
   onDiscountAmountChange: (amount: number) => void;
   deposit: string;
-  depositAmount: number;
-  onDepositAmountChange: (amount: number) => void;
+  depositPercentage: number;
+  onDepositPercentageChange: (percentage: number) => void;
 }
 
 const InvoiceTotal = ({
@@ -76,8 +76,8 @@ const InvoiceTotal = ({
   discountAmount,
   onDiscountAmountChange,
   deposit,
-  depositAmount,
-  onDepositAmountChange,
+  depositPercentage,
+  onDepositPercentageChange,
 }: InvoiceTotalProps) => {
   const taxAmount = (subtotal * taxRate) / 100;
   const vatAmount = (subtotal * vatRate) / 100;
@@ -113,7 +113,7 @@ const InvoiceTotal = ({
     if (depositSpanRef.current && depositInputRef.current) {
       depositInputRef.current.style.width = depositSpanRef.current.offsetWidth + 4 + 'px';
     }
-  }, [taxRate, taxLabel, vatRate, vatLabel, depositAmount]);
+  }, [taxRate, taxLabel, vatRate, vatLabel, depositPercentage]);
 
   const handleTaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -279,22 +279,22 @@ const InvoiceTotal = ({
                 className='invisible absolute font-mono text-[10px] px-0'
                 style={{ whiteSpace: 'pre' }}
               >
-                {depositAmount}
+                {depositPercentage}
               </span>
               <Input
                 ref={depositInputRef}
                 type='number'
-                value={depositAmount}
+                value={depositPercentage}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '') {
-                    onDepositAmountChange(0);
+                    onDepositPercentageChange(0);
                   } else {
                     const cleanValue = value.replace(/^0+/, '') || '0';
                     const numValue = Number(cleanValue);
                     if (!isNaN(numValue) && numValue <= 100) {
                       e.target.value = cleanValue;
-                      onDepositAmountChange(numValue);
+                      onDepositPercentageChange(numValue);
                     }
                   }
                 }}
@@ -308,7 +308,7 @@ const InvoiceTotal = ({
             <span className='text-[11px]'>
               {currencySymbol}
               {formatNumber(
-                (subtotal + taxAmount + vatAmount - discountAmount) * (depositAmount / 100),
+                (subtotal + taxAmount + vatAmount - discountAmount) * (depositPercentage / 100),
               )}
             </span>
           </div>
