@@ -92,6 +92,8 @@ const InvoiceTotal = ({
   const vatInputRef = useRef<HTMLInputElement>(null);
   const vatLabelRef = useRef<HTMLSpanElement>(null);
   const vatLabelInputRef = useRef<HTMLInputElement>(null);
+  const depositSpanRef = useRef<HTMLSpanElement>(null);
+  const depositInputRef = useRef<HTMLInputElement>(null);
 
   useLayoutEffect(() => {
     if (taxSpanRef.current && taxInputRef.current) {
@@ -108,7 +110,10 @@ const InvoiceTotal = ({
       const width = Math.max(vatLabelRef.current.offsetWidth + 4, 30);
       vatLabelInputRef.current.style.width = `${width}px`;
     }
-  }, [taxRate, taxLabel, vatRate, vatLabel]);
+    if (depositSpanRef.current && depositInputRef.current) {
+      depositInputRef.current.style.width = depositSpanRef.current.offsetWidth + 4 + 'px';
+    }
+  }, [taxRate, taxLabel, vatRate, vatLabel, depositAmount]);
 
   const handleTaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -228,7 +233,7 @@ const InvoiceTotal = ({
           </div>
         )}
         {salesTax === 'enable' && (
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-center mb-2'>
             <div className='flex items-center'>
               <span
                 contentEditable
@@ -265,19 +270,47 @@ const InvoiceTotal = ({
           </div>
         )}
         {deposit === 'enable' && (
-          <div className='flex justify-between items-center mb-2'>
+          <div className='flex justify-between items-center'>
             <div className='flex items-center'>
               <span className='text-[11px]'>Deposit</span>
+              <span className='text-[11px]'>(</span>
+              <span
+                ref={depositSpanRef}
+                className='invisible absolute font-mono text-[10px] px-0'
+                style={{ whiteSpace: 'pre' }}
+              >
+                {depositAmount}
+              </span>
               <Input
+                ref={depositInputRef}
                 type='number'
                 value={depositAmount}
                 onChange={(e) => {
-                  return onDepositAmountChange(Number(e.target.value));
+                  const value = e.target.value;
+                  if (value === '') {
+                    onDepositAmountChange(0);
+                  } else {
+                    const cleanValue = value.replace(/^0+/, '') || '0';
+                    const numValue = Number(cleanValue);
+                    if (!isNaN(numValue) && numValue <= 100) {
+                      e.target.value = cleanValue;
+                      onDepositAmountChange(numValue);
+                    }
+                  }
                 }}
-                className='min-w-0 w-[60px] !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-right appearance-none h-4'
+                className='min-w-0 w-auto !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-center appearance-none h-4'
                 min='0'
+                max='100'
+                style={{ width: 'auto' }}
               />
+              <span className='text-[11px]'>%)</span>
             </div>
+            <span className='text-[11px]'>
+              {currencySymbol}
+              {formatNumber(
+                (subtotal + taxAmount + vatAmount - discountAmount) * (depositAmount / 100),
+              )}
+            </span>
           </div>
         )}
         <div className='h-[1px] bg-[#e0e0e0] my-3'></div>
