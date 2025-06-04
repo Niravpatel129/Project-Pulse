@@ -172,7 +172,28 @@ const InvoicePage = () => {
     },
     enabled: !!invoiceId,
   });
-  console.log('🚀 invoice:', invoice);
+
+  // Transform invoice to match StripePaymentForm's expected type
+  const transformedInvoice = invoice
+    ? {
+        _id: invoice._id,
+        invoiceNumber: invoice.invoiceNumber,
+        from: invoice.from,
+        to: invoice.to,
+        items: invoice.items,
+        totals: invoice.totals,
+        settings: {
+          currency: invoice.settings.currency,
+          salesTax: invoice.settings.salesTax,
+          vat: invoice.settings.vat,
+          deposit: {
+            enabled: invoice.settings.deposit.enabled,
+            percentage: invoice.settings.deposit.percentage,
+          },
+          decimals: invoice.settings.decimals === 'yes',
+        },
+      }
+    : null;
 
   const {
     stripePromise,
@@ -651,7 +672,7 @@ const InvoicePage = () => {
                         >
                           <StripePaymentForm
                             clientSecret={clientSecret}
-                            invoice={invoice}
+                            invoice={transformedInvoice!}
                             onBack={handleBackToSelection}
                             setIsLoading={setIsLoading}
                             paymentType={paymentType}
