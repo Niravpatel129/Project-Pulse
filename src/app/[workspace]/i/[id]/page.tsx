@@ -505,7 +505,7 @@ const InvoicePage = () => {
                     <div className='text-center mb-8'>
                       <h2 className='text-2xl font-mono mb-4 text-gray-900'>Payment Details</h2>
                       {invoice.settings.deposit.enabled && (
-                        <div className='mb-4'>
+                        <div className='mb-8'>
                           <div className='flex items-center justify-center gap-2 mb-4'>
                             <button
                               onClick={() => {
@@ -532,24 +532,9 @@ const InvoicePage = () => {
                               Pay Full Amount
                             </button>
                           </div>
-                          <p className='text-[11px] text-[#878787] mb-2'>Required Deposit</p>
-                          <div className='text-2xl font-mono mb-2 text-gray-900'>
-                            {formatCurrency(
-                              (invoice.totals.total * invoice.depositPercentage) / 100,
-                              invoice.settings.currency,
-                              invoice.settings.decimals,
-                            )}
-                          </div>
-                          <p className='text-[11px] text-[#878787]'>
-                            {invoice.depositPercentage}% of total
-                          </p>
                         </div>
                       )}
-                      <p className='text-[11px] text-[#878787] mb-6'>
-                        {paymentType === 'deposit' && invoice.settings.deposit.enabled
-                          ? 'Deposit Amount Due'
-                          : 'Total Amount Due'}
-                      </p>
+
                       <div className='text-4xl font-mono mb-8 text-gray-900'>
                         {formatCurrency(
                           paymentType === 'deposit' && invoice.settings.deposit.enabled
@@ -558,6 +543,11 @@ const InvoicePage = () => {
                           invoice.settings.currency,
                           invoice.settings.decimals,
                         )}
+                        <p className='text-[11px] text-[#878787] mb-6'>
+                          {paymentType === 'deposit' && invoice.settings.deposit.enabled
+                            ? 'Deposit Amount Due'
+                            : 'Total Amount Due'}
+                        </p>
                       </div>
                       <button
                         onClick={() => {
