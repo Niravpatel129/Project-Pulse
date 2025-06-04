@@ -167,7 +167,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: existingInvoice.settings.deposit?.enabled || false,
-          amount: existingInvoice.settings.deposit?.amount || 0,
+          amount: existingInvoice.settings.deposit?.amount || 50,
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings.decimals || 'yes',
@@ -193,7 +193,7 @@ const InvoiceSheet = ({
       },
       deposit: {
         enabled: false,
-        amount: 0,
+        amount: 50,
       },
       attachPdf: 'disable',
       decimals: 'yes',
@@ -225,7 +225,7 @@ const InvoiceSheet = ({
           },
           deposit: {
             enabled: lastInvoiceSettings.deposit?.enabled || false,
-            amount: lastInvoiceSettings.deposit?.amount || prev.deposit.amount,
+            amount: lastInvoiceSettings.deposit?.amount || 50,
           },
           decimals: lastInvoiceSettings.decimals || prev.decimals,
           notes: lastInvoiceSettings.notes || prev.notes,
@@ -362,7 +362,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: existingInvoice.settings?.deposit?.enabled || false,
-          amount: existingInvoice.settings?.deposit?.amount || 0,
+          amount: existingInvoice.settings?.deposit?.amount || 50,
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings?.decimals || 'yes',
@@ -734,7 +734,7 @@ const InvoiceSheet = ({
   // Handle settings change from menu
   const handleMenuSettingsChange = (newSettings: Partial<MenuInvoiceSettings>) => {
     setInvoiceSettings((prev) => {
-      return {
+      const updatedSettings = {
         ...prev,
         dateFormat: newSettings.dateFormat || prev.dateFormat,
         salesTax: {
@@ -752,7 +752,7 @@ const InvoiceSheet = ({
         },
         deposit: {
           enabled: newSettings.deposit === 'enable',
-          amount: prev.deposit.amount,
+          amount: newSettings.deposit === 'enable' ? 50 : prev.deposit.amount,
         },
         attachPdf: newSettings.attachPdf || prev.attachPdf,
         decimals: newSettings.decimals || prev.decimals,
@@ -761,6 +761,7 @@ const InvoiceSheet = ({
         teamNotes: newSettings.teamNotes || prev.teamNotes,
         logo: newSettings.logo || prev.logo,
       };
+      return updatedSettings;
     });
   };
 
@@ -834,7 +835,7 @@ const InvoiceSheet = ({
                 selectedCustomer={selectedCustomer}
                 toAddress={toAddress}
               />
-              <div className='flex flex-col gap-2 mt-8'>
+              <div className='flex flex-col gap-2 mt-6'>
                 {/* Labels */}
                 <div className='flex items-center gap-6 h-6'>
                   <div className='flex-[4] text-[11px] text-muted-foreground'>Description</div>
