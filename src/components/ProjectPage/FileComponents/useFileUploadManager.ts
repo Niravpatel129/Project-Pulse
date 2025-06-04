@@ -38,7 +38,7 @@ export function useFileUploadManager() {
     queryKey: ['files'],
     queryFn: async () => {
       const response = await newRequest.get('/files');
-      return response.data.files;
+      return response.data?.files || [];
     },
   });
 
