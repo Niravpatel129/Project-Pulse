@@ -49,6 +49,7 @@ interface Invoice {
     deposit: {
       enabled: boolean;
       percentage: number;
+      dueDate?: string;
     };
     salesTax: {
       enabled: boolean;
@@ -295,6 +296,19 @@ const InvoicePage = () => {
                                 </span>
                               </div>
                             </div>
+                            {invoice?.settings?.deposit?.dueDate && (
+                              <div className='flex items-center flex-shrink-0 space-x-1'>
+                                <span className='truncate font-mono text-[11px] text-[#878787]'>
+                                  Deposit Due Date:
+                                </span>
+                                <span className='text-[11px] font-mono flex-shrink-0 text-gray-900'>
+                                  {formatDate(
+                                    invoice?.settings?.deposit?.dueDate,
+                                    invoice?.settings?.dateFormat,
+                                  )}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
