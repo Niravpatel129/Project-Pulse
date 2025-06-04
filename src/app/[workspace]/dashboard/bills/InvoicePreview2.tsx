@@ -55,6 +55,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   onCancel,
   onDelete,
 }) => {
+  console.log('🚀 selectedInvoice:', selectedInvoice);
   const [activityOpen, setActivityOpen] = useState(true);
   const [noteOpen, setNoteOpen] = useState(!!selectedInvoice?.internalNote);
   const [internalNote, setInternalNote] = useState(selectedInvoice?.internalNote || '');
@@ -178,11 +179,10 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
           ) : (
             // Status Message
             <div className='flex-1 py-2'>
-              <div className='text-base font-medium'>
+              <div className='text-base font-medium capitalize'>
                 {selectedInvoice.status === 'cancelled'
                   ? 'Canceled'
-                  : selectedInvoice.status.charAt(0).toUpperCase() +
-                    selectedInvoice.status.slice(1)}{' '}
+                  : selectedInvoice.status.replace(/_/g, ' ')}{' '}
                 on {formatDate(selectedInvoice.statusChangedAt)}
               </div>
               <div className='text-xs text-gray-500 dark:text-gray-400'>
@@ -394,6 +394,23 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                   </div>
                 </div>
               </div>
+              {selectedInvoice.status === 'partially_paid' && (
+                <div className='flex items-center gap-2'>
+                  <div className='w-3 flex justify-center'>
+                    <span className='h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse'></span>
+                  </div>
+                  <div className='flex-1'>
+                    <div className='flex items-center justify-between'>
+                      <span>Partially Paid</span>
+                      <DateTooltip date={selectedInvoice.paidAt}>
+                        <span className='text-gray-900 dark:text-gray-100'>
+                          {formatDate(selectedInvoice?.depositPaidAt)}
+                        </span>
+                      </DateTooltip>
+                    </div>
+                  </div>
+                </div>
+              )}
               {selectedInvoice.status === 'paid' && (
                 <div className='flex items-center gap-2'>
                   <div className='w-3 flex justify-center'>
@@ -475,6 +492,39 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
                       </div>
                     </div>
                   </div>
+                  {selectedInvoice.settings?.deposit?.enabled && (
+                    <div className='flex items-center gap-2'>
+                      <div className='w-3 flex justify-center'>
+                        {selectedInvoice.status === 'partially_paid' ? (
+                          <span className='h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse'></span>
+                        ) : (
+                          <span className='h-1.5 w-1.5 rounded-full border border-gray-300 dark:border-gray-600'></span>
+                        )}
+                      </div>
+                      <div className='flex-1'>
+                        <div className='flex items-center justify-between'>
+                          <span
+                            className={
+                              selectedInvoice.status === 'partially_paid'
+                                ? 'text-gray-900 dark:text-gray-100'
+                                : 'text-gray-400 dark:text-gray-500'
+                            }
+                          >
+                            Deposit ({selectedInvoice.settings.deposit.percentage}%)
+                          </span>
+                          {selectedInvoice.status === 'partially_paid' ? (
+                            <DateTooltip date={selectedInvoice.paidAt}>
+                              <span className='text-gray-900 dark:text-gray-100'>
+                                {formatDate(selectedInvoice.paidAt)}
+                              </span>
+                            </DateTooltip>
+                          ) : (
+                            <span className='text-gray-400 dark:text-gray-500'>--</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className='flex items-center gap-2'>
                     <div className='w-3 flex justify-center'>
                       {selectedInvoice.status === 'paid' ? (
