@@ -264,7 +264,7 @@ const InvoicePage = () => {
               className='px-2 py-0.5 rounded-full cursor-default font-mono text-[11px] text-[#00C969] bg-[#DDF1E4]'
             >
               <span className='line-clamp-1 truncate inline-block capitalize'>
-                {invoice.status.replace('_', ' ')}
+                {invoice.status?.replace('_', ' ')}
               </span>
             </Badge>
           </div>
