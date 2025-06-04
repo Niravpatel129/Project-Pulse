@@ -75,7 +75,6 @@ interface Invoice {
   updatedAt: string;
   __v: number;
   depositPercentage: number;
-  requireDeposit: boolean;
   paymentIntentId: string;
   paidAt: string;
 }
@@ -109,6 +108,7 @@ const formatCurrency = (
 
 const InvoicePage = () => {
   const [showPayment, setShowPayment] = useState(false);
+  const [paymentType, setPaymentType] = useState<'deposit' | 'full'>('deposit');
   const params = useParams();
   const invoiceId = params.id as string;
 
@@ -188,6 +188,17 @@ const InvoicePage = () => {
     invoiceId,
     currency: invoice?.settings?.currency || 'USD',
   });
+
+  // Update payment amount when payment type changes
+  useEffect(() => {
+    if (invoice) {
+      const amount =
+        paymentType === 'deposit' && invoice.settings.deposit.enabled
+          ? (invoice.totals.total * invoice.depositPercentage) / 100
+          : invoice.totals.total;
+      handleSelectPayment(amount, paymentType);
+    }
+  }, [paymentType, invoice, handleSelectPayment]);
 
   // useEffect(() => {
   //   const timer = setTimeout(() => {
@@ -493,8 +504,34 @@ const InvoicePage = () => {
                   >
                     <div className='text-center mb-8'>
                       <h2 className='text-2xl font-mono mb-4 text-gray-900'>Payment Details</h2>
-                      {invoice.requireDeposit && (
+                      {invoice.settings.deposit.enabled && (
                         <div className='mb-4'>
+                          <div className='flex items-center justify-center gap-2 mb-4'>
+                            <button
+                              onClick={() => {
+                                return setPaymentType('deposit');
+                              }}
+                              className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
+                                paymentType === 'deposit'
+                                  ? 'bg-[#1D1D1F] text-white'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              Pay Deposit
+                            </button>
+                            <button
+                              onClick={() => {
+                                return setPaymentType('full');
+                              }}
+                              className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
+                                paymentType === 'full'
+                                  ? 'bg-[#1D1D1F] text-white'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              Pay Full Amount
+                            </button>
+                          </div>
                           <p className='text-[11px] text-[#878787] mb-2'>Required Deposit</p>
                           <div className='text-2xl font-mono mb-2 text-gray-900'>
                             {formatCurrency(
@@ -508,10 +545,16 @@ const InvoicePage = () => {
                           </p>
                         </div>
                       )}
-                      <p className='text-[11px] text-[#878787] mb-6'>Total Amount Due</p>
+                      <p className='text-[11px] text-[#878787] mb-6'>
+                        {paymentType === 'deposit' && invoice.settings.deposit.enabled
+                          ? 'Deposit Amount Due'
+                          : 'Total Amount Due'}
+                      </p>
                       <div className='text-4xl font-mono mb-8 text-gray-900'>
                         {formatCurrency(
-                          invoice.totals.total,
+                          paymentType === 'deposit' && invoice.settings.deposit.enabled
+                            ? (invoice.totals.total * invoice.depositPercentage) / 100
+                            : invoice.totals.total,
                           invoice.settings.currency,
                           invoice.settings.decimals,
                         )}
