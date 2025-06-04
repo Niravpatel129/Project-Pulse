@@ -36,9 +36,9 @@ interface InvoiceTotalProps {
   subtotal: number;
   total: number;
   taxRate: number;
-  onTaxRateChange: (taxRate: number) => void;
+  onTaxRateChange: (rate: number) => void;
   vatRate: number;
-  onVatRateChange: (vatRate: number) => void;
+  onVatRateChange: (rate: number) => void;
   taxLabel?: string;
   onTaxLabelChange?: (label: string) => void;
   vatLabel?: string;
@@ -51,6 +51,9 @@ interface InvoiceTotalProps {
   discount: string;
   discountAmount: number;
   onDiscountAmountChange: (amount: number) => void;
+  deposit: string;
+  depositAmount: number;
+  onDepositAmountChange: (amount: number) => void;
 }
 
 const InvoiceTotal = ({
@@ -72,6 +75,9 @@ const InvoiceTotal = ({
   discount,
   discountAmount,
   onDiscountAmountChange,
+  deposit,
+  depositAmount,
+  onDepositAmountChange,
 }: InvoiceTotalProps) => {
   const taxAmount = (subtotal * taxRate) / 100;
   const vatAmount = (subtotal * vatRate) / 100;
@@ -256,6 +262,22 @@ const InvoiceTotal = ({
               {currencySymbol}
               {formatNumber(taxAmount)}
             </span>
+          </div>
+        )}
+        {deposit === 'enable' && (
+          <div className='flex justify-between items-center mb-2'>
+            <div className='flex items-center'>
+              <span className='text-[11px]'>Deposit</span>
+              <Input
+                type='number'
+                value={depositAmount}
+                onChange={(e) => {
+                  return onDepositAmountChange(Number(e.target.value));
+                }}
+                className='min-w-0 w-[60px] !text-[11px] border-0 p-0 m-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent shadow-none font-mono text-[#878787] text-right appearance-none h-4'
+                min='0'
+              />
+            </div>
           </div>
         )}
         <div className='h-[1px] bg-[#e0e0e0] my-3'></div>

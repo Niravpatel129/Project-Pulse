@@ -51,6 +51,10 @@ interface InvoiceSettings {
     enabled: boolean;
     amount: number;
   };
+  deposit: {
+    enabled: boolean;
+    amount: number;
+  };
   attachPdf: string;
   decimals: 'yes' | 'no';
   qrCode: string;
@@ -66,6 +70,7 @@ interface MenuInvoiceSettings {
   vat: string;
   currency: string;
   discount: string;
+  deposit: string;
   attachPdf: string;
   decimals: 'yes' | 'no';
   qrCode: string;
@@ -160,6 +165,10 @@ const InvoiceSheet = ({
           enabled: existingInvoice.settings.discount?.enabled || false,
           amount: existingInvoice.settings.discount?.amount || 0,
         },
+        deposit: {
+          enabled: existingInvoice.settings.deposit?.enabled || false,
+          amount: existingInvoice.settings.deposit?.amount || 0,
+        },
         attachPdf: 'disable',
         decimals: existingInvoice.settings.decimals || 'yes',
         qrCode: 'enable',
@@ -179,6 +188,10 @@ const InvoiceSheet = ({
       },
       currency: 'CAD',
       discount: {
+        enabled: false,
+        amount: 0,
+      },
+      deposit: {
         enabled: false,
         amount: 0,
       },
@@ -209,6 +222,10 @@ const InvoiceSheet = ({
           discount: {
             enabled: lastInvoiceSettings.discount?.enabled || false,
             amount: lastInvoiceSettings.discount?.amount || prev.discount.amount,
+          },
+          deposit: {
+            enabled: lastInvoiceSettings.deposit?.enabled || false,
+            amount: lastInvoiceSettings.deposit?.amount || prev.deposit.amount,
           },
           decimals: lastInvoiceSettings.decimals || prev.decimals,
           notes: lastInvoiceSettings.notes || prev.notes,
@@ -247,6 +264,9 @@ const InvoiceSheet = ({
   const [vatRate, setVatRate] = useState<number>(existingInvoice?.settings?.vat?.rate || 20);
   const [discountAmount, setDiscountAmount] = useState<number>(
     existingInvoice?.settings?.discount?.amount || 0,
+  );
+  const [depositAmount, setDepositAmount] = useState<number>(
+    existingInvoice?.settings?.deposit?.amount || 0,
   );
   const [selectedCustomer, setSelectedCustomer] = useState<string>(
     existingInvoice?.customer?.id || '',
@@ -306,6 +326,7 @@ const InvoiceSheet = ({
       setTaxRate(existingInvoice.settings?.salesTax?.rate || 13);
       setVatRate(existingInvoice.settings?.vat?.rate || 20);
       setDiscountAmount(existingInvoice.settings?.discount?.amount || 0);
+      setDepositAmount(existingInvoice.settings?.deposit?.amount || 0);
       setInvoiceSettings({
         dateFormat: existingInvoice.settings?.dateFormat || 'DD/MM/YYYY',
         salesTax: {
@@ -320,6 +341,10 @@ const InvoiceSheet = ({
         discount: {
           enabled: existingInvoice.settings?.discount?.enabled || false,
           amount: existingInvoice.settings?.discount?.amount || 0,
+        },
+        deposit: {
+          enabled: existingInvoice.settings?.deposit?.enabled || false,
+          amount: existingInvoice.settings?.deposit?.amount || 0,
         },
         attachPdf: 'disable',
         decimals: existingInvoice.settings?.decimals || 'yes',
@@ -336,6 +361,7 @@ const InvoiceSheet = ({
       setTaxRate(lastInvoiceSettings.salesTax?.rate || 13);
       setVatRate(lastInvoiceSettings.vat?.rate || 20);
       setDiscountAmount(lastInvoiceSettings.discount?.amount || 0);
+      setDepositAmount(lastInvoiceSettings.deposit?.amount || 0);
       setInvoiceNumber(lastInvoiceSettings.newInvoiceNumber || 'INV-0001');
     }
   }, [lastInvoiceSettings, existingInvoice]);
@@ -426,6 +452,10 @@ const InvoiceSheet = ({
 
   const handleDiscountAmountChange = (amount: number) => {
     setDiscountAmount(amount);
+  };
+
+  const handleDepositAmountChange = (amount: number) => {
+    setDepositAmount(amount);
   };
 
   const handleInvoiceSettingsChange = (newSettings: Partial<InvoiceSettings>) => {
@@ -560,6 +590,10 @@ const InvoiceSheet = ({
           enabled: invoiceSettings.discount.enabled,
           amount: discountAmount,
         },
+        deposit: {
+          enabled: invoiceSettings.deposit.enabled,
+          amount: depositAmount,
+        },
         decimals: invoiceSettings.decimals,
       },
       notes: invoiceSettings.notes,
@@ -633,6 +667,7 @@ const InvoiceSheet = ({
     setTaxRate(13);
     setVatRate(20);
     setDiscountAmount(0);
+    setDepositAmount(0);
   };
 
   const { data: invoiceNumberValidation, refetch: validateInvoiceNumber } = useQuery({
@@ -664,6 +699,7 @@ const InvoiceSheet = ({
     vat: invoiceSettings.vat.enabled ? 'enable' : 'disable',
     currency: invoiceSettings.currency,
     discount: invoiceSettings.discount.enabled ? 'enable' : 'disable',
+    deposit: invoiceSettings.deposit.enabled ? 'enable' : 'disable',
     attachPdf: invoiceSettings.attachPdf,
     decimals: invoiceSettings.decimals,
     qrCode: invoiceSettings.qrCode,
@@ -690,6 +726,10 @@ const InvoiceSheet = ({
         discount: {
           enabled: newSettings.discount === 'enable',
           amount: prev.discount.amount,
+        },
+        deposit: {
+          enabled: newSettings.deposit === 'enable',
+          amount: prev.deposit.amount,
         },
         attachPdf: newSettings.attachPdf || prev.attachPdf,
         decimals: newSettings.decimals || prev.decimals,
@@ -830,6 +870,8 @@ const InvoiceSheet = ({
                 discount={invoiceSettings.discount.enabled ? 'enable' : 'disable'}
                 discountAmount={discountAmount}
                 onDiscountAmountChange={handleDiscountAmountChange}
+                depositAmount={depositAmount}
+                onDepositAmountChange={handleDepositAmountChange}
               />
               <InvoiceNotes
                 notes={invoiceSettings.notes}

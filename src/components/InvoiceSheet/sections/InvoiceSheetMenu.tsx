@@ -25,6 +25,7 @@ interface InvoiceSettings {
   vat: string;
   currency: string;
   discount: string;
+  deposit: string;
   attachPdf: string;
   decimals: 'yes' | 'no';
   qrCode: string;
@@ -226,6 +227,39 @@ const InvoiceSheetMenu = ({ settings, onSettingsChange }: InvoiceSheetMenuProps)
                   onSelect={(e) => {
                     e.preventDefault();
                     handleSettingChange('discount', 'disable');
+                  }}
+                >
+                  Disable
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Landmark className='mr-2 h-4 w-4' />
+              Add deposit
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={settings.deposit}
+                onValueChange={(value) => {
+                  return handleSettingChange('deposit', value);
+                }}
+              >
+                <DropdownMenuRadioItem
+                  value='enable'
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleSettingChange('deposit', 'enable');
+                  }}
+                >
+                  Enable
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value='disable'
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleSettingChange('deposit', 'disable');
                   }}
                 >
                   Disable
