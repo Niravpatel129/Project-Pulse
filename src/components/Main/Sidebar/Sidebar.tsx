@@ -20,13 +20,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
-import {
-  RiChat1Fill,
-  RiFileListFill,
-  RiFolderFill,
-  RiRobotFill,
-  RiSettingsFill,
-} from 'react-icons/ri';
+import { RiFileListFill, RiSettingsFill } from 'react-icons/ri';
 
 // Custom hook for media queries
 function useMediaQuery(query: string) {
@@ -135,29 +129,29 @@ export default function AppSidebar() {
           // },
         ],
       },
-      {
-        name: 'AI',
-        items: [
-          {
-            name: 'Chat',
-            href: '/dashboard/chat',
-            icon: RiChat1Fill,
-          },
-          {
-            name: 'Agents',
-            href: '/dashboard/chat/agents',
-            icon: RiRobotFill,
-          },
-        ],
-      },
+      // {
+      //   name: 'AI',
+      //   items: [
+      //     {
+      //       name: 'Chat',
+      //       href: '/dashboard/chat',
+      //       icon: RiChat1Fill,
+      //     },
+      //     {
+      //       name: 'Agents',
+      //       href: '/dashboard/chat/agents',
+      //       icon: RiRobotFill,
+      //     },
+      //   ],
+      // },
       {
         name: 'Management',
         items: [
-          {
-            name: 'File Manager',
-            href: '/dashboard/files',
-            icon: RiFolderFill,
-          },
+          // {
+          //   name: 'File Manager',
+          //   href: '/dashboard/files',
+          //   icon: RiFolderFill,
+          // },
           {
             name: 'Settings',
             href: '/dashboard/settings',
