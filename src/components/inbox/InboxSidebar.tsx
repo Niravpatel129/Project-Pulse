@@ -43,8 +43,9 @@ const ThreadItem = ({
   return (
     <div
       className={cn(
-        'flex items-center px-4 py-3 cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428]',
-        isSelected && 'bg-slate-50 dark:bg-[#232428]',
+        'flex items-center px-4 py-3 transition-colors duration-150',
+        !isSelected && 'cursor-pointer hover:bg-slate-50/50 dark:hover:bg-[#232428]',
+        isSelected && 'bg-slate-100 dark:bg-[#2a2a2f]',
       )}
       onClick={onClick}
     >
