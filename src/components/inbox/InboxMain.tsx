@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -31,6 +32,7 @@ interface Email {
 
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
 
   // Set the latest email as expanded when emailChain data is available
@@ -53,8 +55,21 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     });
   };
 
+  const toggleBody = (emailId: string) => {
+    setExpandedBodies((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(emailId)) {
+        newSet.delete(emailId);
+      } else {
+        newSet.add(emailId);
+      }
+      return newSet;
+    });
+  };
+
   const renderThread = (email: Email) => {
     const isExpanded = expandedThreads.has(email._id);
+    const isBodyExpanded = expandedBodies.has(email._id);
     const recipients = email.to
       .map((t) => {
         return t.email;
@@ -134,9 +149,22 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
             <div className='p-4 min-h-[100px]'>
               <div
-                className='text-sm mt-2 text-[#121212] dark:text-white whitespace-pre-wrap'
+                className={`text-sm mt-2 text-[#121212] dark:text-white whitespace-pre-wrap ${
+                  !isBodyExpanded ? 'line-clamp-3' : ''
+                }`}
                 dangerouslySetInnerHTML={{ __html: email.body.html }}
               />
+              <Button
+                variant='ghost'
+                size='sm'
+                className='mt-2 text-muted-foreground hover:text-foreground'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleBody(email._id);
+                }}
+              >
+                {isBodyExpanded ? 'Show less' : 'Show more'}
+              </Button>
             </div>
           </>
         )}
