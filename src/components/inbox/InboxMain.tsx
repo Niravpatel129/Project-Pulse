@@ -210,12 +210,12 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   }
 
   return (
-    <div className='p-4'>
+    <div className='p-4 h-full overflow-hidden flex flex-col'>
       <h2 className='text-xl font-bold mb-4 text-[#121212] dark:text-white'>
         {emailChain.subject}
       </h2>
 
-      <div className='flex flex-col gap-0'>
+      <div className='flex flex-col gap-0 overflow-y-auto flex-1'>
         {emailChain.emails.map((email) => {
           return renderThread(email);
         })}
