@@ -42,7 +42,6 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
   const [isReplying, setIsReplying] = useState(false);
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
-  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
 
