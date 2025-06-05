@@ -42,27 +42,6 @@ interface Email {
   isRead: boolean;
 }
 
-const getEffectiveBackgroundColor = (element: HTMLElement) => {
-  let current: HTMLElement | null = element;
-  while (current) {
-    try {
-      const computedBg = getComputedStyle(current).backgroundColor;
-      // Skip if the background color is transparent or empty
-      if (!computedBg || computedBg === 'transparent' || computedBg === 'rgba(0, 0, 0, 0)') {
-        current = current.parentElement;
-        continue;
-      }
-      const bg = Color(computedBg);
-      if (bg.alpha() >= 1) return bg.rgb();
-    } catch (error) {
-      // If there's any error parsing the color, continue to parent element
-      console.warn('Error parsing background color:', error);
-    }
-    current = current.parentElement;
-  }
-  return Color('#ffffff');
-};
-
 const EmailContent = ({
   html,
   isBodyExpanded,
