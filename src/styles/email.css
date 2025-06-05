@@ -4,6 +4,8 @@
   line-height: 1.3;
   color: #202124;
   font-size: 14px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* Reset margins and padding for email content */
@@ -64,17 +66,25 @@
 /* Style tables */
 .email-content table {
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
   margin: 0;
+  border-spacing: 0;
+  table-layout: auto;
+  max-width: 100%;
 }
 
 .email-content th,
 .email-content td {
-  padding: 0.25em 0.5em;
+  padding: 0;
+  border: none;
+  vertical-align: top;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .email-content th {
   font-weight: 600;
+  text-align: left;
 }
 
 /* Style horizontal rules */
