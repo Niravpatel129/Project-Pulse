@@ -149,12 +149,10 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       setExpandedThreads(new Set([latestEmail._id]));
 
       // Scroll to bottom after a short delay to ensure content is rendered
-      setTimeout(() => {
-        containerRef.current?.scrollTo({
-          top: containerRef.current.scrollHeight,
-          behavior: 'instant',
-        });
-      }, 100);
+      containerRef.current?.scrollTo({
+        top: containerRef.current.scrollHeight,
+        behavior: 'instant',
+      });
     }
   }, [emailChain]);
 
