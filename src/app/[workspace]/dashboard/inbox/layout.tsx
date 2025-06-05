@@ -1,10 +1,6 @@
 import { Metadata } from 'next';
 
-type Props = {
-  params: { workspace: string };
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }): Promise<Metadata> {
   return {
     title: `${params.workspace} - Inbox`,
     description: 'Manage your messages and communications in one place',
