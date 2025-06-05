@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import InboxReply from './InboxReply';
 
 interface InboxMainProps {
   selectedThreadId?: string;
@@ -156,6 +157,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         {mockThreads.map((thread) => {
           return renderThread(thread);
         })}
+        <InboxReply />
       </div>
     </div>
   );
