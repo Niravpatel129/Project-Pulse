@@ -36,6 +36,12 @@ const InboxPage = () => {
     );
   }
 
+  // Flatten the pages array to get all threads
+  const allThreads =
+    threads?.pages.flatMap((page) => {
+      return page.data;
+    }) || [];
+
   return (
     <div className='flex flex-col h-screen w-full overflow-hidden'>
       {/* Topbar */}
@@ -93,7 +99,7 @@ const InboxPage = () => {
         <div className='w-[320px] h-full flex-shrink-0'>
           <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
             <InboxSidebar
-              threads={threads?.map((thread) => {
+              threads={allThreads.map((thread) => {
                 return {
                   threadId: thread.threadId,
                   subject: thread.subject,
