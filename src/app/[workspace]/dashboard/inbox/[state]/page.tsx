@@ -21,7 +21,6 @@ const InboxPage = () => {
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
   const { data: threads, error } = useInbox();
-  console.log('🚀 activeTab:', activeTab);
 
   // Automatically select the first thread when threads data is available
   useEffect(() => {
@@ -103,7 +102,6 @@ const InboxPage = () => {
           <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
             <InboxSidebar
               threads={allThreads.map((thread) => {
-                console.log('🚀 thread:', thread);
                 return {
                   threadId: thread.threadId,
                   subject: thread.subject,

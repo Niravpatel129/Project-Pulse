@@ -391,7 +391,14 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
 
   return (
     <div className='p-4 h-full overflow-hidden flex flex-col'>
-      <InboxHeader subject={emailChain.subject} />
+      <InboxHeader
+        subject={emailChain.subject}
+        threadId={emailChain.threadId}
+        isUnread={!emailChain.isRead}
+        hasAttachments={emailChain.emails.some((email) => {
+          return email.attachments?.length > 0;
+        })}
+      />
       <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
         {emailChain.emails.map((email) => {
           return renderThread(email);

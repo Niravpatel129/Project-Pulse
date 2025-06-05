@@ -179,7 +179,6 @@ const fetchInboxThreads = async ({
   pageParam?: number;
   stage: string;
 }): Promise<PaginatedResponse> => {
-  console.log('🚀 stage:', stage);
   const { data } = await newRequest.get('/inbox', {
     params: {
       stage: stage,

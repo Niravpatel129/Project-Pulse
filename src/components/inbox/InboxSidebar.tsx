@@ -83,7 +83,6 @@ export default function InboxSidebar({
   selectedThreadId,
   onThreadSelect,
 }: InboxSidebarProps) {
-  console.log('🚀 threads:', threads);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [localThreads, setLocalThreads] = useState(threads);
