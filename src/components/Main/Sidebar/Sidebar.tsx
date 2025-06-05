@@ -139,7 +139,7 @@ export default function AppSidebar() {
           // },
           {
             name: 'Inbox',
-            href: '/dashboard/inbox',
+            href: '/dashboard/inbox/unassigned',
             icon: RiInboxFill,
           },
           // {
