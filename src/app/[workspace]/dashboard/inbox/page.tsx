@@ -92,6 +92,7 @@ const InboxPage = () => {
           <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
             <InboxSidebar
               threads={allThreads.map((thread) => {
+                console.log('🚀 thread:', thread);
                 return {
                   threadId: thread.threadId,
                   subject: thread.subject,
