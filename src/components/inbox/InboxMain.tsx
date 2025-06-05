@@ -93,7 +93,6 @@ const EmailContent = ({
         }
         .email-content table {
           border-collapse: collapse !important;
-          width: 100%;
         }
         .email-content td {
           padding: 0;
@@ -235,7 +234,6 @@ const EmailContent = ({
         }
         .email-content table {
           border-collapse: collapse !important;
-          width: 100%;
         }
         .email-content td {
           padding: 0;
