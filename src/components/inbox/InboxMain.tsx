@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import InboxReply from './InboxReply';
 
 interface InboxMainProps {
@@ -32,6 +32,14 @@ interface Email {
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
+
+  // Set the latest email as expanded when emailChain data is available
+  useEffect(() => {
+    if (emailChain?.emails?.length > 0) {
+      const latestEmailId = emailChain.emails[emailChain.emails.length - 1]._id;
+      setExpandedThreads(new Set([latestEmailId]));
+    }
+  }, [emailChain]);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
