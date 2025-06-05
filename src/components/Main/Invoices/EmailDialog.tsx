@@ -117,6 +117,7 @@ function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
+          <link rel="stylesheet" href="/styles/email.css">
           <style>
             body {
               margin: 0;
@@ -126,41 +127,9 @@ function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }
               color: ${resolvedTheme === 'dark' ? '#fafafa' : '#3F3F46'};
               background-color: ${resolvedTheme === 'dark' ? '#141414' : '#ffffff'};
             }
-            img {
-              max-width: 100%;
-              height: auto;
-            }
-            table {
-              border-collapse: collapse;
-              width: 100%;
-            }
-            td, th {
-              border: 1px solid ${resolvedTheme === 'dark' ? '#232428' : '#E4E4E7'};
-              padding: 8px;
-            }
-            a {
-              color: ${resolvedTheme === 'dark' ? '#3B82F6' : '#2563EB'};
-            }
-            blockquote {
-              border-left: 4px solid ${resolvedTheme === 'dark' ? '#232428' : '#E4E4E7'};
-              margin: 0;
-              padding-left: 1rem;
-              color: ${resolvedTheme === 'dark' ? '#fafafa' : '#3F3F46'};
-            }
-            pre {
-              background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#fafafa'};
-              padding: 1rem;
-              border-radius: 0.375rem;
-              overflow-x: auto;
-            }
-            code {
-              background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#fafafa'};
-              padding: 0.2rem 0.4rem;
-              border-radius: 0.25rem;
-            }
           </style>
         </head>
-        <body>
+        <body class="email-content">
           ${html}
         </body>
       </html>

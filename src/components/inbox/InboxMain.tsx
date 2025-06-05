@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useEmailChain } from '@/hooks/use-email-chain';
+import '@/styles/email.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import InboxReply from './InboxReply';
@@ -168,7 +169,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
             <div className='p-4 min-h-[100px]'>
               <div
-                className={`text-sm mt-2 text-[#121212] dark:text-white whitespace-pre-wrap ${
+                className={`email-content ${
                   !isBodyExpanded && containsQuotedContent
                     ? '[&_blockquote]:hidden [&_div]:has(blockquote):hidden'
                     : ''
