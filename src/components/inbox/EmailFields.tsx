@@ -107,19 +107,11 @@ export function EmailFields({
           <Input
             className={seemLessInput()}
             value={cc}
-            onChange={(e) => {
-              return onCcChange(e.target.value);
+            onKeyDown={(e) => {
+              if (e.key === 'Backspace' && cc === '') {
+                setShowCc(false);
+              }
             }}
-            placeholder='Cc email(s)'
-          />
-        </div>
-      )}
-      {showCc && (
-        <div className='flex items-center mb-2'>
-          <span className='pr-1 text-gray-500 text-sm'>Cc:</span>
-          <Input
-            className={seemLessInput()}
-            value={cc}
             onChange={(e) => {
               return onCcChange(e.target.value);
             }}
@@ -132,6 +124,11 @@ export function EmailFields({
           <span className='pr-1 text-gray-500 text-sm'>Bcc:</span>
           <Input
             className={seemLessInput()}
+            onKeyDown={(e) => {
+              if (e.key === 'Backspace' && bcc === '') {
+                setShowBcc(false);
+              }
+            }}
             value={bcc}
             onChange={(e) => {
               return onBccChange(e.target.value);
@@ -145,6 +142,11 @@ export function EmailFields({
           <span className='pr-1 text-gray-500 text-sm'>Subject:</span>
           <Input
             className={seemLessInput()}
+            onKeyDown={(e) => {
+              if (e.key === 'Backspace' && subject === '') {
+                setIsSubjectVisible(false);
+              }
+            }}
             value={subject}
             onChange={(e) => {
               onSubjectChange(e.target.value);
