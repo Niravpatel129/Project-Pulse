@@ -54,6 +54,9 @@ export function EmailFields({
           variant='link'
           size='sm'
           className='ml-2 px-1 text-xs'
+          style={{
+            display: !showCc ? 'block' : 'none',
+          }}
           type='button'
           onClick={() => {
             return setShowCc((v) => {
@@ -67,6 +70,9 @@ export function EmailFields({
           variant='link'
           size='sm'
           className='ml-1 px-1 text-xs'
+          style={{
+            display: !showBcc ? 'block' : 'none',
+          }}
           type='button'
           onClick={() => {
             return setShowBcc((v) => {
