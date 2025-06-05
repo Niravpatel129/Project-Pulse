@@ -143,17 +143,6 @@ export default function InboxSidebar({
 
   return (
     <div className='flex h-full w-full min-w-0 flex-col bg-white dark:bg-neutral-900 overflow-hidden'>
-      {/* Header */}
-      <div className='flex items-center justify-between p-4 border-b border-slate-100 dark:border-[#232428]'>
-        <h2 className='text-base font-medium text-[#121212] dark:text-white'>Inbox</h2>
-        <Badge
-          variant='secondary'
-          className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
-        >
-          {localThreads.length}
-        </Badge>
-      </div>
-
       {/* Search */}
       <div className='p-4 border-b border-slate-100 dark:border-[#232428]'>
         <div className='flex gap-2'>
