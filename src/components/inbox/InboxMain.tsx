@@ -7,26 +7,37 @@ interface InboxMainProps {
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   return (
     <div className='p-4'>
-      <h2 className='text-xl font-bold'>
+      <h2 className='text-xl font-bold mb-2'>
         Heroku app &quot;toastify&quot; log data transfer notification
       </h2>
-      <div className='border border-slate-100 dark:border-[#232428] rounded-lg p-4'>
-        {/* Avatar  */}
-        <div className='flex items-start gap-4 mt-2 mb-4'>
-          <Avatar className='h-8 w-8'>
-            <AvatarFallback className='bg-gray-200 text-gray-600 text-xs'>HH</AvatarFallback>
-          </Avatar>
-          <div>
-            <div className='font-medium text-sm text-[#121212] dark:text-white leading-tight'>
-              Heather Hahnenberg (LinkedIn Supplier)
+      <div className='border border-slate-100 dark:border-[#232428] rounded-lg'>
+        <div className='flex items-center gap-4 p-4'>
+          {/* Avatar  */}
+          <div className='flex items-start gap-4 mt-2 mb-4'>
+            <Avatar className='h-8 w-8'>
+              <AvatarFallback className='bg-gray-200 text-gray-600 text-xs'>HH</AvatarFallback>
+            </Avatar>
+            <div className='flex-1'>
+              <div className='flex justify-between items-start'>
+                <div>
+                  <div className='font-medium text-sm text-[#121212] dark:text-white leading-tight'>
+                    Heather Hahnenberg{' '}
+                    <span className='text-muted-foreground text-sm'>&lt;someone@email.com&gt;</span>
+                  </div>
+
+                  <div className='text-sm text-muted-foreground'>To: Nirav Patel</div>
+                  <div className='text-sm text-muted-foreground'>Subject: Random Subject</div>
+                </div>
+                <div className='text-sm text-muted-foreground'>1 week ago</div>
+              </div>
             </div>
-            <div className='text-sm text-muted-foreground'>&lt;hhahnenberg@linkedin.com&gt;</div>
-            <div className='text-sm text-muted-foreground'>To: Nirav Patel</div>
-            <div className='text-sm mt-2'>
-              <span className='font-medium'>Subject:</span> [YOU&apos;RE INVITED!] LinkedIn
-              Marketing Targeting Webinar - Smarter Targeting, Stronger Results
-            </div>
-            <div className='text-sm text-muted-foreground mt-1'>1 week ago</div>
+          </div>
+        </div>
+        <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
+        <div className='p-4 min-h-[100px]'>
+          <div className='text-sm mt-2 '>
+            hi. iam not sure cause iam working . but i call you afternoon around 3.30 to see if you
+            are in the store
           </div>
         </div>
       </div>
