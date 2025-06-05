@@ -28,14 +28,6 @@ const InboxPage = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className='flex items-center justify-center h-screen'>
-        <p>Loading inbox...</p>
-      </div>
-    );
-  }
-
   // Flatten the pages array to get all threads
   const allThreads =
     threads?.pages.flatMap((page) => {
