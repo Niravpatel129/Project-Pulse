@@ -5,11 +5,8 @@ interface InboxMainProps {
 }
 
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
-  return (
-    <div className='p-4'>
-      <h2 className='text-xl font-bold mb-2'>
-        Heroku app &quot;toastify&quot; log data transfer notification
-      </h2>
+  const renderThread = () => {
+    return (
       <div className='border border-slate-100 dark:border-[#232428] rounded-lg'>
         <div className='flex items-center gap-4 p-4 justify-between w-full'>
           {/* Avatar  */}
@@ -42,6 +39,19 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
             are in the store
           </div>
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className='p-4'>
+      <h2 className='text-xl font-bold mb-2'>
+        Heroku app &quot;toastify&quot; log data transfer notification
+      </h2>
+
+      <div className='flex flex-col gap-4'>
+        {renderThread()}
+        {renderThread()}
       </div>
     </div>
   );
