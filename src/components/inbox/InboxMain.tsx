@@ -8,16 +8,24 @@ interface InboxMainProps {
   selectedThreadId?: string;
 }
 
-interface Thread {
-  id: string;
-  sender: {
+interface Email {
+  _id: string;
+  from: {
     name: string;
     email: string;
+    avatar: string;
+    initials: string;
   };
-  recipient: string;
+  to: Array<{
+    name: string;
+    email: string;
+  }>;
   subject: string;
-  timestamp: string;
-  content: string;
+  body: {
+    text: string;
+    html: string;
+  };
+  internalDate: string;
   isRead: boolean;
 }
 
@@ -37,39 +45,39 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     });
   };
 
-  const renderThread = (thread: Thread) => {
-    const isExpanded = expandedThreads.has(thread.id);
+  const renderThread = (email: Email) => {
+    const isExpanded = expandedThreads.has(email._id);
+    const recipients = email.to
+      .map((t) => {
+        return t.email;
+      })
+      .join(', ');
 
     return (
       <div
-        key={thread.id}
+        key={email._id}
         className='border border-slate-100 dark:border-[#232428] rounded-lg mb-4'
       >
         <div
           className='flex items-center gap-4 p-4 justify-between w-full cursor-pointer transition-colors'
           onClick={() => {
-            return toggleThread(thread.id);
+            return toggleThread(email._id);
           }}
         >
           {/* Avatar  */}
           <div className='flex items-start gap-4 w-full'>
             <Avatar className='h-7 w-7'>
               <AvatarFallback className='bg-[#656973] text-white dark:text-white dark:bg-[#656973] text-[10px]'>
-                {thread.sender.name
-                  .split(' ')
-                  .map((n) => {
-                    return n[0];
-                  })
-                  .join('')}
+                {email.from.initials}
               </AvatarFallback>
             </Avatar>
             <div className='flex-1'>
               <div className='flex justify-between items-start'>
                 <div>
                   <div className='font-medium text-sm text-[#121212] dark:text-white leading-tight'>
-                    {thread.sender.name}{' '}
+                    {email.from.name}{' '}
                     <span className='text-muted-foreground text-sm'>
-                      &lt;{thread.sender.email}&gt;
+                      &lt;{email.from.email}&gt;
                     </span>
                   </div>
                   <div
@@ -78,7 +86,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                       display: isExpanded ? 'block' : 'none',
                     }}
                   >
-                    To: {thread.recipient}
+                    To: {recipients}
                   </div>
                   <div
                     className='text-sm text-muted-foreground'
@@ -86,7 +94,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                       display: isExpanded ? 'block' : 'none',
                     }}
                   >
-                    Subject: {thread.subject}
+                    Subject: {email.subject}
                   </div>
                   <div
                     className='text-sm text-muted-foreground'
@@ -94,13 +102,15 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                       display: !isExpanded ? 'block' : 'none',
                     }}
                   >
-                    {thread.content.length > 100
-                      ? `${thread.content.substring(0, 100)}...`
-                      : thread.content}
+                    {email.body.text.length > 100
+                      ? `${email.body.text.substring(0, 100)}...`
+                      : email.body.text}
                   </div>
                 </div>
                 <div className='flex items-center gap-2'>
-                  <div className='text-sm text-muted-foreground'>{thread.timestamp}</div>
+                  <div className='text-sm text-muted-foreground'>
+                    {new Date(email.internalDate).toLocaleString()}
+                  </div>
                   {isExpanded ? (
                     <ChevronUp className='h-4 w-4 text-muted-foreground' />
                   ) : (
@@ -115,7 +125,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
           <>
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
             <div className='p-4 min-h-[100px]'>
-              <div className='text-sm mt-2 text-[#121212] dark:text-white'>{thread.content}</div>
+              <div className='text-sm mt-2 text-[#121212] dark:text-white'>{email.body.text}</div>
             </div>
           </>
         )}
@@ -162,8 +172,8 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       </h2>
 
       <div className='flex flex-col gap-0'>
-        {emailChain.messages.map((message) => {
-          return renderThread(message);
+        {emailChain.emails.map((email) => {
+          return renderThread(email);
         })}
         <InboxReply />
       </div>
