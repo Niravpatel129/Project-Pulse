@@ -67,6 +67,22 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     });
   };
 
+  const hasQuotedContent = (html: string) => {
+    // Check for common email quote patterns
+    const quotePatterns = [
+      /On .* wrote:/i,
+      /From:.*\n.*\n.*\n.*\n/i,
+      /Sent from my iPhone/i,
+      /Sent from my mobile/i,
+      /gmail_quote/i,
+      /blockquote/i,
+    ];
+
+    return quotePatterns.some((pattern) => {
+      return pattern.test(html);
+    });
+  };
+
   const renderThread = (email: Email) => {
     const isExpanded = expandedThreads.has(email._id);
     const isBodyExpanded = expandedBodies.has(email._id);
@@ -76,8 +92,8 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       })
       .join(', ');
 
-    // Check if email contains quoted content
-    const hasQuotedContent = email.body.html.includes('gmail_quote');
+    // Check if email contains quoted content using the new function
+    const containsQuotedContent = hasQuotedContent(email.body.html);
 
     return (
       <div
@@ -153,11 +169,13 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
             <div className='p-4 min-h-[100px]'>
               <div
                 className={`text-sm mt-2 text-[#121212] dark:text-white whitespace-pre-wrap ${
-                  !isBodyExpanded && hasQuotedContent ? '[&>br]:hidden [&>br~*]:hidden' : ''
+                  !isBodyExpanded && containsQuotedContent
+                    ? '[&_blockquote]:hidden [&_div]:has(blockquote):hidden'
+                    : ''
                 }`}
                 dangerouslySetInnerHTML={{ __html: email.body.html }}
               />
-              {hasQuotedContent && (
+              {containsQuotedContent && (
                 <Button
                   variant='ghost'
                   size='sm'
