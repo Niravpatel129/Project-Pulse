@@ -71,9 +71,16 @@
   border-collapse: collapse;
   width: 100%;
   margin: 0;
-  table-layout: fixed;
+  table-layout: auto;
   max-width: 100%;
   border: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.email-content tr {
+  display: flex;
+  width: 100%;
 }
 
 .email-content th,
@@ -82,7 +89,8 @@
   border: none;
   vertical-align: top;
   word-break: break-word;
-  width: auto;
+  flex: 1;
+  min-width: 0;
   background-color: white;
 }
 
@@ -91,6 +99,7 @@
   text-align: left;
   background-color: #f8f9fa;
   border: none;
+  white-space: nowrap;
 }
 
 /* Style horizontal rules */
