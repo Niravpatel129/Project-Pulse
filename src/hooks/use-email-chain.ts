@@ -52,7 +52,7 @@ interface EmailChain {
   subject: string;
   participants: Participant[];
   emails: Email[];
-  status: string;
+  stage: string;
   priority: string;
   lastActivity: string;
   isRead: boolean;

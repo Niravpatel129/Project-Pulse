@@ -398,6 +398,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         hasAttachments={emailChain.emails.some((email) => {
           return email.attachments?.length > 0;
         })}
+        status={emailChain.stage}
       />
       <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
         {emailChain.emails.map((email) => {

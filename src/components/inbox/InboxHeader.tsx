@@ -42,6 +42,7 @@ export default function InboxHeader({
   hasAttachments,
   status = 'unassigned',
 }: InboxHeaderProps) {
+  console.log('status', status);
   const { toast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
