@@ -11,9 +11,9 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         Heroku app &quot;toastify&quot; log data transfer notification
       </h2>
       <div className='border border-slate-100 dark:border-[#232428] rounded-lg'>
-        <div className='flex items-center gap-4 p-4'>
+        <div className='flex items-center gap-4 p-4 justify-between w-full'>
           {/* Avatar  */}
-          <div className='flex items-start gap-4 mt-2 mb-4'>
+          <div className='flex items-start gap-4 mt-2 mb-4 w-full'>
             <Avatar className='h-8 w-8'>
               <AvatarFallback className='bg-gray-200 text-gray-600 text-xs'>HH</AvatarFallback>
             </Avatar>
