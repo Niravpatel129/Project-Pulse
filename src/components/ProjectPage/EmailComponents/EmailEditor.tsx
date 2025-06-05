@@ -19,13 +19,6 @@ type CustomText = {
   list?: boolean;
 };
 
-declare module 'slate' {
-  interface CustomTypes {
-    Element: CustomElement;
-    Text: CustomText;
-  }
-}
-
 interface EmailEditorProps {
   initialValue: Descendant[];
   onChange: (value: Descendant[], plainText: string) => void;
