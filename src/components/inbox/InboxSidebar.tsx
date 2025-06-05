@@ -1,7 +1,14 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Search } from 'lucide-react';
+import { Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 
 interface EmailThread {
@@ -45,13 +52,13 @@ const ThreadItem = ({
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 mb-1'>
           {thread.isUnread && <div className='w-2 h-2 rounded-full bg-[#3b82f6] flex-shrink-0' />}
-          <span className='font-medium text-[#121212] dark:text-white truncate'>
+          <span className='text-sm font-medium text-[#121212] dark:text-white truncate'>
             {getEmailName(thread.participants[0])}
           </span>
           {thread.messageCount > 1 && (
             <Badge
               variant='secondary'
-              className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300'
+              className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
             >
               {thread.messageCount}
             </Badge>
@@ -75,26 +82,31 @@ export default function InboxSidebar({
   onThreadSelect,
 }: InboxSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const filteredThreads = threads.filter((thread) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       thread.subject.toLowerCase().includes(searchLower) ||
       thread.participants.some((p) => {
         return p.toLowerCase().includes(searchLower);
       }) ||
-      thread.snippet.toLowerCase().includes(searchLower)
-    );
+      thread.snippet.toLowerCase().includes(searchLower);
+
+    if (filter === 'all') return matchesSearch;
+    if (filter === 'unread') return matchesSearch && thread.isUnread;
+    if (filter === 'read') return matchesSearch && !thread.isUnread;
+    return matchesSearch;
   });
 
   return (
-    <div className='flex h-full w-[350px] min-w-0 flex-col border-r border-slate-100 dark:border-[#232428] bg-white dark:bg-[#141414] overflow-hidden'>
+    <div className='flex h-full w-full min-w-0 flex-col bg-white dark:bg-neutral-900 overflow-hidden'>
       {/* Header */}
       <div className='flex items-center justify-between p-4 border-b border-slate-100 dark:border-[#232428]'>
-        <h2 className='text-lg font-semibold text-[#121212] dark:text-white'>Inbox</h2>
+        <h2 className='text-base font-medium text-[#121212] dark:text-white'>Inbox</h2>
         <Badge
           variant='secondary'
-          className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300'
+          className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
         >
           {threads.length}
         </Badge>
@@ -102,24 +114,63 @@ export default function InboxSidebar({
 
       {/* Search */}
       <div className='p-4 border-b border-slate-100 dark:border-[#232428]'>
-        <div className='relative'>
-          <input
-            type='text'
-            placeholder='Search emails...'
-            value={searchQuery}
-            onChange={(e) => {
-              return setSearchQuery(e.target.value);
-            }}
-            className='w-full px-3 py-2 pl-9 bg-slate-50 dark:bg-[#232428] text-[#121212] dark:text-white rounded-md border border-slate-100 dark:border-[#232428] focus:outline-none focus:ring-2 focus:ring-[#8b5df8]'
-          />
-          <Search className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
+        <div className='flex gap-2'>
+          <div className='relative flex-1'>
+            <input
+              type='text'
+              placeholder='Search emails...'
+              value={searchQuery}
+              onChange={(e) => {
+                return setSearchQuery(e.target.value);
+              }}
+              className='w-full h-9 px-3 pl-9 bg-transparent text-sm text-[#121212] dark:text-white rounded-md border border-slate-200 dark:border-[#232428] focus:outline-none focus:ring-1 focus:ring-slate-300 dark:focus:ring-[#232428] placeholder:text-muted-foreground'
+            />
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant='outline'
+                size='icon'
+                className='h-9 w-9 shrink-0 border-slate-200 dark:border-[#232428]'
+              >
+                <Filter className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' className='w-[200px]'>
+              <DropdownMenuItem
+                className={cn('text-sm', filter === 'all' && 'bg-slate-50 dark:bg-[#232428]')}
+                onClick={() => {
+                  return setFilter('all');
+                }}
+              >
+                All emails
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={cn('text-sm', filter === 'unread' && 'bg-slate-50 dark:bg-[#232428]')}
+                onClick={() => {
+                  return setFilter('unread');
+                }}
+              >
+                Unread
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={cn('text-sm', filter === 'read' && 'bg-slate-50 dark:bg-[#232428]')}
+                onClick={() => {
+                  return setFilter('read');
+                }}
+              >
+                Read
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Thread List */}
-      <div className='flex-1 w-full overflow-y-auto overflow-x-hidden min-w-0'>
+      <div className='flex-1 w-full overflow-y-auto overflow-x-hidden min-w-0 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-[#232428] scrollbar-track-transparent hover:scrollbar-thumb-slate-300 dark:hover:scrollbar-thumb-[#2a2a2f]'>
         {filteredThreads.length === 0 ? (
-          <div className='flex h-full items-center justify-center text-muted-foreground'>
+          <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
             No emails found
           </div>
         ) : (

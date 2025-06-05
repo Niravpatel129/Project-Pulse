@@ -84,13 +84,21 @@ const InboxPage = () => {
   const [selectedThreadId, setSelectedThreadId] = useState<string | undefined>();
 
   return (
-    <div className='flex h-screen w-full overflow-hidden'>
-      <InboxSidebar
-        threads={sampleThreads}
-        selectedThreadId={selectedThreadId}
-        onThreadSelect={setSelectedThreadId}
-      />
-      <InboxMain selectedThreadId={selectedThreadId} />
+    <div className='flex h-screen w-full overflow-hidden p-4 gap-4'>
+      <div className='w-[320px] h-full flex-shrink-0'>
+        <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
+          <InboxSidebar
+            threads={sampleThreads}
+            selectedThreadId={selectedThreadId}
+            onThreadSelect={setSelectedThreadId}
+          />
+        </div>
+      </div>
+      <div className='flex-1 h-full min-w-0'>
+        <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
+          <InboxMain selectedThreadId={selectedThreadId} />
+        </div>
+      </div>
     </div>
   );
 };
