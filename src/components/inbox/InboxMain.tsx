@@ -15,7 +15,9 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
           {/* Avatar  */}
           <div className='flex items-start gap-4 mt-2 mb-4 w-full'>
             <Avatar className='h-8 w-8'>
-              <AvatarFallback className='bg-gray-200 text-gray-600 text-xs'>HH</AvatarFallback>
+              <AvatarFallback className='bg-[#656973] text-white dark:text-white dark:bg-[#656973] text-xs'>
+                HH
+              </AvatarFallback>
             </Avatar>
             <div className='flex-1'>
               <div className='flex justify-between items-start'>
