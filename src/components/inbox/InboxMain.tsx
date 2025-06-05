@@ -56,11 +56,9 @@ const EmailContent = ({
       // Remove existing shadow root if it exists
       if (containerRef.current.shadowRoot) {
         containerRef.current.shadowRoot.innerHTML = '';
-      }
-
-      // Create shadow root
-      if (containerRef.current) {
-        const shadowRoot = containerRef?.current?.attachShadow({ mode: 'open' });
+      } else {
+        // Create shadow root only if it doesn't exist
+        const shadowRoot = containerRef.current.attachShadow({ mode: 'open' });
 
         // Create wrapper for content
         const wrapper = document.createElement('div');
