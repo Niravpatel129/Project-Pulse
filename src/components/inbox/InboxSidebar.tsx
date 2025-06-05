@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 
@@ -14,10 +14,10 @@ interface EmailThread {
   threadId: string;
   subject: string;
   participants: string[];
-  messageCount: number;
   snippet: string;
   timestamp: Date;
   isUnread: boolean;
+  emails: any[];
 }
 
 interface InboxSidebarProps {
@@ -54,14 +54,17 @@ const ThreadItem = ({
           <span className='text-sm font-medium text-[#121212] dark:text-white truncate'>
             {getEmailName(thread.participants[0])}
           </span>
-          {thread.messageCount > 1 && (
+          {thread.emails.length > 1 && (
             <Badge
               variant='secondary'
               className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
             >
-              {thread.messageCount}
+              {thread.emails.length}
             </Badge>
           )}
+          <span className='text-xs text-muted-foreground ml-auto'>
+            {formatShortRelativeTime(thread.timestamp)}
+          </span>
         </div>
         <div className='text-sm text-[#121212] dark:text-white font-medium truncate'>
           {thread.subject}

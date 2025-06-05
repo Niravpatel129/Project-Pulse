@@ -59,3 +59,23 @@ export function truncateString(str: string, maxLength: number = 50): string {
   if (!str || str.length <= maxLength) return str;
   return `${str.slice(0, maxLength)}...`;
 }
+
+/**
+ * Format a date as a short relative time (e.g., "2h" for 2 hours ago)
+ * @param date Date to format
+ * @returns Short relative time string
+ */
+export function formatShortRelativeTime(date: Date | string): string {
+  if (!date) return '';
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds}s`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  return `${Math.floor(diffInSeconds / 31536000)}y`;
+}

@@ -102,6 +102,7 @@ const InboxPage = () => {
                   snippet: thread.latestMessage.content,
                   timestamp: new Date(thread.latestMessage.timestamp),
                   isUnread: !thread.isRead,
+                  emails: thread.emails,
                 };
               })}
               selectedThreadId={selectedThreadId}
