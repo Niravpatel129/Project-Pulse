@@ -29,6 +29,7 @@ export function EmailFields({
 }: EmailFieldsProps) {
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
+  const [isSubjectVisible, setIsSubjectVisible] = useState(false);
 
   const seemLessInput = () => {
     return 'flex-1 text-sm border-none shadow-none active:border-none focus:border-none focus:outline-none focus-visible:outline-none focus-visible:border-none focus-visible:shadow-none focus-visible:ring-0';
@@ -50,6 +51,7 @@ export function EmailFields({
           }}
           placeholder='Recipient email'
         />
+
         <Button
           variant='link'
           size='sm'
@@ -65,6 +67,22 @@ export function EmailFields({
           }}
         >
           Cc
+        </Button>
+        <Button
+          variant='link'
+          size='sm'
+          className='ml-2 px-1 text-xs'
+          style={{
+            display: !isSubjectVisible ? 'block' : 'none',
+          }}
+          type='button'
+          onClick={() => {
+            setIsSubjectVisible((v) => {
+              return !v;
+            });
+          }}
+        >
+          Subject
         </Button>
         <Button
           variant='link'
@@ -96,6 +114,19 @@ export function EmailFields({
           />
         </div>
       )}
+      {showCc && (
+        <div className='flex items-center mb-2'>
+          <span className='pr-1 text-gray-500 text-sm'>Cc:</span>
+          <Input
+            className={seemLessInput()}
+            value={cc}
+            onChange={(e) => {
+              return onCcChange(e.target.value);
+            }}
+            placeholder='Cc email(s)'
+          />
+        </div>
+      )}
       {showBcc && (
         <div className='flex items-center mb-2'>
           <span className='pr-1 text-gray-500 text-sm'>Bcc:</span>
@@ -109,14 +140,14 @@ export function EmailFields({
           />
         </div>
       )}
-      {showSubject && (
+      {isSubjectVisible && (
         <div className='flex items-center mb-2'>
           <span className='pr-1 text-gray-500 text-sm'>Subject:</span>
           <Input
             className={seemLessInput()}
             value={subject}
             onChange={(e) => {
-              return onSubjectChange(e.target.value);
+              onSubjectChange(e.target.value);
             }}
             placeholder='Subject'
           />

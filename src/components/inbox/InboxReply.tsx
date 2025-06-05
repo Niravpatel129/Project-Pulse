@@ -68,20 +68,32 @@ interface InboxReplyProps {
   initialValue?: Descendant[];
   onChange?: (value: Descendant[], plainText: string) => void;
   height?: string;
+  email?: {
+    from: {
+      email: string;
+    };
+    to: Array<{
+      email: string;
+    }>;
+    subject: string;
+  };
+  isReply?: boolean;
 }
 
 export default function InboxReply({
   initialValue = [{ type: 'paragraph', children: [{ text: '' }] }],
   onChange,
   height = '200px',
+  email,
+  isReply = false,
 }: InboxReplyProps) {
   // Email fields state
-  const [to, setTo] = useState('');
+  const [to, setTo] = useState(email?.to[0]?.email || '');
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
-  const [subject, setSubject] = useState('');
-  const [showSubject, setShowSubject] = useState(true);
-  const from = 'mrmapletv@gmail.com'; // Hardcoded for now
+  const [subject, setSubject] = useState(email?.subject ? `Re: ${email.subject}` : '');
+  const [showSubject, setShowSubject] = useState(!isReply);
+  const from = email?.from.email || 'mrmapletv@gmail.com'; // Use the email address from the selected email or fallback to default
 
   // Create a Slate editor object that won't change across renders
   const editor = useMemo(() => {

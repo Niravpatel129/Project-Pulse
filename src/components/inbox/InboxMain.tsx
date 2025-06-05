@@ -1,8 +1,14 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
 import { useState } from 'react';
 import InboxReply from './InboxReply';
 
@@ -34,6 +40,8 @@ interface Email {
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
 
   const toggleThread = (threadId: string) => {
@@ -146,6 +154,47 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                   <div className='text-sm text-muted-foreground'>
                     {new Date(email.internalDate).toLocaleString()}
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      asChild
+                      onClick={(e) => {
+                        return e.stopPropagation();
+                      }}
+                    >
+                      <Button variant='ghost' size='icon' className='h-8 w-8'>
+                        <MoreVertical className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReplyToEmail(email);
+                          setIsReplying(true);
+                        }}
+                      >
+                        Reply
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReplyToEmail(email);
+                          setIsReplying(true);
+                        }}
+                      >
+                        Reply All
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReplyToEmail(email);
+                          setIsReplying(true);
+                        }}
+                      >
+                        Forward
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   {isExpanded ? (
                     <ChevronUp className='h-4 w-4 text-muted-foreground' />
                   ) : (
@@ -230,7 +279,31 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         {emailChain.emails.map((email) => {
           return renderThread(email);
         })}
-        <InboxReply />
+        {isReplying && replyToEmail && (
+          <div className='relative'>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='absolute right-2 top-2 z-10'
+              onClick={() => {
+                return setIsReplying(false);
+              }}
+            >
+              <X className='h-4 w-4' />
+            </Button>
+            <InboxReply
+              initialValue={[
+                {
+                  type: 'paragraph',
+                  children: [{ text: '' }],
+                },
+              ]}
+              height='200px'
+              email={replyToEmail}
+              isReply={true}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
