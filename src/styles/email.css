@@ -1,4 +1,16 @@
 /* Email Framework Core Styles */
+.email-wrapper {
+  /* Create a new stacking context and contain all styles */
+  isolation: isolate;
+  contain: content;
+  /* Reset any inherited styles */
+  all: initial;
+  /* Ensure proper display */
+  display: block;
+  /* Prevent style leakage */
+  position: relative;
+}
+
 .email-content {
   /* Reset */
   margin: 0;
@@ -6,6 +18,8 @@
   width: 100%;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
+  /* Contain styles */
+  contain: content;
 }
 
 /* Typography */
@@ -14,6 +28,8 @@
   line-height: 1.3;
   color: #202124;
   font-size: 14px;
+  /* Reset any inherited styles */
+  all: initial;
 }
 
 /* Links */
@@ -64,4 +80,21 @@
   .email-content {
     width: 100% !important;
   }
+}
+
+/* Additional containment rules */
+.email-wrapper * {
+  /* Prevent style leakage */
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.email-wrapper :where(style) {
+  /* Contain style tags */
+  display: none;
+}
+
+.email-wrapper :where(link) {
+  /* Prevent external stylesheets */
+  display: none;
 }

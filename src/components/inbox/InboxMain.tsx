@@ -37,6 +37,88 @@ interface Email {
   isRead: boolean;
 }
 
+const EmailContent = ({
+  html,
+  isBodyExpanded,
+  containsQuotedContent,
+}: {
+  html: string;
+  isBodyExpanded: boolean;
+  containsQuotedContent: boolean;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      // Create shadow root
+      const shadowRoot = containerRef.current.attachShadow({ mode: 'open' });
+
+      // Create wrapper for content
+      const wrapper = document.createElement('div');
+      wrapper.className = 'email-content';
+      if (!isBodyExpanded && containsQuotedContent) {
+        wrapper.classList.add('hide-quotes');
+      }
+
+      // Add styles
+      const styleSheet = document.createElement('style');
+      styleSheet.textContent = `
+        .email-content {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          line-height: 1.3;
+          color: #202124;
+          font-size: 14px;
+        }
+        .email-content a {
+          color: #1a73e8;
+          text-decoration: none;
+        }
+        .email-content a:hover {
+          text-decoration: underline;
+        }
+        .email-content img {
+          border: 0;
+          height: auto;
+          line-height: 100%;
+          outline: none;
+          text-decoration: none;
+          -ms-interpolation-mode: bicubic;
+          max-width: 100%;
+        }
+        .email-content table {
+          border-collapse: collapse !important;
+          width: 100%;
+        }
+        .email-content td {
+          padding: 0;
+          vertical-align: top;
+        }
+        .hide-quotes blockquote,
+        .hide-quotes div:has(blockquote) {
+          display: none;
+        }
+        @media (prefers-color-scheme: dark) {
+          .email-content {
+            color: #e8eaed;
+          }
+          .email-content a {
+            color: #8ab4f8;
+          }
+        }
+      `;
+
+      // Set content
+      wrapper.innerHTML = html;
+
+      // Append elements to shadow root
+      shadowRoot.appendChild(styleSheet);
+      shadowRoot.appendChild(wrapper);
+    }
+  }, [html, isBodyExpanded, containsQuotedContent]);
+
+  return <div ref={containerRef} className='email-wrapper' />;
+};
+
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
@@ -228,13 +310,10 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
           <>
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
             <div className='p-4 min-h-[100px]'>
-              <div
-                className={`email-content ${
-                  !isBodyExpanded && containsQuotedContent
-                    ? '[&_blockquote]:hidden [&_div]:has(blockquote):hidden'
-                    : ''
-                }`}
-                dangerouslySetInnerHTML={{ __html: email.body.html }}
+              <EmailContent
+                html={email.body.html}
+                isBodyExpanded={isBodyExpanded}
+                containsQuotedContent={containsQuotedContent}
               />
               {containsQuotedContent && (
                 <Button
