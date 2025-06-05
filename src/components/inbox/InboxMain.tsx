@@ -9,7 +9,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
+import Color from 'color';
 import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 import EmailSkeleton from './EmailSkeleton';
 import InboxHeader from './InboxHeader';
@@ -40,6 +42,27 @@ interface Email {
   isRead: boolean;
 }
 
+const getEffectiveBackgroundColor = (element: HTMLElement) => {
+  let current: HTMLElement | null = element;
+  while (current) {
+    try {
+      const computedBg = getComputedStyle(current).backgroundColor;
+      // Skip if the background color is transparent or empty
+      if (!computedBg || computedBg === 'transparent' || computedBg === 'rgba(0, 0, 0, 0)') {
+        current = current.parentElement;
+        continue;
+      }
+      const bg = Color(computedBg);
+      if (bg.alpha() >= 1) return bg.rgb();
+    } catch (error) {
+      // If there's any error parsing the color, continue to parent element
+      console.warn('Error parsing background color:', error);
+    }
+    current = current.parentElement;
+  }
+  return Color('#ffffff');
+};
+
 const EmailContent = ({
   html,
   isBodyExpanded,
@@ -50,6 +73,7 @@ const EmailContent = ({
   containsQuotedContent: boolean;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -73,7 +97,6 @@ const EmailContent = ({
         .email-content {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           line-height: 1.3;
-          color: #202124;
           font-size: 14px;
         }
         .email-content a {
@@ -104,18 +127,127 @@ const EmailContent = ({
         .hide-quotes div:has(blockquote) {
           display: none;
         }
-        @media (prefers-color-scheme: dark) {
+        ${
+          theme === 'dark'
+            ? `
           .email-content {
+            color-scheme: dark;
             color: #e8eaed;
+            background-color: transparent;
           }
           .email-content a {
             color: #8ab4f8;
           }
+          .email-content img {
+            filter: brightness(0.8) contrast(1.2);
+          }
+          .email-content * {
+            background-color: transparent !important;
+          }
+          .email-content * {
+            color: #e8eaed !important;
+          }
+          .email-content [style*="color"] {
+            color: #e8eaed !important;
+          }
+          .email-content h1,
+          .email-content h2,
+          .email-content h3,
+          .email-content h4,
+          .email-content h5,
+          .email-content h6 {
+            color: #ffffff !important;
+          }
+          .email-content a[href] {
+            color: #8ab4f8 !important;
+          }
+          .email-content blockquote {
+            border-left-color: #5f6368 !important;
+            color: #9aa0a6 !important;
+          }
+          .email-content pre,
+          .email-content code {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #e8eaed !important;
+          }
+          .email-content table {
+            border-color: #5f6368 !important;
+          }
+          .email-content th,
+          .email-content td {
+            border-color: #5f6368 !important;
+          }
+          .email-content hr {
+            border-color: #5f6368 !important;
+          }
+        `
+            : `
+          .email-content {
+            color-scheme: light;
+            color: #202124;
+            background-color: transparent;
+          }
+          .email-content a {
+            color: #1a73e8;
+          }
+        `
         }
       `;
 
         // Set content
         wrapper.innerHTML = html;
+
+        // Sanitize colors
+        const sanitizeColors = () => {
+          const elements = wrapper.getElementsByTagName('*');
+
+          for (const element of elements) {
+            try {
+              // Handle background colors
+              const computedBg = getComputedStyle(element as HTMLElement).backgroundColor;
+              if (computedBg && computedBg !== 'transparent' && computedBg !== 'rgba(0, 0, 0, 0)') {
+                if (theme === 'dark') {
+                  const bg = Color(computedBg);
+                  const rgb = bg.rgb();
+                  (
+                    element as HTMLElement
+                  ).style.backgroundColor = `rgba(${rgb.red()}, ${rgb.green()}, ${rgb.blue()}, 0.1)`;
+                } else {
+                  const bg = Color(computedBg);
+                  if (bg.alpha() >= 1) {
+                    (element as HTMLElement).style.backgroundColor = bg.rgb().toString();
+                  }
+                }
+              }
+
+              // Handle text colors in dark mode
+              if (theme === 'dark') {
+                const computedColor = getComputedStyle(element as HTMLElement).color;
+                if (computedColor && computedColor !== 'rgba(0, 0, 0, 0)') {
+                  const color = Color(computedColor);
+                  const rgb = color.rgb();
+                  // Adjust color brightness for dark mode
+                  const brightness =
+                    (rgb.red() * 299 + rgb.green() * 587 + rgb.blue() * 114) / 1000;
+                  if (brightness < 128) {
+                    // Dark colors become light
+                    (element as HTMLElement).style.color = '#e8eaed';
+                  } else {
+                    // Light colors become slightly dimmer
+                    (
+                      element as HTMLElement
+                    ).style.color = `rgba(${rgb.red()}, ${rgb.green()}, ${rgb.blue()}, 0.8)`;
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn('Error parsing colors:', error);
+            }
+          }
+        };
+
+        // Run sanitization after content is loaded
+        sanitizeColors();
 
         // Append elements to shadow root
         shadowRoot.appendChild(styleSheet);
@@ -129,7 +261,7 @@ const EmailContent = ({
         containerRef.current.shadowRoot.innerHTML = '';
       }
     };
-  }, [html, isBodyExpanded, containsQuotedContent]);
+  }, [html, isBodyExpanded, containsQuotedContent, theme]);
 
   return <div ref={containerRef} className='email-wrapper' />;
 };
