@@ -6,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useEmails } from '@/hooks/useEmails';
 import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { Filter, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -25,31 +24,20 @@ interface InboxSidebarProps {
   threads?: EmailThread[];
   selectedThreadId?: string;
   onThreadSelect?: (threadId: string) => void;
-  projectId: string;
 }
 
 const ThreadItem = ({
   thread,
   isSelected,
   onClick,
-  onToggleRead,
 }: {
   thread: EmailThread;
   isSelected: boolean;
   onClick: () => void;
-  onToggleRead: (emailId: string) => void;
 }) => {
   const getEmailName = (email: string) => {
     const name = email.split('@')[0];
     return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClick();
-    if (thread.isUnread && thread.emails[0]?._id) {
-      onToggleRead(thread.emails[0]._id);
-    }
   };
 
   return (
@@ -59,7 +47,7 @@ const ThreadItem = ({
         !isSelected && 'cursor-pointer hover:bg-slate-50/50 dark:hover:bg-[#232428]',
         isSelected && 'bg-slate-100 dark:bg-[#2a2a2f]',
       )}
-      onClick={handleClick}
+      onClick={onClick}
     >
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 mb-1'>
@@ -92,11 +80,9 @@ export default function InboxSidebar({
   threads = [],
   selectedThreadId,
   onThreadSelect,
-  projectId,
 }: InboxSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const { toggleReadStatus } = useEmails(projectId);
 
   const filteredThreads = threads.filter((thread) => {
     const searchLower = searchQuery.toLowerCase();
@@ -112,14 +98,6 @@ export default function InboxSidebar({
     if (filter === 'read') return matchesSearch && !thread.isUnread;
     return matchesSearch;
   });
-
-  const handleToggleRead = async (emailId: string) => {
-    try {
-      await toggleReadStatus(emailId);
-    } catch (error) {
-      console.error('Failed to toggle read status:', error);
-    }
-  };
 
   return (
     <div className='flex h-full w-full min-w-0 flex-col bg-white dark:bg-neutral-900 overflow-hidden'>
@@ -206,7 +184,6 @@ export default function InboxSidebar({
                   onClick={() => {
                     return onThreadSelect?.(thread.threadId);
                   }}
-                  onToggleRead={handleToggleRead}
                 />
               );
             })}
