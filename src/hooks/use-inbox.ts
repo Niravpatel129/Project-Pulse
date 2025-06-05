@@ -1,5 +1,6 @@
 import { newRequest } from '@/utils/newRequest';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 
 interface EmailParticipant {
   id: number;
@@ -172,8 +173,12 @@ interface PaginatedResponse {
 }
 
 const fetchInboxThreads = async ({ pageParam = 1 }): Promise<PaginatedResponse> => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const stage = searchParams.get('stage') || 'unassigned';
+
   const { data } = await newRequest.get('/inbox', {
     params: {
+      state: stage,
       page: pageParam,
       limit: 10,
     },
@@ -182,8 +187,11 @@ const fetchInboxThreads = async ({ pageParam = 1 }): Promise<PaginatedResponse> 
 };
 
 export const useInbox = () => {
+  const searchParams = useSearchParams();
+  const stage = searchParams.get('stage') || 'unassigned';
+
   return useInfiniteQuery({
-    queryKey: ['inbox-threads'],
+    queryKey: ['inbox-threads', stage],
     queryFn: fetchInboxThreads,
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.page < lastPage.pagination.pages) {
