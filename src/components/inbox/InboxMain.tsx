@@ -6,10 +6,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
 import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import EmailSkeleton from './EmailSkeleton';
 import InboxReply from './InboxReply';
 
 interface InboxMainProps {
@@ -50,19 +52,25 @@ const EmailContent = ({
 
   useEffect(() => {
     if (containerRef.current) {
-      // Create shadow root
-      const shadowRoot = containerRef.current.attachShadow({ mode: 'open' });
-
-      // Create wrapper for content
-      const wrapper = document.createElement('div');
-      wrapper.className = 'email-content';
-      if (!isBodyExpanded && containsQuotedContent) {
-        wrapper.classList.add('hide-quotes');
+      // Remove existing shadow root if it exists
+      if (containerRef.current.shadowRoot) {
+        containerRef.current.shadowRoot.innerHTML = '';
       }
 
-      // Add styles
-      const styleSheet = document.createElement('style');
-      styleSheet.textContent = `
+      // Create shadow root
+      if (containerRef.current) {
+        const shadowRoot = containerRef.current.attachShadow({ mode: 'open' });
+
+        // Create wrapper for content
+        const wrapper = document.createElement('div');
+        wrapper.className = 'email-content';
+        if (!isBodyExpanded && containsQuotedContent) {
+          wrapper.classList.add('hide-quotes');
+        }
+
+        // Add styles
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
         .email-content {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           line-height: 1.3;
@@ -107,13 +115,21 @@ const EmailContent = ({
         }
       `;
 
-      // Set content
-      wrapper.innerHTML = html;
+        // Set content
+        wrapper.innerHTML = html;
 
-      // Append elements to shadow root
-      shadowRoot.appendChild(styleSheet);
-      shadowRoot.appendChild(wrapper);
+        // Append elements to shadow root
+        shadowRoot.appendChild(styleSheet);
+        shadowRoot.appendChild(wrapper);
+      }
     }
+
+    // Cleanup function
+    return () => {
+      if (containerRef.current?.shadowRoot) {
+        containerRef.current.shadowRoot.innerHTML = '';
+      }
+    };
   }, [html, isBodyExpanded, containsQuotedContent]);
 
   return <div ref={containerRef} className='email-wrapper' />;
@@ -345,8 +361,13 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
 
   if (isLoading) {
     return (
-      <div className='flex items-center justify-center h-full'>
-        <p className='text-muted-foreground'>Loading thread...</p>
+      <div className='p-4 h-full overflow-hidden flex flex-col'>
+        <div className='flex justify-between items-center mb-4'>
+          <Skeleton className='h-8 w-64' />
+        </div>
+        <div className='flex flex-col gap-0 overflow-y-auto flex-1'>
+          <EmailSkeleton />
+        </div>
       </div>
     );
   }
