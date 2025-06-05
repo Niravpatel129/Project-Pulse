@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn, formatShortRelativeTime } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Filter, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -41,7 +42,11 @@ const ThreadItem = ({
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
       className={cn(
         'flex items-center px-4 py-3 transition-colors duration-150',
         !isSelected && 'cursor-pointer hover:bg-slate-50/50 dark:hover:bg-[#232428]',
@@ -51,19 +56,33 @@ const ThreadItem = ({
     >
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 mb-1'>
-          {thread.isUnread && !isSelected && (
-            <div className='w-2 h-2 rounded-full bg-[#3b82f6] flex-shrink-0' />
-          )}
+          <AnimatePresence>
+            {thread.isUnread && !isSelected && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ duration: 0.2 }}
+                className='w-2 h-2 rounded-full bg-[#3b82f6] flex-shrink-0'
+              />
+            )}
+          </AnimatePresence>
           <span className='text-sm font-medium text-[#121212] dark:text-white truncate'>
             {getEmailName(thread.participants[0])}
           </span>
           {thread.emails.length > 1 && (
-            <Badge
-              variant='secondary'
-              className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.2 }}
             >
-              {thread.emails.length}
-            </Badge>
+              <Badge
+                variant='secondary'
+                className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
+              >
+                {thread.emails.length}
+              </Badge>
+            </motion.div>
           )}
           <span className='text-xs text-muted-foreground ml-auto'>
             {formatShortRelativeTime(thread.timestamp)}
@@ -74,7 +93,7 @@ const ThreadItem = ({
         </div>
         <div className='text-sm text-muted-foreground truncate'>{thread.snippet}</div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -191,23 +210,30 @@ export default function InboxSidebar({
       {/* Thread List */}
       <div className='flex-1 w-full overflow-y-auto overflow-x-hidden min-w-0 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-[#232428] scrollbar-track-transparent hover:scrollbar-thumb-slate-300 dark:hover:scrollbar-thumb-[#2a2a2f]'>
         {filteredThreads.length === 0 ? (
-          <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className='flex h-full items-center justify-center text-sm text-muted-foreground'
+          >
             No emails found
-          </div>
+          </motion.div>
         ) : (
           <div className='divide-y divide-slate-100 dark:divide-[#232428] w-full'>
-            {filteredThreads.map((thread) => {
-              return (
-                <ThreadItem
-                  key={thread.threadId}
-                  thread={thread}
-                  isSelected={selectedThreadId === thread.threadId}
-                  onClick={() => {
-                    return handleThreadSelect(thread.threadId);
-                  }}
-                />
-              );
-            })}
+            <AnimatePresence mode='popLayout'>
+              {filteredThreads.map((thread) => {
+                return (
+                  <ThreadItem
+                    key={thread.threadId}
+                    thread={thread}
+                    isSelected={selectedThreadId === thread.threadId}
+                    onClick={() => {
+                      return handleThreadSelect(thread.threadId);
+                    }}
+                  />
+                );
+              })}
+            </AnimatePresence>
           </div>
         )}
       </div>
