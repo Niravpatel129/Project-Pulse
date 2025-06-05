@@ -5,8 +5,9 @@ import InboxSidebar from '@/components/inbox/InboxSidebar';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { FiRefreshCcw, FiSidebar } from 'react-icons/fi';
+import { FiSettings, FiSidebar } from 'react-icons/fi';
 
 // Sample email threads
 const sampleThreads = [
@@ -91,6 +92,7 @@ const InboxPage = () => {
   const [activeTab, setActiveTab] = useState('Unassigned');
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
+  const router = useRouter();
 
   return (
     <div className='flex flex-col h-screen w-full overflow-hidden'>
@@ -131,8 +133,14 @@ const InboxPage = () => {
           </div>
 
           <div className='flex items-center gap-2 w-full justify-end'>
-            <Button variant='ghost' size='icon'>
-              <FiRefreshCcw size={20} />
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => {
+                return router.push('/dashboard/settings?tab=inbox');
+              }}
+            >
+              <FiSettings size={20} />
             </Button>
           </div>
         </div>
