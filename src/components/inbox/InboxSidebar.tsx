@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { Filter, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface EmailThread {
   threadId: string;
@@ -86,11 +87,31 @@ export default function InboxSidebar({
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [localThreads, setLocalThreads] = useState(threads);
+  const previousThreadsRef = useRef<EmailThread[]>([]);
 
   // Only update local threads when threads prop changes and we don't have local state yet
   useEffect(() => {
     if (localThreads.length === 0) {
       setLocalThreads(threads);
+      previousThreadsRef.current = threads;
+    } else {
+      // Check for new messages
+      const newThreads = threads.filter((thread) => {
+        return !previousThreadsRef.current.some((prevThread) => {
+          return prevThread.threadId === thread.threadId;
+        });
+      });
+
+      if (newThreads.length > 0) {
+        toast.info('New messages received', {
+          description: `${newThreads.length} new message${
+            newThreads.length > 1 ? 's' : ''
+          } in your inbox`,
+        });
+      }
+
+      setLocalThreads(threads);
+      previousThreadsRef.current = threads;
     }
   }, [threads]);
 
