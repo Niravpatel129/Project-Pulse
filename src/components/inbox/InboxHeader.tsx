@@ -493,13 +493,15 @@ export default function InboxHeader({
           </DropdownMenuContent>
         </DropdownMenu>
         <Select defaultValue={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className='w-40'>
+          <SelectTrigger className='font-semibold focus-visible:ring-0 focus-visible:border-0 active:ring-0 active:border-0 focus:ring-0 focus:border-1'>
             <SelectValue placeholder='Unassigned' />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='unassigned'>Unassigned</SelectItem>
             <SelectItem value='assigned'>Assigned</SelectItem>
             <SelectItem value='archived'>Archived</SelectItem>
+            <SelectItem value='snoozed'>Snoozed</SelectItem>
+            <SelectItem value='trash'>Trash</SelectItem>
             <SelectItem value='spam'>Spam</SelectItem>
           </SelectContent>
         </Select>
