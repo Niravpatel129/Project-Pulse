@@ -9,7 +9,7 @@ import {
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
 import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import InboxReply from './InboxReply';
 
 interface InboxMainProps {
@@ -42,6 +42,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
   const [isReplying, setIsReplying] = useState(false);
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
 
   // Add effect to expand latest email when emailChain loads
@@ -51,6 +52,18 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       setExpandedThreads(new Set([latestEmail._id]));
     }
   }, [emailChain]);
+
+  // Add effect to scroll to bottom when reply box opens
+  useEffect(() => {
+    if (isReplying && containerRef.current) {
+      setTimeout(() => {
+        containerRef.current?.scrollTo({
+          top: containerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }, 100);
+    }
+  }, [isReplying, replyToEmail]);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
@@ -283,7 +296,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         {emailChain.subject}
       </h2>
 
-      <div className='flex flex-col gap-0 overflow-y-auto flex-1'>
+      <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
         {emailChain.emails.map((email) => {
           return renderThread(email);
         })}
