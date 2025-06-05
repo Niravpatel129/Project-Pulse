@@ -42,6 +42,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
   const [isReplying, setIsReplying] = useState(false);
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
 
@@ -52,18 +53,6 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       setExpandedThreads(new Set([latestEmail._id]));
     }
   }, [emailChain]);
-
-  // Add effect to scroll to bottom when reply box opens
-  useEffect(() => {
-    if (isReplying && containerRef.current) {
-      setTimeout(() => {
-        containerRef.current?.scrollTo({
-          top: containerRef.current.scrollHeight,
-          behavior: 'smooth',
-        });
-      }, 100);
-    }
-  }, [isReplying, replyToEmail]);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
@@ -175,7 +164,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                   <div className='text-sm text-muted-foreground'>
                     {new Date(email.internalDate).toLocaleString()}
                   </div>
-                  <DropdownMenu>
+                  <DropdownMenu modal={false}>
                     <DropdownMenuTrigger
                       asChild
                       onClick={(e) => {
@@ -186,10 +175,20 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                         <MoreVertical className='h-4 w-4' />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
+                    <DropdownMenuContent
+                      align='end'
+                      onCloseAutoFocus={(e) => {
+                        return e.preventDefault();
+                      }}
+                    >
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
+
+                          containerRef.current?.scrollTo({
+                            top: containerRef.current.scrollHeight,
+                            behavior: 'smooth',
+                          });
                           setReplyToEmail(email);
                           setIsReplying(true);
                         }}
@@ -292,9 +291,9 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
 
   return (
     <div className='p-4 h-full overflow-hidden flex flex-col'>
-      <h2 className='text-xl font-bold mb-4 text-[#121212] dark:text-white'>
-        {emailChain.subject}
-      </h2>
+      <div className='flex justify-between items-center mb-4'>
+        <h2 className='text-xl font-bold text-[#121212] dark:text-white'>{emailChain.subject}</h2>
+      </div>
 
       <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
         {emailChain.emails.map((email) => {
