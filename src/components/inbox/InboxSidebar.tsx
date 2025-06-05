@@ -7,7 +7,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 
@@ -68,9 +67,6 @@ const ThreadItem = ({
           {thread.subject}
         </div>
         <div className='text-sm text-muted-foreground truncate'>{thread.snippet}</div>
-        <div className='text-xs text-muted-foreground mt-1'>
-          {format(thread.timestamp, 'MMM d, h:mm a')}
-        </div>
       </div>
     </div>
   );
