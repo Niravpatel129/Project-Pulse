@@ -1,11 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Bold, Italic, Link, List, Underline } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { createEditor, Descendant, Editor, Node, Element as SlateElement, Transforms } from 'slate';
@@ -161,8 +155,42 @@ export default function InboxReply({
           onSubjectChange={setSubject}
           showSubject={showSubject}
         />
+
+        <Slate
+          editor={editor}
+          initialValue={initialValue}
+          onChange={(value) => {
+            onChange?.(
+              value,
+              value
+                .map((n) => {
+                  return Node.string(n);
+                })
+                .join('\n'),
+            );
+          }}
+        >
+          <Editable
+            className='outline-none focus:outline-none focus-visible:outline-none border-none'
+            placeholder='Write your reply here...'
+            renderPlaceholder={({ children, attributes }) => {
+              return (
+                <div {...attributes} className='text-gray-500 pt-[10px]'>
+                  {children}
+                </div>
+              );
+            }}
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            style={{
+              minHeight: height,
+              padding: '10px',
+              border: 'none',
+            }}
+          />
+        </Slate>
         {/* Toolbar and Editor */}
-        <div className='border-b p-2 flex gap-1'>
+        <div className='border-t p-2 flex gap-1'>
           <Button
             variant='ghost'
             size='sm'
@@ -199,52 +227,8 @@ export default function InboxReply({
             <Link className='h-4 w-4' />
           </Button>
         </div>
-        <Slate
-          editor={editor}
-          initialValue={initialValue}
-          onChange={(value) => {
-            onChange?.(
-              value,
-              value
-                .map((n) => {
-                  return Node.string(n);
-                })
-                .join('\n'),
-            );
-          }}
-        >
-          <Editable
-            className='outline-none focus:outline-none focus-visible:outline-none border-none'
-            placeholder='Write your reply here...'
-            renderPlaceholder={({ children, attributes }) => {
-              return (
-                <div {...attributes} className='text-gray-500 pt-[10px]'>
-                  {children}
-                </div>
-              );
-            }}
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            style={{
-              minHeight: height,
-              padding: '10px',
-              border: 'none',
-            }}
-          />
-        </Slate>
         <div className='px-4 pb-4 flex justify-end'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className='bg-blue-600 text-white font-semibold px-6 py-2 rounded shadow'>
-                Send & archive
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem>Send only</DropdownMenuItem>
-              <DropdownMenuItem>Send & archive</DropdownMenuItem>
-              <DropdownMenuItem>Send & delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button className=' font-semibold px-6 py-2 rounded-full shadow'>Send</Button>
         </div>
       </CardContent>
     </Card>
