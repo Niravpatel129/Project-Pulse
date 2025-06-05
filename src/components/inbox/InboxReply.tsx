@@ -6,12 +6,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Bold, Italic, Link, List, Underline } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { createEditor, Descendant, Editor, Node, Element as SlateElement, Transforms } from 'slate';
 import { withHistory } from 'slate-history';
 import { Editable, RenderElementProps, RenderLeafProps, Slate, withReact } from 'slate-react';
+import { EmailFields } from './EmailFields';
 
 // Custom types for Slate
 type CustomElement = {
@@ -50,8 +50,6 @@ export default function InboxReply({
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
   const [subject, setSubject] = useState('');
-  const [showCc, setShowCc] = useState(false);
-  const [showBcc, setShowBcc] = useState(false);
   const [showSubject, setShowSubject] = useState(true);
   const from = 'mrmapletv@gmail.com'; // Hardcoded for now
 
@@ -151,93 +149,18 @@ export default function InboxReply({
   return (
     <Card className='w-full mx-auto'>
       <CardContent className='p-0'>
-        {/* Email fields */}
-        <div className='px-4 pt-4 pb-2'>
-          <div className='flex items-center mb-2'>
-            <span className='w-16 text-gray-500 text-sm'>From:</span>
-            <Input
-              className='flex-1 bg-gray-100 text-gray-700 cursor-not-allowed'
-              value={from}
-              readOnly
-            />
-          </div>
-          <div className='flex items-center mb-2'>
-            <span className='w-16 text-gray-500 text-sm'>To:</span>
-            <Input
-              className='flex-1 text-sm'
-              value={to}
-              onChange={(e) => {
-                return setTo(e.target.value);
-              }}
-              placeholder='Recipient email'
-            />
-            <Button
-              variant='link'
-              size='sm'
-              className='ml-2 px-1 text-xs'
-              type='button'
-              onClick={() => {
-                return setShowCc((v) => {
-                  return !v;
-                });
-              }}
-            >
-              Cc
-            </Button>
-            <Button
-              variant='link'
-              size='sm'
-              className='ml-1 px-1 text-xs'
-              type='button'
-              onClick={() => {
-                return setShowBcc((v) => {
-                  return !v;
-                });
-              }}
-            >
-              Bcc
-            </Button>
-          </div>
-          {showCc && (
-            <div className='flex items-center mb-2'>
-              <span className='w-16 text-gray-500 text-sm'>Cc:</span>
-              <Input
-                className='flex-1 text-sm'
-                value={cc}
-                onChange={(e) => {
-                  return setCc(e.target.value);
-                }}
-                placeholder='Cc email(s)'
-              />
-            </div>
-          )}
-          {showBcc && (
-            <div className='flex items-center mb-2'>
-              <span className='w-16 text-gray-500 text-sm'>Bcc:</span>
-              <Input
-                className='flex-1 text-sm'
-                value={bcc}
-                onChange={(e) => {
-                  return setBcc(e.target.value);
-                }}
-                placeholder='Bcc email(s)'
-              />
-            </div>
-          )}
-          {showSubject && (
-            <div className='flex items-center mb-2'>
-              <span className='w-16 text-gray-500 text-sm'>Subject:</span>
-              <Input
-                className='flex-1 text-sm'
-                value={subject}
-                onChange={(e) => {
-                  return setSubject(e.target.value);
-                }}
-                placeholder='Subject'
-              />
-            </div>
-          )}
-        </div>
+        <EmailFields
+          from={from}
+          to={to}
+          cc={cc}
+          bcc={bcc}
+          subject={subject}
+          onToChange={setTo}
+          onCcChange={setCc}
+          onBccChange={setBcc}
+          onSubjectChange={setSubject}
+          showSubject={showSubject}
+        />
         {/* Toolbar and Editor */}
         <div className='border-b p-2 flex gap-1'>
           <Button
