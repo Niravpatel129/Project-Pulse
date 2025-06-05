@@ -42,15 +42,15 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         className='border border-slate-100 dark:border-[#232428] rounded-lg mb-4'
       >
         <div
-          className='flex items-center gap-4 p-4 justify-between w-full cursor-pointer hover:bg-slate-50/50 dark:hover:bg-[#232428] transition-colors'
+          className='flex items-center gap-4 p-4 justify-between w-full cursor-pointer  transition-colors'
           onClick={() => {
             return toggleThread(thread.id);
           }}
         >
           {/* Avatar  */}
           <div className='flex items-start gap-4 w-full'>
-            <Avatar className='h-8 w-8'>
-              <AvatarFallback className='bg-[#656973] text-white dark:text-white dark:bg-[#656973] text-xs'>
+            <Avatar className='h-7 w-7'>
+              <AvatarFallback className='bg-[#656973] text-white dark:text-white dark:bg-[#656973] text-[10px]'>
                 {thread.sender.name
                   .split(' ')
                   .map((n) => {
@@ -68,8 +68,32 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                       &lt;{thread.sender.email}&gt;
                     </span>
                   </div>
-                  <div className='text-sm text-muted-foreground'>To: {thread.recipient}</div>
-                  <div className='text-sm text-muted-foreground'>Subject: {thread.subject}</div>
+                  <div
+                    className='text-sm text-muted-foreground'
+                    style={{
+                      display: isExpanded ? 'block' : 'none',
+                    }}
+                  >
+                    To: {thread.recipient}
+                  </div>
+                  <div
+                    className='text-sm text-muted-foreground'
+                    style={{
+                      display: isExpanded ? 'block' : 'none',
+                    }}
+                  >
+                    Subject: {thread.subject}
+                  </div>
+                  <div
+                    className='text-sm text-muted-foreground'
+                    style={{
+                      display: !isExpanded ? 'block' : 'none',
+                    }}
+                  >
+                    {thread.content.length > 100
+                      ? `${thread.content.substring(0, 100)}...`
+                      : thread.content}
+                  </div>
                 </div>
                 <div className='flex items-center gap-2'>
                   <div className='text-sm text-muted-foreground'>{thread.timestamp}</div>
@@ -128,7 +152,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         Heroku app &quot;toastify&quot; log data transfer notification
       </h2>
 
-      <div className='flex flex-col gap-4'>
+      <div className='flex flex-col gap-0'>
         {mockThreads.map((thread) => {
           return renderThread(thread);
         })}
