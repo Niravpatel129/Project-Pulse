@@ -65,8 +65,7 @@ const Bills = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toggleSidebar } = useSidebar();
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+
   const [invoicesList, setInvoicesList] = useState<any[]>([]);
   const observerTarget = useRef<HTMLDivElement>(null);
 
