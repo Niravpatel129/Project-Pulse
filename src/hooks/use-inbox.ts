@@ -1,6 +1,6 @@
 import { newRequest } from '@/utils/newRequest';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 interface EmailParticipant {
   id: number;
@@ -172,10 +172,13 @@ interface PaginatedResponse {
   };
 }
 
-const fetchInboxThreads = async ({ pageParam = 1 }): Promise<PaginatedResponse> => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const stage = searchParams.get('stage') || 'unassigned';
-
+const fetchInboxThreads = async ({
+  pageParam = 1,
+  stage,
+}: {
+  pageParam?: number;
+  stage: string;
+}): Promise<PaginatedResponse> => {
   const { data } = await newRequest.get('/inbox', {
     params: {
       state: stage,
@@ -187,12 +190,14 @@ const fetchInboxThreads = async ({ pageParam = 1 }): Promise<PaginatedResponse> 
 };
 
 export const useInbox = () => {
-  const searchParams = useSearchParams();
-  const stage = searchParams.get('stage') || 'unassigned';
+  const params = useParams();
+  const stage = (params.state as string) || 'unassigned';
 
   return useInfiniteQuery({
-    queryKey: ['inbox-threads', stage],
-    queryFn: fetchInboxThreads,
+    queryKey: ['inbox-threads', stage] as const,
+    queryFn: ({ pageParam }) => {
+      return fetchInboxThreads({ pageParam, stage });
+    },
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.page < lastPage.pagination.pages) {
         return lastPage.pagination.page + 1;

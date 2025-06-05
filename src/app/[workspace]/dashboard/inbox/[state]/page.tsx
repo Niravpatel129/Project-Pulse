@@ -20,6 +20,7 @@ const InboxPage = () => {
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
   const { data: threads, error } = useInbox();
+  console.log('🚀 activeTab:', activeTab);
 
   if (error) {
     return (
