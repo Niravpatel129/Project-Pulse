@@ -149,6 +149,14 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     if (emailChain?.emails?.length > 0) {
       const latestEmail = emailChain.emails[emailChain.emails.length - 1];
       setExpandedThreads(new Set([latestEmail._id]));
+
+      // Scroll to bottom after a short delay to ensure content is rendered
+      setTimeout(() => {
+        containerRef.current?.scrollTo({
+          top: containerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }, 100);
     }
   }, [emailChain]);
 
