@@ -76,6 +76,9 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       })
       .join(', ');
 
+    // Check if email contains quoted content
+    const hasQuotedContent = email.body.html.includes('gmail_quote');
+
     return (
       <div
         key={email._id}
@@ -150,21 +153,23 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
             <div className='p-4 min-h-[100px]'>
               <div
                 className={`text-sm mt-2 text-[#121212] dark:text-white whitespace-pre-wrap ${
-                  !isBodyExpanded ? 'line-clamp-3' : ''
+                  !isBodyExpanded && hasQuotedContent ? '[&>br]:hidden [&>br~*]:hidden' : ''
                 }`}
                 dangerouslySetInnerHTML={{ __html: email.body.html }}
               />
-              <Button
-                variant='ghost'
-                size='sm'
-                className='mt-2 text-muted-foreground hover:text-foreground'
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleBody(email._id);
-                }}
-              >
-                {isBodyExpanded ? 'Show less' : 'Show more'}
-              </Button>
+              {hasQuotedContent && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='mt-2 text-muted-foreground hover:text-foreground'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBody(email._id);
+                  }}
+                >
+                  {isBodyExpanded ? 'Show less' : 'Show more'}
+                </Button>
+              )}
             </div>
           </>
         )}
