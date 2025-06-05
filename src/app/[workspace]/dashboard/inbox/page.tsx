@@ -98,7 +98,6 @@ const InboxPage = () => {
                   participants: thread.participants.map((p) => {
                     return p.name;
                   }),
-                  messageCount: thread.messageCount,
                   snippet: thread.latestMessage.content,
                   timestamp: new Date(thread.latestMessage.timestamp),
                   isUnread: !thread.isRead,
