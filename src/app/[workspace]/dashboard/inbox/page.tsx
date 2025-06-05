@@ -104,7 +104,7 @@ const InboxPage = () => {
                   threadId: thread.threadId,
                   subject: thread.subject,
                   participants: thread.to.map((p) => {
-                    return p.email;
+                    return p.handle || p.email || p.display_name;
                   }),
                   messageCount: 1, // Since we don't have this in the API response
                   snippet: thread.snippet,
