@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import InboxReply from './InboxReply';
 
 interface InboxMainProps {
@@ -36,34 +35,6 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
-  const previousEmailsRef = useRef<Email[]>([]);
-
-  // Set the latest email as expanded when emailChain data is available
-  useEffect(() => {
-    if (emailChain?.emails?.length > 0) {
-      const latestEmailId = emailChain.emails[emailChain.emails.length - 1]._id;
-      setExpandedThreads(new Set([latestEmailId]));
-
-      // Check for new emails in the thread
-      if (previousEmailsRef.current.length > 0) {
-        const newEmails = emailChain.emails.filter((email) => {
-          return !previousEmailsRef.current.some((prevEmail) => {
-            return prevEmail._id === email._id;
-          });
-        });
-
-        if (newEmails.length > 0) {
-          toast.info('New message in thread', {
-            description: `${newEmails.length} new message${
-              newEmails.length > 1 ? 's' : ''
-            } in this conversation`,
-          });
-        }
-      }
-
-      previousEmailsRef.current = emailChain.emails;
-    }
-  }, [emailChain]);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
