@@ -12,6 +12,7 @@ import '@/styles/email.css';
 import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import EmailSkeleton from './EmailSkeleton';
+import InboxHeader from './InboxHeader';
 import InboxReply from './InboxReply';
 
 interface InboxMainProps {
@@ -390,10 +391,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
 
   return (
     <div className='p-4 h-full overflow-hidden flex flex-col'>
-      <div className='flex justify-between items-center mb-4'>
-        <h2 className='text-xl font-bold text-[#121212] dark:text-white'>{emailChain.subject}</h2>
-      </div>
-
+      <InboxHeader subject={emailChain.subject} />
       <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
         {emailChain.emails.map((email) => {
           return renderThread(email);
