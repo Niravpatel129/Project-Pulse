@@ -95,12 +95,12 @@ const InboxPage = () => {
                 return {
                   threadId: thread.threadId,
                   subject: thread.subject,
-                  participants: thread.to.map((p) => {
-                    return p.handle || p.email || p.display_name;
+                  participants: thread.participants.map((p) => {
+                    return p.name;
                   }),
-                  messageCount: 1, // Since we don't have this in the API response
-                  snippet: thread.snippet,
-                  timestamp: new Date(thread.internalDate),
+                  messageCount: thread.messageCount,
+                  snippet: thread.latestMessage.content,
+                  timestamp: new Date(thread.latestMessage.timestamp),
                   isUnread: !thread.isRead,
                 };
               })}

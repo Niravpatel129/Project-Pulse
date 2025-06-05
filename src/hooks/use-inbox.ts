@@ -119,32 +119,45 @@ interface Token {
   scope: string;
 }
 
-export interface InboxThread {
+interface Participant {
+  email: string;
+  name: string;
+  role: 'sender' | 'recipient';
+  isInternal: boolean;
+  lastInteraction: string;
+}
+
+interface LatestMessage {
+  content: string;
+  sender: string;
+  timestamp: string;
+  type: string;
+}
+
+interface InboxThread {
+  latestMessage: LatestMessage;
+  messageCount: number;
   _id: string;
-  gmailMessageId: string;
   threadId: string;
-  userId: string;
   workspaceId: string;
-  from: EmailParticipant;
-  to: EmailParticipant[];
-  cc: EmailParticipant[];
-  bcc: EmailParticipant[];
+  title: string;
   subject: string;
-  body: EmailBody;
-  labels: string[];
-  snippet: string;
-  internalDate: string;
-  attachments: Attachment[];
+  participants: Participant[];
+  emails: string[];
+  status: string;
+  priority: string;
+  lastActivity: string;
   isRead: boolean;
-  historyId: string;
-  threadPart: number;
-  messageSource: string;
-  rawHeaders: Record<string, any>;
-  token: Token;
-  syncedAt: string;
+  isStarred: boolean;
+  isPinned: boolean;
+  customFields: Record<string, any>;
+  metadata: Record<string, any>;
+  labels: string[];
+  notes: any[];
   createdAt: string;
   updatedAt: string;
   __v: number;
+  messageReferences: any[];
 }
 
 interface PaginatedResponse {
