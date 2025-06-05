@@ -1,3 +1,12 @@
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { FaFont } from 'react-icons/fa';
 import { IoMdColorPalette } from 'react-icons/io';
 import {
@@ -21,189 +30,127 @@ import {
 
 export function InboxReplyToolbar() {
   return (
-    <div className='sticky bottom-0 z-10 bg-white border-t pt-3 pb-3 px-3 shadow-sm'>
+    <div className='sticky bottom-0 z-10 bg-background border-t p-3 shadow-sm'>
       {/* Top row: font and formatting controls */}
       <div className='flex items-center gap-2 w-full mb-2'>
         {/* Font family dropdown */}
-        <div className='flex items-center bg-gray-50 hover:bg-gray-100 rounded-full px-3 py-1.5 transition-colors duration-200'>
-          <FaFont className='mr-2 text-gray-600' size={16} />
-          <select
-            className='bg-transparent outline-none border-none text-sm font-medium appearance-none pr-3 cursor-pointer'
-            style={{ minWidth: 80 }}
-            title='Font Family'
-          >
-            <option value='sans-serif'>Sans-Serif</option>
-            <option value='serif'>Serif</option>
-            <option value='monospace'>Mono</option>
-          </select>
-          <MdArrowDropDown className='ml-[-14px] text-gray-600' size={18} />
-        </div>
+        <Select defaultValue='sans-serif'>
+          <SelectTrigger className='w-[120px]'>
+            <FaFont className='mr-2 text-muted-foreground' size={16} />
+            <SelectValue placeholder='Font' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='sans-serif'>Sans-Serif</SelectItem>
+            <SelectItem value='serif'>Serif</SelectItem>
+            <SelectItem value='monospace'>Mono</SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Font size dropdown */}
-        <div className='flex items-center bg-gray-50 hover:bg-gray-100 rounded-full px-3 py-1.5 transition-colors duration-200'>
-          <span className='mr-2 text-gray-600 text-sm'>14</span>
-          <select
-            className='bg-transparent outline-none border-none text-sm font-medium appearance-none pr-3 cursor-pointer'
-            style={{ width: 32 }}
-            title='Font Size'
-          >
-            <option value='12'>12</option>
-            <option value='14'>14</option>
-            <option value='16'>16</option>
-            <option value='18'>18</option>
-            <option value='20'>20</option>
-            <option value='24'>24</option>
-          </select>
-          <MdArrowDropDown className='ml-[-14px] text-gray-600' size={18} />
-        </div>
+        <Select defaultValue='14'>
+          <SelectTrigger className='w-[80px]'>
+            <span className='mr-2 text-muted-foreground text-sm'>14</span>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='12'>12</SelectItem>
+            <SelectItem value='14'>14</SelectItem>
+            <SelectItem value='16'>16</SelectItem>
+            <SelectItem value='18'>18</SelectItem>
+            <SelectItem value='20'>20</SelectItem>
+            <SelectItem value='24'>24</SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Text color dropdown */}
-        <div className='flex items-center bg-gray-50 hover:bg-gray-100 rounded-full px-3 py-1.5 transition-colors duration-200'>
-          <MdFormatUnderlined className='mr-2 text-gray-600' size={16} />
-          <IoMdColorPalette className='mr-1 text-gray-600' size={16} />
-          <select
-            className='bg-transparent outline-none border-none text-sm font-medium appearance-none pr-3 cursor-pointer'
-            style={{ width: 28 }}
-            title='Text Color'
-          >
-            <option value='#000000'>A</option>
-            <option value='#ff0000'>A</option>
-            <option value='#008000'>A</option>
-            <option value='#0000ff'>A</option>
-          </select>
-          <MdArrowDropDown className='ml-[-14px] text-gray-600' size={18} />
-        </div>
+        <Select defaultValue='#000000'>
+          <SelectTrigger className='w-[100px]'>
+            <MdFormatUnderlined className='mr-2 text-muted-foreground' size={16} />
+            <IoMdColorPalette className='mr-1 text-muted-foreground' size={16} />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='#000000'>Black</SelectItem>
+            <SelectItem value='#ff0000'>Red</SelectItem>
+            <SelectItem value='#008000'>Green</SelectItem>
+            <SelectItem value='#0000ff'>Blue</SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Highlight color dropdown */}
-        <div className='flex items-center bg-gray-50 hover:bg-gray-100 rounded-full px-3 py-1.5 transition-colors duration-200'>
-          <MdFormatUnderlined className='mr-2 text-gray-600' size={16} />
-          <span className='w-3 h-3 rounded bg-yellow-200 border border-gray-300 mr-1' />
-          <select
-            className='bg-transparent outline-none border-none text-sm font-medium appearance-none pr-3 cursor-pointer'
-            style={{ width: 28 }}
-            title='Highlight Color'
-          >
-            <option value='#ffff00'>A</option>
-            <option value='#ffb300'>A</option>
-            <option value='#00ff00'>A</option>
-            <option value='#00ffff'>A</option>
-          </select>
-          <MdArrowDropDown className='ml-[-14px] text-gray-600' size={18} />
-        </div>
+        <Select defaultValue='#ffff00'>
+          <SelectTrigger className='w-[100px]'>
+            <span className='w-3 h-3 rounded bg-yellow-200 border border-border mr-1' />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='#ffff00'>Yellow</SelectItem>
+            <SelectItem value='#ffb300'>Orange</SelectItem>
+            <SelectItem value='#00ff00'>Green</SelectItem>
+            <SelectItem value='#00ffff'>Cyan</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Separator orientation='vertical' className='h-6' />
+
         {/* Formatting icons */}
-        <div className='flex items-center gap-1 ml-1'>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Bold'
-          >
-            <MdFormatBold size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Italic'
-          >
-            <MdFormatItalic size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Underline'
-          >
-            <MdFormatUnderlined size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Strikethrough'
-          >
-            <MdStrikethroughS size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Bullet List'
-          >
-            <MdFormatListBulleted size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert Link'
-          >
-            <MdLink size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert Image'
-          >
-            <MdImage size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert Quote'
-          >
-            <MdFormatQuote size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert Code'
-          >
-            <MdCode size={18} className='text-gray-600' />
-          </button>
+        <div className='flex items-center gap-1'>
+          <Button variant='ghost' size='icon' title='Bold'>
+            <MdFormatBold size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Italic'>
+            <MdFormatItalic size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Underline'>
+            <MdFormatUnderlined size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Strikethrough'>
+            <MdStrikethroughS size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Bullet List'>
+            <MdFormatListBulleted size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Insert Link'>
+            <MdLink size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Insert Image'>
+            <MdImage size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Insert Quote'>
+            <MdFormatQuote size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Insert Code'>
+            <MdCode size={18} className='text-muted-foreground' />
+          </Button>
         </div>
       </div>
+
       {/* Bottom row: media/action icons left, send button right */}
       <div className='flex items-center w-full'>
         <div className='flex items-center gap-1'>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert Emoji'
-          >
-            <MdEmojiEmotions size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert GIF'
-          >
-            <MdGif size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Attach File'
-          >
-            <MdAttachFile size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Quick Reply'
-          >
-            <MdFlashOn size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Insert File'
-          >
-            <MdInsertDriveFile size={18} className='text-gray-600' />
-          </button>
-          <button
-            type='button'
-            className='bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 transition-colors duration-200'
-            title='Delete'
-          >
-            <MdDelete size={18} className='text-gray-600' />
-          </button>
+          <Button variant='ghost' size='icon' title='Insert Emoji'>
+            <MdEmojiEmotions size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Insert GIF'>
+            <MdGif size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Attach File'>
+            <MdAttachFile size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Quick Reply'>
+            <MdFlashOn size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Insert File'>
+            <MdInsertDriveFile size={18} className='text-muted-foreground' />
+          </Button>
+          <Button variant='ghost' size='icon' title='Delete'>
+            <MdDelete size={18} className='text-muted-foreground' />
+          </Button>
         </div>
         <div className='flex-1' />
-        <button className='bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-6 py-2 rounded-full shadow-sm hover:shadow transition-all duration-200 flex items-center gap-2 text-sm'>
+        <Button className='gap-2'>
           Send & archive <MdArrowDropDown size={18} />
-        </button>
+        </Button>
       </div>
     </div>
   );
