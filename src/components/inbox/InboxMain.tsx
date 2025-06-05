@@ -133,7 +133,10 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
           <>
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
             <div className='p-4 min-h-[100px]'>
-              <div className='text-sm mt-2 text-[#121212] dark:text-white'>{email.body.text}</div>
+              <div
+                className='text-sm mt-2 text-[#121212] dark:text-white whitespace-pre-wrap'
+                dangerouslySetInnerHTML={{ __html: email.body.html }}
+              />
             </div>
           </>
         )}
