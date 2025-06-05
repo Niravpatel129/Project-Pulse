@@ -50,12 +50,12 @@ interface ColumnMeta {
 }
 
 const TABLE_HEADERS = [
-  { id: 'invoice', label: 'Invoice', className: 'px-4 py-3' },
-  { id: 'status', label: 'Status', className: 'px-4 py-3' },
-  { id: 'dueDate', label: 'Due Date', className: 'px-4 py-3' },
-  { id: 'customer', label: 'Customer', className: 'px-4 py-3' },
-  { id: 'amount', label: 'Amount', className: 'px-4 py-3' },
-  { id: 'issueDate', label: 'Issue Date', className: 'px-4 py-3' },
+  { id: 'invoice', label: 'Invoice', className: 'px-4 py-3 w-[150px]' },
+  { id: 'status', label: 'Status', className: 'px-4 py-3 w-[150px]' },
+  { id: 'dueDate', label: 'Due Date', className: 'px-4 py-3 w-[150px]' },
+  { id: 'customer', label: 'Customer', className: 'px-4 py-3 w-[250px]' },
+  { id: 'amount', label: 'Amount', className: 'px-4 py-3 w-[120px]' },
+  { id: 'issueDate', label: 'Issue Date', className: 'px-4 py-3 w-[150px]' },
   { id: 'actions', label: 'Actions', className: 'px-4 py-3 w-[80px]' },
 ];
 
@@ -277,8 +277,8 @@ export const InvoiceTable = ({
         switch (header.id) {
           case 'invoice':
             return (
-              <div className='flex flex-col gap-1'>
-                <span className='text-[#121212] dark:text-white font-medium'>
+              <div className='flex flex-col gap-1 max-w-[150px]'>
+                <span className='text-[#121212] dark:text-white font-medium truncate'>
                   {invoice.invoiceNumber}
                 </span>
               </div>
@@ -287,11 +287,11 @@ export const InvoiceTable = ({
             return getStatusBadge(invoice.status);
           case 'dueDate':
             return invoice.dueDate ? (
-              <div className='h-full'>
+              <div className='h-full max-w-[150px]'>
                 <DateTooltip date={invoice.dueDate}>
-                  <span className='font-medium'>{formatDate(invoice.dueDate)}</span>
+                  <span className='font-medium truncate'>{formatDate(invoice.dueDate)}</span>
                 </DateTooltip>
-                <div className='text-xs text-muted-foreground'>
+                <div className='text-xs text-muted-foreground truncate'>
                   {getRelativeTime(invoice.dueDate)}
                 </div>
               </div>
@@ -300,25 +300,25 @@ export const InvoiceTable = ({
             );
           case 'customer':
             return (
-              <div className='flex flex-col'>
-                <span className='text-[#121212] dark:text-white font-medium text-left'>
+              <div className='flex flex-col max-w-[250px]'>
+                <span className='text-[#121212] dark:text-white font-medium text-left truncate'>
                   {invoice.customer?.id?.user?.name || '-'}
                 </span>
-                <span className='text-xs text-muted-foreground'>
+                <span className='text-xs text-muted-foreground truncate'>
                   {invoice.customer?.id?.user?.email || '-'}
                 </span>
               </div>
             );
           case 'amount':
             return (
-              <span className='text-[#121212] dark:text-white font-medium'>
+              <span className='text-[#121212] dark:text-white font-medium max-w-[120px] truncate'>
                 {formatCurrency(invoice.totals?.total || 0, invoice.currency)}
               </span>
             );
           case 'issueDate':
             return (
               <DateTooltip date={invoice.issueDate}>
-                <span className='text-[#121212] dark:text-slate-300 font-medium'>
+                <span className='text-[#121212] dark:text-slate-300 font-medium max-w-[150px] truncate'>
                   {invoice.issueDate ? formatDate(invoice.issueDate) : '-'}
                 </span>
               </DateTooltip>
