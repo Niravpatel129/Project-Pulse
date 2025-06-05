@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useInbox } from '@/hooks/use-inbox';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiSettings, FiSidebar } from 'react-icons/fi';
 
 const TABS = ['Unassigned', 'Assigned', 'Archived', 'Snoozed', 'Trash', 'Spam'];
@@ -21,6 +21,13 @@ const InboxPage = () => {
     'Unassigned';
   const { data: threads, error } = useInbox();
   console.log('🚀 activeTab:', activeTab);
+
+  // Automatically select the first thread when threads data is available
+  useEffect(() => {
+    if (threads?.pages?.[0]?.data?.[0]?.threadId && !selectedThreadId) {
+      setSelectedThreadId(threads.pages[0].data[0].threadId);
+    }
+  }, [threads, selectedThreadId]);
 
   if (error) {
     return (
