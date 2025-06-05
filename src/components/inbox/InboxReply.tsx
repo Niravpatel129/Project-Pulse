@@ -1,8 +1,23 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useCallback, useMemo, useState } from 'react';
-import { createEditor, Descendant, Editor, Node, Element as SlateElement, Transforms } from 'slate';
-import { withHistory } from 'slate-history';
-import { Editable, RenderElementProps, RenderLeafProps, Slate, withReact } from 'slate-react';
+import {
+  BaseEditor,
+  createEditor,
+  Descendant,
+  Editor,
+  Node,
+  Element as SlateElement,
+  Transforms,
+} from 'slate';
+import { HistoryEditor, withHistory } from 'slate-history';
+import {
+  Editable,
+  ReactEditor,
+  RenderElementProps,
+  RenderLeafProps,
+  Slate,
+  withReact,
+} from 'slate-react';
 import { EmailFields } from './EmailFields';
 import { InboxReplyToolbar } from './InboxReplyToolbar';
 
@@ -18,10 +33,32 @@ type CustomText = {
   italic?: boolean;
   underline?: boolean;
   list?: boolean;
+  fontFamily?: string;
+  fontSize?: string;
+  color?: string;
 };
 
 declare module 'slate' {
   interface CustomTypes {
+    Editor: BaseEditor & ReactEditor & HistoryEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
+}
+
+// Extend the Slate types
+declare module 'slate' {
+  interface CustomTypes {
+    Editor: BaseEditor & ReactEditor & HistoryEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
+}
+
+// Extend the Slate React types
+declare module 'slate-react' {
+  interface CustomTypes {
+    Editor: BaseEditor & ReactEditor & HistoryEditor;
     Element: CustomElement;
     Text: CustomText;
   }
@@ -63,7 +100,7 @@ export default function InboxReply({
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
     let { children } = props;
-    const { leaf } = props;
+    const { leaf } = props as { leaf: CustomText };
 
     if (leaf.bold) {
       children = <strong>{children}</strong>;
@@ -77,7 +114,25 @@ export default function InboxReply({
       children = <u>{children}</u>;
     }
 
-    return <span {...props.attributes}>{children}</span>;
+    const style: React.CSSProperties = {};
+
+    if (leaf.fontFamily) {
+      style.fontFamily = leaf.fontFamily;
+    }
+
+    if (leaf.fontSize) {
+      style.fontSize = leaf.fontSize;
+    }
+
+    if (leaf.color) {
+      style.color = leaf.color;
+    }
+
+    return (
+      <span {...props.attributes} style={style}>
+        {children}
+      </span>
+    );
   }, []);
 
   // Editor formatting functions
@@ -94,6 +149,18 @@ export default function InboxReply({
     } else {
       Editor.addMark(editor, format, true);
     }
+  };
+
+  const setFontFamily = (fontFamily: string) => {
+    Editor.addMark(editor, 'fontFamily', fontFamily);
+  };
+
+  const setFontSize = (fontSize: string) => {
+    Editor.addMark(editor, 'fontSize', fontSize);
+  };
+
+  const setTextColor = (color: string) => {
+    Editor.addMark(editor, 'color', color);
   };
 
   const toggleBold = () => {
@@ -188,7 +255,20 @@ export default function InboxReply({
             }}
           />
         </Slate>
-        <InboxReplyToolbar />
+        <InboxReplyToolbar
+          onBold={toggleBold}
+          onItalic={toggleItalic}
+          onUnderline={toggleUnderline}
+          onList={toggleList}
+          onLink={insertLink}
+          onFontFamily={setFontFamily}
+          onFontSize={setFontSize}
+          onTextColor={setTextColor}
+          onSend={() => {
+            // TODO: Implement send functionality
+            console.log('Send email');
+          }}
+        />
       </CardContent>
     </Card>
   );
