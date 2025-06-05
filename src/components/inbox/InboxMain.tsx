@@ -60,7 +60,7 @@ const EmailContent = ({
 
       // Create shadow root
       if (containerRef.current) {
-        const shadowRoot = containerRef.current.attachShadow({ mode: 'open' });
+        const shadowRoot = containerRef?.current?.attachShadow({ mode: 'open' });
 
         // Create wrapper for content
         const wrapper = document.createElement('div');
