@@ -9,7 +9,7 @@ import {
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
 import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import InboxReply from './InboxReply';
 
 interface InboxMainProps {
@@ -43,6 +43,14 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
+
+  // Add effect to expand latest email when emailChain loads
+  useEffect(() => {
+    if (emailChain?.emails?.length > 0) {
+      const latestEmail = emailChain.emails[emailChain.emails.length - 1];
+      setExpandedThreads(new Set([latestEmail._id]));
+    }
+  }, [emailChain]);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {

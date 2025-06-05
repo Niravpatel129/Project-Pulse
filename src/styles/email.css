@@ -1,31 +1,22 @@
-/* Email Content Styling */
+/* Email Framework Core Styles */
 .email-content {
+  /* Reset */
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Typography */
+.email-content body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.3;
   color: #202124;
   font-size: 14px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
 }
 
-/* Reset margins and padding for email content */
-.email-content > *:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  width: 100%;
-}
-
-/* Style blockquotes (quoted content) */
-.email-content blockquote {
-  border-left: 1px solid #ccc;
-  margin: 0;
-  padding-left: 1rem;
-  color: #666;
-  width: 100%;
-}
-
-/* Style links */
+/* Links */
 .email-content a {
   color: #1a73e8;
   text-decoration: none;
@@ -35,114 +26,26 @@
   text-decoration: underline;
 }
 
-/* Style lists */
-.email-content ul,
-.email-content ol {
-  margin: 0;
-  padding-left: 2em;
-}
-
-/* Style images */
+/* Images */
 .email-content img {
-  max-width: 100%;
+  border: 0;
   height: auto;
-  margin: 0;
-}
-
-/* Style code blocks */
-.email-content pre {
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  padding: 0.5em;
-  overflow-x: auto;
-  margin: 0;
-}
-
-.email-content code {
-  background-color: #f8f9fa;
-  border-radius: 3px;
-  padding: 0.2em 0.4em;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.9em;
-}
-
-/* Style tables */
-.email-content table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 0;
-  table-layout: auto;
+  line-height: 100%;
+  outline: none;
+  text-decoration: none;
+  -ms-interpolation-mode: bicubic;
   max-width: 100%;
-  border: none;
-  display: flex;
-  flex-direction: column;
 }
 
-.email-content tr {
-  display: flex;
+/* Tables */
+.email-content table {
+  border-collapse: collapse !important;
   width: 100%;
 }
 
-.email-content th,
 .email-content td {
   padding: 0;
-  border: none;
   vertical-align: top;
-  word-break: break-word;
-  flex: 1;
-  min-width: 0;
-  background-color: white;
-}
-
-.email-content th {
-  font-weight: 600;
-  text-align: left;
-  background-color: #f8f9fa;
-  border: none;
-  white-space: nowrap;
-}
-
-/* Style horizontal rules */
-.email-content hr {
-  border: none;
-  border-top: 1px solid #e8eaed;
-  margin: 0;
-}
-
-/* Style paragraphs */
-.email-content p {
-  margin: 0;
-}
-
-/* Style headings */
-.email-content h1,
-.email-content h2,
-.email-content h3,
-.email-content h4,
-.email-content h5,
-.email-content h6 {
-  margin: 0;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.email-content h1 {
-  font-size: 1.5em;
-}
-.email-content h2 {
-  font-size: 1.3em;
-}
-.email-content h3 {
-  font-size: 1.2em;
-}
-.email-content h4 {
-  font-size: 1.1em;
-}
-.email-content h5 {
-  font-size: 1em;
-}
-.email-content h6 {
-  font-size: 0.9em;
 }
 
 /* Dark mode support */
@@ -151,48 +54,14 @@
     color: #e8eaed;
   }
 
-  .email-content blockquote {
-    border-left-color: #5f6368;
-    color: #9aa0a6;
-  }
-
   .email-content a {
     color: #8ab4f8;
   }
-
-  .email-content pre,
-  .email-content code {
-    background-color: #202124;
-  }
-
-  .email-content hr {
-    border-color: #3c4043;
-  }
-
-  .email-content table {
-    border-color: #3c4043;
-  }
-
-  .email-content th,
-  .email-content td {
-    border-color: #3c4043;
-    background-color: #202124;
-  }
-
-  .email-content th {
-    background-color: #2d2e31;
-    border-bottom-color: #3c4043;
-  }
 }
 
-/* Dark mode support for tables */
-@media (prefers-color-scheme: dark) {
-  .email-content th,
-  .email-content td {
-    background-color: #202124;
-  }
-
-  .email-content th {
-    background-color: #2d2e31;
+/* Responsive */
+@media screen and (max-width: 600px) {
+  .email-content {
+    width: 100% !important;
   }
 }
