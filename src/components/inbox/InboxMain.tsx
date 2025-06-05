@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useEmailChain } from '@/hooks/use-email-chain';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import InboxReply from './InboxReply';
@@ -17,10 +18,12 @@ interface Thread {
   subject: string;
   timestamp: string;
   content: string;
+  isRead: boolean;
 }
 
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
@@ -43,7 +46,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         className='border border-slate-100 dark:border-[#232428] rounded-lg mb-4'
       >
         <div
-          className='flex items-center gap-4 p-4 justify-between w-full cursor-pointer  transition-colors'
+          className='flex items-center gap-4 p-4 justify-between w-full cursor-pointer transition-colors'
           onClick={() => {
             return toggleThread(thread.id);
           }}
@@ -120,42 +123,47 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     );
   };
 
-  // Mock data for demonstration
-  const mockThreads: Thread[] = [
-    {
-      id: '1',
-      sender: {
-        name: 'Heather Hahnenberg',
-        email: 'someone@email.com',
-      },
-      recipient: 'Nirav Patel',
-      subject: 'Random Subject',
-      timestamp: '1 week ago',
-      content:
-        'hi. iam not sure cause iam working . but i call you afternoon around 3.30 to see if you are in the store',
-    },
-    {
-      id: '2',
-      sender: {
-        name: 'John Doe',
-        email: 'john@email.com',
-      },
-      recipient: 'Nirav Patel',
-      subject: 'Project Update',
-      timestamp: '2 days ago',
-      content: 'Here is the latest update on the project. We have made significant progress...',
-    },
-  ];
+  if (!selectedThreadId) {
+    return (
+      <div className='flex items-center justify-center h-full'>
+        <p className='text-muted-foreground'>Select a thread to view its contents</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-full'>
+        <p className='text-muted-foreground'>Loading thread...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='flex items-center justify-center h-full'>
+        <p className='text-red-500'>Error loading thread: {(error as Error).message}</p>
+      </div>
+    );
+  }
+
+  if (!emailChain) {
+    return (
+      <div className='flex items-center justify-center h-full'>
+        <p className='text-muted-foreground'>No thread data available</p>
+      </div>
+    );
+  }
 
   return (
     <div className='p-4'>
       <h2 className='text-xl font-bold mb-4 text-[#121212] dark:text-white'>
-        Heroku app &quot;toastify&quot; log data transfer notification
+        {emailChain.subject}
       </h2>
 
       <div className='flex flex-col gap-0'>
-        {mockThreads.map((thread) => {
-          return renderThread(thread);
+        {emailChain.messages.map((message) => {
+          return renderThread(message);
         })}
         <InboxReply />
       </div>
