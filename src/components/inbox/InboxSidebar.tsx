@@ -9,7 +9,6 @@ import {
 import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { Filter, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 
 interface EmailThread {
   threadId: string;
@@ -102,14 +101,6 @@ export default function InboxSidebar({
           return prevThread.threadId === thread.threadId;
         });
       });
-
-      if (newThreads.length > 0) {
-        toast.info('New messages received', {
-          description: `${newThreads.length} new message${
-            newThreads.length > 1 ? 's' : ''
-          } in your inbox`,
-        });
-      }
 
       setLocalThreads(threads);
       previousThreadsRef.current = threads;
