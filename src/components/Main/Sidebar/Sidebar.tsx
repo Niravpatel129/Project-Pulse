@@ -361,15 +361,17 @@ export default function AppSidebar() {
             )}
           </SidebarContent>
           <SidebarFooter className='bg-white dark:bg-[#141414] border-t border-[#E4E4E7] dark:border-[#232428]'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='w-full text-[#8b8b8b] hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white hover:bg-gray-300 dark:hover:bg-white/10'
-              onClick={handleThemeToggle}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </Button>
+            {mounted && (
+              <Button
+                variant='ghost'
+                size='icon'
+                className='w-full text-[#8b8b8b] hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white hover:bg-gray-300 dark:hover:bg-white/10'
+                onClick={handleThemeToggle}
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </Button>
+            )}
           </SidebarFooter>
         </Sidebar>
       </SidebarToggleContext.Provider>
