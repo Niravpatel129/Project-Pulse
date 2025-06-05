@@ -25,6 +25,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface InboxHeaderProps {
@@ -42,6 +43,12 @@ export default function InboxHeader({
   hasAttachments,
   status = 'unassigned',
 }: InboxHeaderProps) {
+  const [localStatus, setLocalStatus] = useState(status);
+
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
   console.log('status', status);
   const { toast } = useToast();
   const router = useRouter();
@@ -296,12 +303,15 @@ export default function InboxHeader({
       return response.data;
     },
     onMutate: async (newStatus) => {
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['email-chain', threadId] });
       await queryClient.cancelQueries({ queryKey: ['inbox-threads'] });
 
+      // Snapshot the previous value
       const previousEmailChain = queryClient.getQueryData(['email-chain', threadId]);
       const previousInboxThreads = queryClient.getQueryData(['inbox-threads']);
 
+      // Optimistically update the cache
       queryClient.setQueryData(['email-chain', threadId], (old: any) => {
         return {
           ...old,
@@ -319,6 +329,7 @@ export default function InboxHeader({
       return { previousEmailChain, previousInboxThreads };
     },
     onError: (err, newStatus, context) => {
+      // Rollback on error
       if (context?.previousEmailChain) {
         queryClient.setQueryData(['email-chain', threadId], context.previousEmailChain);
       }
@@ -332,6 +343,7 @@ export default function InboxHeader({
       });
     },
     onSettled: () => {
+      // Refetch after error or success to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ['email-chain', threadId] });
       queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
     },
@@ -420,6 +432,7 @@ export default function InboxHeader({
   };
 
   const handleStatusChange = (newStatus: string) => {
+    setLocalStatus(newStatus);
     updateStatusMutation.mutate(newStatus);
   };
 
@@ -493,20 +506,20 @@ export default function InboxHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Select defaultValue={status} onValueChange={handleStatusChange}>
+        <Select value={localStatus} onValueChange={handleStatusChange}>
           <SelectTrigger
             className={`font-semibold rounded-full px-3 py-1.5 h-auto border-0 focus-visible:ring-0 focus-visible:border-0 active:ring-0 active:border-0 focus:ring-0 focus:border-1 ${
-              status === 'unassigned'
+              localStatus === 'unassigned'
                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                : status === 'assigned'
+                : localStatus === 'assigned'
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                : status === 'archived'
+                : localStatus === 'archived'
                 ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                : status === 'snoozed'
+                : localStatus === 'snoozed'
                 ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                : status === 'trash'
+                : localStatus === 'trash'
                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : status === 'spam'
+                : localStatus === 'spam'
                 ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
