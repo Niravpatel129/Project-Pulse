@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { Filter, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface EmailThread {
   threadId: string;
@@ -51,7 +51,9 @@ const ThreadItem = ({
     >
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 mb-1'>
-          {thread.isUnread && <div className='w-2 h-2 rounded-full bg-[#3b82f6] flex-shrink-0' />}
+          {thread.isUnread && !isSelected && (
+            <div className='w-2 h-2 rounded-full bg-[#3b82f6] flex-shrink-0' />
+          )}
           <span className='text-sm font-medium text-[#121212] dark:text-white truncate'>
             {getEmailName(thread.participants[0])}
           </span>
@@ -83,8 +85,26 @@ export default function InboxSidebar({
 }: InboxSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [localThreads, setLocalThreads] = useState(threads);
 
-  const filteredThreads = threads.filter((thread) => {
+  // Only update local threads when threads prop changes and we don't have local state yet
+  useEffect(() => {
+    if (localThreads.length === 0) {
+      setLocalThreads(threads);
+    }
+  }, [threads]);
+
+  const handleThreadSelect = (threadId: string) => {
+    // Immediately mark as read in local state
+    setLocalThreads((prevThreads) => {
+      return prevThreads.map((thread) => {
+        return thread.threadId === threadId ? { ...thread, isUnread: false } : thread;
+      });
+    });
+    onThreadSelect?.(threadId);
+  };
+
+  const filteredThreads = localThreads.filter((thread) => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
       thread.subject.toLowerCase().includes(searchLower) ||
@@ -108,7 +128,7 @@ export default function InboxSidebar({
           variant='secondary'
           className='bg-slate-100 dark:bg-[#232428] text-[#121212] dark:text-slate-300 text-xs'
         >
-          {threads.length}
+          {localThreads.length}
         </Badge>
       </div>
 
@@ -182,7 +202,7 @@ export default function InboxSidebar({
                   thread={thread}
                   isSelected={selectedThreadId === thread.threadId}
                   onClick={() => {
-                    return onThreadSelect?.(thread.threadId);
+                    return handleThreadSelect(thread.threadId);
                   }}
                 />
               );
