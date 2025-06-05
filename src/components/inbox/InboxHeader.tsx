@@ -494,16 +494,44 @@ export default function InboxHeader({
           </DropdownMenuContent>
         </DropdownMenu>
         <Select defaultValue={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className='font-semibold focus-visible:ring-0 focus-visible:border-0 active:ring-0 active:border-0 focus:ring-0 focus:border-1'>
+          <SelectTrigger
+            className={`font-semibold rounded-full px-3 py-1.5 h-auto border-0 focus-visible:ring-0 focus-visible:border-0 active:ring-0 active:border-0 focus:ring-0 focus:border-1 ${
+              status === 'unassigned'
+                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : status === 'assigned'
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                : status === 'archived'
+                ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                : status === 'snoozed'
+                ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                : status === 'trash'
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : status === 'spam'
+                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
             <SelectValue placeholder='Unassigned' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='unassigned'>Unassigned</SelectItem>
-            <SelectItem value='assigned'>Assigned</SelectItem>
-            <SelectItem value='archived'>Archived</SelectItem>
-            <SelectItem value='snoozed'>Snoozed</SelectItem>
-            <SelectItem value='trash'>Trash</SelectItem>
-            <SelectItem value='spam'>Spam</SelectItem>
+            <SelectItem value='unassigned' className='focus:bg-gray-100'>
+              Unassigned
+            </SelectItem>
+            <SelectItem value='assigned' className='focus:bg-blue-100'>
+              Assigned
+            </SelectItem>
+            <SelectItem value='archived' className='focus:bg-purple-100'>
+              Archived
+            </SelectItem>
+            <SelectItem value='snoozed' className='focus:bg-yellow-100'>
+              Snoozed
+            </SelectItem>
+            <SelectItem value='trash' className='focus:bg-red-100'>
+              Trash
+            </SelectItem>
+            <SelectItem value='spam' className='focus:bg-orange-100'>
+              Spam
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
