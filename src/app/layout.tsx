@@ -1,3 +1,4 @@
+import { DynamicFavicon } from '@/components/shared/DynamicFavicon';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -29,27 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const subdomain = hostname.split('.')[0];
   const isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app';
 
-  let logoUrl = '/favicon.ico';
-
-  if (isSubdomain) {
-    try {
-      // Create a new request instance for server-side
-      const response = await fetch(`https://api.hourblock.com/api/workspaces/logo`, {
-        headers: {
-          origin: host,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.data?.logo) {
-          logoUrl = data.data.logo;
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching workspace logo:', error);
-    }
-  }
+  // Always use the default logo here; client will update favicon if needed
+  const logoUrl = '/favicon.ico';
 
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
@@ -143,6 +125,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get subdomain on client side for DynamicFavicon
+  let subdomain: string | null = null;
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const sd = hostname.split('.')[0];
+    if (hostname !== 'localhost' && sd !== 'www' && sd !== 'pulse-app') {
+      subdomain = sd;
+    }
+  }
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
@@ -202,6 +193,7 @@ export default function RootLayout({
             }
           `}
         </Script>
+        <DynamicFavicon subdomain={subdomain} />
       </head>
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
         <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
