@@ -271,20 +271,18 @@ export default function InboxMain() {
     }
   }, [emailChain?.threadId, emailChain?.isRead]);
 
-  // Add effect to expand latest email when emailChain loads
   useEffect(() => {
     if (emailChain?.emails?.length > 0) {
       const latestEmail = emailChain.emails[emailChain.emails.length - 1];
       setExpandedThreads(new Set([latestEmail._id]));
 
       // Scroll to bottom after a short delay to ensure content is rendered
-      containerRef.current?.scrollTo({
-        top: containerRef.current.scrollHeight,
-        behavior: 'instant',
-      });
+      // containerRef.current?.scrollTo({
+      //   top: containerRef.current.scrollHeight,
+      //   behavior: 'instant',
+      // });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [emailChain]);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
