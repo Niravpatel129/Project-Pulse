@@ -212,7 +212,7 @@ const AttachmentList = ({ attachments }: { attachments: Attachment[] }) => {
   };
 
   return (
-    <div className='border border-slate-100 dark:border-[#232428] rounded-lg mb-4 p-4'>
+    <div className=''>
       <div className='flex items-center gap-2 mb-3'>
         <Paperclip className='h-4 w-4 text-muted-foreground' />
         <h3 className='text-sm font-medium'>Attachments ({attachments.length})</h3>
@@ -479,25 +479,35 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         {isExpanded && (
           <>
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
-            <div className='p-4 min-h-[100px]'>
-              <EmailContent
-                html={emailContent.html}
-                isBodyExpanded={isBodyExpanded}
-                containsQuotedContent={containsQuotedContent}
-              />
-              {containsQuotedContent && (
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='mt-2 text-muted-foreground hover:text-foreground'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleBody(email._id);
-                  }}
-                >
-                  {isBodyExpanded ? 'Show less' : 'Show more'}
-                </Button>
+            <div className='min-h-[100px]'>
+              {email.attachments && email.attachments.length > 0 && (
+                <>
+                  <div className='p-4'>
+                    <AttachmentList attachments={email.attachments} />
+                  </div>
+                  <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
+                </>
               )}
+              <div className='p-4'>
+                <EmailContent
+                  html={emailContent.html}
+                  isBodyExpanded={isBodyExpanded}
+                  containsQuotedContent={containsQuotedContent}
+                />
+                {containsQuotedContent && (
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='mt-2 text-muted-foreground hover:text-foreground'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBody(email._id);
+                    }}
+                  >
+                    {isBodyExpanded ? 'Show less' : 'Show more'}
+                  </Button>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -573,7 +583,6 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         status={emailChain.stage}
       />
       <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
-        <AttachmentList attachments={getAllAttachments()} />
         {emailChain.emails.map((email) => {
           return renderThread(email);
         })}
