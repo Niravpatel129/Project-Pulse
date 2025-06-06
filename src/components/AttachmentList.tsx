@@ -7,6 +7,13 @@ export interface AttachmentListAttachment {
   size: number;
   attachmentId: string;
   storageUrl: string;
+  storagePath?: string;
+  thumbnail?: {
+    url: string;
+    path: string;
+    width: number;
+    height: number;
+  };
   headers?: any[];
 }
 
@@ -15,6 +22,7 @@ interface AttachmentListProps {
 }
 
 const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
+  console.log('🚀 attachments:', attachments);
   if (!attachments.length) return null;
 
   const formatFileSize = (bytes: number) => {
@@ -42,25 +50,58 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
         <Paperclip className='h-4 w-4 text-muted-foreground' />
         <h3 className='text-sm font-medium'>Attachments ({attachments.length})</h3>
       </div>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
+      <div className='flex flex-wrap gap-3'>
         {attachments.map((attachment) => {
+          const isImage = attachment.mimeType.startsWith('image/');
           return (
             <a
               key={attachment.attachmentId}
               href={attachment.storageUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='flex flex-col items-center gap-3 p-2 rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[158px] overflow-hidden'
+              className={`group relative flex flex-col rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[200px] h-[150px] overflow-hidden`}
             >
-              <div className='flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg'>
-                <span className='text-lg'>{getFileIcon(attachment.mimeType)}</span>
-              </div>
-              <div className='flex-1 min-w-0'>
-                <p className='text-sm font-medium truncate' title={attachment.filename}>
-                  {attachment.filename}
-                </p>
-                <p className='text-xs text-muted-foreground'>{formatFileSize(attachment.size)}</p>
-              </div>
+              {isImage && attachment.thumbnail ? (
+                <>
+                  <img
+                    src={attachment.thumbnail.url}
+                    alt={attachment.filename}
+                    className='absolute inset-0 w-full h-full object-cover'
+                  />
+                  <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent' />
+                  <div className='absolute bottom-0 left-0 right-0'>
+                    <div className='p-3 transform transition-transform duration-300 group-hover:-translate-y-6'>
+                      <p
+                        className='text-sm font-medium truncate text-white'
+                        title={attachment.filename}
+                      >
+                        {attachment.filename}
+                      </p>
+                    </div>
+                    <div className='absolute bottom-0 left-0 right-0 p-3 transform transition-transform duration-300 translate-y-full group-hover:translate-y-0'>
+                      <p className='text-xs text-white/80'>{formatFileSize(attachment.size)}</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className='flex-1 flex items-center justify-center bg-slate-100 dark:bg-[#232428]'>
+                    <span className='text-2xl'>{getFileIcon(attachment.mimeType)}</span>
+                  </div>
+                  <div className='relative'>
+                    <div className='p-3 transform transition-transform duration-300 group-hover:-translate-y-6'>
+                      <p className='text-sm font-medium truncate' title={attachment.filename}>
+                        {attachment.filename}
+                      </p>
+                    </div>
+                    <div className='absolute bottom-0 left-0 right-0 p-3 transform transition-transform duration-300 translate-y-full group-hover:translate-y-0'>
+                      <p className='text-xs text-muted-foreground'>
+                        {formatFileSize(attachment.size)}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </a>
           );
         })}
