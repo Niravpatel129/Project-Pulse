@@ -211,6 +211,44 @@ const AttachmentList = ({ attachments }: { attachments: Attachment[] }) => {
     return '📎';
   };
 
+  const renderThumbnail = (attachment: Attachment) => {
+    if (attachment.mimeType.startsWith('image/')) {
+      return (
+        <div className='w-[158px] h-[114px] relative overflow-hidden rounded-lg'>
+          <img
+            src={attachment.storageUrl}
+            alt={attachment.filename}
+            className='w-full h-full object-cover'
+            onError={(e) => {
+              // Fallback to icon if image fails to load
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.parentElement!.innerHTML = `
+                <div class="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg">
+                  <span class="text-lg">${getFileIcon(attachment.mimeType)}</span>
+                </div>
+              `;
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className='flex items-center gap-3 p-2 rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[158px] h-[114px]'>
+        <div className='flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg'>
+          <span className='text-lg'>{getFileIcon(attachment.mimeType)}</span>
+        </div>
+        <div className='flex-1 min-w-0'>
+          <p className='text-sm font-medium truncate' title={attachment.filename}>
+            {attachment.filename}
+          </p>
+          <p className='text-xs text-muted-foreground'>{formatFileSize(attachment.size)}</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className=''>
       <div className='flex items-center gap-2 mb-3'>
@@ -225,17 +263,9 @@ const AttachmentList = ({ attachments }: { attachments: Attachment[] }) => {
               href={attachment.storageUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='flex items-center gap-3 p-2 rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[158px] h-[114px]'
+              className='block'
             >
-              <div className='flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg'>
-                <span className='text-lg'>{getFileIcon(attachment.mimeType)}</span>
-              </div>
-              <div className='flex-1 min-w-0'>
-                <p className='text-sm font-medium truncate' title={attachment.filename}>
-                  {attachment.filename}
-                </p>
-                <p className='text-xs text-muted-foreground'>{formatFileSize(attachment.size)}</p>
-              </div>
+              {renderThumbnail(attachment)}
             </a>
           );
         })}
