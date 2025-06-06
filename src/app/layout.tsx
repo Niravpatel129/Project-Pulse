@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: {
-      template: '%s',
+      template: '%s | Pulse',
       default: appName,
     },
     description:
