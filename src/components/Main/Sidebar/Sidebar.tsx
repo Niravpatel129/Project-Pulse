@@ -207,6 +207,7 @@ export default function AppSidebar() {
                   <Link
                     href={item.href}
                     className='flex items-center gap-3 px-2 text-[#3F3F46] dark:text-[#fafafa] group-data-[state=collapsed]:justify-center'
+                    prefetch={true}
                   >
                     <item.icon className='h-4 w-4 text-[#3F3F46] dark:text-[#858585]' />
                     <span className='group-data-[state=collapsed]:hidden text-[#3F3F46] dark:text-[#fafafa]'>
