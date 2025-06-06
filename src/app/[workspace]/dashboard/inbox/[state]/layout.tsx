@@ -55,7 +55,7 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
                   return (
                     <Link
                       key={tab}
-                      href={`/dashboard/inbox/${path}`}
+                      href={`/dashboard/inbox/${path}/${headers?.[path]?.threadId}`}
                       prefetch={true}
                       scroll={false}
                       className={`text-sm transition-all duration-300 pb-1 border-b-2 whitespace-nowrap flex items-center gap-2 ${
@@ -64,8 +64,10 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
                           : 'font-normal text-gray-400 border-transparent hover:text-black dark:hover:text-white'
                       }`}
                     >
-                      {tab}
-                      {isUnread && <div className='w-2 h-2 rounded-full bg-blue-500' />}
+                      <span className='flex items-center gap-2'>
+                        {tab}
+                        {isUnread && <div className='w-2 h-2 rounded-full bg-blue-500' />}
+                      </span>
                     </Link>
                   );
                 })}
