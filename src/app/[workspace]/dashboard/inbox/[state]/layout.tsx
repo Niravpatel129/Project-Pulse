@@ -51,7 +51,7 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
                     href={`/dashboard/inbox/${path}`}
                     prefetch={true}
                     scroll={false}
-                    className={`text-sm transition-colors duration-150 pb-1 border-b-2 whitespace-nowrap ${
+                    className={`text-sm transition-all duration-300 pb-1 border-b-2 whitespace-nowrap ${
                       activeTab === tab
                         ? 'font-semibold text-black dark:text-white border-black dark:border-white'
                         : 'font-normal text-gray-400 border-transparent hover:text-black dark:hover:text-white'
