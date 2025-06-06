@@ -1,3 +1,4 @@
+import AttachmentList from '@/components/AttachmentList';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
 import { formatDistanceToNow } from 'date-fns';
-import { ChevronDown, ChevronUp, MoreVertical, Paperclip, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import EmailContent from './EmailContent';
 import EmailSkeleton from './EmailSkeleton';
@@ -188,91 +189,6 @@ interface Attachment {
   storageUrl: string;
   headers: any[];
 }
-
-const AttachmentList = ({ attachments }: { attachments: Attachment[] }) => {
-  if (!attachments.length) return null;
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return '🖼️';
-    if (mimeType.startsWith('video/')) return '🎥';
-    if (mimeType.startsWith('audio/')) return '🎵';
-    if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('word')) return '📝';
-    if (mimeType.includes('excel') || mimeType.includes('sheet')) return '📊';
-    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📑';
-    return '📎';
-  };
-
-  const renderThumbnail = (attachment: Attachment) => {
-    if (attachment.mimeType.startsWith('image/')) {
-      return (
-        <div className='w-[158px] h-[114px] relative overflow-hidden rounded-lg'>
-          <img
-            src={attachment.storageUrl}
-            alt={attachment.filename}
-            className='w-full h-full object-cover'
-            onError={(e) => {
-              // Fallback to icon if image fails to load
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              target.parentElement!.innerHTML = `
-                <div class="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg">
-                  <span class="text-lg">${getFileIcon(attachment.mimeType)}</span>
-                </div>
-              `;
-            }}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div className='flex items-center gap-3 p-2 rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[158px] h-[114px]'>
-        <div className='flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg'>
-          <span className='text-lg'>{getFileIcon(attachment.mimeType)}</span>
-        </div>
-        <div className='flex-1 min-w-0'>
-          <p className='text-sm font-medium truncate' title={attachment.filename}>
-            {attachment.filename}
-          </p>
-          <p className='text-xs text-muted-foreground'>{formatFileSize(attachment.size)}</p>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className=''>
-      <div className='flex items-center gap-2 mb-3'>
-        <Paperclip className='h-4 w-4 text-muted-foreground' />
-        <h3 className='text-sm font-medium'>Attachments ({attachments.length})</h3>
-      </div>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
-        {attachments.map((attachment) => {
-          return (
-            <a
-              key={attachment.attachmentId}
-              href={attachment.storageUrl}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='block'
-            >
-              {renderThumbnail(attachment)}
-            </a>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());

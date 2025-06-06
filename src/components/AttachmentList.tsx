@@ -50,7 +50,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
               href={attachment.storageUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='flex items-center gap-3 p-2 rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[158px] h-[114px]'
+              className='flex items-center gap-3 p-2 rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[158px] h-[114px] overflow-hidden'
             >
               <div className='flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-[#232428] rounded-lg'>
                 <span className='text-lg'>{getFileIcon(attachment.mimeType)}</span>
