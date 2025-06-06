@@ -200,7 +200,11 @@ export default function AppSidebar() {
               <SidebarMenuItem key={item.name}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={
+                    item.name === 'Inbox'
+                      ? pathname.startsWith('/dashboard/inbox/')
+                      : pathname.startsWith(item.href)
+                  }
                   tooltip={item.name}
                   className='text-white hover:bg-[#eaeaea] dark:hover:bg-white/10 data-[active=true]:bg-[#eaeaea] dark:data-[active=true]:bg-white/10 mb-1'
                 >
