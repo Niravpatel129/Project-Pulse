@@ -537,7 +537,7 @@ export default function InboxMain() {
   if (isLoading) {
     return (
       <div className='p-4 h-full overflow-hidden flex flex-col'>
-        <div className='flex justify-between items-center mb-4'>
+        <div className='flex justify-between items-center mb-6'>
           <Skeleton className='h-8 w-64' />
         </div>
         <div className='flex flex-col gap-0 overflow-y-auto flex-1'>
