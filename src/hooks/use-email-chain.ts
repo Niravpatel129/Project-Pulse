@@ -1,5 +1,5 @@
 import { newRequest } from '@/utils/newRequest';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Participant {
   email: string;
@@ -163,6 +163,8 @@ interface EmailChain {
 }
 
 export function useEmailChain(threadId?: string) {
+  const queryClient = useQueryClient();
+
   return useQuery<EmailChain>({
     queryKey: ['email-chain', threadId],
     queryFn: async () => {
@@ -170,6 +172,8 @@ export function useEmailChain(threadId?: string) {
         throw new Error('Thread ID is required');
       }
       const response = await newRequest.get(`/inbox/${threadId}`);
+
+      queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
       return response.data;
     },
     enabled: !!threadId,
