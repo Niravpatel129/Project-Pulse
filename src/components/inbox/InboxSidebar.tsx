@@ -53,12 +53,13 @@ const ThreadItem = ({
         <div className='flex-1 min-w-0'>
           <div className='flex items-center justify-between mb-1'>
             <div className='font-medium text-sm text-[#121212] dark:text-white truncate'>
-              {thread.subject}
+              {thread.participants[0]}
             </div>
             <div className='text-xs text-muted-foreground'>
               {thread.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
+          <div className='text-sm text-[#121212] dark:text-white truncate'>{thread.subject}</div>
           <div className='text-sm text-muted-foreground truncate'>{thread.snippet}</div>
         </div>
       </div>
