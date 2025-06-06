@@ -434,7 +434,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                   <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
                 </>
               )}
-              <div className='p-4'>
+              <div className='p-4 min-h-[200px]'>
                 <EmailContent
                   html={emailContent.html}
                   isBodyExpanded={isBodyExpanded}
