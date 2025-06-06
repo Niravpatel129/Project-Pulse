@@ -1,6 +1,8 @@
 'use client';
+import InboxSidebar from '@/components/inbox/InboxSidebar';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useInbox } from '@/hooks/use-inbox';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
@@ -15,6 +17,13 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const activeTab =
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
+
+  const { data: threads, error } = useInbox();
+
+  const allThreads =
+    threads?.pages.flatMap((page) => {
+      return page.data;
+    }) || [];
 
   return (
     <div className='w-full'>
@@ -69,14 +78,33 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
 
-      <div className='flex flex-col h-screen w-full overflow-hidden'>
-        {/* Topbar */}
-
-        {/* Main Content */}
-        <div className='flex flex-1 overflow-hidden p-4 gap-4'>
-          <div className='flex-1 h-full min-w-0'>
-            <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
-              {children}
+      <div className='flex flex-1 overflow-hidden p-4 gap-4'>
+        <div className='flex flex-col w-full overflow-hidden'>
+          {/* Main Content */}
+          <div className='flex flex-1 overflow-hidden gap-4 max-h-[calc(100vh-100px)]'>
+            <div className='w-[320px] h-full flex-shrink-0'>
+              <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
+                <InboxSidebar
+                  threads={allThreads.map((thread) => {
+                    return {
+                      threadId: thread.threadId,
+                      subject: thread.subject,
+                      participants: thread.participants.map((p) => {
+                        return p.name;
+                      }),
+                      snippet: thread.latestMessage.content,
+                      timestamp: new Date(thread.latestMessage.timestamp),
+                      isUnread: !thread.isRead,
+                      emails: thread.emails,
+                    };
+                  })}
+                />
+              </div>
+            </div>
+            <div className='flex-1 h-full min-w-0'>
+              <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-scroll'>
+                {children}
+              </div>
             </div>
           </div>
         </div>
