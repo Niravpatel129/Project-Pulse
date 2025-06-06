@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const fetchInboxHeaders = async () => {
   const { data } = await newRequest.get('/inbox/inbox-headers');
-  return data;
+  return data.data;
 };
 
 export const useInboxHeaders = () => {
