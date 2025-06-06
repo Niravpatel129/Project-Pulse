@@ -1,4 +1,13 @@
-import { Paperclip } from 'lucide-react';
+import {
+  File,
+  FileAudio,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
+  Paperclip,
+  Presentation,
+} from 'lucide-react';
 import React from 'react';
 
 export interface AttachmentListAttachment {
@@ -34,14 +43,19 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
   };
 
   const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return '🖼️';
-    if (mimeType.startsWith('video/')) return '🎥';
-    if (mimeType.startsWith('audio/')) return '🎵';
-    if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('word')) return '📝';
-    if (mimeType.includes('excel') || mimeType.includes('sheet')) return '📊';
-    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📑';
-    return '📎';
+    if (mimeType.startsWith('image/'))
+      return <FileImage className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.startsWith('video/'))
+      return <FileVideo className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.startsWith('audio/'))
+      return <FileAudio className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.includes('pdf')) return <FileText className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.includes('word')) return <FileText className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.includes('excel') || mimeType.includes('sheet'))
+      return <FileSpreadsheet className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation'))
+      return <Presentation className='w-12 h-12 text-muted-foreground' />;
+    return <File className='w-12 h-12 text-muted-foreground' />;
   };
 
   return (
@@ -59,7 +73,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
               href={attachment.storageUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className={`group relative flex flex-col rounded-lg border border-slate-100 dark:border-[#232428] hover:bg-slate-50 dark:hover:bg-[#1a1b1e] transition-colors w-[200px] h-[150px] overflow-hidden`}
+              className={`group relative flex flex-col rounded-lg border border-slate-100 dark:border-[#232428]  transition-colors w-[200px] h-[150px] overflow-hidden`}
             >
               {isImage && attachment.thumbnail ? (
                 <>
@@ -85,10 +99,10 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
                 </>
               ) : (
                 <>
-                  <div className='flex-1 flex items-center justify-center bg-slate-100 dark:bg-[#232428]'>
-                    <span className='text-2xl'>{getFileIcon(attachment.mimeType)}</span>
+                  <div className='flex-1 flex items-center justify-center '>
+                    {getFileIcon(attachment.mimeType)}
                   </div>
-                  <div className='relative'>
+                  <div className='relative bg-white dark:bg-[#1a1b1e]'>
                     <div className='p-3 transform transition-transform duration-300 group-hover:-translate-y-6'>
                       <p className='text-sm font-medium truncate' title={attachment.filename}>
                         {attachment.filename}
