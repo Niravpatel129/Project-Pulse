@@ -1,7 +1,6 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useInbox } from '@/hooks/use-inbox';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
@@ -16,12 +15,6 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const activeTab =
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
-  const { data: threads, error } = useInbox();
-
-  const allThreads =
-    threads?.pages.flatMap((page) => {
-      return page.data;
-    }) || [];
 
   return (
     <div className='w-full'>
