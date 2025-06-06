@@ -1,14 +1,15 @@
-import {
-  File,
-  FileAudio,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileVideo,
-  Paperclip,
-  Presentation,
-} from 'lucide-react';
 import React from 'react';
+import { BsFileEarmark } from 'react-icons/bs';
+import {
+  FaFile,
+  FaFileAudio,
+  FaFileExcel,
+  FaFileImage,
+  FaFilePdf,
+  FaFilePowerpoint,
+  FaFileWord,
+  FaPaperclip,
+} from 'react-icons/fa';
 
 export interface AttachmentListAttachment {
   filename: string;
@@ -43,25 +44,22 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
   };
 
   const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/'))
-      return <FileImage className='w-12 h-12 text-muted-foreground' />;
-    if (mimeType.startsWith('video/'))
-      return <FileVideo className='w-12 h-12 text-muted-foreground' />;
-    if (mimeType.startsWith('audio/'))
-      return <FileAudio className='w-12 h-12 text-muted-foreground' />;
-    if (mimeType.includes('pdf')) return <FileText className='w-12 h-12 text-muted-foreground' />;
-    if (mimeType.includes('word')) return <FileText className='w-12 h-12 text-muted-foreground' />;
+    if (mimeType.startsWith('image/')) return <FaFileImage className='w-12 h-12 text-blue-500' />;
+    if (mimeType.startsWith('video/')) return <FaFile className='w-12 h-12 text-purple-500' />;
+    if (mimeType.startsWith('audio/')) return <FaFileAudio className='w-12 h-12 text-pink-500' />;
+    if (mimeType.includes('pdf')) return <FaFilePdf className='w-12 h-12 text-red-500' />;
+    if (mimeType.includes('word')) return <FaFileWord className='w-12 h-12 text-blue-600' />;
     if (mimeType.includes('excel') || mimeType.includes('sheet'))
-      return <FileSpreadsheet className='w-12 h-12 text-muted-foreground' />;
+      return <FaFileExcel className='w-12 h-12 text-green-600' />;
     if (mimeType.includes('powerpoint') || mimeType.includes('presentation'))
-      return <Presentation className='w-12 h-12 text-muted-foreground' />;
-    return <File className='w-12 h-12 text-muted-foreground' />;
+      return <FaFilePowerpoint className='w-12 h-12 text-orange-500' />;
+    return <BsFileEarmark className='w-12 h-12 text-gray-500' />;
   };
 
   return (
     <div className=''>
       <div className='flex items-center gap-2 mb-3'>
-        <Paperclip className='h-4 w-4 text-muted-foreground' />
+        <FaPaperclip className='h-4 w-4 text-muted-foreground' />
         <h3 className='text-sm font-medium'>Attachments ({attachments.length})</h3>
       </div>
       <div className='flex flex-wrap gap-3'>
