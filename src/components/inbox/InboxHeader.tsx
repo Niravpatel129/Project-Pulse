@@ -25,7 +25,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface InboxHeaderProps {
@@ -44,10 +44,26 @@ export default function InboxHeader({
   status = 'unassigned',
 }: InboxHeaderProps) {
   const [localStatus, setLocalStatus] = useState(status);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedSubject, setEditedSubject] = useState(subject);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocalStatus(status);
   }, [status]);
+
+  useEffect(() => {
+    setEditedSubject(subject);
+  }, [subject]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      // Place cursor at the end of the text
+      const length = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(length, length);
+    }
+  }, [isEditing]);
 
   console.log('status', status);
   const { toast } = useToast();
@@ -355,6 +371,61 @@ export default function InboxHeader({
     },
   });
 
+  const updateSubjectMutation = useMutation({
+    mutationFn: async (newSubject: string) => {
+      const response = await newRequest.post(`/inbox/${threadId}/subject`, {
+        subject: newSubject,
+      });
+      return response.data;
+    },
+    onMutate: async (newSubject) => {
+      await queryClient.cancelQueries({ queryKey: ['email-chain', threadId] });
+      await queryClient.cancelQueries({ queryKey: ['inbox-threads'] });
+
+      const previousEmailChain = queryClient.getQueryData(['email-chain', threadId]);
+      const previousInboxThreads = queryClient.getQueryData(['inbox-threads']);
+
+      queryClient.setQueryData(['email-chain', threadId], (old: any) => {
+        return {
+          ...old,
+          subject: newSubject,
+        };
+      });
+
+      queryClient.setQueryData(['inbox-threads'], (old: any) => {
+        if (!old) return old;
+        return old.map((thread: any) => {
+          return thread.id === threadId ? { ...thread, subject: newSubject } : thread;
+        });
+      });
+
+      return { previousEmailChain, previousInboxThreads };
+    },
+    onError: (err, newSubject, context) => {
+      if (context?.previousEmailChain) {
+        queryClient.setQueryData(['email-chain', threadId], context.previousEmailChain);
+      }
+      if (context?.previousInboxThreads) {
+        queryClient.setQueryData(['inbox-threads'], context.previousInboxThreads);
+      }
+      toast({
+        title: 'Error',
+        description: 'Failed to update subject',
+        variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-chain', threadId] });
+      queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Subject updated',
+        description: 'The subject has been updated successfully',
+      });
+    },
+  });
+
   const handleMarkAsUnread = () => {
     markAsUnreadMutation.mutate();
   };
@@ -436,9 +507,83 @@ export default function InboxHeader({
     updateStatusMutation.mutate(newStatus);
   };
 
+  const handleSubjectClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleSubjectSave = () => {
+    if (editedSubject.trim() === '') {
+      toast({
+        title: 'Error',
+        description: 'Subject cannot be empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (editedSubject !== subject) {
+      updateSubjectMutation.mutate(editedSubject);
+    }
+    setIsEditing(false);
+  };
+
+  const handleSubjectCancel = () => {
+    setEditedSubject(subject);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubjectSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleSubjectCancel();
+    }
+  };
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (isEditing && inputRef.current && !inputRef.current.contains(e.target as Node)) {
+      handleSubjectSave();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditing]);
+
   return (
     <div className='flex justify-between items-center mb-4'>
-      <h2 className='text-xl font-bold text-[#121212] dark:text-white'>{subject}</h2>
+      {isEditing ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubjectSave();
+          }}
+          className='w-full'
+        >
+          <input
+            ref={inputRef}
+            type='text'
+            value={editedSubject}
+            onChange={(e) => {
+              return setEditedSubject(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            className='text-xl font-bold text-[#121212] dark:text-white bg-transparent border-none focus:outline-none px-1 w-full'
+            autoFocus
+          />
+        </form>
+      ) : (
+        <h2
+          className='text-xl font-bold text-[#121212] dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-1'
+          onClick={handleSubjectClick}
+        >
+          {subject}
+        </h2>
+      )}
       <div className='flex items-center gap-1'>
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>

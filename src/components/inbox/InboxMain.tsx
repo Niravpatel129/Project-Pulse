@@ -283,7 +283,8 @@ export default function InboxMain() {
         behavior: 'instant',
       });
     }
-  }, [emailChain]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleThread = (threadId: string) => {
     setExpandedThreads((prev) => {
