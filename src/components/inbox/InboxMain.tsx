@@ -547,11 +547,7 @@ export default function InboxMain() {
   }
 
   if (error) {
-    return (
-      <div className='flex items-center justify-center h-full'>
-        <p className='text-red-500'>Error loading thread: {(error as Error).message}</p>
-      </div>
-    );
+    return <div className='flex items-center justify-center h-full'></div>;
   }
 
   if (!emailChain) {

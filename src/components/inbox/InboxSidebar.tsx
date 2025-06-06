@@ -1,7 +1,7 @@
 import { useEmailChainContext } from '@/contexts/EmailChainContext';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import EmailSkeleton from './EmailSkeleton';
 
@@ -31,10 +31,11 @@ const ThreadItem = ({
 }) => {
   const pathname = usePathname();
   const isSelected = pathname.includes(thread.threadId);
+  const params = useParams();
 
   return (
     <Link
-      href={`/dashboard/inbox/unassigned/${thread.threadId}`}
+      href={`/dashboard/inbox/${params.state}/${thread.threadId}`}
       className='w-full'
       prefetch={true}
     >
