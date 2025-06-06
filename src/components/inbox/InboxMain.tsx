@@ -9,6 +9,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
+import { formatDistanceToNow } from 'date-fns';
 import { ChevronDown, ChevronUp, MoreVertical, Paperclip, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import EmailContent from './EmailContent';
@@ -412,7 +413,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                 </div>
                 <div className='flex items-center gap-2'>
                   <div className='text-sm text-muted-foreground'>
-                    {new Date(email.internalDate).toLocaleString()}
+                    {formatDistanceToNow(new Date(email.internalDate), { addSuffix: true })}
                   </div>
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger
