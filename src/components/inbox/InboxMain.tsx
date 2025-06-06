@@ -10,6 +10,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmailChain } from '@/hooks/use-email-chain';
 import '@/styles/email.css';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -196,7 +198,72 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasMarkedAsReadRef = useRef<boolean>(false);
   const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
+  const queryClient = useQueryClient();
+
+  const markAsReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedThreadId) return;
+      const response = await newRequest.post(`/inbox/${selectedThreadId}/read-status`, {
+        isUnread: false,
+      });
+      return response.data;
+    },
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['email-chain', selectedThreadId] });
+      await queryClient.cancelQueries({ queryKey: ['inbox-threads'] });
+
+      // Snapshot the previous value
+      const previousEmailChain = queryClient.getQueryData(['email-chain', selectedThreadId]);
+      const previousInboxThreads = queryClient.getQueryData(['inbox-threads']);
+
+      // Optimistically update the cache
+      queryClient.setQueryData(['email-chain', selectedThreadId], (old: any) => {
+        return {
+          ...old,
+          isRead: true,
+        };
+      });
+
+      queryClient.setQueryData(['inbox-threads'], (old: any) => {
+        if (!old) return old;
+        return old.map((thread: any) => {
+          return thread.id === selectedThreadId ? { ...thread, isRead: true } : thread;
+        });
+      });
+
+      return { previousEmailChain, previousInboxThreads };
+    },
+    onError: (err, newTodo, context) => {
+      // Rollback on error
+      if (context?.previousEmailChain) {
+        queryClient.setQueryData(['email-chain', selectedThreadId], context.previousEmailChain);
+      }
+      if (context?.previousInboxThreads) {
+        queryClient.setQueryData(['inbox-threads'], context.previousInboxThreads);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ['email-chain', selectedThreadId] });
+      queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
+    },
+  });
+
+  // Reset the ref when selectedThreadId changes
+  useEffect(() => {
+    hasMarkedAsReadRef.current = false;
+  }, [selectedThreadId]);
+
+  // Add effect to mark as read when thread is selected
+  useEffect(() => {
+    if (selectedThreadId && !emailChain?.isRead && !hasMarkedAsReadRef.current) {
+      hasMarkedAsReadRef.current = true;
+      markAsReadMutation.mutate();
+    }
+  }, [selectedThreadId, emailChain?.isRead]);
 
   // Add effect to expand latest email when emailChain loads
   useEffect(() => {
@@ -523,13 +590,13 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
         subject={emailChain.subject}
         threadId={emailChain.threadId}
         isUnread={!emailChain.isRead}
-        hasAttachments={emailChain.emails.some((email) => {
+        hasAttachments={emailChain?.emails?.some((email) => {
           return email.attachments?.length > 0;
         })}
         status={emailChain.stage}
       />
       <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
-        {emailChain.emails.map((email) => {
+        {emailChain?.emails?.map((email) => {
           return renderThread(email);
         })}
         {isReplying && replyToEmail && (
