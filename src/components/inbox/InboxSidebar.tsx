@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Filter, Search } from 'lucide-react';
@@ -148,6 +149,13 @@ export default function InboxSidebar({
     if (filter === 'unread') return matchesSearch && thread.isUnread;
     if (filter === 'read') return matchesSearch && !thread.isUnread;
     return matchesSearch;
+  });
+
+  // Add keyboard shortcuts after all variables are declared
+  useKeyboardShortcuts({
+    threads: filteredThreads,
+    selectedThreadId,
+    onThreadSelect: handleThreadSelect,
   });
 
   return (
