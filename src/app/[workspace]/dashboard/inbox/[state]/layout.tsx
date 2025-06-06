@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
 import { EmailChainProvider } from '@/contexts/EmailChainContext';
 import { useInbox } from '@/hooks/use-inbox';
+import { useInboxHeaders } from '@/hooks/use-inbox-headers';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
@@ -20,6 +21,9 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
     'Unassigned';
 
   const { data: threads, error, isLoading } = useInbox();
+  const { data: headers, error: headersError, isLoading: headersLoading } = useInboxHeaders();
+
+  console.log('🚀 headers:', headers);
 
   const allThreads =
     threads?.pages.flatMap((page) => {
