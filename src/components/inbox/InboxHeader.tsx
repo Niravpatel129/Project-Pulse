@@ -379,12 +379,15 @@ export default function InboxHeader({
       return response.data;
     },
     onMutate: async (newSubject) => {
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['email-chain', threadId] });
       await queryClient.cancelQueries({ queryKey: ['inbox-threads'] });
 
+      // Snapshot the previous value
       const previousEmailChain = queryClient.getQueryData(['email-chain', threadId]);
       const previousInboxThreads = queryClient.getQueryData(['inbox-threads']);
 
+      // Optimistically update the cache
       queryClient.setQueryData(['email-chain', threadId], (old: any) => {
         return {
           ...old,
@@ -399,15 +402,19 @@ export default function InboxHeader({
         });
       });
 
+      // Return context with the previous values
       return { previousEmailChain, previousInboxThreads };
     },
     onError: (err, newSubject, context) => {
+      // Rollback on error
       if (context?.previousEmailChain) {
         queryClient.setQueryData(['email-chain', threadId], context.previousEmailChain);
       }
       if (context?.previousInboxThreads) {
         queryClient.setQueryData(['inbox-threads'], context.previousInboxThreads);
       }
+      // Reset the edited subject to the original value
+      setEditedSubject(subject);
       toast({
         title: 'Error',
         description: 'Failed to update subject',
@@ -415,6 +422,7 @@ export default function InboxHeader({
       });
     },
     onSettled: () => {
+      // Refetch after error or success to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ['email-chain', threadId] });
       queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
     },
@@ -521,9 +529,13 @@ export default function InboxHeader({
       return;
     }
     if (editedSubject !== subject) {
+      // Update the local state first
+      setIsEditing(false);
+      // Then trigger the mutation
       updateSubjectMutation.mutate(editedSubject);
+    } else {
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
 
   const handleSubjectCancel = () => {
@@ -581,7 +593,7 @@ export default function InboxHeader({
           className='text-xl font-bold text-[#121212] dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-1'
           onClick={handleSubjectClick}
         >
-          {subject}
+          {editedSubject}
         </h2>
       )}
       <div className='flex items-center gap-1'>
