@@ -32,11 +32,6 @@ const ThreadItem = ({
   const pathname = usePathname();
   const isSelected = pathname.includes(thread.threadId);
 
-  const getEmailName = (email: string) => {
-    const name = email.split('@')[0];
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-
   return (
     <Link
       href={`/dashboard/inbox/unassigned/${thread.threadId}`}
@@ -52,8 +47,11 @@ const ThreadItem = ({
       >
         <div className='flex-1 min-w-0'>
           <div className='flex items-center justify-between mb-1'>
-            <div className='font-medium text-sm text-[#121212] dark:text-white truncate'>
-              {thread.participants[0]}
+            <div className='flex items-center gap-2'>
+              {thread.isUnread && <div className='w-2 h-2 rounded-full bg-blue-500' />}
+              <div className='font-medium text-sm text-[#121212] dark:text-white truncate'>
+                {thread.participants[0]}
+              </div>
             </div>
             <div className='text-xs text-muted-foreground'>
               {thread.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -72,6 +70,7 @@ export default function InboxSidebar({ threads = [], loading = false }: InboxSid
   const [localThreads, setLocalThreads] = useState(threads);
   const previousThreadsRef = useRef<EmailThread[]>([]);
   const { prefetchEmailChain } = useEmailChainContext();
+  console.log('🚀 threads:', threads);
 
   useEffect(() => {
     if (localThreads.length === 0) {
