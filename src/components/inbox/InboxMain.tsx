@@ -22,23 +22,161 @@ interface InboxMainProps {
 
 interface Email {
   _id: string;
+  gmailMessageId: string;
+  threadId: string;
+  userId: string;
+  workspaceId: string;
   from: {
+    id: number;
+    avatar_type: string;
+    class: string;
+    source: string;
+    url: string;
+    namespace: string;
     name: string;
+    card_name: string;
+    handle: string;
     email: string;
+    display_name: string;
+    description: string | null;
     avatar: string;
     initials: string;
+    role: string;
+    is_spammer: boolean;
+    recipient_url: string;
   };
   to: Array<{
+    id: number;
+    avatar_type: string;
+    class: string;
+    source: string;
+    url: string;
+    namespace: string;
     name: string;
+    card_name: string;
+    handle: string;
     email: string;
+    display_name: string;
+    description: string | null;
+    avatar: string;
+    initials: string;
+    role: string;
+    is_spammer: boolean;
+    recipient_url: string;
+  }>;
+  cc: Array<{
+    id: number;
+    avatar_type: string;
+    class: string;
+    source: string;
+    url: string;
+    namespace: string;
+    name: string;
+    card_name: string;
+    handle: string;
+    email: string;
+    display_name: string;
+    description: string | null;
+    avatar: string;
+    initials: string;
+    role: string;
+    is_spammer: boolean;
+    recipient_url: string;
+  }>;
+  bcc: Array<{
+    id: number;
+    avatar_type: string;
+    class: string;
+    source: string;
+    url: string;
+    namespace: string;
+    name: string;
+    card_name: string;
+    handle: string;
+    email: string;
+    display_name: string;
+    description: string | null;
+    avatar: string;
+    initials: string;
+    role: string;
+    is_spammer: boolean;
+    recipient_url: string;
   }>;
   subject: string;
   body: {
-    text: string;
-    html: string;
+    mimeType: string;
+    parts: {
+      mimeType: string;
+      filename: string;
+      headers: Array<{
+        name: string;
+        value: string;
+      }>;
+      parts?: Array<{
+        mimeType: string;
+        filename: string;
+        headers: Array<{
+          name: string;
+          value: string;
+        }>;
+        content: string;
+      }>;
+    }[];
+    structure: {
+      mimeType: string;
+      contentId: string | null;
+      filename: string;
+      headers: Array<{
+        name: string;
+        value: string;
+      }>;
+      parts: Array<{
+        mimeType: string;
+        contentId: string | null;
+        filename: string;
+        headers: Array<{
+          name: string;
+          value: string;
+        }>;
+        content: string;
+      }>;
+    };
   };
   internalDate: string;
-  isRead: boolean;
+  attachments: any[];
+  inlineImages: any[];
+  historyId: string;
+  direction: string;
+  status: string;
+  sentAt: string;
+  isSpam: boolean;
+  stage: string;
+  threadPart: number;
+  messageReferences: Array<{
+    messageId: string;
+    inReplyTo: string;
+    references: string[];
+    type?: string;
+    position?: number;
+    _id?: string;
+    id?: string;
+  }>;
+  labels: Array<{
+    name: string;
+    color: string;
+    _id: string;
+    id: string;
+  }>;
+  headers: Array<{
+    name: string;
+    value: string;
+    _id: string;
+    id: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  id: string;
 }
 
 export default function InboxMain({ selectedThreadId }: InboxMainProps) {
@@ -103,6 +241,21 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     });
   };
 
+  const getEmailContent = (email: Email) => {
+    // Find the text/plain or text/html part in the email body
+    const textPart = email.body.structure.parts.find((part) => {
+      return part.mimeType === 'text/plain';
+    });
+    const htmlPart = email.body.structure.parts.find((part) => {
+      return part.mimeType === 'text/html';
+    });
+
+    return {
+      text: textPart?.content || '',
+      html: htmlPart?.content || '',
+    };
+  };
+
   const renderThread = (email: Email) => {
     const isExpanded = expandedThreads.has(email._id);
     const isBodyExpanded = expandedBodies.has(email._id);
@@ -112,8 +265,8 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       })
       .join(', ');
 
-    // Check if email contains quoted content using the new function
-    const containsQuotedContent = hasQuotedContent(email.body.html);
+    const emailContent = getEmailContent(email);
+    const containsQuotedContent = hasQuotedContent(emailContent.html);
 
     return (
       <div
@@ -164,9 +317,9 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                       display: !isExpanded ? 'block' : 'none',
                     }}
                   >
-                    {email.body.text.length > 100
-                      ? `${email.body.text.substring(0, 100)}...`
-                      : email.body.text}
+                    {emailContent.text.length > 100
+                      ? `${emailContent.text.substring(0, 100)}...`
+                      : emailContent.text}
                   </div>
                 </div>
                 <div className='flex items-center gap-2'>
@@ -239,7 +392,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
             <div className='border-t border-slate-100 dark:border-[#232428] h-[1px]' />
             <div className='p-4 min-h-[100px]'>
               <EmailContent
-                html={email.body.html}
+                html={emailContent.html}
                 isBodyExpanded={isBodyExpanded}
                 containsQuotedContent={containsQuotedContent}
               />

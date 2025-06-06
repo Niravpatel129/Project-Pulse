@@ -10,23 +10,95 @@ interface Participant {
 }
 
 interface EmailBody {
-  text: string;
-  html: string;
+  mimeType: string;
+  parts: {
+    mimeType: string;
+    filename: string;
+    headers: Array<{
+      name: string;
+      value: string;
+    }>;
+    parts?: Array<{
+      mimeType: string;
+      filename: string;
+      headers: Array<{
+        name: string;
+        value: string;
+      }>;
+      content: string;
+    }>;
+  }[];
+  structure: {
+    mimeType: string;
+    contentId: string | null;
+    filename: string;
+    headers: Array<{
+      name: string;
+      value: string;
+    }>;
+    parts: Array<{
+      mimeType: string;
+      contentId: string | null;
+      filename: string;
+      headers: Array<{
+        name: string;
+        value: string;
+      }>;
+      content: string;
+    }>;
+  };
 }
 
 interface EmailContact {
   id: number;
+  avatar_type: string;
+  class: string;
+  source: string;
+  url: string;
+  namespace: string;
   name: string;
+  card_name: string;
+  handle: string;
   email: string;
+  display_name: string;
+  description: string | null;
   avatar: string;
   initials: string;
   role: string;
+  is_spammer: boolean;
+  recipient_url: string;
+}
+
+interface EmailLabel {
+  name: string;
+  color: string;
+  _id: string;
+  id: string;
+}
+
+interface EmailHeader {
+  name: string;
+  value: string;
+  _id: string;
+  id: string;
+}
+
+interface MessageReference {
+  messageId: string;
+  inReplyTo: string;
+  references: string[];
+  type?: string;
+  position?: number;
+  _id?: string;
+  id?: string;
 }
 
 interface Email {
   _id: string;
   gmailMessageId: string;
   threadId: string;
+  userId: string;
+  workspaceId: string;
   from: EmailContact;
   to: EmailContact[];
   cc: EmailContact[];
@@ -36,12 +108,21 @@ interface Email {
   snippet: string;
   internalDate: string;
   attachments: any[];
-  isRead: boolean;
+  inlineImages: any[];
   historyId: string;
-  messageSource: string;
-  syncedAt: string;
+  direction: string;
+  status: string;
+  sentAt: string;
+  isSpam: boolean;
+  stage: string;
+  threadPart: number;
+  messageReferences: MessageReference[];
+  labels: EmailLabel[];
+  headers: EmailHeader[];
   createdAt: string;
   updatedAt: string;
+  __v: number;
+  id: string;
 }
 
 interface EmailChain {
@@ -49,10 +130,17 @@ interface EmailChain {
   threadId: string;
   workspaceId: string;
   title: string;
+  stage: string;
   subject: string;
+  cleanSubject: string;
   participants: Participant[];
   emails: Email[];
-  stage: string;
+  messageReferences: MessageReference[];
+  participantHash: string;
+  firstMessageDate: string;
+  lastMessageDate: string;
+  messageCount: number;
+  status: string;
   priority: string;
   lastActivity: string;
   isRead: boolean;
@@ -64,12 +152,13 @@ interface EmailChain {
   notes: any[];
   createdAt: string;
   updatedAt: string;
-  messageCount: number;
+  __v: number;
   latestMessage: {
     content: string;
     sender: string;
     timestamp: string;
     type: string;
+    isRead: boolean;
   };
 }
 
