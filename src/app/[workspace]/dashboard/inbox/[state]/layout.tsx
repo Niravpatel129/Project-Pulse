@@ -18,7 +18,7 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
 
-  const { data: threads, error } = useInbox();
+  const { data: threads, error, isLoading } = useInbox();
 
   const allThreads =
     threads?.pages.flatMap((page) => {
@@ -85,6 +85,7 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
             <div className='w-[320px] h-full flex-shrink-0'>
               <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
                 <InboxSidebar
+                  loading={isLoading}
                   threads={allThreads.map((thread) => {
                     return {
                       threadId: thread.threadId,

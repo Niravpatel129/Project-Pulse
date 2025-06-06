@@ -12,6 +12,7 @@ import { Filter, Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import EmailSkeleton from './EmailSkeleton';
 
 interface EmailThread {
   threadId: string;
@@ -25,6 +26,7 @@ interface EmailThread {
 
 interface InboxSidebarProps {
   threads?: EmailThread[];
+  loading?: boolean;
 }
 
 const ThreadItem = ({ thread, onClick }: { thread: EmailThread; onClick: () => void }) => {
@@ -90,7 +92,7 @@ const ThreadItem = ({ thread, onClick }: { thread: EmailThread; onClick: () => v
   );
 };
 
-export default function InboxSidebar({ threads = [] }: InboxSidebarProps) {
+export default function InboxSidebar({ threads = [], loading = false }: InboxSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [localThreads, setLocalThreads] = useState(threads);
@@ -197,7 +199,13 @@ export default function InboxSidebar({ threads = [] }: InboxSidebarProps) {
 
       {/* Thread List */}
       <div className='flex-1 w-full overflow-y-auto overflow-x-hidden min-w-0 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-[#232428] scrollbar-track-transparent hover:scrollbar-thumb-slate-300 dark:hover:scrollbar-thumb-[#2a2a2f]'>
-        {filteredThreads.length === 0 ? (
+        {loading ? (
+          <div className='divide-y divide-slate-100 dark:divide-[#232428] w-full p-4'>
+            {[...Array(6)].map((_, i) => {
+              return <EmailSkeleton key={i} />;
+            })}
+          </div>
+        ) : filteredThreads.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
