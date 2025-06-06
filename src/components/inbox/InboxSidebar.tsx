@@ -54,13 +54,12 @@ const ThreadItem = ({ thread, onClick }: { thread: EmailThread; onClick: () => v
       >
         <div className='flex-1 min-w-0'>
           <div className='flex items-center gap-2 mb-1'>
-            <AnimatePresence>
+            <AnimatePresence mode='wait'>
               {thread.isUnread && (
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                  initial={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.15 }}
                   className='w-2 h-2 rounded-full bg-[#3b82f6] flex-shrink-0'
                 />
               )}
@@ -218,15 +217,7 @@ export default function InboxSidebar({ threads = [], loading = false }: InboxSid
           <div className='divide-y divide-slate-100 dark:divide-[#232428] w-full'>
             <AnimatePresence mode='popLayout'>
               {filteredThreads.map((thread) => {
-                return (
-                  <ThreadItem
-                    key={thread.threadId}
-                    thread={thread}
-                    onClick={() => {
-                      return handleThreadSelect(thread.threadId);
-                    }}
-                  />
-                );
+                return <ThreadItem key={thread.threadId} thread={thread} onClick={() => {}} />;
               })}
             </AnimatePresence>
           </div>
