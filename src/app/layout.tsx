@@ -3,27 +3,11 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
-import { Geist, Geist_Mono, IBM_Plex_Sans, Inter } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
 import Script from 'next/script';
 import ClientLayout from './ClientLayout';
 import './globals.css';
-
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 const inter = Inter({ subsets: ['latin'] });
 
