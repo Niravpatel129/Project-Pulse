@@ -242,18 +242,42 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   };
 
   const getEmailContent = (email: Email) => {
-    // Find the text/plain or text/html part in the email body
-    const textPart = email.body.structure.parts.find((part) => {
-      return part.mimeType === 'text/plain';
-    });
-    const htmlPart = email.body.structure.parts.find((part) => {
-      return part.mimeType === 'text/html';
-    });
+    const findContentParts = (parts: any[]): { text: string; html: string } => {
+      let text = '';
+      let html = '';
 
-    return {
-      text: textPart?.content || '',
-      html: htmlPart?.content || '',
+      for (const part of parts) {
+        if (part.mimeType === 'text/plain') {
+          text += part.content || '';
+        } else if (part.mimeType === 'text/html') {
+          html += part.content || '';
+        } else if (part.parts) {
+          const nestedContent = findContentParts(part.parts);
+          text += nestedContent.text;
+          html += nestedContent.html;
+        }
+      }
+
+      return { text, html };
     };
+
+    // First try to get content from the structure
+    if (email.body.structure?.parts) {
+      const content = findContentParts(email.body.structure.parts);
+      if (content.text || content.html) {
+        return content;
+      }
+    }
+
+    // Fallback to the parts array if structure doesn't have content
+    if (email.body.parts) {
+      const content = findContentParts(email.body.parts);
+      if (content.text || content.html) {
+        return content;
+      }
+    }
+
+    return { text: '', html: '' };
   };
 
   const renderThread = (email: Email) => {
