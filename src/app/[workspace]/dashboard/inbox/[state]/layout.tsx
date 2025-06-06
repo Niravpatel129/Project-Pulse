@@ -51,19 +51,21 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
               <div className='flex gap-6 overflow-x-auto'>
                 {TABS.map((tab) => {
                   const path = tab.toLowerCase();
+                  const isUnread = headers?.[path]?.isRead === false;
                   return (
                     <Link
                       key={tab}
                       href={`/dashboard/inbox/${path}`}
                       prefetch={true}
                       scroll={false}
-                      className={`text-sm transition-all duration-300 pb-1 border-b-2 whitespace-nowrap ${
+                      className={`text-sm transition-all duration-300 pb-1 border-b-2 whitespace-nowrap flex items-center gap-2 ${
                         activeTab === tab
                           ? 'font-semibold text-black dark:text-white border-black dark:border-white'
                           : 'font-normal text-gray-400 border-transparent hover:text-black dark:hover:text-white'
                       }`}
                     >
                       {tab}
+                      {isUnread && <div className='w-2 h-2 rounded-full bg-blue-500' />}
                     </Link>
                   );
                 })}
