@@ -528,25 +528,6 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     );
   };
 
-  // Get all attachments from all emails
-  const getAllAttachments = () => {
-    if (!emailChain?.emails) return [];
-
-    // Get all attachments and filter out duplicates based on attachmentId
-    const seenAttachments = new Set<string>();
-    return emailChain.emails
-      .flatMap((email) => {
-        return email.attachments || [];
-      })
-      .filter((attachment) => {
-        if (seenAttachments.has(attachment.attachmentId)) {
-          return false;
-        }
-        seenAttachments.add(attachment.attachmentId);
-        return true;
-      });
-  };
-
   if (!selectedThreadId) {
     return (
       <div className='flex items-center justify-center h-full'>
