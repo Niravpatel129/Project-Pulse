@@ -192,35 +192,35 @@ interface Attachment {
   headers: any[];
 }
 
-export default function InboxMain({ selectedThreadId }: InboxMainProps) {
+export default function InboxMain() {
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const [expandedBodies, setExpandedBodies] = useState<Set<string>>(new Set());
   const [isReplying, setIsReplying] = useState(false);
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasMarkedAsReadRef = useRef<boolean>(false);
-  const { data: emailChain, isLoading, error } = useEmailChain(selectedThreadId);
+  const { data: emailChain, isLoading, error } = useEmailChain();
   const queryClient = useQueryClient();
 
   const markAsReadMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedThreadId) return;
-      const response = await newRequest.post(`/inbox/${selectedThreadId}/read-status`, {
+      if (!emailChain?.threadId) return;
+      const response = await newRequest.post(`/inbox/${emailChain.threadId}/read-status`, {
         isUnread: false,
       });
       return response.data;
     },
     onMutate: async () => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['email-chain', selectedThreadId] });
+      await queryClient.cancelQueries({ queryKey: ['email-chain', emailChain?.threadId] });
       await queryClient.cancelQueries({ queryKey: ['inbox-threads'] });
 
       // Snapshot the previous value
-      const previousEmailChain = queryClient.getQueryData(['email-chain', selectedThreadId]);
+      const previousEmailChain = queryClient.getQueryData(['email-chain', emailChain?.threadId]);
       const previousInboxThreads = queryClient.getQueryData(['inbox-threads']);
 
       // Optimistically update the cache
-      queryClient.setQueryData(['email-chain', selectedThreadId], (old: any) => {
+      queryClient.setQueryData(['email-chain', emailChain?.threadId], (old: any) => {
         return {
           ...old,
           isRead: true,
@@ -230,7 +230,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
       queryClient.setQueryData(['inbox-threads'], (old: any) => {
         if (!old) return old;
         return old.map((thread: any) => {
-          return thread.id === selectedThreadId ? { ...thread, isRead: true } : thread;
+          return thread.id === emailChain?.threadId ? { ...thread, isRead: true } : thread;
         });
       });
 
@@ -239,7 +239,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     onError: (err, newTodo, context) => {
       // Rollback on error
       if (context?.previousEmailChain) {
-        queryClient.setQueryData(['email-chain', selectedThreadId], context.previousEmailChain);
+        queryClient.setQueryData(['email-chain', emailChain?.threadId], context.previousEmailChain);
       }
       if (context?.previousInboxThreads) {
         queryClient.setQueryData(['inbox-threads'], context.previousInboxThreads);
@@ -247,7 +247,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     },
     onSettled: () => {
       // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: ['email-chain', selectedThreadId] });
+      queryClient.invalidateQueries({ queryKey: ['email-chain', emailChain?.threadId] });
       queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
     },
   });
@@ -255,15 +255,15 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
   // Reset the ref when selectedThreadId changes
   useEffect(() => {
     hasMarkedAsReadRef.current = false;
-  }, [selectedThreadId]);
+  }, [emailChain?.threadId]);
 
   // Add effect to mark as read when thread is selected
   useEffect(() => {
-    if (selectedThreadId && !emailChain?.isRead && !hasMarkedAsReadRef.current) {
+    if (emailChain?.threadId && !emailChain?.isRead && !hasMarkedAsReadRef.current) {
       hasMarkedAsReadRef.current = true;
       markAsReadMutation.mutate();
     }
-  }, [selectedThreadId, emailChain?.isRead]);
+  }, [emailChain?.threadId, emailChain?.isRead]);
 
   // Add effect to expand latest email when emailChain loads
   useEffect(() => {
@@ -528,7 +528,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
     );
   };
 
-  if (!selectedThreadId) {
+  if (!emailChain?.threadId) {
     return (
       <div className='flex items-center justify-center h-full'>
         <p className='text-muted-foreground'>Select a thread to view its contents</p>

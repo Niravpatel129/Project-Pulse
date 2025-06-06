@@ -11,6 +11,7 @@ import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Filter, Search } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 interface EmailThread {
@@ -29,15 +30,10 @@ interface InboxSidebarProps {
   onThreadSelect?: (threadId: string) => void;
 }
 
-const ThreadItem = ({
-  thread,
-  isSelected,
-  onClick,
-}: {
-  thread: EmailThread;
-  isSelected: boolean;
-  onClick: () => void;
-}) => {
+const ThreadItem = ({ thread, onClick }: { thread: EmailThread; onClick: () => void }) => {
+  const pathname = usePathname();
+  const isSelected = pathname.includes(thread.threadId);
+
   const getEmailName = (email: string) => {
     const name = email.split('@')[0];
     return name.charAt(0).toUpperCase() + name.slice(1);
@@ -233,7 +229,6 @@ export default function InboxSidebar({
                   <ThreadItem
                     key={thread.threadId}
                     thread={thread}
-                    isSelected={selectedThreadId === thread.threadId}
                     onClick={() => {
                       return handleThreadSelect(thread.threadId);
                     }}

@@ -1,5 +1,6 @@
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 
 interface Participant {
   email: string;
@@ -162,20 +163,22 @@ interface EmailChain {
   };
 }
 
-export function useEmailChain(threadId?: string) {
+export function useEmailChain() {
   const queryClient = useQueryClient();
+  const params = useParams();
+  const selectedEmailId = (params.selectedEmailId as string) || '0';
 
   return useQuery<EmailChain>({
-    queryKey: ['email-chain', threadId],
+    queryKey: ['email-chain', selectedEmailId],
     queryFn: async () => {
-      if (!threadId) {
+      if (!selectedEmailId) {
         throw new Error('Thread ID is required');
       }
-      const response = await newRequest.get(`/inbox/${threadId}`);
+      const response = await newRequest.get(`/inbox/${selectedEmailId}`);
 
       queryClient.invalidateQueries({ queryKey: ['inbox-threads'] });
       return response.data;
     },
-    enabled: !!threadId,
+    enabled: !!selectedEmailId,
   });
 }
