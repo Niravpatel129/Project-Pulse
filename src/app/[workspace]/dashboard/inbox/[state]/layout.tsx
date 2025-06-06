@@ -102,7 +102,7 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </div>
             <div className='flex-1 h-full min-w-0'>
-              <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-scroll'>
+              <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-scroll min-h-[calc(100vh-100px)]'>
                 {children}
               </div>
             </div>
