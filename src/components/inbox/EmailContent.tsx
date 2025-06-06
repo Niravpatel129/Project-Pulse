@@ -53,7 +53,6 @@ const EmailContent = ({ html, isBodyExpanded, containsQuotedContent }: EmailCont
           border-collapse: collapse !important;
         }
         .email-content td {
-          padding: 0;
           vertical-align: top;
         }
         .hide-quotes blockquote,
@@ -194,7 +193,6 @@ const EmailContent = ({ html, isBodyExpanded, containsQuotedContent }: EmailCont
           border-collapse: collapse !important;
         }
         .email-content td {
-          padding: 0;
           vertical-align: top;
         }
         .hide-quotes blockquote,
