@@ -57,7 +57,7 @@ const ThreadItem = ({
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 mb-1'>
           <AnimatePresence>
-            {thread.isUnread && !isSelected && (
+            {thread.isUnread && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
