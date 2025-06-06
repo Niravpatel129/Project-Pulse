@@ -5,9 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from '@/contexts';
 import { LoadingProvider } from '@/contexts/LoadingContext';
-import { PageContext } from '@/hooks/useChatWidget';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { usePathname } from 'next/navigation';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -18,12 +16,6 @@ export default function ClientLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const pageContext: PageContext = {
-    url: pathname,
-  };
-
-  const showSidebar = pathname?.includes('/dashboard');
   return (
     <>
       <QueryClientProvider client={queryClient}>
