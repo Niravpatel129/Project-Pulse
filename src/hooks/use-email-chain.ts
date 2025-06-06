@@ -184,9 +184,11 @@ export function useEmailChain() {
     placeholderData: (previousData) => {
       return previousData;
     },
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1, // Only retry once on failure
   });
 }
