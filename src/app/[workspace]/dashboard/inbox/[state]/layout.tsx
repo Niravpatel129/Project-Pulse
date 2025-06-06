@@ -1,6 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useInbox } from '@/hooks/use-inbox';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
@@ -15,9 +16,16 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const activeTab =
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
+  const { data: threads, error } = useInbox();
+
+  const allThreads =
+    threads?.pages.flatMap((page) => {
+      return page.data;
+    }) || [];
 
   return (
     <div className='w-full'>
+      {/* Topbar */}
       <div className='flex items-center justify-between px-4 pb-2 pt-3 border-b border-[#E4E4E7] dark:border-[#232428] relative z-[1] bg-background'>
         <div className='flex items-center justify-between w-full'>
           <div className='flex items-center gap-2 h-full w-full'>
@@ -68,7 +76,18 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
 
-      {children}
+      <div className='flex flex-col h-screen w-full overflow-hidden'>
+        {/* Topbar */}
+
+        {/* Main Content */}
+        <div className='flex flex-1 overflow-hidden p-4 gap-4'>
+          <div className='flex-1 h-full min-w-0'>
+            <div className='h-full rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm bg-white dark:bg-neutral-900 overflow-hidden'>
+              {children}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

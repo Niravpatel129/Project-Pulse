@@ -6,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn, formatShortRelativeTime } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Filter, Search } from 'lucide-react';
@@ -26,8 +25,6 @@ interface EmailThread {
 
 interface InboxSidebarProps {
   threads?: EmailThread[];
-  selectedThreadId?: string;
-  onThreadSelect?: (threadId: string) => void;
 }
 
 const ThreadItem = ({ thread, onClick }: { thread: EmailThread; onClick: () => void }) => {
@@ -93,11 +90,7 @@ const ThreadItem = ({ thread, onClick }: { thread: EmailThread; onClick: () => v
   );
 };
 
-export default function InboxSidebar({
-  threads = [],
-  selectedThreadId,
-  onThreadSelect,
-}: InboxSidebarProps) {
+export default function InboxSidebar({ threads = [] }: InboxSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [localThreads, setLocalThreads] = useState(threads);
@@ -128,7 +121,6 @@ export default function InboxSidebar({
         return thread.threadId === threadId ? { ...thread, isUnread: false } : thread;
       });
     });
-    onThreadSelect?.(threadId);
   };
 
   const filteredThreads = localThreads.filter((thread) => {
@@ -144,13 +136,6 @@ export default function InboxSidebar({
     if (filter === 'unread') return matchesSearch && thread.isUnread;
     if (filter === 'read') return matchesSearch && !thread.isUnread;
     return matchesSearch;
-  });
-
-  // Add keyboard shortcuts after all variables are declared
-  useKeyboardShortcuts({
-    threads: filteredThreads,
-    selectedThreadId,
-    onThreadSelect: handleThreadSelect,
   });
 
   return (
