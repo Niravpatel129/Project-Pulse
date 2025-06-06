@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEmailChain } from '@/hooks/use-email-chain';
+import { useEmailChainContext } from '@/contexts/EmailChainContext';
 import '@/styles/email.css';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -199,7 +199,7 @@ export default function InboxMain() {
   const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasMarkedAsReadRef = useRef<boolean>(false);
-  const { data: emailChain, isLoading, error } = useEmailChain();
+  const { emailChain, isLoading, error } = useEmailChainContext();
   // Only log when we have data
   useEffect(() => {
     if (emailChain) {
