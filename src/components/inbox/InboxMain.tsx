@@ -413,7 +413,7 @@ export default function InboxMain({ selectedThreadId }: InboxMainProps) {
                 </div>
                 <div className='flex items-center gap-2'>
                   <div className='text-sm text-muted-foreground'>
-                    {formatDistanceToNow(new Date(email.internalDate), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(email.internalDate), { addSuffix: false })}
                   </div>
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger
