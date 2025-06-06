@@ -1,17 +1,23 @@
 import { Metadata } from 'next';
 
-export async function generateMetadata({ params }): Promise<Metadata> {
+type Props = {
+  params: Promise<{ workspace: string; state: string; selectedEmailId: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { workspace } = await params;
+
   return {
-    title: `${params.workspace} - Inbox`,
+    title: `${workspace} - Inbox`,
     description: 'Manage your messages and communications in one place',
     openGraph: {
-      title: `${params.workspace} - Inbox`,
+      title: `${workspace} - Inbox`,
       description: 'Manage your messages and communications in one place',
       type: 'website',
     },
     twitter: {
       card: 'summary',
-      title: `${params.workspace} - Inbox`,
+      title: `${workspace} - Inbox`,
       description: 'Manage your messages and communications in one place',
     },
   };
