@@ -200,6 +200,12 @@ export default function InboxMain() {
   const containerRef = useRef<HTMLDivElement>(null);
   const hasMarkedAsReadRef = useRef<boolean>(false);
   const { data: emailChain, isLoading, error } = useEmailChain();
+  // Only log when we have data
+  useEffect(() => {
+    if (emailChain) {
+      console.log('🚀 emailChain:', emailChain);
+    }
+  }, [emailChain]);
   const queryClient = useQueryClient();
 
   const markAsReadMutation = useMutation({
@@ -527,14 +533,6 @@ export default function InboxMain() {
       </div>
     );
   };
-
-  if (!emailChain?.threadId) {
-    return (
-      <div className='flex items-center justify-center h-full'>
-        <p className='text-muted-foreground'>Select a thread to view its contents</p>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (

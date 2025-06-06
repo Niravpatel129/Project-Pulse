@@ -167,6 +167,7 @@ export function useEmailChain() {
   const queryClient = useQueryClient();
   const params = useParams();
   const selectedEmailId = (params.selectedEmailId as string) || '0';
+  console.log('🚀 selectedEmailId:', selectedEmailId);
 
   return useQuery<EmailChain>({
     queryKey: ['email-chain', selectedEmailId],
@@ -180,5 +181,12 @@ export function useEmailChain() {
       return response.data;
     },
     enabled: !!selectedEmailId,
+    placeholderData: (previousData) => {
+      return previousData;
+    },
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
