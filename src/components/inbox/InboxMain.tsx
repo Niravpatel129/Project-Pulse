@@ -200,12 +200,7 @@ export default function InboxMain() {
   const containerRef = useRef<HTMLDivElement>(null);
   const hasMarkedAsReadRef = useRef<boolean>(false);
   const { emailChain, isLoading, error } = useEmailChainContext();
-  // Only log when we have data
-  useEffect(() => {
-    if (emailChain) {
-      console.log('🚀 emailChain:', emailChain);
-    }
-  }, [emailChain]);
+
   const queryClient = useQueryClient();
 
   const markAsReadMutation = useMutation({
