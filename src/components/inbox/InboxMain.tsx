@@ -530,7 +530,7 @@ export default function InboxMain() {
 
   if (isLoading) {
     return (
-      <div className='p-4 h-full overflow-hidden flex flex-col'>
+      <div className='p-4 h-full overflow-hidden flex flex-col scrollbar-hide'>
         <div className='flex justify-between items-center mb-6'>
           <Skeleton className='h-8 w-64' />
         </div>
@@ -554,7 +554,7 @@ export default function InboxMain() {
   }
 
   return (
-    <div className='p-4 h-full overflow-hidden flex flex-col'>
+    <div className='p-4 h-full overflow-hidden flex flex-col scrollbar-hide'>
       <InboxHeader
         subject={emailChain.subject}
         threadId={emailChain.threadId}
@@ -564,7 +564,7 @@ export default function InboxMain() {
         })}
         status={emailChain.stage}
       />
-      <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1'>
+      <div ref={containerRef} className='flex flex-col gap-0 overflow-y-auto flex-1 scrollbar-hide'>
         {emailChain?.emails?.map((email) => {
           return renderThread(email);
         })}
