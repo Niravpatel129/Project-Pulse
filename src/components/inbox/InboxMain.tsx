@@ -591,6 +591,10 @@ export default function InboxMain() {
               email={replyToEmail}
               isReply={true}
               inReplyToEmailId={replyToEmail._id}
+              onSend={() => {
+                setIsReplying(false);
+                setReplyToEmail(null);
+              }}
             />
           </div>
         )}

@@ -86,6 +86,7 @@ interface InboxReplyProps {
     inReplyToEmailId?: string;
   };
   isReply?: boolean;
+  onSend?: () => void;
 }
 
 export default function InboxReply({
@@ -94,6 +95,7 @@ export default function InboxReply({
   height = '200px',
   email,
   isReply = false,
+  onSend,
 }: InboxReplyProps) {
   // Email fields state
   const [to, setTo] = useState(isReply ? email?.from.email || '' : '');
@@ -287,6 +289,7 @@ export default function InboxReply({
       });
 
       toast.success('Email sent successfully');
+      onSend?.();
     } catch (error) {
       toast.error('Failed to send email');
       console.error('Error sending email:', error);
