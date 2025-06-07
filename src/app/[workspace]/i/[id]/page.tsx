@@ -210,6 +210,11 @@ const InvoicePage = () => {
         paymentType === 'deposit' && invoice.settings?.deposit?.enabled
           ? (invoice.totals.total * invoice.settings?.deposit?.percentage) / 100
           : invoice.totals.total;
+
+      if (invoice.status === 'paid') {
+        return;
+      }
+
       handleSelectPayment(amount, paymentType);
     }
   }, [paymentType, invoice, handleSelectPayment]);
