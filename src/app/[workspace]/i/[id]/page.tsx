@@ -181,8 +181,8 @@ const InvoicePage = () => {
           salesTax: invoice.settings.salesTax,
           vat: invoice.settings.vat,
           deposit: {
-            enabled: invoice.settings.deposit.enabled,
-            percentage: invoice.settings.deposit.percentage,
+            enabled: invoice.settings.deposit?.enabled,
+            percentage: invoice.settings.deposit?.percentage,
           },
           decimals: invoice.settings.decimals === 'yes',
         },
@@ -207,8 +207,8 @@ const InvoicePage = () => {
   useEffect(() => {
     if (invoice) {
       const amount =
-        paymentType === 'deposit' && invoice.settings.deposit.enabled
-          ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
+        paymentType === 'deposit' && invoice.settings?.deposit?.enabled
+          ? (invoice.totals.total * invoice.settings?.deposit?.percentage) / 100
           : invoice.totals.total;
       handleSelectPayment(amount, paymentType);
     }
@@ -540,13 +540,13 @@ const InvoicePage = () => {
                   >
                     <div className='text-center mb-0'>
                       <h2 className='text-2xl font-mono mb-4 text-gray-900'>Payment Details</h2>
-                      {invoice.settings.deposit.enabled && (
+                      {invoice.settings.deposit?.enabled && (
                         <div className='mb-3'>
                           {invoice.status === 'partially_paid' ? (
                             <div className='text-sm text-[#878787] mb-0'>
                               Deposit of{' '}
                               {formatCurrency(
-                                (invoice.totals.total * invoice.settings.deposit.percentage) / 100,
+                                (invoice.totals.total * invoice.settings.deposit?.percentage) / 100,
                                 invoice.settings.currency,
                                 invoice.settings.decimals,
                               )}{' '}
@@ -585,8 +585,8 @@ const InvoicePage = () => {
 
                       <div className='text-4xl font-mono mb-0 text-gray-900'>
                         {formatCurrency(
-                          paymentType === 'deposit' && invoice.settings.deposit.enabled
-                            ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
+                          paymentType === 'deposit' && invoice.settings?.deposit?.enabled
+                            ? (invoice.totals.total * invoice.settings?.deposit?.percentage) / 100
                             : invoice.status === 'partially_paid'
                             ? invoice.totals.total -
                               (invoice.totals.total * invoice.settings.deposit.percentage) / 100
@@ -597,7 +597,7 @@ const InvoicePage = () => {
                         <p className='text-[11px] text-[#878787] mb-6'>
                           {invoice.status === 'partially_paid'
                             ? 'Remaining Amount Due'
-                            : paymentType === 'deposit' && invoice.settings.deposit.enabled
+                            : paymentType === 'deposit' && invoice.settings?.deposit?.enabled
                             ? 'Deposit Amount Due'
                             : 'Total Amount Due'}
                         </p>

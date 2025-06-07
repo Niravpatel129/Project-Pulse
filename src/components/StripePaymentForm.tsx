@@ -158,8 +158,8 @@ export function StripePaymentForm({
             <>
               Pay{' '}
               {formatCurrency(
-                paymentType === 'deposit' && invoice.settings.deposit.enabled
-                  ? (invoice.totals.total * invoice.settings.deposit.percentage) / 100
+                paymentType === 'deposit' && invoice?.settings?.deposit?.enabled
+                  ? (invoice.totals.total * invoice?.settings?.deposit?.percentage) / 100
                   : invoice.totals.total,
                 invoice.settings.currency,
                 invoice.settings.decimals,
