@@ -8,12 +8,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEmailChainContext } from '@/contexts/EmailChainContext';
 import '@/styles/email.css';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { ChevronDown, ChevronUp, MoreVertical, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, MoreHorizontal, MoreVertical, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import EmailContent from './EmailContent';
 import EmailSkeleton from './EmailSkeleton';
@@ -508,17 +509,26 @@ export default function InboxMain() {
                   containsQuotedContent={containsQuotedContent}
                 />
                 {containsQuotedContent && (
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='mt-2 text-muted-foreground hover:text-foreground'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleBody(email._id);
-                    }}
-                  >
-                    {isBodyExpanded ? 'Show less' : 'Show more'}
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='mt-2 text-muted-foreground hover:text-foreground'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBody(email._id);
+                          }}
+                        >
+                          <MoreHorizontal className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Toggle message quote</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             </div>
