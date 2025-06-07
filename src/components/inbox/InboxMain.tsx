@@ -530,6 +530,23 @@ export default function InboxMain() {
                     </Tooltip>
                   </TooltipProvider>
                 )}
+                <div className='mt-4 flex justify-end'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReplyToEmail(email);
+                      setIsReplying(true);
+                      containerRef.current?.scrollTo({
+                        top: containerRef.current.scrollHeight,
+                        behavior: 'smooth',
+                      });
+                    }}
+                  >
+                    Reply
+                  </Button>
+                </div>
               </div>
             </div>
           </>
@@ -578,6 +595,7 @@ export default function InboxMain() {
         {emailChain?.emails?.map((email) => {
           return renderThread(email);
         })}
+
         {isReplying && replyToEmail && (
           <div className='relative pb-40'>
             <Button
