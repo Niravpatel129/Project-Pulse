@@ -66,10 +66,12 @@ declare module 'slate-react' {
 }
 
 interface InboxReplyProps {
+  inReplyToEmailId: string;
   initialValue?: Descendant[];
   onChange?: (value: Descendant[], plainText: string) => void;
   height?: string;
   email?: {
+    id: string;
     from: {
       email: string;
     };
@@ -81,6 +83,7 @@ interface InboxReplyProps {
     messageReferences?: Array<{
       messageId: string;
     }>;
+    inReplyToEmailId?: string;
   };
   isReply?: boolean;
 }
@@ -93,12 +96,12 @@ export default function InboxReply({
   isReply = false,
 }: InboxReplyProps) {
   // Email fields state
-  const [to, setTo] = useState(email?.to[0]?.email || '');
+  const [to, setTo] = useState(isReply ? email?.from.email || '' : '');
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
   const [subject, setSubject] = useState(email?.subject ? `Re: ${email.subject}` : '');
   const [showSubject, setShowSubject] = useState(!isReply);
-  const from = email?.from.email || 'mrmapletv@gmail.com'; // Use the email address from the selected email or fallback to default
+  const from = isReply ? email?.to[0]?.email || 'mrmapletv@gmail.com' : 'mrmapletv@gmail.com'; // Use the email address from the selected email or fallback to default
 
   // Create a Slate editor object that won't change across renders
   const editor = useMemo(() => {
@@ -263,14 +266,20 @@ export default function InboxReply({
           })
         : [];
 
+      console.log('🚀 email:', email);
+      if (!email?.id) {
+        toast.error('No message ID found');
+        return;
+      }
+
       await sendEmailMutation.mutateAsync({
+        fromEmail: from,
         to: toArray,
         cc: ccArray,
         bcc: bccArray,
         subject,
         body: htmlContent || ' ', // Ensure we always send some content
-        fromEmail: from,
-        inReplyTo: email?.messageId,
+        inReplyTo: email?.id,
         references:
           email?.messageReferences?.map((ref) => {
             return ref.messageId;

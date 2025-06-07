@@ -25,6 +25,7 @@ interface SendEmailPayload {
   inReplyTo?: string;
   references?: string[];
   fromEmail: string;
+  inReplyToEmailId?: string;
 }
 
 interface MessageReference {
@@ -76,7 +77,10 @@ interface SendEmailResponse {
 export const useSendEmail = () => {
   return useMutation<SendEmailResponse, Error, SendEmailPayload>({
     mutationFn: async (payload) => {
-      const { data } = await newRequest.post<SendEmailResponse>('/inbox/send-email', payload);
+      const { data } = await newRequest.post<SendEmailResponse>('/inbox/send-email', {
+        ...payload,
+        inReplyToEmailId: payload.inReplyToEmailId,
+      });
       return data;
     },
   });

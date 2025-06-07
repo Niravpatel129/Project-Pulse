@@ -590,6 +590,7 @@ export default function InboxMain() {
               height='200px'
               email={replyToEmail}
               isReply={true}
+              inReplyToEmailId={replyToEmail._id}
             />
           </div>
         )}
