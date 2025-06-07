@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 import {
   MdAttachFile,
   MdDelete,
@@ -37,6 +38,7 @@ interface InboxReplyToolbarProps {
   onAttach?: () => void;
   onDelete?: () => void;
   onSend?: () => void;
+  isSending?: boolean;
 }
 
 const FONT_FAMILIES = [
@@ -78,9 +80,10 @@ export function InboxReplyToolbar({
   onAttach,
   onDelete,
   onSend,
+  isSending = false,
 }: InboxReplyToolbarProps) {
   return (
-    <div className='sticky bottom-0 z-10 bg-background border-t p-2 shadow-sm'>
+    <div className='sticky bottom-0 z-10 bg-background border-t p-2 '>
       <div className='flex items-center justify-between w-full'>
         {/* Left side: formatting options */}
         <div className='flex items-center gap-0.5'>
@@ -253,8 +256,17 @@ export function InboxReplyToolbar({
             variant='default'
             className='gap-2 bg-blue-600 hover:bg-blue-700 text-white'
             onClick={onSend}
+            disabled={isSending}
           >
-            Send <MdSend size={18} />
+            {isSending ? (
+              <>
+                Sending <Loader2 className='h-4 w-4 animate-spin' />
+              </>
+            ) : (
+              <>
+                Send <MdSend size={18} />
+              </>
+            )}
           </Button>
         )}
       </div>

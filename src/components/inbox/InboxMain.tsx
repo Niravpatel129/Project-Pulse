@@ -569,7 +569,7 @@ export default function InboxMain() {
           return renderThread(email);
         })}
         {isReplying && replyToEmail && (
-          <div className='relative'>
+          <div className='relative pb-40'>
             <Button
               variant='ghost'
               size='icon'

@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { useSendEmail } from '@/hooks/useSendEmail';
 import { useCallback, useMemo, useState } from 'react';
 import {
   BaseEditor,
@@ -18,6 +19,7 @@ import {
   Slate,
   withReact,
 } from 'slate-react';
+import { toast } from 'sonner';
 import { EmailFields } from './EmailFields';
 import { InboxReplyToolbar } from './InboxReplyToolbar';
 
@@ -76,6 +78,10 @@ interface InboxReplyProps {
       email: string;
     }>;
     subject: string;
+    messageId?: string;
+    messageReferences?: Array<{
+      messageId: string;
+    }>;
   };
   isReply?: boolean;
 }
@@ -218,9 +224,57 @@ export default function InboxReply({
     }
   };
 
+  const sendEmailMutation = useSendEmail();
+
+  const handleSendEmail = async () => {
+    try {
+      const plainText = editor.children
+        .map((n) => {
+          return Node.string(n);
+        })
+        .join('\n');
+
+      // Convert single email addresses to arrays
+      const toArray = to.split(',').map((email) => {
+        return email.trim();
+      });
+      const ccArray = cc
+        ? cc.split(',').map((email) => {
+            return email.trim();
+          })
+        : [];
+      const bccArray = bcc
+        ? bcc.split(',').map((email) => {
+            return email.trim();
+          })
+        : [];
+
+      await sendEmailMutation.mutateAsync({
+        to: toArray,
+        cc: ccArray,
+        bcc: bccArray,
+        subject,
+        body: plainText,
+        fromEmail: from,
+        // If this is a reply, include the original email's message ID
+        inReplyTo: email?.messageId,
+        // If this is a reply, include the original email's references plus its message ID
+        references:
+          email?.messageReferences?.map((ref) => {
+            return ref.messageId;
+          }) || [],
+      });
+
+      toast.success('Email sent successfully');
+    } catch (error) {
+      toast.error('Failed to send email');
+      console.error('Error sending email:', error);
+    }
+  };
+
   return (
-    <Card className='w-full mx-auto'>
-      <CardContent className='p-0'>
+    <Card className='w-full mx-auto border border-slate-100 dark:border-[#232428] overflow-hidden shadow-none'>
+      <CardContent className='p-0 '>
         <EmailFields
           from={from}
           to={to}
@@ -276,10 +330,8 @@ export default function InboxReply({
           onFontFamily={setFontFamily}
           onFontSize={setFontSize}
           onTextColor={setTextColor}
-          onSend={() => {
-            // TODO: Implement send functionality
-            console.log('Send email');
-          }}
+          onSend={handleSendEmail}
+          isSending={sendEmailMutation.isPending}
         />
       </CardContent>
     </Card>
