@@ -65,7 +65,6 @@ export default function InboxHeader({
     }
   }, [isEditing]);
 
-  console.log('status', status);
   const { toast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();

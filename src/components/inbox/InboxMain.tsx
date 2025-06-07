@@ -236,6 +236,8 @@ export default function InboxMain() {
         });
       });
 
+      queryClient.invalidateQueries({ queryKey: ['inbox-headers'] });
+
       return { previousEmailChain, previousInboxThreads };
     },
     onError: (err, newTodo, context) => {

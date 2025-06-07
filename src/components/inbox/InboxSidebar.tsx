@@ -18,6 +18,9 @@ interface EmailThread {
 interface InboxSidebarProps {
   threads?: EmailThread[];
   loading?: boolean;
+  hasNextPage?: boolean;
+  fetchNextPage?: () => void;
+  isFetchingNextPage?: boolean;
 }
 
 const ThreadItem = ({
@@ -66,12 +69,18 @@ const ThreadItem = ({
   );
 };
 
-export default function InboxSidebar({ threads = [], loading = false }: InboxSidebarProps) {
+export default function InboxSidebar({
+  threads = [],
+  loading = false,
+  hasNextPage,
+  fetchNextPage,
+  isFetchingNextPage,
+}: InboxSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [localThreads, setLocalThreads] = useState(threads);
   const previousThreadsRef = useRef<EmailThread[]>([]);
   const { prefetchEmailChain } = useEmailChainContext();
-  console.log('🚀 threads:', threads);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (localThreads.length === 0) {
@@ -89,6 +98,27 @@ export default function InboxSidebar({ threads = [], loading = false }: InboxSid
       previousThreadsRef.current = threads;
     }
   }, [threads]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage?.();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleThreadSelect = (threadId: string) => {
     // Handle thread selection
@@ -161,6 +191,15 @@ export default function InboxSidebar({ threads = [], loading = false }: InboxSid
             );
           })}
         </AnimatePresence>
+        {hasNextPage && (
+          <div ref={loadMoreRef} className='p-4 text-center'>
+            {isFetchingNextPage ? (
+              <div className='flex items-center justify-center'>
+                <div className='w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin' />
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -20,10 +20,8 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
     (params.state as string)?.charAt(0).toUpperCase() + (params.state as string)?.slice(1) ||
     'Unassigned';
 
-  const { data: threads, error, isLoading } = useInbox();
-  const { data: headers, error: headersError, isLoading: headersLoading } = useInboxHeaders();
-
-  console.log('🚀 headers:', headers);
+  const { data: threads, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useInbox();
+  const { data: headers } = useInboxHeaders();
 
   const allThreads =
     threads?.pages.flatMap((page) => {
@@ -109,6 +107,9 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
                         emails: thread.emails,
                       };
                     })}
+                    hasNextPage={hasNextPage}
+                    fetchNextPage={fetchNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
                   />
                 </div>
               </div>
