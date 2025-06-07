@@ -6,7 +6,6 @@ import {
   createEditor,
   Descendant,
   Editor,
-  Node,
   Element as SlateElement,
   Transforms,
 } from 'slate';
@@ -228,11 +227,26 @@ export default function InboxReply({
 
   const handleSendEmail = async () => {
     try {
-      const plainText = editor.children
-        .map((n) => {
-          return Node.string(n);
+      // Get the HTML content from the editor
+      const htmlContent = editor.children
+        .map((node) => {
+          if (SlateElement.isElement(node) && node.type === 'paragraph') {
+            return node.children
+              .map((child) => {
+                if (typeof child.text === 'string') {
+                  let text = child.text;
+                  if (child.bold) text = `<strong>${text}</strong>`;
+                  if (child.italic) text = `<em>${text}</em>`;
+                  if (child.underline) text = `<u>${text}</u>`;
+                  return text;
+                }
+                return '';
+              })
+              .join('');
+          }
+          return '';
         })
-        .join('\n');
+        .join('<br/>');
 
       // Convert single email addresses to arrays
       const toArray = to.split(',').map((email) => {
@@ -254,11 +268,9 @@ export default function InboxReply({
         cc: ccArray,
         bcc: bccArray,
         subject,
-        body: plainText,
+        body: htmlContent || ' ', // Ensure we always send some content
         fromEmail: from,
-        // If this is a reply, include the original email's message ID
         inReplyTo: email?.messageId,
-        // If this is a reply, include the original email's references plus its message ID
         references:
           email?.messageReferences?.map((ref) => {
             return ref.messageId;
@@ -292,14 +304,28 @@ export default function InboxReply({
           editor={editor}
           initialValue={initialValue}
           onChange={(value) => {
-            onChange?.(
-              value,
-              value
-                .map((n) => {
-                  return Node.string(n);
-                })
-                .join('\n'),
-            );
+            // Ensure we're capturing the editor content
+            const content = value
+              .map((node) => {
+                if (SlateElement.isElement(node) && node.type === 'paragraph') {
+                  return node.children
+                    .map((child) => {
+                      if (typeof child.text === 'string') {
+                        let text = child.text;
+                        if (child.bold) text = `<strong>${text}</strong>`;
+                        if (child.italic) text = `<em>${text}</em>`;
+                        if (child.underline) text = `<u>${text}</u>`;
+                        return text;
+                      }
+                      return '';
+                    })
+                    .join('');
+                }
+                return '';
+              })
+              .join('<br/>');
+
+            onChange?.(value, content);
           }}
         >
           <Editable
