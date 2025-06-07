@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useSendEmail } from '@/hooks/useSendEmail';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BaseEditor,
   createEditor,
@@ -97,6 +97,14 @@ export default function InboxReply({
   isReply = false,
   onSend,
 }: InboxReplyProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   // Email fields state
   const [to, setTo] = useState(isReply ? email?.from.email || '' : '');
   const [cc, setCc] = useState('');
@@ -297,7 +305,10 @@ export default function InboxReply({
   };
 
   return (
-    <Card className='w-full mx-auto border border-slate-100 dark:border-[#232428] overflow-hidden shadow-none'>
+    <Card
+      ref={containerRef}
+      className='w-full mx-auto border border-slate-100 dark:border-[#232428] overflow-hidden shadow-none'
+    >
       <CardContent className='p-0 '>
         <EmailFields
           from={from}
