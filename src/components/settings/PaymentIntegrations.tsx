@@ -30,16 +30,16 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  AlertCircle,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  MapPin,
-  Trash2,
-  XCircle,
-} from 'lucide-react';
 import { useState } from 'react';
+import {
+  FiAlertCircle,
+  FiCheck,
+  FiCreditCard,
+  FiLoader,
+  FiMapPin,
+  FiTrash2,
+  FiX,
+} from 'react-icons/fi';
 
 interface Terminal {
   id: string;
@@ -256,9 +256,9 @@ export function PaymentIntegrations({
   const getStatusIcon = (enabled: boolean | undefined) => {
     if (enabled === undefined) return null;
     return enabled ? (
-      <CheckCircle2 className='h-4 w-4 text-green-500' />
+      <FiCheck className='h-4 w-4 text-green-500' />
     ) : (
-      <XCircle className='h-4 w-4 text-red-500' />
+      <FiX className='h-4 w-4 text-red-500' />
     );
   };
 
@@ -284,7 +284,7 @@ export function PaymentIntegrations({
                   {stripeStatus?.status === 'active' ||
                   stripeStatus?.status === 'requirements.past_due' ? (
                     <Badge className='bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1'>
-                      <CheckCircle2 className='h-3 w-3' />
+                      <FiCheck className='h-3 w-3' />
                       Connected
                     </Badge>
                   ) : (
@@ -292,7 +292,7 @@ export function PaymentIntegrations({
                       variant='outline'
                       className='border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46]/60 dark:text-[#8b8b8b] flex items-center gap-1'
                     >
-                      <AlertCircle className='h-3 w-3' />
+                      <FiAlertCircle className='h-3 w-3' />
                       Not Connected
                     </Badge>
                   )}
@@ -307,7 +307,7 @@ export function PaymentIntegrations({
             <div className='flex items-center justify-between py-4'>
               <div className='flex items-center space-x-4'>
                 <div className='bg-purple-100 p-3 rounded-full'>
-                  <CreditCard className='h-6 w-6 text-purple-600' />
+                  <FiCreditCard className='h-6 w-6 text-purple-600' />
                 </div>
                 <div>
                   {stripeStatus?.status === 'active' ||
@@ -371,7 +371,7 @@ export function PaymentIntegrations({
                     >
                       {isDisconnecting ? (
                         <>
-                          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                          <FiLoader className='mr-2 h-4 w-4 animate-spin' />
                           Disconnecting...
                         </>
                       ) : (
@@ -406,7 +406,7 @@ export function PaymentIntegrations({
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      <FiLoader className='mr-2 h-4 w-4 animate-spin' />
                       Connecting...
                     </>
                   ) : (
@@ -448,20 +448,7 @@ export function PaymentIntegrations({
                   <DrawerClose asChild>
                     <button className='rounded p-1.5 transition hover:bg-black/5 dark:hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/10'>
                       <span className='sr-only'>Close</span>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        className='h-5 w-5'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M6 18L18 6M6 6l12 12'
-                        />
-                      </svg>
+                      <FiX className='h-5 w-5' />
                     </button>
                   </DrawerClose>
                 </div>
@@ -498,7 +485,7 @@ export function PaymentIntegrations({
                             </div>
                           </div>
                           <div className='flex items-center gap-2'>
-                            <MapPin className='h-4 w-4 text-[#6C6C6C] dark:text-[#A0A0A0]' />
+                            <FiMapPin className='h-4 w-4 text-[#6C6C6C] dark:text-[#A0A0A0]' />
                             <input
                               type='text'
                               value={shopInfo.address}
@@ -527,7 +514,7 @@ export function PaymentIntegrations({
                             </Button>
                           </div>
                           <div className='flex items-center gap-2 text-xs text-[#6C6C6C] dark:text-[#A0A0A0]'>
-                            <MapPin className='h-4 w-4' />
+                            <FiMapPin className='h-4 w-4' />
                             {shopInfo.address}
                           </div>
                           <div className='flex items-center gap-2 mt-1'>
@@ -599,22 +586,9 @@ export function PaymentIntegrations({
                                             disabled={isTestingConnection === terminal.id}
                                           >
                                             {isTestingConnection === terminal.id ? (
-                                              <Loader2 className='h-4 w-4 animate-spin' />
+                                              <FiLoader className='h-4 w-4 animate-spin' />
                                             ) : (
-                                              <svg
-                                                xmlns='http://www.w3.org/2000/svg'
-                                                className='h-4 w-4 text-[#6C6C6C] dark:text-[#A0A0A0]'
-                                                fill='none'
-                                                viewBox='0 0 24 24'
-                                                stroke='currentColor'
-                                              >
-                                                <path
-                                                  strokeLinecap='round'
-                                                  strokeLinejoin='round'
-                                                  strokeWidth={2}
-                                                  d='M9 12l2 2 4-4'
-                                                />
-                                              </svg>
+                                              <FiCheck className='h-4 w-4 text-[#6C6C6C] dark:text-[#A0A0A0]' />
                                             )}
                                           </button>
                                         </TooltipTrigger>
@@ -629,7 +603,7 @@ export function PaymentIntegrations({
                                           className='rounded p-1.5 transition hover:bg-[#ECECEC] dark:hover:bg-[#232428]'
                                           aria-label='Delete terminal'
                                         >
-                                          <Trash2 className='w-4 h-4 text-[#D14343]' />
+                                          <FiTrash2 className='w-4 h-4 text-[#D14343]' />
                                         </button>
                                       </AlertDialogTrigger>
                                       <AlertDialogContent>
@@ -772,7 +746,7 @@ export function PaymentIntegrations({
                             >
                               {isTestingConnection === terminal.id ? (
                                 <>
-                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                  <FiLoader className='mr-2 h-4 w-4 animate-spin' />
                                   Testing...
                                 </>
                               ) : (
@@ -786,7 +760,7 @@ export function PaymentIntegrations({
                                   size='icon'
                                   className='border-[#E4E4E7] dark:border-[#313131]'
                                 >
-                                  <Trash2 className='w-4 h-4 text-red-500' />
+                                  <FiTrash2 className='w-4 h-4 text-red-500' />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
