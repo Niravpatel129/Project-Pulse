@@ -9,7 +9,10 @@ import {
 } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import React from 'react';
+import { usePosPaymentIntent } from '@/hooks/usePosPaymentIntent';
+import { newRequest } from '@/utils/newRequest';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Customer {
   id: {
@@ -145,9 +148,64 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
   onCancel,
 }) => {
   const { readerId } = useWorkspace();
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [currentPaymentIntentId, setCurrentPaymentIntentId] = useState<string | null>(null);
+
+  const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
+
+  useEffect(() => {
+    if (open && readerId && invoice._id) {
+      createPaymentIntent(
+        { invoiceId: invoice._id, readerId },
+        {
+          onSuccess: (response) => {
+            if (response.success && response.data.clientSecret) {
+              setCurrentPaymentIntentId(response.data.clientSecret.split('_secret_')[0]);
+            }
+          },
+          onError: (error) => {
+            toast.error('Failed to initialize payment');
+            console.error('Error creating payment intent:', error);
+          },
+        },
+      );
+    }
+  }, [open, readerId, invoice._id, createPaymentIntent]);
 
   const formatCurrency = (amount: number) => {
     return amount.toFixed(2);
+  };
+
+  const handleCancel = async () => {
+    if (!currentPaymentIntentId) {
+      toast.error('No payment intent found');
+      return;
+    }
+
+    if (!readerId) {
+      toast.error('No reader found');
+      return;
+    }
+
+    setIsCanceling(true);
+    try {
+      const response = await newRequest.post('/pos/cancel-payment-intent', {
+        paymentIntentId: currentPaymentIntentId,
+        readerId,
+      });
+
+      if (response.data.status === 'success') {
+        toast.success('Payment cancelled successfully');
+        onCancel();
+      } else {
+        throw new Error(response.data.message || 'Failed to cancel payment');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to cancel payment');
+      console.error('Error canceling payment:', error);
+    } finally {
+      setIsCanceling(false);
+    }
   };
 
   return (
@@ -157,27 +215,39 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
           <DialogTitle className='text-center'>Front counter</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col items-center justify-center py-4 gap-4'>
-          <LoadingSpinner size='lg' variant='primary' />
-          <div className='text-lg font-semibold text-center mt-2'>Complete payment on terminal</div>
-          <DialogDescription className='text-center mb-2'>
-            Ask the client to follow the instructions on the terminal
-          </DialogDescription>
-          <div className='w-full space-y-4'>
-            <div className='text-center'>
-              <div className='text-sm text-gray-500'>Invoice #{invoice.invoiceNumber}</div>
-              <div className='text-3xl font-bold text-center mt-2'>
-                {invoice.settings.currency} {formatCurrency(invoice.totals.total)}
+          {isCreatingPaymentIntent ? (
+            <LoadingSpinner size='lg' variant='primary' />
+          ) : (
+            <>
+              <div className='text-lg font-semibold text-center mt-2'>
+                Complete payment on terminal
               </div>
-            </div>
-            <div className='text-sm text-gray-600 text-center mt-1'>
-              <div>Customer: {invoice.customer.name}</div>
-              <div>Email: {invoice.customer.email}</div>
-            </div>
-          </div>
+              <DialogDescription className='text-center mb-2'>
+                Ask the client to follow the instructions on the terminal
+              </DialogDescription>
+              <div className='w-full space-y-4'>
+                <div className='text-center'>
+                  <div className='text-sm text-gray-500'>Invoice #{invoice.invoiceNumber}</div>
+                  <div className='text-3xl font-bold text-center mt-2'>
+                    {invoice.settings.currency} {formatCurrency(invoice.totals.total)}
+                  </div>
+                </div>
+                <div className='text-sm text-gray-600 text-center mt-1'>
+                  <div>Customer: {invoice.customer.name}</div>
+                  <div>Email: {invoice.customer.email}</div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <DialogFooter>
-          <Button variant='outline' className='w-full' onClick={onCancel}>
-            Cancel
+          <Button
+            variant='outline'
+            className='w-full'
+            onClick={handleCancel}
+            disabled={isCanceling || isCreatingPaymentIntent}
+          >
+            {isCanceling ? 'Canceling...' : 'Cancel'}
           </Button>
         </DialogFooter>
       </DialogContent>
