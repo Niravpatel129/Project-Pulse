@@ -42,8 +42,6 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const { isAuthenticated } = useAuth();
 
   const fetchPOSReaders = async () => {
-    if (!workspace) return;
-
     setIsLoadingReaders(true);
     try {
       const response = await newRequest.get('/pos/readers');
