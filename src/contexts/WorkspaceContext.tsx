@@ -12,12 +12,19 @@ interface Workspace {
   stripeAccountId?: string;
 }
 
+interface POSReader {
+  id: string;
+  // Add other POS reader properties as needed
+}
+
 interface WorkspaceContextType {
   workspace: Workspace | null;
   isLoading: boolean;
   error: Error | null;
   connectStripe?: () => Promise<void>;
   disconnectStripe?: () => Promise<void>;
+  posReaders: POSReader[];
+  isLoadingReaders: boolean;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -30,7 +37,23 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [posReaders, setPosReaders] = useState<POSReader[]>([]);
+  const [isLoadingReaders, setIsLoadingReaders] = useState(false);
   const { isAuthenticated } = useAuth();
+
+  const fetchPOSReaders = async () => {
+    if (!workspace) return;
+
+    setIsLoadingReaders(true);
+    try {
+      const response = await newRequest.get('/pos/readers');
+      setPosReaders(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching POS readers:', err);
+    } finally {
+      setIsLoadingReaders(false);
+    }
+  };
 
   useEffect(() => {
     // dont fetch if not logged in
@@ -41,6 +64,8 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
         try {
           const response = await newRequest.get('/workspaces/current');
           setWorkspace(response.data.data);
+          // Fetch POS readers after workspace is loaded
+          await fetchPOSReaders();
         } catch (err) {
           console.error('Error fetching workspace:', err);
           if (typeof window !== 'undefined') {
@@ -50,7 +75,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
               setWorkspace({
                 name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1),
                 slug: subdomain,
-                stripeConnected: false, // This would be fetched from your API in a real app
+                stripeConnected: false,
               });
             } else {
               // For localhost development, extract from URL path
@@ -75,7 +100,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const connectStripe = async () => {
     try {
@@ -129,6 +154,8 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
         error,
         connectStripe,
         disconnectStripe,
+        posReaders,
+        isLoadingReaders,
       }}
     >
       {children}
