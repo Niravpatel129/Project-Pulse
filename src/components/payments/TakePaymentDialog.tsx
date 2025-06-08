@@ -234,8 +234,8 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
         { invoiceId: invoice._id, readerId },
         {
           onSuccess: (response: PosPaymentIntentResponse) => {
-            if (response.status === 'success' && response.data.client_secret) {
-              setCurrentPaymentIntentId(response.data.client_secret.split('_secret_')[0]);
+            if (response.status === 'success' && response.data.id) {
+              setCurrentPaymentIntentId(response.data.id);
             }
           },
           onError: (error) => {
