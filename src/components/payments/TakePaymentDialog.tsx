@@ -125,7 +125,7 @@ const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md'>
+      <DialogContent className='max-w-md focus-visible:ring-0'>
         <DialogHeader>
           <DialogTitle className='text-center'>Front counter</DialogTitle>
         </DialogHeader>
