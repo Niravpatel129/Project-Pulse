@@ -1,4 +1,3 @@
-import TakePaymentDialog from '@/components/payments/TakePaymentDialog';
 import { Calendar } from '@/components/ui/calendar';
 import {
   DropdownMenu,
@@ -12,7 +11,7 @@ import {
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { usePosPaymentIntent } from '@/hooks/usePosPaymentIntent';
 import { newRequest } from '@/utils/newRequest';
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 import { toast } from 'sonner';
 
 interface InvoicePreviewActionsProps {
@@ -22,6 +21,7 @@ interface InvoicePreviewActionsProps {
   onDelete: (invoiceId: string) => void;
   handleEdit: () => void;
   trigger?: ReactNode;
+  onTakePayment?: (invoice: any) => void;
 }
 
 const InvoicePreviewActions = ({
@@ -31,9 +31,9 @@ const InvoicePreviewActions = ({
   onDelete,
   handleEdit,
   trigger,
+  onTakePayment,
 }: InvoicePreviewActionsProps) => {
   const { readerId } = useWorkspace();
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
 
   const handleDownload = async () => {
@@ -79,30 +79,13 @@ const InvoicePreviewActions = ({
       toast.error('Reader ID is required for payment');
       return;
     }
-    setShowPaymentDialog(true);
-  };
-
-  const handleDialogOpenChange = (open: boolean) => {
-    setShowPaymentDialog(open);
-    if (open && readerId) {
-      createPaymentIntent(
-        {
-          invoiceId: invoice._id,
-          readerId,
-        },
-        {
-          onError: (error) => {
-            toast.error('Failed to initialize payment');
-            console.error('Payment intent error:', error);
-            setShowPaymentDialog(false);
-          },
-        },
-      );
+    if (onTakePayment) {
+      onTakePayment(invoice);
     }
   };
 
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {trigger || (
           <button
@@ -192,15 +175,6 @@ const InvoicePreviewActions = ({
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
-      <TakePaymentDialog
-        open={showPaymentDialog}
-        onOpenChange={handleDialogOpenChange}
-        invoice={invoice}
-        isLoading={isCreatingPaymentIntent}
-        onCancel={() => {
-          return setShowPaymentDialog(false);
-        }}
-      />
     </DropdownMenu>
   );
 };

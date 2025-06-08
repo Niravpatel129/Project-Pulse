@@ -1,6 +1,7 @@
 'use client';
 
 import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
+import TakePaymentDialog from '@/components/payments/TakePaymentDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -261,6 +262,14 @@ const Bills = () => {
       toast.error(error.message || 'Failed to delete invoice');
     },
   });
+
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentInvoice, setPaymentInvoice] = useState<any>(null);
+
+  const handleTakePayment = (invoice: any) => {
+    setPaymentInvoice(invoice);
+    setShowPaymentDialog(true);
+  };
 
   if (error) return <div>Error loading invoices</div>;
 
@@ -527,6 +536,7 @@ const Bills = () => {
             }}
             isLoading={isLoading}
             visibleColumns={visibleColumns}
+            onTakePayment={handleTakePayment}
           />
           {/* Loading indicator and observer target */}
           <div ref={observerTarget} className='h-10 flex items-center justify-center'>
@@ -632,6 +642,17 @@ const Bills = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TakePaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        invoice={paymentInvoice}
+        isLoading={false}
+        onCancel={() => {
+          setShowPaymentDialog(false);
+          setPaymentInvoice(null);
+        }}
+      />
     </div>
   );
 };

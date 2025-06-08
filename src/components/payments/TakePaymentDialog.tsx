@@ -9,233 +9,84 @@ import {
 } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { usePosPaymentCancel } from '@/hooks/usePosPaymentCancel';
 import { usePosPaymentIntent } from '@/hooks/usePosPaymentIntent';
-import { newRequest } from '@/utils/newRequest';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { usePosPaymentStatus } from '@/hooks/usePosPaymentStatus';
+import { formatCurrency } from '@/utils/formatCurrency';
+import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Customer {
-  id: {
-    _id: string;
-    user: {
-      name: string;
-      email: string;
-    };
-    workspace: string;
-    phone: string;
-    address: {
-      street: string;
-      city: string;
-      state: string;
-      country: string;
-      zip: string;
-    };
-    shippingAddress: {
-      street: string;
-      city: string;
-      state: string;
-      country: string;
-      zip: string;
-    };
-    contact: {
-      firstName: string;
-      lastName: string;
-    };
-    taxId: string;
-    accountNumber: string;
-    fax: string;
-    mobile: string;
-    tollFree: string;
-    website: string;
-    internalNotes: string;
-    customFields: Record<string, any>;
-    isActive: boolean;
-    deletedAt: string | null;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-  };
   name: string;
   email: string;
 }
 
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  price: number;
-  total: number;
-  _id: string;
-}
-
-interface InvoiceTotals {
-  subtotal: number;
-  taxAmount: number;
-  vatAmount: number;
-  discount: number;
-  total: number;
-  _id: string;
-}
-
-interface InvoiceSettings {
-  deposit: {
-    enabled: boolean;
-    percentage: number;
-  };
-  salesTax: {
-    enabled: boolean;
-    rate: number;
-  };
-  vat: {
-    enabled: boolean;
-    rate: number;
-  };
-  discount: {
-    enabled: boolean;
-    amount: number;
-  };
-  currency: string;
-  dateFormat: string;
-  decimals: string;
-  _id: string;
-}
-
 interface Invoice {
-  customer: Customer;
   _id: string;
-  workspace: string;
   invoiceNumber: string;
-  createdBy: string;
-  invoiceTitle: string;
-  attachments: any[];
-  from: string;
-  to: string;
-  issueDate: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  totals: InvoiceTotals;
-  internalNote: string;
-  logo: string;
-  settings: InvoiceSettings;
-  status: string;
-  paymentMethod: string;
-  depositPaidAt: string | null;
-  depositPaymentAmount: number;
-  requireDeposit: boolean;
-  depositPercentage: number;
-  statusHistory: Array<{
-    status: string;
-    changedAt: string;
-    reason: string;
-    _id: string;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-  paymentIntentId: string;
+  customer: Customer;
+  settings: {
+    currency: string;
+  };
+  totals: {
+    total: number;
+  };
 }
 
 interface TakePaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: Invoice;
-  onCancel: () => void;
+  invoice: Invoice | null;
   isLoading?: boolean;
+  onCancel: () => void;
 }
 
-interface PaymentMethodDetails {
-  card?: {
-    brand: string;
-    last4: string;
-    exp_month: number;
-    exp_year: number;
-  } | null;
-}
-
-interface TransferData {
-  destination: string;
-  amount?: number;
-}
-
-interface PaymentStatus {
-  paymentIntentId: string;
-  status:
-    | 'succeeded'
-    | 'processing'
-    | 'requires_payment_method'
-    | 'requires_confirmation'
-    | 'requires_action'
-    | 'canceled';
-  amount: number;
-  amount_received: number;
-  currency: string;
-  payment_method: string | null;
-  payment_method_types: string[];
-  created: number;
-  client_secret: string;
-  payment_method_details: PaymentMethodDetails;
-  transfer_data: TransferData | null;
-  metadata: Record<string, string>;
-}
-
-interface PosPaymentIntentResponse {
-  status: string;
-  data: {
-    id: string;
-    status: string;
-    amount: number;
-    amount_received: number;
-    currency: string;
-    payment_method: null | any;
-    payment_method_types: string[];
-    created: number;
-    client_secret: string;
-    payment_method_details: {
-      card: null | any;
-    };
-    transfer_data: null | any;
-    metadata: {
-      invoiceId: string;
-      workspaceId: string;
-    };
-  };
-}
-
-export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
+const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
   open,
   onOpenChange,
   invoice,
-  onCancel,
   isLoading = false,
+  onCancel,
 }) => {
   const { readerId } = useWorkspace();
-  const [isCanceling, setIsCanceling] = useState(false);
   const [currentPaymentIntentId, setCurrentPaymentIntentId] = useState<string | null>(null);
+  const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
+  const { data: paymentStatus, isLoading: isPaymentStatusLoading } =
+    usePosPaymentStatus(currentPaymentIntentId);
+  const { mutate: cancelPayment, isPending: isCanceling } = usePosPaymentCancel();
   const queryClient = useQueryClient();
 
-  const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
-
-  // Add polling for payment status
-  const { data: paymentStatus } = useQuery<PaymentStatus | null>({
-    queryKey: ['payment-status', currentPaymentIntentId],
-    queryFn: async () => {
-      if (!currentPaymentIntentId) return null;
-      const response = await newRequest.get<{ status: string; data: PaymentStatus }>(
-        `/pos/payment-status?paymentIntentId=${currentPaymentIntentId}`,
-      );
-      return response.data.data;
-    },
-    enabled: !!currentPaymentIntentId && open,
-    refetchInterval: 2000,
-    refetchIntervalInBackground: false,
-  });
-
-  useEffect(() => {
-    if (open && readerId && invoice._id) {
-      createPaymentIntent(
-        { invoiceId: invoice._id, readerId },
+  const handleCancel = () => {
+    if (currentPaymentIntentId) {
+      cancelPayment(
+        { paymentIntentId: currentPaymentIntentId },
         {
-          onSuccess: (response: PosPaymentIntentResponse) => {
+          onSuccess: () => {
+            setCurrentPaymentIntentId(null);
+            onCancel();
+          },
+          onError: (error) => {
+            console.error('Error canceling payment:', error);
+            toast.error('Failed to cancel payment');
+          },
+        },
+      );
+    } else {
+      onCancel();
+    }
+  };
+
+  // Create payment intent when dialog opens
+  useEffect(() => {
+    if (open && readerId && invoice?._id) {
+      createPaymentIntent(
+        {
+          invoiceId: invoice._id,
+          readerId,
+        },
+        {
+          onSuccess: (response) => {
             if (response.status === 'success' && response.data.id) {
               console.log('Setting payment intent ID:', response.data.id);
               setCurrentPaymentIntentId(response.data.id);
@@ -250,7 +101,7 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
         },
       );
     }
-  }, [open, readerId, invoice._id, createPaymentIntent, onOpenChange]);
+  }, [open, readerId, invoice?._id, createPaymentIntent, onOpenChange]);
 
   // Reset payment intent ID when dialog closes
   useEffect(() => {
@@ -268,46 +119,9 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
     }
   }, [paymentStatus?.status, queryClient, onOpenChange]);
 
-  const formatCurrency = (amount: number) => {
-    return amount.toFixed(2);
-  };
-
-  const handleCancel = async () => {
-    if (!currentPaymentIntentId) {
-      toast.error('No payment intent found');
-      return;
-    }
-
-    if (!readerId) {
-      toast.error('No reader found');
-      return;
-    }
-
-    setIsCanceling(true);
-    try {
-      const response = await newRequest.post<{ status: string; message?: string }>(
-        '/pos/cancel-payment-intent',
-        {
-          paymentIntentId: currentPaymentIntentId,
-          readerId,
-        },
-      );
-
-      if (response.data.status === 'success') {
-        console.log('Payment cancelled successfully, clearing payment intent ID');
-        setCurrentPaymentIntentId(null);
-        toast.success('Payment cancelled successfully');
-        onCancel();
-      } else {
-        throw new Error(response.data.message || 'Failed to cancel payment');
-      }
-    } catch (error: any) {
-      console.error('Error canceling payment:', error);
-      toast.error(error.response?.data?.message || 'Failed to cancel payment');
-    } finally {
-      setIsCanceling(false);
-    }
-  };
+  if (!invoice) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

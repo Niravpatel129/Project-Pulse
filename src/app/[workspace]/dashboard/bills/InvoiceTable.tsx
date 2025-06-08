@@ -160,6 +160,7 @@ interface InvoiceTableProps {
   onDelete: (invoiceId: string) => void;
   isLoading: boolean;
   visibleColumns: Record<string, boolean>;
+  onTakePayment?: (invoice: Invoice) => void;
 }
 
 interface Invoice {
@@ -247,6 +248,7 @@ export const InvoiceTable = ({
   onDelete,
   isLoading,
   visibleColumns,
+  onTakePayment,
 }: InvoiceTableProps) => {
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
@@ -328,6 +330,7 @@ export const InvoiceTable = ({
                 handleEdit={() => {
                   return setEditingInvoice(invoice);
                 }}
+                onTakePayment={onTakePayment}
                 trigger={
                   <Button
                     variant='ghost'
