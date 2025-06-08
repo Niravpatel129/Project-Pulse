@@ -25,6 +25,7 @@ interface WorkspaceContextType {
   disconnectStripe?: () => Promise<void>;
   posReaders: POSReader[];
   isLoadingReaders: boolean;
+  readerId: string | null;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -39,6 +40,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [error, setError] = useState<Error | null>(null);
   const [posReaders, setPosReaders] = useState<POSReader[]>([]);
   const [isLoadingReaders, setIsLoadingReaders] = useState(false);
+  const [readerId, setReaderId] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
 
   const fetchPOSReaders = async () => {
@@ -46,6 +48,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     try {
       const response = await newRequest.get('/pos/readers');
       setPosReaders(response.data.data || []);
+      setReaderId(response.data.data[0]?.readerId || null);
     } catch (err) {
       console.error('Error fetching POS readers:', err);
     } finally {
@@ -153,6 +156,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
         connectStripe,
         disconnectStripe,
         posReaders,
+        readerId,
         isLoadingReaders,
       }}
     >
