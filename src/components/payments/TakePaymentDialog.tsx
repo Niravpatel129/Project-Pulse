@@ -235,18 +235,27 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
         {
           onSuccess: (response: PosPaymentIntentResponse) => {
             if (response.status === 'success' && response.data.id) {
+              console.log('Setting payment intent ID:', response.data.id);
               setCurrentPaymentIntentId(response.data.id);
             }
           },
           onError: (error) => {
-            toast.error('Failed to initialize payment');
             console.error('Error creating payment intent:', error);
+            setCurrentPaymentIntentId(null);
+            toast.error('Failed to initialize payment');
             onOpenChange(false);
           },
         },
       );
     }
   }, [open, readerId, invoice._id, createPaymentIntent, onOpenChange]);
+
+  // Reset payment intent ID when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setCurrentPaymentIntentId(null);
+    }
+  }, [open]);
 
   // Handle successful payment
   useEffect(() => {
@@ -283,14 +292,16 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
       );
 
       if (response.data.status === 'success') {
+        console.log('Payment cancelled successfully, clearing payment intent ID');
+        setCurrentPaymentIntentId(null);
         toast.success('Payment cancelled successfully');
         onCancel();
       } else {
         throw new Error(response.data.message || 'Failed to cancel payment');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to cancel payment');
       console.error('Error canceling payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to cancel payment');
     } finally {
       setIsCanceling(false);
     }
