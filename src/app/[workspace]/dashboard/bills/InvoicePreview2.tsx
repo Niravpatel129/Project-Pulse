@@ -64,7 +64,6 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   const [attachments, setAttachments] = useState<any[]>([]);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const queryClient = useQueryClient();
-
   useEffect(() => {
     setInternalNote(selectedInvoice?.internalNote || '');
     setNoteOpen(!!selectedInvoice?.internalNote || !!selectedInvoice?.attachments?.length);

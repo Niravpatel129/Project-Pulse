@@ -1,3 +1,4 @@
+import TakePaymentDialog from '@/components/payments/TakePaymentDialog';
 import { Calendar } from '@/components/ui/calendar';
 import {
   DropdownMenu,
@@ -8,7 +9,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { newRequest } from '@/utils/newRequest';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface InvoicePreviewActionsProps {
@@ -26,6 +29,10 @@ const InvoicePreviewActions = ({
   onDelete,
   handleEdit,
 }: InvoicePreviewActionsProps) => {
+  const { readerId } = useWorkspace();
+
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+
   const handleDownload = async () => {
     try {
       const response = await newRequest.get(`/invoices2/${invoice._id}/download`, {
@@ -84,6 +91,17 @@ const InvoicePreviewActions = ({
         <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
         <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownload}>Download</DropdownMenuItem>
+        {readerId &&
+          invoice.status?.toLowerCase() !== 'paid' &&
+          invoice.status?.toLowerCase() !== 'cancelled' && (
+            <DropdownMenuItem
+              onClick={() => {
+                return setShowPaymentDialog(true);
+              }}
+            >
+              Take Payment
+            </DropdownMenuItem>
+          )}
         {invoice.status?.toLowerCase() !== 'cancelled' &&
           invoice.status?.toLowerCase() !== 'paid' &&
           invoice.status?.toLowerCase() !== 'draft' && (
@@ -145,6 +163,14 @@ const InvoicePreviewActions = ({
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
+      <TakePaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        invoice={invoice}
+        onCancel={() => {
+          return setShowPaymentDialog(false);
+        }}
+      />
     </DropdownMenu>
   );
 };
