@@ -73,7 +73,8 @@ const InvoicePreviewActions = ({
     toast.success('Invoice link copied to clipboard');
   };
 
-  const handleTakePayment = () => {
+  const handleTakePayment = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!readerId) {
       toast.error('Reader ID is required for payment');
       return;
