@@ -127,7 +127,7 @@ const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-md focus-visible:ring-0'>
         <DialogHeader>
-          <DialogTitle className='text-center'>Front counter</DialogTitle>
+          <DialogTitle className='text-center'>Card Payment</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col items-center justify-center py-4 gap-4'>
           {isLoading || isCreatingPaymentIntent ? (
