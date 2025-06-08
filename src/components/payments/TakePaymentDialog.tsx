@@ -221,7 +221,7 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
     queryFn: async () => {
       if (!currentPaymentIntentId) return null;
       const response = await newRequest.get<{ status: string; data: PaymentStatus }>(
-        `/payment-status?paymentIntentId=${currentPaymentIntentId}`,
+        `/pos/payment-status?paymentIntentId=${currentPaymentIntentId}`,
       );
       return response.data.data;
     },
