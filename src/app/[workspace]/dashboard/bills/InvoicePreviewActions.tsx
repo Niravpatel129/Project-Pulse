@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { usePosPaymentIntent } from '@/hooks/usePosPaymentIntent';
 import { newRequest } from '@/utils/newRequest';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -30,8 +31,8 @@ const InvoicePreviewActions = ({
   handleEdit,
 }: InvoicePreviewActionsProps) => {
   const { readerId } = useWorkspace();
-
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
 
   const handleDownload = async () => {
     try {
@@ -70,6 +71,29 @@ const InvoicePreviewActions = ({
     toast.success('Invoice link copied to clipboard');
   };
 
+  const handleTakePayment = () => {
+    if (!readerId) {
+      toast.error('Reader ID is required for payment');
+      return;
+    }
+
+    createPaymentIntent(
+      {
+        invoiceId: invoice._id,
+        readerId,
+      },
+      {
+        onSuccess: (data) => {
+          setShowPaymentDialog(true);
+        },
+        onError: (error) => {
+          toast.error('Failed to initialize payment');
+          console.error('Payment intent error:', error);
+        },
+      },
+    );
+  };
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -94,12 +118,8 @@ const InvoicePreviewActions = ({
         {readerId &&
           invoice.status?.toLowerCase() !== 'paid' &&
           invoice.status?.toLowerCase() !== 'cancelled' && (
-            <DropdownMenuItem
-              onClick={() => {
-                return setShowPaymentDialog(true);
-              }}
-            >
-              Take Payment
+            <DropdownMenuItem onClick={handleTakePayment} disabled={isCreatingPaymentIntent}>
+              {isCreatingPaymentIntent ? 'Initializing...' : 'Take Payment'}
             </DropdownMenuItem>
           )}
         {invoice.status?.toLowerCase() !== 'cancelled' &&
