@@ -78,22 +78,26 @@ const InvoicePreviewActions = ({
       toast.error('Reader ID is required for payment');
       return;
     }
+    setShowPaymentDialog(true);
+  };
 
-    createPaymentIntent(
-      {
-        invoiceId: invoice._id,
-        readerId,
-      },
-      {
-        onSuccess: () => {
-          setShowPaymentDialog(true);
+  const handleDialogOpenChange = (open: boolean) => {
+    setShowPaymentDialog(open);
+    if (open && readerId) {
+      createPaymentIntent(
+        {
+          invoiceId: invoice._id,
+          readerId,
         },
-        onError: (error) => {
-          toast.error('Failed to initialize payment');
-          console.error('Payment intent error:', error);
+        {
+          onError: (error) => {
+            toast.error('Failed to initialize payment');
+            console.error('Payment intent error:', error);
+            setShowPaymentDialog(false);
+          },
         },
-      },
-    );
+      );
+    }
   };
 
   return (
@@ -189,7 +193,7 @@ const InvoicePreviewActions = ({
       </DropdownMenuContent>
       <TakePaymentDialog
         open={showPaymentDialog}
-        onOpenChange={setShowPaymentDialog}
+        onOpenChange={handleDialogOpenChange}
         invoice={invoice}
         isLoading={isCreatingPaymentIntent}
         onCancel={() => {
