@@ -13,12 +13,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -36,7 +37,7 @@ import {
   FiCheck,
   FiCreditCard,
   FiLoader,
-  FiMapPin,
+  FiPlus,
   FiTrash2,
   FiX,
 } from 'react-icons/fi';
@@ -75,7 +76,7 @@ export function PaymentIntegrations({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditingShop, setIsEditingShop] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState<string | null>(null);
 
@@ -420,9 +421,90 @@ export function PaymentIntegrations({
       </div>
       {/* Payment Terminals Section */}
       <div>
-        <h2 className='text-2xl font-semibold mb-6 text-[#3F3F46] dark:text-white'>
-          Payment Terminals
-        </h2>
+        <div className='flex items-center justify-between mb-6'>
+          <h2 className='text-2xl font-semibold text-[#3F3F46] dark:text-white'>
+            Payment Terminals
+          </h2>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className='bg-black hover:bg-black/90 text-white'>
+                <FiPlus className='mr-2 h-4 w-4' />
+                Add Terminal
+              </Button>
+            </DialogTrigger>
+            <DialogContent className='sm:max-w-[500px]'>
+              <DialogHeader>
+                <DialogTitle>Add Payment Terminal</DialogTitle>
+                <DialogDescription>
+                  Add a new payment terminal to your account. Make sure you have the terminal&apos;s
+                  activation code ready.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddTerminal} className='space-y-6 py-4'>
+                <div className='space-y-4'>
+                  <div>
+                    <Label htmlFor='terminal-name'>Terminal Name</Label>
+                    <Input
+                      id='terminal-name'
+                      placeholder='Enter terminal name'
+                      value={newTerminal.name}
+                      onChange={(e) => {
+                        return setNewTerminal({ ...newTerminal, name: e.target.value });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor='terminal-model'>Terminal Model</Label>
+                    <Select
+                      value={newTerminal.model}
+                      onValueChange={(value) => {
+                        return setNewTerminal({ ...newTerminal, model: value });
+                      }}
+                    >
+                      <SelectTrigger id='terminal-model'>
+                        <SelectValue placeholder='Select model' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='BBPOS WisePOS E'>BBPOS WisePOS E</SelectItem>
+                        {/* Add more models as needed */}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Activation Code</Label>
+                    <div className='mt-2 p-4 rounded-lg bg-muted border border-border'>
+                      <p className='text-sm text-muted-foreground'>
+                        To generate your activation code:
+                      </p>
+                      <ol className='mt-2 text-sm text-muted-foreground list-decimal list-inside space-y-1'>
+                        <li>Swipe the terminal screen from left edge to right edge</li>
+                        <li>Tap Settings and enter the admin code 0 7 1 3 9</li>
+                        <li>
+                          Tap &quot;Generate pairing code&quot; to obtain your activation code
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+                <div className='flex justify-end gap-3'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() => {
+                      return setIsDialogOpen(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type='submit' className='bg-black hover:bg-black/90 text-white'>
+                    Add Terminal
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <Card className='bg-white dark:bg-[#181818] border-[#E4E4E7] dark:border-[#232428] shadow-sm'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <div>
@@ -431,275 +513,6 @@ export function PaymentIntegrations({
                 Manage your payment terminals for in-person transactions
               </CardDescription>
             </div>
-            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-              <DrawerTrigger asChild>
-                <Button className='bg-black hover:bg-black/90 text-white'>+ Add terminal</Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <div className='flex items-center justify-between border-b border-[#ECECEC] dark:border-[#232428] px-8 py-5'>
-                  <div className='flex items-center gap-3'>
-                    <DrawerTitle className='text-lg font-semibold text-[#232428] dark:text-white tracking-tight'>
-                      Manage Payment Terminals
-                    </DrawerTitle>
-                    <Badge variant='outline' className='text-xs font-normal'>
-                      {stripeStatus?.status === 'active' ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                  <DrawerClose asChild>
-                    <button className='rounded p-1.5 transition hover:bg-black/5 dark:hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/10'>
-                      <span className='sr-only'>Close</span>
-                      <FiX className='h-5 w-5' />
-                    </button>
-                  </DrawerClose>
-                </div>
-                <div className='flex-1 overflow-y-auto'>
-                  <div className='max-w-2xl mx-auto pt-8 pb-12 px-6 md:px-0'>
-                    {/* Shop Info */}
-                    <div className='mb-8 p-4 rounded-lg bg-white dark:bg-[#232428] border border-[#ECECEC] dark:border-[#313131]'>
-                      {isEditingShop ? (
-                        <form onSubmit={handleUpdateShopInfo} className='space-y-4'>
-                          <div className='flex items-center justify-between'>
-                            <input
-                              type='text'
-                              value={shopInfo.name}
-                              onChange={(e) => {
-                                return setShopInfo({ ...shopInfo, name: e.target.value });
-                              }}
-                              className='text-sm font-medium bg-transparent border-b border-[#ECECEC] dark:border-[#313131] focus:outline-none focus:border-black dark:focus:border-white'
-                            />
-                            <div className='flex gap-2'>
-                              <Button type='submit' size='sm' className='text-xs'>
-                                Save
-                              </Button>
-                              <Button
-                                type='button'
-                                variant='outline'
-                                size='sm'
-                                className='text-xs'
-                                onClick={() => {
-                                  return setIsEditingShop(false);
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                          <div className='flex items-center gap-2'>
-                            <FiMapPin className='h-4 w-4 text-[#6C6C6C] dark:text-[#A0A0A0]' />
-                            <input
-                              type='text'
-                              value={shopInfo.address}
-                              onChange={(e) => {
-                                return setShopInfo({ ...shopInfo, address: e.target.value });
-                              }}
-                              className='text-xs bg-transparent border-b border-[#ECECEC] dark:border-[#313131] focus:outline-none focus:border-black dark:focus:border-white w-full'
-                            />
-                          </div>
-                        </form>
-                      ) : (
-                        <div className='flex flex-col gap-2'>
-                          <div className='flex items-center justify-between'>
-                            <span className='text-sm font-medium text-[#232428] dark:text-white'>
-                              {shopInfo.name}
-                            </span>
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              className='text-xs'
-                              onClick={() => {
-                                return setIsEditingShop(true);
-                              }}
-                            >
-                              Edit Details
-                            </Button>
-                          </div>
-                          <div className='flex items-center gap-2 text-xs text-[#6C6C6C] dark:text-[#A0A0A0]'>
-                            <FiMapPin className='h-4 w-4' />
-                            {shopInfo.address}
-                          </div>
-                          <div className='flex items-center gap-2 mt-1'>
-                            <Badge className='bg-[#F6E9C6] text-[#8A6D1B] font-normal px-2 py-0.5 rounded'>
-                              {shopInfo.gatewayStatus === 'complete' ? 'Complete' : 'Incomplete'}
-                            </Badge>
-                            <span className='text-xs text-[#A0A0A0] dark:text-[#6C6C6C]'>
-                              {shopInfo.status === 'active' ? 'Active gateway' : 'Inactive gateway'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Terminals Table */}
-                    <div className='rounded-xl bg-white dark:bg-[#181818] border border-[#ECECEC] dark:border-[#232428] p-0 shadow-sm'>
-                      <div className='p-4 border-b border-[#ECECEC] dark:border-[#232428]'>
-                        <h3 className='text-sm font-medium text-[#232428] dark:text-white'>
-                          Connected Terminals
-                        </h3>
-                        <p className='text-xs text-[#6C6C6C] dark:text-[#A0A0A0] mt-1'>
-                          Manage your payment terminals and their settings
-                        </p>
-                      </div>
-                      <table className='w-full text-xs md:text-sm border-separate border-spacing-0'>
-                        <thead>
-                          <tr className='bg-[#FAFAFA] dark:bg-[#232428]'>
-                            <th className='py-3 px-4 text-left font-medium text-[#232428] dark:text-white'>
-                              Name
-                            </th>
-                            <th className='py-3 px-4 text-left font-medium text-[#232428] dark:text-white'>
-                              Model
-                            </th>
-                            <th className='py-3 px-4 text-left font-medium text-[#232428] dark:text-white'>
-                              Serial
-                            </th>
-                            <th className='py-3 px-2 text-right font-medium text-[#232428] dark:text-white'>
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {terminals.map((terminal) => {
-                            return (
-                              <tr
-                                key={terminal.id}
-                                className='transition-colors hover:bg-[#F5F5F5] dark:hover:bg-[#232428]'
-                              >
-                                <td className='py-3 px-4 whitespace-nowrap text-[#232428] dark:text-white font-medium'>
-                                  {terminal.name}
-                                </td>
-                                <td className='py-3 px-4 text-[#6C6C6C] dark:text-[#A0A0A0]'>
-                                  {terminal.model}
-                                </td>
-                                <td className='py-3 px-4 text-[#6C6C6C] dark:text-[#A0A0A0]'>
-                                  {terminal.serial}
-                                </td>
-                                <td className='py-3 px-2 text-right'>
-                                  <div className='flex justify-end gap-1'>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            className='rounded p-1.5 transition hover:bg-[#ECECEC] dark:hover:bg-[#232428]'
-                                            aria-label='Test connection'
-                                            onClick={() => {
-                                              return handleTestConnection(terminal.id);
-                                            }}
-                                            disabled={isTestingConnection === terminal.id}
-                                          >
-                                            {isTestingConnection === terminal.id ? (
-                                              <FiLoader className='h-4 w-4 animate-spin' />
-                                            ) : (
-                                              <FiCheck className='h-4 w-4 text-[#6C6C6C] dark:text-[#A0A0A0]' />
-                                            )}
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Test terminal connection</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <button
-                                          className='rounded p-1.5 transition hover:bg-[#ECECEC] dark:hover:bg-[#232428]'
-                                          aria-label='Delete terminal'
-                                        >
-                                          <FiTrash2 className='w-4 h-4 text-[#D14343]' />
-                                        </button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete Terminal?</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently
-                                            delete the terminal from your account.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction
-                                            className='bg-red-600 hover:bg-red-700'
-                                            onClick={() => {
-                                              return handleDeleteTerminal(terminal.id);
-                                            }}
-                                          >
-                                            Delete
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      {/* Add Terminal Form */}
-                      <Card className='border-none shadow-none p-4'>
-                        <CardHeader className='p-0 mb-4'>
-                          <h2 className='text-lg font-semibold text-[#232428] dark:text-white'>
-                            Add a Payment Terminal
-                          </h2>
-                        </CardHeader>
-                        <CardContent className='p-0'>
-                          <form onSubmit={handleAddTerminal} className='flex flex-col gap-6'>
-                            <div>
-                              <Label htmlFor='terminal-name' className='mb-1'>
-                                Terminal Name
-                              </Label>
-                              <Input
-                                id='terminal-name'
-                                placeholder='Enter terminal name'
-                                value={newTerminal.name}
-                                onChange={(e) => {
-                                  return setNewTerminal({ ...newTerminal, name: e.target.value });
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor='terminal-model' className='mb-1'>
-                                Terminal Model
-                              </Label>
-                              <Select
-                                value={newTerminal.model}
-                                onValueChange={(value) => {
-                                  return setNewTerminal({ ...newTerminal, model: value });
-                                }}
-                              >
-                                <SelectTrigger id='terminal-model'>
-                                  <SelectValue placeholder='Select model' />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='BBPOS WisePOS E'>BBPOS WisePOS E</SelectItem>
-                                  {/* Add more models as needed */}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label className='mb-1'>Activation Code</Label>
-                              <p className='text-sm text-muted-foreground bg-muted rounded p-3 border border-border'>
-                                To generate your activation code, swipe the terminal screen from
-                                left edge to right edge. Tap Settings and enter the admin code 0 7 1
-                                3 9 when prompted. Tap &quot;Generate pairing code&quot; to obtain
-                                your activation code.
-                              </p>
-                            </div>
-                            <div className='flex items-end'>
-                              <Button
-                                type='submit'
-                                className='bg-black hover:bg-black/90 text-white'
-                              >
-                                Add
-                              </Button>
-                            </div>
-                          </form>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </div>
-              </DrawerContent>
-            </Drawer>
           </CardHeader>
           <CardContent>
             <div className='overflow-x-auto'>
@@ -738,6 +551,7 @@ export function PaymentIntegrations({
                           <div className='flex justify-end gap-2'>
                             <Button
                               variant='outline'
+                              size='sm'
                               className='text-[#3F3F46] dark:text-white'
                               onClick={() => {
                                 return handleTestConnection(terminal.id);
