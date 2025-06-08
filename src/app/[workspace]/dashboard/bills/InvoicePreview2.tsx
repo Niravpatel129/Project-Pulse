@@ -14,6 +14,7 @@ interface InvoicePreview2Props {
   onMarkAsPaid?: (invoiceId: string, paymentDate: Date) => void;
   onCancel?: (invoiceId: string) => void;
   onDelete?: (invoiceId: string) => void;
+  onTakePayment?: (invoice: any) => void;
 }
 
 function formatCurrency(amount: number, currency: string = 'CAD') {
@@ -54,6 +55,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
   onMarkAsPaid,
   onCancel,
   onDelete,
+  onTakePayment,
 }) => {
   console.log('🚀 selectedInvoice:', selectedInvoice);
   const [activityOpen, setActivityOpen] = useState(true);
@@ -202,6 +204,7 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
             onMarkAsPaid={onMarkAsPaid || (() => {})}
             onCancel={onCancel || (() => {})}
             onDelete={onDelete || (() => {})}
+            onTakePayment={onTakePayment || (() => {})}
             handleEdit={() => {
               return setEditingInvoice(selectedInvoice);
             }}

@@ -581,6 +581,7 @@ const Bills = () => {
                     });
                     setShowConfirmDialog(true);
                   }}
+                  onTakePayment={handleTakePayment}
                 />
               </SheetContent>
             </Sheet>
@@ -612,6 +613,7 @@ const Bills = () => {
                   });
                   setShowConfirmDialog(true);
                 }}
+                onTakePayment={handleTakePayment}
               />
             </motion.div>
           ))}
