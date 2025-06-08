@@ -1,12 +1,6 @@
 import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
 import { Button } from '@/components/ui/button';
 import { DateTooltip } from '@/components/ui/date-tooltip';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -44,6 +38,7 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
+import InvoicePreviewActions from './InvoicePreviewActions';
 
 interface ColumnMeta {
   className?: string;
@@ -325,8 +320,15 @@ export const InvoiceTable = ({
             );
           case 'actions':
             return (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
+              <InvoicePreviewActions
+                invoice={invoice}
+                onMarkAsPaid={onMarkAsPaid}
+                onCancel={onCancel}
+                onDelete={onDelete}
+                handleEdit={() => {
+                  return setEditingInvoice(invoice);
+                }}
+                trigger={
                   <Button
                     variant='ghost'
                     className='h-8 w-8 p-0'
@@ -337,42 +339,8 @@ export const InvoiceTable = ({
                     <MoreHorizontal className='h-4 w-4' />
                     <span className='sr-only'>Open menu</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingInvoice(invoice);
-                    }}
-                  >
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onMarkAsPaid(invoice._id, new Date());
-                    }}
-                  >
-                    Mark as paid
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCancel(invoice._id);
-                    }}
-                  >
-                    Cancel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(invoice._id);
-                    }}
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                }
+              />
             );
           default:
             return null;

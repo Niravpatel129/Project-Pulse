@@ -12,7 +12,7 @@ import {
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { usePosPaymentIntent } from '@/hooks/usePosPaymentIntent';
 import { newRequest } from '@/utils/newRequest';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 
 interface InvoicePreviewActionsProps {
@@ -21,6 +21,7 @@ interface InvoicePreviewActionsProps {
   onCancel: (invoiceId: string) => void;
   onDelete: (invoiceId: string) => void;
   handleEdit: () => void;
+  trigger?: ReactNode;
 }
 
 const InvoicePreviewActions = ({
@@ -29,6 +30,7 @@ const InvoicePreviewActions = ({
   onCancel,
   onDelete,
   handleEdit,
+  trigger,
 }: InvoicePreviewActionsProps) => {
   const { readerId } = useWorkspace();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -96,19 +98,21 @@ const InvoicePreviewActions = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <button
-          className='w-9 h-9 flex items-center justify-center rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
-          onClick={(e) => {
-            return e.stopPropagation();
-          }}
-          aria-label='Actions'
-        >
-          <svg width='16' height='16' fill='none' viewBox='0 0 24 24'>
-            <circle cx='12' cy='5' r='1.5' fill='currentColor' />
-            <circle cx='12' cy='12' r='1.5' fill='currentColor' />
-            <circle cx='12' cy='19' r='1.5' fill='currentColor' />
-          </svg>
-        </button>
+        {trigger || (
+          <button
+            className='w-9 h-9 flex items-center justify-center rounded-md bg-gray-50 dark:bg-neutral-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-150'
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+            aria-label='Actions'
+          >
+            <svg width='16' height='16' fill='none' viewBox='0 0 24 24'>
+              <circle cx='12' cy='5' r='1.5' fill='currentColor' />
+              <circle cx='12' cy='12' r='1.5' fill='currentColor' />
+              <circle cx='12' cy='19' r='1.5' fill='currentColor' />
+            </svg>
+          </button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
