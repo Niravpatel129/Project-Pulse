@@ -60,7 +60,7 @@ const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
   const handleCancel = () => {
     if (currentPaymentIntentId) {
       cancelPayment(
-        { paymentIntentId: currentPaymentIntentId },
+        { paymentIntentId: currentPaymentIntentId, readerId: readerId! },
         {
           onSuccess: () => {
             setCurrentPaymentIntentId(null);
