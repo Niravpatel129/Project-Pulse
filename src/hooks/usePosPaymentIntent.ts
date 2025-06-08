@@ -2,9 +2,25 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation } from '@tanstack/react-query';
 
 interface PosPaymentIntentResponse {
-  success: boolean;
+  status: string;
   data: {
-    clientSecret: string;
+    id: string;
+    status: string;
+    amount: number;
+    amount_received: number;
+    currency: string;
+    payment_method: null | any;
+    payment_method_types: string[];
+    created: number;
+    client_secret: string;
+    payment_method_details: {
+      card: null | any;
+    };
+    transfer_data: null | any;
+    metadata: {
+      invoiceId: string;
+      workspaceId: string;
+    };
   };
 }
 

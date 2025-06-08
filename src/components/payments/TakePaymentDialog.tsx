@@ -159,8 +159,8 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
         { invoiceId: invoice._id, readerId },
         {
           onSuccess: (response) => {
-            if (response.success && response.data.clientSecret) {
-              setCurrentPaymentIntentId(response.data.clientSecret.split('_secret_')[0]);
+            if (response.status === 'success' && response.data.client_secret) {
+              setCurrentPaymentIntentId(response.data.client_secret.split('_secret_')[0]);
             }
           },
           onError: (error) => {
