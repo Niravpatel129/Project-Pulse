@@ -102,7 +102,7 @@ const InvoicePreviewActions = ({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         {trigger || (
           <button
