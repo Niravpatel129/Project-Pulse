@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { usePosPaymentIntent } from '@/hooks/usePosPaymentIntent';
 import { newRequest } from '@/utils/newRequest';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -142,6 +143,64 @@ interface TakePaymentDialogProps {
   isLoading?: boolean;
 }
 
+interface PaymentMethodDetails {
+  card?: {
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+  } | null;
+}
+
+interface TransferData {
+  destination: string;
+  amount?: number;
+}
+
+interface PaymentStatus {
+  paymentIntentId: string;
+  status:
+    | 'succeeded'
+    | 'processing'
+    | 'requires_payment_method'
+    | 'requires_confirmation'
+    | 'requires_action'
+    | 'canceled';
+  amount: number;
+  amount_received: number;
+  currency: string;
+  payment_method: string | null;
+  payment_method_types: string[];
+  created: number;
+  client_secret: string;
+  payment_method_details: PaymentMethodDetails;
+  transfer_data: TransferData | null;
+  metadata: Record<string, string>;
+}
+
+interface PosPaymentIntentResponse {
+  status: string;
+  data: {
+    id: string;
+    status: string;
+    amount: number;
+    amount_received: number;
+    currency: string;
+    payment_method: null | any;
+    payment_method_types: string[];
+    created: number;
+    client_secret: string;
+    payment_method_details: {
+      card: null | any;
+    };
+    transfer_data: null | any;
+    metadata: {
+      invoiceId: string;
+      workspaceId: string;
+    };
+  };
+}
+
 export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
   open,
   onOpenChange,
@@ -152,15 +211,29 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
   const { readerId } = useWorkspace();
   const [isCanceling, setIsCanceling] = useState(false);
   const [currentPaymentIntentId, setCurrentPaymentIntentId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
+
+  // Add polling for payment status
+  const { data: paymentStatus } = useQuery<PaymentStatus | null>({
+    queryKey: ['payment-status', currentPaymentIntentId],
+    queryFn: async () => {
+      if (!currentPaymentIntentId) return null;
+      const response = await newRequest.get<{ status: string; data: PaymentStatus }>(
+        `/payment-status?paymentIntentId=${currentPaymentIntentId}`,
+      );
+      return response.data.data;
+    },
+    enabled: !!currentPaymentIntentId && open,
+  });
 
   useEffect(() => {
     if (open && readerId && invoice._id) {
       createPaymentIntent(
         { invoiceId: invoice._id, readerId },
         {
-          onSuccess: (response) => {
+          onSuccess: (response: PosPaymentIntentResponse) => {
             if (response.status === 'success' && response.data.client_secret) {
               setCurrentPaymentIntentId(response.data.client_secret.split('_secret_')[0]);
             }
@@ -174,6 +247,15 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
       );
     }
   }, [open, readerId, invoice._id, createPaymentIntent, onOpenChange]);
+
+  // Handle successful payment
+  useEffect(() => {
+    if (paymentStatus?.status === 'succeeded') {
+      toast.success('Payment successful!');
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      onOpenChange(false);
+    }
+  }, [paymentStatus?.status, queryClient, onOpenChange]);
 
   const formatCurrency = (amount: number) => {
     return amount.toFixed(2);
@@ -192,10 +274,13 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
 
     setIsCanceling(true);
     try {
-      const response = await newRequest.post('/pos/cancel-payment-intent', {
-        paymentIntentId: currentPaymentIntentId,
-        readerId,
-      });
+      const response = await newRequest.post<{ status: string; message?: string }>(
+        '/pos/cancel-payment-intent',
+        {
+          paymentIntentId: currentPaymentIntentId,
+          readerId,
+        },
+      );
 
       if (response.data.status === 'success') {
         toast.success('Payment cancelled successfully');
@@ -223,10 +308,14 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
           ) : (
             <>
               <div className='text-lg font-semibold text-center mt-2'>
-                Complete payment on terminal
+                {paymentStatus?.status === 'processing'
+                  ? 'Processing payment...'
+                  : 'Complete payment on terminal'}
               </div>
               <DialogDescription className='text-center mb-2'>
-                Ask the client to follow the instructions on the terminal
+                {paymentStatus?.status === 'processing'
+                  ? 'Please wait while we process your payment'
+                  : 'Ask the client to follow the instructions on the terminal'}
               </DialogDescription>
               <div className='w-full space-y-4'>
                 <div className='text-center'>
@@ -248,7 +337,9 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
             variant='outline'
             className='w-full'
             onClick={handleCancel}
-            disabled={isCanceling || isCreatingPaymentIntent}
+            disabled={
+              isCanceling || isCreatingPaymentIntent || paymentStatus?.status === 'processing'
+            }
           >
             {isCanceling ? 'Canceling...' : 'Cancel'}
           </Button>
