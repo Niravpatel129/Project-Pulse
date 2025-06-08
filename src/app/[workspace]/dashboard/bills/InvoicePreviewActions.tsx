@@ -79,17 +79,18 @@ const InvoicePreviewActions = ({
       return;
     }
 
-    setShowPaymentDialog(true);
     createPaymentIntent(
       {
         invoiceId: invoice._id,
         readerId,
       },
       {
+        onSuccess: () => {
+          setShowPaymentDialog(true);
+        },
         onError: (error) => {
           toast.error('Failed to initialize payment');
           console.error('Payment intent error:', error);
-          setShowPaymentDialog(false);
         },
       },
     );
