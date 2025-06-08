@@ -226,6 +226,8 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
       return response.data.data;
     },
     enabled: !!currentPaymentIntentId && open,
+    refetchInterval: 2000,
+    refetchIntervalInBackground: false,
   });
 
   useEffect(() => {
