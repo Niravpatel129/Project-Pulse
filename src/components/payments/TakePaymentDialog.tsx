@@ -139,6 +139,7 @@ interface TakePaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   invoice: Invoice;
   onCancel: () => void;
+  isLoading?: boolean;
 }
 
 export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
@@ -146,6 +147,7 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
   onOpenChange,
   invoice,
   onCancel,
+  isLoading = false,
 }) => {
   const { readerId } = useWorkspace();
   const [isCanceling, setIsCanceling] = useState(false);
@@ -166,11 +168,12 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
           onError: (error) => {
             toast.error('Failed to initialize payment');
             console.error('Error creating payment intent:', error);
+            onOpenChange(false);
           },
         },
       );
     }
-  }, [open, readerId, invoice._id, createPaymentIntent]);
+  }, [open, readerId, invoice._id, createPaymentIntent, onOpenChange]);
 
   const formatCurrency = (amount: number) => {
     return amount.toFixed(2);
@@ -215,7 +218,7 @@ export const TakePaymentDialog: React.FC<TakePaymentDialogProps> = ({
           <DialogTitle className='text-center'>Front counter</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col items-center justify-center py-4 gap-4'>
-          {isCreatingPaymentIntent ? (
+          {isLoading || isCreatingPaymentIntent ? (
             <LoadingSpinner size='lg' variant='primary' />
           ) : (
             <>
