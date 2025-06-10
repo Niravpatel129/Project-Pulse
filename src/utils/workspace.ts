@@ -1,13 +1,37 @@
+import { DEV_CONFIG, getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
 import { WorkspaceData } from '@/types/workspace';
 import { fetchCMSContent, fetchCMSSettings } from '@/utils/cms';
 import { newRequest } from './newRequest';
 
 /**
- * Fetches workspace configuration and content from the backend
+ * Fetches workspace configuration and content from the backend or mock data in development
  * @param workspaceSlug - The workspace identifier (usually subdomain)
  * @returns Promise<WorkspaceData | null>
  */
 export async function fetchWorkspaceData(workspaceSlug: string): Promise<WorkspaceData | null> {
+  // In development, check for mock data first
+  if (process.env.NODE_ENV === 'development' && hasMockWorkspace(workspaceSlug)) {
+    console.log(`[DEV] Using mock data for workspace: ${workspaceSlug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData) {
+      // Convert CMS data to WorkspaceData format
+      return {
+        name: mockData.settings.siteName,
+        description: mockData.settings.siteDescription,
+        about: 'Mock workspace data for development testing',
+        services: [], // Will be populated from CMS data
+        theme: mockData.settings.theme,
+        contact: mockData.settings.contact,
+        social: {
+          linkedin: mockData.settings.socialMedia?.linkedin,
+          twitter: mockData.settings.socialMedia?.twitter,
+          facebook: mockData.settings.socialMedia?.facebook,
+        },
+        settings: mockData.settings,
+      };
+    }
+  }
+
   try {
     // Make API call to fetch workspace data using newRequest
     const response = await newRequest({
@@ -29,6 +53,29 @@ export async function fetchWorkspaceData(workspaceSlug: string): Promise<Workspa
       `Error fetching workspace data for ${workspaceSlug}:`,
       error.response?.data || error.message,
     );
+
+    // In development, fallback to default mock workspace if available
+    if (process.env.NODE_ENV === 'development' && DEV_CONFIG.defaultWorkspace) {
+      console.log(`[DEV] Falling back to default mock workspace: ${DEV_CONFIG.defaultWorkspace}`);
+      const fallbackData = getMockWorkspace(DEV_CONFIG.defaultWorkspace);
+      if (fallbackData) {
+        return {
+          name: fallbackData.settings.siteName,
+          description: fallbackData.settings.siteDescription,
+          about: 'Fallback mock workspace data for development',
+          services: [],
+          theme: fallbackData.settings.theme,
+          contact: fallbackData.settings.contact,
+          social: {
+            linkedin: fallbackData.settings.socialMedia?.linkedin,
+            twitter: fallbackData.settings.socialMedia?.twitter,
+            facebook: fallbackData.settings.socialMedia?.facebook,
+          },
+          settings: fallbackData.settings,
+        };
+      }
+    }
+
     return null;
   }
 }

@@ -1,203 +1,115 @@
 'use client';
+
+import { getWorkspaceCMS, getWorkspacePage } from '@/lib/cms';
 import '@/styles/workspace-public.css';
-import { WorkspacePublicPageProps } from '@/types/workspace';
-import { buildNavigationTree } from '@/utils/cms';
-import React from 'react';
-import { mockCMSData } from './mockData';
-import {
-  ClientsSection,
-  FooterSection,
-  HeroSection,
-  OutcomesSection,
-  ServiceSection,
-  SocialsSection,
-  StorySection,
-} from './sections';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import HomePage from './HomePage';
+import LocationPage from './LocationPage';
 
-export default function WorkspacePublicPage({ workspace, data }: WorkspacePublicPageProps) {
-  console.log('🚀 data:', data);
+export interface WorkspacePublicPageProps {
+  workspace: string;
+  pageType?: 'home' | 'location';
+  locationSlug?: string;
+  data?: any; // Legacy prop for backward compatibility
+}
 
-  // Add smooth scrolling to the document
-  React.useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
-    return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
-    };
-  }, []);
+export default function WorkspacePublicPage({
+  workspace,
+  pageType = 'home',
+  locationSlug,
+  data,
+}: WorkspacePublicPageProps) {
+  const [cmsData, setCmsData] = useState(null);
+  const [pageData, setPageData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Use mock data instead of backend data
-  const overriddenData = mockCMSData;
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
 
-  // Use CMS settings if available, otherwise fall back to workspace data or defaults
-  const siteName =
-    overriddenData?.settings?.siteName || workspace.charAt(0).toUpperCase() + workspace.slice(1);
-  const description =
-    overriddenData?.settings?.siteDescription ||
-    'Your trusted partner for exceptional service and solutions';
-  const about =
-    overriddenData?.about ||
-    `We are dedicated to providing exceptional service and innovative solutions that help
-              our clients achieve their goals. With years of experience and a commitment to
-              excellence, we're here to support your success.`;
+        // Fetch workspace CMS data
+        const workspaceCMS = await getWorkspaceCMS(workspace);
+        if (!workspaceCMS) {
+          throw new Error(`Workspace '${workspace}' not found`);
+        }
 
-  // Get theme colors from CMS settings
-  const primaryColor = overriddenData?.settings?.theme?.primaryColor || '#7C3AED';
-  const secondaryColor = overriddenData?.settings?.theme?.secondaryColor || '#2563EB';
+        setCmsData(workspaceCMS);
 
-  // Get contact info from CMS settings
-  const contact = overriddenData?.settings?.contact;
-  const social = overriddenData?.settings?.socialMedia;
+        // Fetch specific page data
+        const page = await getWorkspacePage(workspace, pageType, locationSlug);
+        if (!page) {
+          if (pageType === 'location' && locationSlug) {
+            throw new Error(
+              `Location page '${locationSlug}' not found for workspace '${workspace}'`,
+            );
+          }
+          throw new Error(`Page not found`);
+        }
 
-  // Get navigation from CMS or use defaults - convert navigation for buildNavigationTree
-  const navigation = overriddenData?.cms?.navigation
-    ? buildNavigationTree(
-        overriddenData.cms.navigation.map((nav) => {
-          return {
-            ...nav,
-            id: nav.id.toString(),
-          };
-        }),
-      )
-    : [];
-
-  // Helper function to get section ID based on type
-  const getSectionId = (section: any) => {
-    switch (section.type) {
-      case 'heroSection':
-        return 'home';
-      case 'serviceSection':
-        return 'services';
-      case 'storySection':
-        return 'about';
-      case 'footerSection':
-        return 'contact';
-      default:
-        return section.type;
+        setPageData(page);
+      } catch (err) {
+        console.error('Error fetching workspace data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
 
-  // Helper function to render sections based on type
-  const renderSection = (section: any) => {
-    const commonProps = { primaryColor, secondaryColor };
-    const sectionId = getSectionId(section);
+    fetchData();
+  }, [workspace, pageType, locationSlug]);
 
-    switch (section.type) {
-      case 'heroSection':
-        return (
-          <HeroSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            buttonText={section.buttonText}
-            buttonUrl={section.buttonUrl}
-            {...commonProps}
-          />
-        );
-      case 'clientsSection':
-        return (
-          <ClientsSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            clients={section.clients}
-          />
-        );
-      case 'serviceSection':
-        return (
-          <ServiceSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            services={section.services}
-          />
-        );
-      case 'outcomesSection':
-        return (
-          <OutcomesSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            outcomes={section.outcomes}
-            {...commonProps}
-          />
-        );
-      case 'storySection':
-        return (
-          <StorySection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            story={section.story}
-            {...commonProps}
-          />
-        );
-      case 'socialsSection':
-        return (
-          <SocialsSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            socialLinks={section.socialLinks}
-            testimonials={section.testimonials}
-            {...commonProps}
-          />
-        );
-      case 'footerSection':
-        return (
-          <FooterSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            contact={section.contact}
-            quickLinks={section.quickLinks}
-            legalLinks={section.legalLinks}
-            siteName={siteName}
-            {...commonProps}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+          <p className='text-gray-600'>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  return (
-    <div className='workspace-public-page min-h-screen' style={{ scrollBehavior: 'smooth' }}>
-      {/* Navigation */}
-      {navigation.length > 0 && (
-        <nav className='bg-white shadow-sm border-b'>
-          <div className='container mx-auto px-4'>
-            <div className='flex items-center justify-between h-16'>
-              <div className='sitename font-bold text-xl' style={{ color: primaryColor }}>
-                {siteName}
-              </div>
-              <div className='hidden md:flex space-x-8'>
-                {navigation.map((item) => {
-                  return (
-                    <a
-                      key={item.id}
-                      href={item.url}
-                      className='text-gray-600 hover:text-gray-900 transition-colors'
-                      target={item.target}
-                    >
-                      {item.label}
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </nav>
-      )}
+  if (error) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+        <div className='text-center'>
+          <h1 className='text-4xl font-bold text-gray-900 mb-4'>Page Not Found</h1>
+          <p className='text-gray-600 mb-8'>{error}</p>
+          <Link
+            href='/'
+            className='inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+          >
+            Go Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-      {/* Render all sections */}
-      {overriddenData?.cms?.sections?.map(renderSection)}
-    </div>
-  );
+  if (!cmsData || !pageData) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+        <div className='text-center'>
+          <p className='text-gray-600'>No content available</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render appropriate page component based on page type
+  if (pageType === 'location' && locationSlug) {
+    return (
+      <LocationPage
+        workspace={workspace}
+        locationSlug={locationSlug}
+        cmsData={cmsData}
+        pageData={pageData}
+      />
+    );
+  }
+
+  return <HomePage workspace={workspace} cmsData={cmsData} pageData={pageData} />;
 }

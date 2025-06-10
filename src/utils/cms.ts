@@ -1,3 +1,4 @@
+import { getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
 import {
   CMSContent,
   CMSNavigation,
@@ -107,6 +108,23 @@ class CMSClient {
  * Fetch complete CMS content for a workspace
  */
 export async function fetchCMSContent(workspaceSlug: string): Promise<CMSContent | null> {
+  // In development, check for mock data first
+  if (process.env.NODE_ENV === 'development' && hasMockWorkspace(workspaceSlug)) {
+    console.log(`[DEV] Using mock CMS content for workspace: ${workspaceSlug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData) {
+      // Convert WorkspaceCMSData to CMSContent format
+      return {
+        posts: [], // No posts in mock data for now
+        sections: [], // Sections are in pages
+        media: [], // No media in mock data for now
+        pages: mockData.pages.home ? [mockData.pages.home] : [],
+        navigation: mockData.navigation || [],
+        settings: mockData.settings,
+      };
+    }
+  }
+
   const client = new CMSClient(workspaceSlug);
   return client.getContent();
 }
@@ -115,6 +133,15 @@ export async function fetchCMSContent(workspaceSlug: string): Promise<CMSContent
  * Fetch CMS settings for a workspace
  */
 export async function fetchCMSSettings(workspaceSlug: string): Promise<CMSSettings | null> {
+  // In development, check for mock data first
+  if (process.env.NODE_ENV === 'development' && hasMockWorkspace(workspaceSlug)) {
+    console.log(`[DEV] Using mock CMS settings for workspace: ${workspaceSlug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData) {
+      return mockData.settings;
+    }
+  }
+
   const client = new CMSClient(workspaceSlug);
   return client.getSettings();
 }
@@ -123,6 +150,22 @@ export async function fetchCMSSettings(workspaceSlug: string): Promise<CMSSettin
  * Fetch a specific page by slug
  */
 export async function fetchPage(workspaceSlug: string, slug: string): Promise<CMSPage | null> {
+  // In development, check for mock data first
+  if (process.env.NODE_ENV === 'development' && hasMockWorkspace(workspaceSlug)) {
+    console.log(`[DEV] Using mock page data for workspace: ${workspaceSlug}, page: ${slug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData) {
+      // Check home page
+      if (slug === 'home' && mockData.pages.home) {
+        return mockData.pages.home;
+      }
+      // Check location pages
+      if (mockData.pages.locations && mockData.pages.locations[slug]) {
+        return mockData.pages.locations[slug];
+      }
+    }
+  }
+
   const client = new CMSClient(workspaceSlug);
   return client.getPage(slug);
 }
@@ -149,6 +192,15 @@ export async function fetchPosts(workspaceSlug: string, query?: CMSQuery): Promi
  * Fetch navigation items
  */
 export async function fetchNavigation(workspaceSlug: string): Promise<CMSNavigation[]> {
+  // In development, check for mock data first
+  if (process.env.NODE_ENV === 'development' && hasMockWorkspace(workspaceSlug)) {
+    console.log(`[DEV] Using mock navigation for workspace: ${workspaceSlug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData && mockData.navigation) {
+      return mockData.navigation;
+    }
+  }
+
   const client = new CMSClient(workspaceSlug);
   const navigation = await client.getNavigation();
   return navigation || [];

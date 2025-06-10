@@ -233,7 +233,7 @@ const InvoicePage = () => {
 
   if (isLoading) {
     return (
-      <div className='dotted-bg min-h-screen w-full flex items-center justify-center'>
+      <div className='dotted-bg min-h-screen w-full flex items-center justify-center bg-white'>
         <div className='flex flex-col items-center gap-4'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D1D1F]'></div>
           <span className='text-sm text-[#878787] font-mono bg-white'>Loading invoice...</span>
@@ -276,7 +276,7 @@ const InvoicePage = () => {
         </div>
 
         <div className='pb-24 md:pb-0'>
-          <Card className='shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)] bg-white'>
+          <Card className='shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)] bg-white border-[#e2e8f0] border-[1px]'>
             <CardContent className='p-4 sm:p-6 md:p-8'>
               <AnimatePresence mode='wait'>
                 {!showPayment ? (

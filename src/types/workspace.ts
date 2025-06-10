@@ -37,5 +37,7 @@ export interface WorkspaceApiResponse {
 
 export interface WorkspacePublicPageProps {
   workspace: string;
+  pageType?: 'home' | 'location';
+  locationSlug?: string;
   data?: WorkspaceData;
 }

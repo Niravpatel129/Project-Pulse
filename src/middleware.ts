@@ -10,13 +10,60 @@ export function middleware(request: NextRequest) {
 
   // Parse subdomain
   const subdomain = hostname.split('.')[0];
-  const isCustomSubdomain = !['www', 'localhost:3000', 'pulse-app', 'hourblock'].includes(
-    subdomain,
-  );
+  const isCustomSubdomain = ![
+    'www',
+    'localhost:3000',
+    'localhost:3001',
+    'pulse-app',
+    'hourblock',
+  ].includes(subdomain);
 
   // Handle service worker related paths
   if (path === '/sw.js' || path.startsWith('/workbox-')) {
     // Don't apply subdomain redirects to service worker files
+    return NextResponse.next();
+  }
+
+  // Development mode: Handle localhost:3000 or localhost:3001 as if it has a workspace
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isLocalhost = hostname === 'localhost:3000' || hostname === 'localhost:3001';
+
+  if (isDevelopment && isLocalhost && !isCustomSubdomain) {
+    // For development on localhost, treat it as a workspace
+    const mockWorkspace = 'bolocreate'; // Default mock workspace
+
+    // Allow workspace switching via URL param (already handled in page.tsx)
+    const url = new URL(request.url);
+    const workspaceParam = url.searchParams.get('workspace');
+    const activeWorkspace = workspaceParam || mockWorkspace;
+
+    // Skip middleware for API routes, _next, and static files
+    if (
+      path.startsWith('/api') ||
+      path.startsWith('/_next') ||
+      path.startsWith('/favicon') ||
+      path.startsWith('/public')
+    ) {
+      return NextResponse.next();
+    }
+
+    // Handle location pages: /locations/[slug] -> /[workspace]/locations/[slug]
+    if (path.startsWith('/locations/')) {
+      const newPath = `/${activeWorkspace}${path}`;
+      console.log(
+        `[DEV Middleware] Rewriting ${path} -> ${newPath} (workspace: ${activeWorkspace})`,
+      );
+      return NextResponse.rewrite(new URL(newPath, request.url));
+    }
+
+    // Handle root path with workspace param
+    if (path === '/' && workspaceParam) {
+      // Keep the root path, let page.tsx handle workspace switching
+      return NextResponse.next();
+    }
+
+    // For development, don't enforce authentication
+    console.log(`[DEV Middleware] Allowing ${path} in development mode`);
     return NextResponse.next();
   }
 
