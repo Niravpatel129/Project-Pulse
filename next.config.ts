@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
       'cdn.sanity.io',
       'vercel.com',
       'img.freepik.com',
+      'cdn.prod.website-files.com',
     ],
   },
   async headers() {
