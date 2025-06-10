@@ -65,8 +65,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center'>
       <div className='text-center'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-4'>Welcome to Pulse</h1>
-        <p className='text-xl text-gray-600 mb-8'>Multi-tenant CMS Platform</p>
+        <h1 className='text-4xl font-bold text-gray-900 mb-4'>Welcome</h1>
+        <p className='text-xl text-gray-600 mb-8'></p>
         {process.env.NODE_ENV === 'development' && (
           <div className='bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto'>
             <h2 className='text-lg font-semibold mb-4'>Development Mode</h2>
