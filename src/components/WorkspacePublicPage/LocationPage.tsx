@@ -105,7 +105,7 @@ export default function LocationPage({
     <div className='workspace-public-page min-h-screen w-full' style={{ scrollBehavior: 'smooth' }}>
       {/* Navigation */}
       {navigation.length > 0 && (
-        <nav className='bg-white shadow-sm border-b'>
+        <nav className='shadow-sm border-b'>
           <div className='container mx-auto px-4'>
             <div className='flex items-center justify-between h-16'>
               <div className='sitename font-bold text-xl' style={{ color: primaryColor }}>

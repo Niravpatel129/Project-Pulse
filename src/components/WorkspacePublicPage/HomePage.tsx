@@ -167,7 +167,7 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
     <div className='workspace-public-page min-h-screen w-full' style={{ scrollBehavior: 'smooth' }}>
       {/* Navigation */}
       {navigation.length > 0 && (
-        <nav className='bg-white shadow-sm border-b'>
+        <nav className='bg-transparent shadow-sm border-b'>
           <div className='container mx-auto px-4'>
             <div className='flex items-center justify-between h-16'>
               <div className='sitename font-bold text-xl' style={{ color: primaryColor }}>
@@ -191,7 +191,6 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
           </div>
         </nav>
       )}
-
       {/* Render all sections */}
       {sections
         .sort((a, b) => {

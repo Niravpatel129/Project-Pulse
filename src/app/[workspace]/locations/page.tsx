@@ -46,7 +46,7 @@ export default async function LocationsPage({ params }: LocationsPageProps) {
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* Navigation */}
-      <nav className='bg-white shadow-sm border-b'>
+      <nav className='shadow-sm border-b'>
         <div className='container mx-auto px-4'>
           <div className='flex items-center justify-between h-16'>
             <Link href='/' className='font-bold text-xl' style={{ color: primaryColor }}>
