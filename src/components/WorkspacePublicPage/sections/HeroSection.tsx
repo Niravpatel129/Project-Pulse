@@ -23,17 +23,30 @@ export default function HeroSection({
       id={id}
       className='text-white py-20'
       style={{
-        background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+        background: `linear-gradient(var(--color--tinted-100, #f8f5f2), var(--color-2, #fbfafa))`,
       }}
     >
       <div className='container mx-auto px-4'>
         <div className='max-w-4xl mx-auto text-center'>
-          <h1 className='text-5xl font-bold mb-6'>{title}</h1>
-          <p className='text-xl opacity-90 mb-8'>{subtitle}</p>
+          <h1 className='text-5xl font-bold mb-6' style={{ color: 'var(--content--primary)' }}>
+            {title}
+          </h1>
+          <p className='text-xl opacity-90 mb-8' style={{ color: 'var(--content--secondary)' }}>
+            {subtitle}
+          </p>
           <div className='space-x-4'>
             <button
-              className='bg-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors'
-              style={{ color: primaryColor }}
+              className='px-8 py-3 rounded-lg font-semibold transition-colors'
+              style={{
+                backgroundColor: 'var(--fill--brand)',
+                color: 'var(--color--white)',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--blue-hover)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--fill--brand)';
+              }}
               onClick={() => {
                 return buttonUrl && (window.location.href = buttonUrl);
               }}
@@ -41,12 +54,17 @@ export default function HeroSection({
               {buttonText}
             </button>
             <button
-              className='border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white transition-colors'
+              className='px-8 py-3 rounded-lg font-semibold transition-colors'
+              style={{
+                border: '2px solid var(--border--primary)',
+                backgroundColor: 'transparent',
+                color: 'var(--content--primary)',
+              }}
               onMouseOver={(e) => {
-                return (e.currentTarget.style.color = primaryColor);
+                e.currentTarget.style.backgroundColor = 'var(--state--hover)';
               }}
               onMouseOut={(e) => {
-                return (e.currentTarget.style.color = 'white');
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
               Learn More

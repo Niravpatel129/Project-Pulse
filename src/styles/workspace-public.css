@@ -1,0 +1,130 @@
+/* Import Questrial font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Questrial:wght@400&display=swap');
+
+/* Workspace Public Page Theme */
+.workspace-public-page {
+  --base-bg: #f1f1f2;
+  --content--primary: var(--color--neutral-1200);
+  --light-grey: #f4f4f4;
+  --blue-hover: #054bc5;
+  --content--brand: var(--color--brand);
+  --color--ov-dark-600: #00000014;
+  --color--ov-dark-500: #00000029;
+  --color--ov-light-500: #ffffff29;
+  --content-inverted--primary: var(--color--ov-light-100);
+  --color--ov-light-600: #ffffff14;
+  --color--white: white;
+  --light-gray: #f5f5f5;
+  --lightblack: #181f1f;
+  --default--white: white;
+  --content--quaternary: var(--color--neutral-600);
+  --color--neutral-200: #ebebec;
+  --color--neutral-500: #acadaf;
+  --brandblue: #015bf8;
+  --color--neutral-800: #6c6f75;
+  --color--brand: #0051f2;
+  --content--negative: var(--color--negative);
+  --section--radius: 4.8rem;
+  --content--tertiary: var(--color--neutral-700);
+  --content-inverted--tertiary: var(--color--ov-light-300);
+  --light-brown: #f0eae1;
+  --fill--card: var(--color--neutral-200);
+  --grader-footer-bg: #f2f0ed;
+  --grader-brown: #302207;
+  --grader-black-2: #090a0b;
+  --grader-black-1-hover: #222323;
+  --grader-brown-2: #bdab97;
+  --grader-brown-2-hover: #bdab97;
+  --content-inverted--secondary: var(--color--ov-light-200);
+  --color--neutral-700: #787a7d;
+  --color--ov-dark-300: #00000085;
+  --content--secondary: var(--color--neutral-800);
+  --color--ov-light-100: #ffffffeb;
+  --color--neutral-100: whitesmoke;
+  --color--neutral-1200: #181f1f;
+  --section--overlap: -4rem;
+  --color--neutral-300: #e0e0e1;
+  --smoke-white: #fafafa;
+  --color-2: #fbfafa;
+  --color--ov-light-400: #ffffff52;
+  --color--negative: #d73815;
+  --color--neutral-400: #cbcccd;
+  --color--tinted-200: #f2ece5;
+  --border--primary: var(--color--ov-dark-500);
+  --support-bg: #f2f2f3;
+  --color--ov-light-200: #ffffffc2;
+  --fill--background: var(--color--white);
+  --fill--brand: var(--color--brand);
+  --gray: #7b7b7b;
+  --border--weak: var(--color--neutral-200);
+  --state--hover: var(--color--ov-dark-700);
+  --grader-black-1: #0d0e0e;
+  --grader-black-3: #181f1f;
+  --text-color: #737373;
+  --border--strong: var(--color--ov-dark-400);
+  --border-inverted--primary: var(--color--ov-light-500);
+  --border-inverted--strong: var(--color--ov-light-300);
+  --color--neutral-600: #a1a3a5;
+  --color--neutral-900: #4e5155;
+  --color--neutral-1000: #3a3b3e;
+  --color--neutral-1100: #1e1f20;
+  --color--tinted-100: #f8f5f2;
+  --color--tinted-300: #e8e1d9;
+  --color--tinted-400: #d6cdc2;
+  --color--tined-500: #baaea0;
+  --color--tinted-600: #b2a495;
+  --color--tinted-700: #897b6c;
+  --color--tinted-800: #797167;
+  --color--tinted-900: #5b5248;
+  --color--tinted-1000: #463d32;
+  --color--tinted-1100: #241f1a;
+  --color--tinted-1200: white;
+  --color--ov-light-300: #ffffff85;
+  --color--ov-light-700: #ffffff0a;
+  --color--ov-dark-100: #000000eb;
+  --color--ov-dark-200: #000000c2;
+  --color--ov-dark-400: #00000052;
+  --color--ov-dark-700: #0000000a;
+  --color--interactive-brand: #9d5707;
+  --fill--inverted: var(--color--neutral-1200);
+  --fill--muted: #0051f233;
+  --fill-interactive--default: var(--color--neutral-300);
+  --fill-interactive--inverted: var(--color--white);
+  --fill-interactive--brand: var(--color--brand);
+  --state--pressed: var(--color--ov-dark-600);
+  --state--disabled: var(--color--ov-dark-500);
+  --state-inverted--hover: var(--color--ov-light-700);
+  --state-inverted--pressed: var(--color--ov-light-600);
+  --state-inverted--disabled: var(--color--ov-light-700);
+}
+
+/* Apply base background color and Questrial font to the workspace public page */
+.workspace-public-page {
+  background-color: var(--base-bg);
+  color: var(--content--primary);
+  font-family: 'Questrial', sans-serif;
+}
+
+/* Apply Questrial font to all text elements within workspace public pages */
+.workspace-public-page * {
+  font-family: 'Questrial', sans-serif;
+}
+
+/* Navigation styling for workspace public pages */
+.workspace-public-page nav {
+  background-color: var(--fill--background);
+  border-bottom: 1px solid var(--border--weak);
+}
+
+.workspace-public-page nav .sitename {
+  color: var(--content--brand);
+}
+
+.workspace-public-page nav a {
+  color: var(--content--secondary);
+  transition: color 0.2s ease;
+}
+
+.workspace-public-page nav a:hover {
+  color: var(--content--primary);
+}

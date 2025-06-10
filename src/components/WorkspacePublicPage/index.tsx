@@ -1,4 +1,5 @@
 'use client';
+import '@/styles/workspace-public.css';
 import { WorkspacePublicPageProps } from '@/types/workspace';
 import { buildNavigationTree } from '@/utils/cms';
 import React from 'react';
@@ -167,13 +168,13 @@ export default function WorkspacePublicPage({ workspace, data }: WorkspacePublic
   };
 
   return (
-    <div className='min-h-screen' style={{ scrollBehavior: 'smooth' }}>
+    <div className='workspace-public-page min-h-screen' style={{ scrollBehavior: 'smooth' }}>
       {/* Navigation */}
       {navigation.length > 0 && (
         <nav className='bg-white shadow-sm border-b'>
           <div className='container mx-auto px-4'>
             <div className='flex items-center justify-between h-16'>
-              <div className='font-bold text-xl' style={{ color: primaryColor }}>
+              <div className='sitename font-bold text-xl' style={{ color: primaryColor }}>
                 {siteName}
               </div>
               <div className='hidden md:flex space-x-8'>
