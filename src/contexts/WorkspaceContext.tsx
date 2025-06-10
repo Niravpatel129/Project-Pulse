@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
+import { useParams } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -42,6 +43,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [isLoadingReaders, setIsLoadingReaders] = useState(false);
   const [readerId, setReaderId] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
+  const { workspace: workspaceParam } = useParams();
 
   const fetchPOSReaders = async () => {
     setIsLoadingReaders(true);
@@ -59,6 +61,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   useEffect(() => {
     // dont fetch if not logged in
     if (!isAuthenticated) return;
+    if (!workspaceParam) return;
 
     try {
       const fetchWorkspace = async () => {

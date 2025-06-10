@@ -116,7 +116,6 @@ export default function SettingsPage() {
       return response.data.data;
     },
   });
-  console.log('🚀 stripeStatus:', stripeStatus);
 
   // Filter out members who have pending invitations
   const activeTeamMembers = teamMembers.filter((member) => {
