@@ -7,7 +7,10 @@ export const bolocreate: WorkspaceCMSData = {
     siteDescription:
       'Professional Resume Writing That Gets Interviews - Trusted by 100+ Across the Greater Toronto Area',
     theme: {
-      primaryColor: '#1E40AF',
+      content: {
+        primary: '#181f1f',
+      },
+      primaryColor: '#015bf8',
       secondaryColor: '#DC2626',
     },
     contact: {

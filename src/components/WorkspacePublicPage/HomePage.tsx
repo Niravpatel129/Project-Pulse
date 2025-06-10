@@ -33,8 +33,10 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
   const { sections } = pageData;
 
   // Get theme colors from CMS settings
-  const primaryColor = settings.theme?.primaryColor || '#7C3AED';
-  const secondaryColor = settings.theme?.secondaryColor || '#2563EB';
+  const primaryColor = settings.theme?.primaryColor || '#000000';
+  const secondaryColor = settings.theme?.secondaryColor || '#000000';
+  const contentPrimary = settings.theme?.content?.primary || '#000000';
+  const contentSecondary = settings.theme?.content?.secondary || '#000000';
 
   // Helper function to get section ID based on type
   const getSectionId = (section: any) => {
@@ -167,10 +169,10 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
     <div className='workspace-public-page min-h-screen w-full' style={{ scrollBehavior: 'smooth' }}>
       {/* Navigation */}
       {navigation.length > 0 && (
-        <nav className='bg-transparent shadow-sm border-b'>
+        <nav className='bg-[#f5f4f0] shadow-sm border-b'>
           <div className='container mx-auto px-4'>
             <div className='flex items-center justify-between h-16'>
-              <div className='sitename font-bold text-xl' style={{ color: primaryColor }}>
+              <div className='sitename font-bold text-xl' style={{ color: contentPrimary }}>
                 {settings.siteName}
               </div>
               <div className='hidden md:flex space-x-8'>
@@ -179,7 +181,7 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
                     <a
                       key={item.id}
                       href={item.url}
-                      className='text-gray-600 hover:text-gray-900 transition-colors'
+                      className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm'
                       target={item.target}
                     >
                       {item.label}

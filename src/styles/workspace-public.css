@@ -100,31 +100,12 @@
 
 /* Apply base background color and Questrial font to the workspace public page */
 .workspace-public-page {
-  background-color: var(--base-bg);
   color: var(--content--primary);
   font-family: 'Questrial', sans-serif;
+  background-color: var(--base-bg);
 }
 
 /* Apply Questrial font to all text elements within workspace public pages */
 .workspace-public-page * {
   font-family: 'Questrial', sans-serif;
-}
-
-/* Navigation styling for workspace public pages */
-.workspace-public-page nav {
-  background-color: var(--fill--background);
-  border-bottom: 1px solid var(--border--weak);
-}
-
-.workspace-public-page nav .sitename {
-  color: var(--content--brand);
-}
-
-.workspace-public-page nav a {
-  color: var(--content--secondary);
-  transition: color 0.2s ease;
-}
-
-.workspace-public-page nav a:hover {
-  color: var(--content--primary);
 }

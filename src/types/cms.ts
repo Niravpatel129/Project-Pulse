@@ -110,6 +110,10 @@ export interface CMSSettings {
     facebookPixelId?: string;
   };
   theme?: {
+    content?: {
+      primary?: string;
+      secondary?: string;
+    };
     primaryColor?: string;
     secondaryColor?: string;
     fontFamily?: string;
