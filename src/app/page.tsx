@@ -4,10 +4,13 @@ import { getWorkspaceConfig } from '@/utils/workspace';
 import { headers } from 'next/headers';
 
 interface HomePageProps {
-  searchParams: { workspace?: string };
+  searchParams: Promise<{ workspace?: string }>;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
+  // Await the searchParams promise
+  const resolvedSearchParams = await searchParams;
+
   // Get the hostname from headers to determine workspace
   const headersList = await headers();
   const hostname = headersList.get('host') || '';
@@ -23,8 +26,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   if (isCustomSubdomain) {
     // In development, allow workspace override via URL param
     const workspaceSlug =
-      process.env.NODE_ENV === 'development' && searchParams.workspace
-        ? searchParams.workspace
+      process.env.NODE_ENV === 'development' && resolvedSearchParams.workspace
+        ? resolvedSearchParams.workspace
         : 'bolocreate'; // Default for testing
 
     console.log(`[DEV] Using workspace: ${workspaceSlug}`);
