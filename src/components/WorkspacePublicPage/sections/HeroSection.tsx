@@ -42,23 +42,22 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`relative flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 text-white ${textAlignClass}`}
+      className={`relative flex items-center justify-center text-gray-900 ${textAlignClass}`}
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        background: backgroundImage
+          ? `linear-gradient(#f5f3f0,#fefdfd), url(${backgroundImage})`
+          : 'linear-gradient(#f5f3f0,#fefdfd)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         minHeight,
       }}
     >
-      {/* Overlay */}
-      <div className='absolute inset-0 bg-black' style={{ opacity: overlayOpacity }}></div>
-
       {/* Content */}
       <div className='relative z-10 container mx-auto px-4'>
         <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''}`}>
           <h1 className='text-4xl md:text-6xl font-bold mb-6 leading-tight'>{title}</h1>
 
-          <p className='text-xl md:text-2xl mb-8 text-gray-100'>{subtitle}</p>
+          <p className='text-xl md:text-2xl mb-8 text-gray-700'>{subtitle}</p>
 
           {/* Highlights (for location variant or key points) */}
           {highlights.length > 0 && (
@@ -72,9 +71,9 @@ export default function HeroSection({
                   return (
                     <div
                       key={index}
-                      className='bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20'
+                      className='bg-white bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-200'
                     >
-                      <p className='text-sm font-medium text-gray-100'>{highlight}</p>
+                      <p className='text-sm font-medium text-gray-800'>{highlight}</p>
                     </div>
                   );
                 })}
@@ -100,13 +99,13 @@ export default function HeroSection({
               </a>
 
               {variant === 'location' && (
-                <p className='text-sm text-gray-300'>
+                <p className='text-sm text-gray-600'>
                   Call or text anytime • Free consultation • Same-day response
                 </p>
               )}
 
               {variant === 'default' && (
-                <p className='text-sm text-gray-300'>
+                <p className='text-sm text-gray-600'>
                   Get started today • Professional results guaranteed
                 </p>
               )}
@@ -114,9 +113,6 @@ export default function HeroSection({
           )}
         </div>
       </div>
-
-      {/* Decorative elements */}
-      <div className='absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent'></div>
     </section>
   );
 }
