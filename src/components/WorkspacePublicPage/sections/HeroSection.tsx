@@ -1,3 +1,6 @@
+import { StarFilledIcon } from '@radix-ui/react-icons';
+import Link from 'next/link';
+
 interface HeroSectionProps {
   title?: string;
   subtitle?: string;
@@ -55,9 +58,19 @@ export default function HeroSection({
       {/* Content */}
       <div className='relative z-10 container mx-auto px-4'>
         <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''}`}>
-          <h1 className='text-4xl md:text-6xl font-bold mb-6 leading-tight'>{title}</h1>
+          <p className='mb-8 text-[#6b727f] flex items-center gap-1 w-full text-center justify-center text-sm'>
+            #1 Top-Rated Software
+            <span className='text-gray-500 flex items-center gap-0'>
+              <span className='flex items-center gap-0'>
+                4.8
+                <StarFilledIcon className='w-4 h-4' />
+              </span>
+              <span className='text-gray-500'>across 279 reviews</span>
+            </span>
+          </p>
+          <h1 className='text-4xl md:text-7xl font-bold mb-6 leading-tight'>{title}</h1>
 
-          <p className='text-xl md:text-2xl mb-8 text-gray-700'>{subtitle}</p>
+          {/* <p className='text-xl md:text-2xl mb-8 text-gray-700'>{subtitle}</p> */}
 
           {/* Highlights (for location variant or key points) */}
           {highlights.length > 0 && (
@@ -86,17 +99,13 @@ export default function HeroSection({
 
           {/* CTA Button */}
           {buttonText && buttonUrl && (
-            <div className='space-y-4'>
-              <a
+            <div className='space-y-4 flex items-center justify-center flex-col'>
+              <Link
                 href={buttonUrl}
-                className='inline-block px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg'
-                style={{
-                  backgroundColor: primaryColor,
-                  color: 'white',
-                }}
+                className='inline-block px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg bg-black text-white mt-4'
               >
                 {buttonText}
-              </a>
+              </Link>
 
               {variant === 'location' && (
                 <p className='text-sm text-gray-600'>
