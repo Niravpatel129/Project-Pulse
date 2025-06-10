@@ -10,7 +10,9 @@ export function middleware(request: NextRequest) {
 
   // Parse subdomain
   const subdomain = hostname.split('.')[0];
-  const isCustomSubdomain = !['www', 'localhost:3000', 'pulse-app'].includes(subdomain);
+  const isCustomSubdomain = !['www', 'localhost:3000', 'pulse-app', 'hourblock'].includes(
+    subdomain,
+  );
 
   // Handle service worker related paths
   if (path === '/sw.js' || path.startsWith('/workbox-')) {
