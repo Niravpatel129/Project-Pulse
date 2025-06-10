@@ -156,7 +156,7 @@ export const bolocreate: WorkspaceCMSData = {
           title: 'What Our Clients Say',
           subtitle:
             'Real Google Reviews from Real Clients - Trusted by 100+ Professionals Across the GTA',
-          order: 4,
+          order: 3,
           variant: 'default',
           data: {
             reviews: [
@@ -376,7 +376,7 @@ export const bolocreate: WorkspaceCMSData = {
             type: 'contactSection',
             title: 'Contact Us in Toronto',
             subtitle: "Ready to advance your career in Toronto? Let's get started today.",
-            order: 3,
+            order: 4,
             variant: 'location',
             layout: 'split',
             data: {
