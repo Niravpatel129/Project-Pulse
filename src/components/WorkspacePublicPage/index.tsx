@@ -3,6 +3,7 @@ import { WorkspacePublicPageProps } from '@/types/workspace';
 import { buildNavigationTree } from '@/utils/cms';
 
 export default function WorkspacePublicPage({ workspace, data }: WorkspacePublicPageProps) {
+  console.log('🚀 data:', data);
   // Use CMS settings if available, otherwise fall back to workspace data or defaults
   const siteName =
     data?.settings?.siteName ||
