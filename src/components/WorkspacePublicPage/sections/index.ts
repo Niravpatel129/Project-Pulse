@@ -6,6 +6,7 @@ export { default as ServiceSection } from './ServiceSection';
 // Specialized sections
 export { default as ClientsSection } from './ClientsSection';
 export { default as FooterSection } from './FooterSection';
+export { default as GoogleReviewsSection } from './GoogleReviewsSection';
 export { default as OutcomesSection } from './OutcomesSection';
 export { default as SocialsSection } from './SocialsSection';
 export { default as StorySection } from './StorySection';

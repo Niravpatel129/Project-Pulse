@@ -7,6 +7,7 @@ import {
   ClientsSection,
   ContactSection,
   FooterSection,
+  GoogleReviewsSection,
   HeroSection,
   OutcomesSection,
   ServiceSection,
@@ -110,6 +111,20 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
             title={section.title}
             subtitle={section.subtitle}
             clients={section.data.clients}
+          />
+        );
+      case 'googleReviewsSection':
+        return (
+          <GoogleReviewsSection
+            key={section.id}
+            id={sectionId}
+            title={section.title}
+            subtitle={section.subtitle}
+            reviews={section.data.reviews}
+            showGoogleBadge={section.data.showGoogleBadge}
+            averageRating={section.data.averageRating}
+            totalReviews={section.data.totalReviews}
+            primaryColor={primaryColor}
           />
         );
       case 'outcomesSection':

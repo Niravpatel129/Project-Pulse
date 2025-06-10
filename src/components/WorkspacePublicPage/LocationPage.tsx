@@ -4,7 +4,7 @@ import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
 import '@/styles/workspace-public.css';
 import Link from 'next/link';
 import React from 'react';
-import { ContactSection, HeroSection, ServiceSection } from './sections';
+import { ContactSection, GoogleReviewsSection, HeroSection, ServiceSection } from './sections';
 
 interface LocationPageProps {
   workspace: string;
@@ -43,6 +43,8 @@ export default function LocationPage({
         return 'services';
       case 'contactSection':
         return 'contact';
+      case 'googleReviewsSection':
+        return 'reviews';
       default:
         return section.type;
     }
@@ -93,6 +95,20 @@ export default function LocationPage({
             testimonials={section.data.testimonials}
             variant={section.variant}
             layout={section.layout}
+            primaryColor={primaryColor}
+          />
+        );
+      case 'googleReviewsSection':
+        return (
+          <GoogleReviewsSection
+            key={section.id}
+            id={sectionId}
+            title={section.title}
+            subtitle={section.subtitle}
+            reviews={section.data.reviews}
+            showGoogleBadge={section.data.showGoogleBadge}
+            averageRating={section.data.averageRating}
+            totalReviews={section.data.totalReviews}
             primaryColor={primaryColor}
           />
         );
