@@ -14,7 +14,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   const content = (
     <div
-      className={`relative flex min-h-screen w-full bg-background text-foreground ${GeistSans.className}`}
+      className={`w-full relative flex min-h-screen bg-background text-foreground ${GeistSans.className}`}
     >
       {showSidebar && <Sidebar />}
       {children}

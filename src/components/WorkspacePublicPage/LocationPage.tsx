@@ -102,7 +102,7 @@ export default function LocationPage({
   };
 
   return (
-    <div className='workspace-public-page min-h-screen' style={{ scrollBehavior: 'smooth' }}>
+    <div className='workspace-public-page min-h-screen w-full' style={{ scrollBehavior: 'smooth' }}>
       {/* Navigation */}
       {navigation.length > 0 && (
         <nav className='bg-white shadow-sm border-b'>
