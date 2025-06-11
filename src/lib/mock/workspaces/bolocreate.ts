@@ -50,8 +50,8 @@ export const bolocreate: WorkspaceCMSData = {
           order: 1,
           variant: 'default',
           data: {
-            buttonText: 'Call Now to Start Your Resume',
-            buttonUrl: 'tel:4377743721',
+            buttonText: 'Get Started',
+            buttonAction: 'openOnboardingSheet',
             backgroundImage: '/images/resume-hero-bg.jpg',
           },
         },
@@ -264,7 +264,73 @@ export const bolocreate: WorkspaceCMSData = {
             ],
           },
         },
-
+        {
+          id: 'onboarding-services-1',
+          type: 'onboardingServiceSection',
+          title: 'Start Your Resume in Minutes',
+          subtitle: 'Interactive onboarding to match you with the perfect resume service',
+          order: 4,
+          variant: 'onboarding',
+          data: {
+            description:
+              "Answer a few quick questions and we'll guide you to the right service. At the end, you'll get a personalized contact form based on your choices. All in a clean, right-side sheet (shadcn).",
+            steps: [
+              {
+                id: 'role',
+                question: 'What type of role are you applying for?',
+                options: [
+                  'Healthcare (e.g. PSW, Nurse)',
+                  'Security',
+                  'Warehouse/Logistics',
+                  'Office/Admin',
+                  'Customer Service',
+                  'Other',
+                ],
+              },
+              {
+                id: 'urgency',
+                question: 'How soon do you need your resume?',
+                options: ['Within 24 hours', '2-3 days', 'Flexible'],
+              },
+              {
+                id: 'experience',
+                question: 'What is your experience level?',
+                options: ['Entry Level', 'Mid Level', 'Senior/Management'],
+              },
+            ],
+            contactForm: {
+              dynamic: true,
+              description:
+                'The contact form at the end adapts to your answers (e.g., asks for certifications if Healthcare, or license if Security/Logistics).',
+              baseFields: [
+                { label: 'Full Name', type: 'text', required: true },
+                { label: 'Email', type: 'email', required: true },
+                { label: 'Phone', type: 'tel', required: false },
+              ],
+              dynamicFields: [
+                {
+                  dependsOn: 'role',
+                  value: 'Healthcare (e.g. PSW, Nurse)',
+                  fields: [{ label: 'Healthcare Certifications', type: 'text', required: false }],
+                },
+                {
+                  dependsOn: 'role',
+                  value: 'Security',
+                  fields: [{ label: 'Security License Number', type: 'text', required: false }],
+                },
+                {
+                  dependsOn: 'role',
+                  value: 'Warehouse/Logistics',
+                  fields: [{ label: 'Forklift License', type: 'text', required: false }],
+                },
+              ],
+            },
+            sheet: {
+              position: 'right',
+              style: 'shadcn',
+            },
+          },
+        },
         {
           id: 'footer-1',
           type: 'footerSection',

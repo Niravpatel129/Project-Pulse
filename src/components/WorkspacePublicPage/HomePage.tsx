@@ -70,6 +70,7 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
             subtitle={section.subtitle}
             buttonText={section.data.buttonText}
             buttonUrl={section.data.buttonUrl}
+            buttonAction={section.data.buttonAction}
             backgroundImage={section.data.backgroundImage}
             variant={section.variant}
             highlights={section.data.highlights}
