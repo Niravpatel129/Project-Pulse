@@ -82,7 +82,7 @@ export default function GoogleReviewsSection({
                   style={isMiddle ? { zIndex: 30, minHeight: 180 } : { minHeight: 180 }}
                 >
                   {renderStars(review.rating)}
-                  <p className='text-xs text-gray-700 mb-2 leading-snug'>
+                  <p className='text-sm text-gray-700 mb-2 leading-snug'>
                     &ldquo;{review.text}&rdquo;
                   </p>
                   <div className='row-meta flex items-center mt-auto'>
