@@ -153,7 +153,7 @@ export const bolocreate: WorkspaceCMSData = {
         {
           id: 'google-reviews-1',
           type: 'googleReviewsSection',
-          title: 'What Our Clients Say',
+          title: "See why we're rated #1 in the business",
           subtitle:
             'Real Google Reviews from Real Clients - Trusted by 100+ Professionals Across the GTA',
           order: 3,
@@ -168,6 +168,7 @@ export const bolocreate: WorkspaceCMSData = {
                 date: '2024-01-15',
                 profession: 'Registered Nurse',
                 avatar: '👩‍⚕️',
+                source: 'google',
               },
               {
                 id: '2',
@@ -177,6 +178,7 @@ export const bolocreate: WorkspaceCMSData = {
                 date: '2024-01-10',
                 profession: 'Security Guard',
                 avatar: '👨‍💼',
+                source: 'google',
               },
               {
                 id: '3',
@@ -186,6 +188,7 @@ export const bolocreate: WorkspaceCMSData = {
                 date: '2024-01-08',
                 profession: 'Customer Service Representative',
                 avatar: '👩‍💻',
+                source: 'google',
               },
               {
                 id: '4',
@@ -195,6 +198,7 @@ export const bolocreate: WorkspaceCMSData = {
                 date: '2024-01-05',
                 profession: 'Warehouse Supervisor',
                 avatar: '👨‍🔧',
+                source: 'google',
               },
               {
                 id: '5',
@@ -204,6 +208,7 @@ export const bolocreate: WorkspaceCMSData = {
                 date: '2024-01-03',
                 profession: 'Office Administrator',
                 avatar: '👩‍💼',
+                source: 'google',
               },
               {
                 id: '6',
@@ -213,6 +218,7 @@ export const bolocreate: WorkspaceCMSData = {
                 date: '2024-01-01',
                 profession: 'Forklift Operator',
                 avatar: '👨‍🏭',
+                source: 'google',
               },
             ],
             showGoogleBadge: true,

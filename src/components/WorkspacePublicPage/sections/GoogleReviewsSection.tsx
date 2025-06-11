@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { FaStar } from 'react-icons/fa';
+import { SiGoogle } from 'react-icons/si';
 
 interface Review {
   id: string;
@@ -10,6 +11,7 @@ interface Review {
   date: string;
   profession?: string;
   avatar?: string;
+  source?: string;
 }
 
 interface GoogleReviewsSectionProps {
@@ -33,66 +35,16 @@ export default function GoogleReviewsSection({
   totalReviews = 0,
   primaryColor = '#7C3AED',
 }: GoogleReviewsSectionProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    let animationId: number;
-    let isHovered = false;
-
-    const scroll = () => {
-      if (!isHovered && scrollContainer) {
-        scrollContainer.scrollLeft += 0.5;
-
-        // Reset scroll when we reach the end to create infinite loop
-        if (
-          scrollContainer.scrollLeft >=
-          scrollContainer.scrollWidth - scrollContainer.clientWidth
-        ) {
-          scrollContainer.scrollLeft = 0;
-        }
-      }
-      animationId = requestAnimationFrame(scroll);
-    };
-
-    // Start the scroll animation
-    animationId = requestAnimationFrame(scroll);
-
-    // Add hover event listeners
-    const handleMouseEnter = () => {
-      isHovered = true;
-    };
-
-    const handleMouseLeave = () => {
-      isHovered = false;
-    };
-
-    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
-    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      scrollContainer?.removeEventListener('mouseenter', handleMouseEnter);
-      scrollContainer?.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
-
-  // Duplicate reviews for seamless infinite scroll
-  const duplicatedReviews = [...reviews, ...reviews];
-
   const renderStars = (rating: number) => {
     return (
-      <div className='flex items-center space-x-1'>
+      <div className='flex items-center space-x-1 mb-4'>
         {[...Array(5)].map((_, index) => {
           return (
-            <span
+            <FaStar
               key={index}
-              className={`text-lg ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}
-            >
-              ⭐
-            </span>
+              className={index < rating ? 'text-black-400' : 'text-gray-300'}
+              size={12}
+            />
           );
         })}
       </div>
@@ -109,83 +61,52 @@ export default function GoogleReviewsSection({
   };
 
   return (
-    <section id={id} className='py-16 bg-gray-50 overflow-hidden'>
-      <div className='container mx-auto px-4'>
+    <section id={id} className='py-16 bg-gray-50 overflow-hidden mb-22 relative'>
+      <div className='container mx-auto px-2 max-w-6xl'>
         {/* Header Section */}
-        <div className='max-w-4xl mx-auto text-center mb-12'>
-          <h2 className='text-3xl font-bold mb-4'>{title}</h2>
-          <p className='text-lg text-gray-600 mb-8'>{subtitle}</p>
-
-          {/* Google Badge & Rating Summary */}
-          {showGoogleBadge && (
-            <div className='flex items-center justify-center space-x-6 mb-8'>
-              <div className='flex items-center space-x-3'>
-                <div className='flex items-center space-x-1'>
-                  <span className='text-2xl'>🔍</span>
-                  <span className='font-bold text-lg'>Google</span>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <span className='text-2xl font-bold'>{averageRating}</span>
-                  {renderStars(Math.floor(averageRating))}
-                  <span className='text-gray-600'>({totalReviews} reviews)</span>
-                </div>
-              </div>
-            </div>
-          )}
+        <div className='max-w-4xl mx-auto text-center mb-30'>
+          <h2 className='text-5xl font-bold mb-4 max-w-4xl mx-auto'>{title}</h2>
         </div>
-
-        {/* Reviews Carousel */}
-        <div
-          ref={scrollRef}
-          className='flex gap-6 overflow-x-hidden pl-6 pr-6'
-          style={{
-            scrollBehavior: 'auto',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
-        >
-          {duplicatedReviews.map((review, index) => {
-            return (
-              <div
-                key={`${review.id}-${index}`}
-                className='relative w-[350px] bg-white rounded-xl shadow-lg p-6 flex-shrink-0 hover:shadow-xl transition-all duration-300 transform hover:scale-105'
-              >
-                {/* Rating Stars */}
-                <div className='mb-4'>{renderStars(review.rating)}</div>
-
-                {/* Review Text */}
-                <p className='text-gray-700 mb-6 leading-relaxed line-clamp-4'>
-                  &ldquo;{review.text}&rdquo;
-                </p>
-
-                {/* Author Info */}
-                <div className='flex items-center space-x-3'>
-                  <div
-                    className='w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0'
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    {review.avatar || review.author.charAt(0).toUpperCase()}
-                  </div>
-                  <div className='flex-1 min-w-0'>
-                    <h4 className='font-semibold text-gray-900 truncate'>{review.author}</h4>
-                    {review.profession && (
-                      <p className='text-sm text-gray-600 truncate'>{review.profession}</p>
-                    )}
-                    <p className='text-xs text-gray-500'>{formatDate(review.date)}</p>
+        {/* Reviews Grid with fade and podium effect */}
+        <div className='relative mt-20'>
+          <div className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'>
+            {reviews.map((review, idx) => {
+              // For podium effect: middle column in each row on large screens
+              const isMiddle = idx % 3 === 1;
+              return (
+                <div
+                  key={review.id}
+                  className={
+                    `hp-reviews_item bg-white rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 w-full` +
+                    (isMiddle ? ' lg:mt-[-40px] lg:mb-8 ' : '')
+                  }
+                  style={isMiddle ? { zIndex: 30, minHeight: 180 } : { minHeight: 180 }}
+                >
+                  {renderStars(review.rating)}
+                  <p className='text-xs text-gray-700 mb-2 leading-snug'>
+                    &ldquo;{review.text}&rdquo;
+                  </p>
+                  <div className='row-meta flex items-center mt-auto'>
+                    <div>
+                      <p className='text-xs font-semibold text-gray-900 flex items-center gap-2'>
+                        {review.author}
+                        {review.source === 'google' && (
+                          <span className='inline-flex items-center px-2 py-0.5 rounded bg-[#4285F4] text-white text-[10px] font-bold ml-1'>
+                            <SiGoogle className='mr-1' size={12} style={{ display: 'inline' }} />
+                            Google
+                          </span>
+                        )}
+                      </p>
+                      {review.profession && (
+                        <p className='text-xs text-gray-600 truncate'>{review.profession}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Google Icon */}
-                <div className='absolute top-4 right-4'>
-                  <div className='w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center'>
-                    <span className='text-xs'>G</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-
         {/* Call to Action */}
         <div className='text-center mt-12'>
           <div className='bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto'>
@@ -210,18 +131,6 @@ export default function GoogleReviewsSection({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-        .line-clamp-4 {
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
     </section>
   );
 }
