@@ -74,6 +74,7 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
             backgroundImage={section.data.backgroundImage}
             variant={section.variant}
             highlights={section.data.highlights}
+            buttons={section.data.buttons}
             {...commonProps}
           />
         );
