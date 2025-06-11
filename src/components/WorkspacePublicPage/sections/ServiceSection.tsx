@@ -263,30 +263,6 @@ export default function ServiceSection({
               </div>
             </button>
           </div>
-
-          {/* Global CTA */}
-          {showCTA && variant !== 'pricing' && (
-            <div className='text-center mt-12'>
-              <div className='bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto'>
-                <h3 className='text-2xl font-bold mb-4'>Ready to Get Started?</h3>
-                <p className='text-gray-600 mb-6'>
-                  Don&apos;t let another opportunity pass by. Get your professional service today.
-                </p>
-                <div className='space-y-4'>
-                  <a
-                    href={ctaUrl}
-                    className='inline-block px-8 py-3 rounded-lg font-semibold text-white transition-colors duration-300'
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    {ctaText}
-                  </a>
-                  <p className='text-sm text-gray-500'>
-                    Contact us anytime for a free consultation
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </section>

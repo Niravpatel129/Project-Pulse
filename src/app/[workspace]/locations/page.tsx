@@ -135,38 +135,6 @@ export default async function LocationsPage({ params }: LocationsPageProps) {
               );
             })}
           </div>
-
-          {/* Contact CTA */}
-          <div className='text-center mt-12'>
-            <div className='bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto'>
-              <h3 className='text-2xl font-bold mb-4' style={{ color: primaryColor }}>
-                Need Help Choosing?
-              </h3>
-              <p className='text-gray-600 mb-6'>
-                Not sure which location is best for you? Contact us and we&apos;ll help you find the
-                right fit.
-              </p>
-              <div className='space-y-3'>
-                <a
-                  href={`tel:${settings.contact?.phone?.replace(/\D/g, '') || '4377743721'}`}
-                  className='inline-block px-8 py-3 rounded-lg font-semibold text-white transition-colors duration-300 mr-4'
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  Call: {settings.contact?.phone || '(437) 774-3721'}
-                </a>
-                <a
-                  href={`mailto:${settings.contact?.email || 'gtaresumebuilder@gmail.com'}`}
-                  className='inline-block px-8 py-3 rounded-lg font-semibold border-2 transition-colors duration-300'
-                  style={{
-                    borderColor: primaryColor,
-                    color: primaryColor,
-                  }}
-                >
-                  Send Email
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
