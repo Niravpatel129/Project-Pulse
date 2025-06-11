@@ -34,7 +34,7 @@ const services: Service[] = [
 const PriceTag = ({ price }: { price: string }) => {
   return (
     <span
-      className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-sm font-semibold shadow-sm ${
+      className={`absolute rounded-l-lg bottom-4 right-0 bg-gray-200 px-4 py-1 text-sm font-semibold shadow-sm ${
         price === 'Free' ? 'text-green-600' : 'text-gray-800'
       }`}
     >
@@ -59,12 +59,14 @@ const ServiceCard = ({
   return (
     <div
       className={`relative group border rounded px-4 py-4 text-left flex items-start flex-col font-medium ${
-        isSelected ? 'border-black bg-gray-50' : 'border-gray-200'
+        isSelected ? 'border-none bg-black text-white' : 'border-gray-200'
       } min-h-[100px] ${onClick ? 'hover:bg-gray-100 transition cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <span>{service.name}</span>
-      <span className='text-gray-500 text-sm'>{service.subtitle}</span>
+      <span className={`text-sm ${isSelected ? 'text-gray-200' : 'text-gray-500'}`}>
+        {service.subtitle}
+      </span>
       <PriceTag price={service.price} />
       {showRemoveButton && (
         <button
