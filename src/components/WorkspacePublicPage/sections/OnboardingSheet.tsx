@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { CheckIcon } from 'lucide-react';
 import React from 'react';
@@ -31,12 +32,24 @@ const services: Service[] = [
 ];
 
 // Common Components
-const PriceTag = ({ price }: { price: string }) => {
+const PriceTag = ({
+  price,
+  isSelected,
+  isAdditionalService,
+}: {
+  price: string;
+  isSelected?: boolean;
+  isAdditionalService?: boolean;
+}) => {
   return (
     <span
-      className={`absolute rounded-l-lg bottom-4 right-0 bg-gray-200 px-4 py-1 text-sm font-semibold shadow-sm ${
-        price === 'Free' ? 'text-green-600' : 'text-gray-800'
-      }`}
+      className={`absolute rounded-l-lg bottom-4 right-0 px-4 py-1 text-sm font-semibold shadow-sm ${
+        isSelected
+          ? isAdditionalService
+            ? 'bg-white text-gray-800'
+            : 'bg-gray-200 text-gray-800'
+          : 'bg-gray-200 text-gray-800'
+      } ${price === 'Free' ? 'bg-green-500 text-white' : ''}`}
     >
       {price}
     </span>
@@ -49,25 +62,45 @@ const ServiceCard = ({
   onClick,
   showRemoveButton,
   onRemove,
+  isAdditionalService = false,
 }: {
   service: Service;
   isSelected: boolean;
   onClick?: () => void;
   showRemoveButton?: boolean;
   onRemove?: () => void;
+  isAdditionalService?: boolean;
 }) => {
   return (
     <div
-      className={`relative group border rounded px-4 py-4 text-left flex items-start flex-col font-medium ${
-        isSelected ? 'border-none bg-black text-white' : 'border-gray-200'
-      } min-h-[100px] ${onClick ? 'hover:bg-gray-100 transition cursor-pointer' : ''}`}
+      className={`relative group border rounded-xl px-4 py-4 text-left flex items-start flex-col font-medium ${
+        isSelected
+          ? isAdditionalService
+            ? 'border-none bg-[#e0e0e0] text-gray-900'
+            : 'border-none bg-black text-white'
+          : 'border-gray-200'
+      } min-h-[100px] ${
+        onClick
+          ? `hover:${
+              isAdditionalService ? 'bg-[#e0e0e0]' : 'bg-gray-100'
+            } transition cursor-pointer`
+          : ''
+      }`}
       onClick={onClick}
     >
       <span>{service.name}</span>
-      <span className={`text-sm ${isSelected ? 'text-gray-200' : 'text-gray-500'}`}>
+      <span
+        className={`text-sm ${
+          isSelected ? (isAdditionalService ? 'text-gray-700' : 'text-gray-200') : 'text-gray-500'
+        }`}
+      >
         {service.subtitle}
       </span>
-      <PriceTag price={service.price} />
+      <PriceTag
+        price={service.price}
+        isSelected={isSelected}
+        isAdditionalService={isAdditionalService}
+      />
       {showRemoveButton && (
         <button
           type='button'
@@ -87,28 +120,6 @@ const ServiceCard = ({
         </button>
       )}
     </div>
-  );
-};
-
-const Button = ({
-  children,
-  variant = 'primary',
-  className = '',
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary';
-}) => {
-  return (
-    <button
-      className={`px-4 py-2 rounded ${
-        variant === 'primary'
-          ? 'bg-black text-white hover:bg-gray-800'
-          : 'border border-gray-300 bg-white hover:bg-gray-50'
-      } ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
   );
 };
 
@@ -217,6 +228,7 @@ export default function OnboardingSheet({
                           key={service.name}
                           service={service}
                           isSelected={isSelected}
+                          isAdditionalService={true}
                           onClick={() => {
                             setAdditionalSelectedServices((prev) => {
                               return isSelected
@@ -234,7 +246,7 @@ export default function OnboardingSheet({
             )}
             <div className='flex justify-end mt-8'>
               <Button
-                className={`min-w-[180px] min-h-[44px] ${
+                className={`min-w-[180px] min-h-[44px] bg-black hover:bg-black/80 ${
                   selectedService
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 translate-y-4 pointer-events-none'
@@ -361,17 +373,7 @@ export default function OnboardingSheet({
                   </Button>
                 );
               }
-              if (btn.type === 'callOrText' && btn.url) {
-                return (
-                  <a
-                    key={i}
-                    href={btn.url}
-                    className='px-4 py-2 rounded bg-black text-white hover:bg-gray-800'
-                  >
-                    {btn.text}
-                  </a>
-                );
-              }
+
               return null;
             })}
           </div>
