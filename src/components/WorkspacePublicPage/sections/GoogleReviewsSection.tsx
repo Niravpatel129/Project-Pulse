@@ -1,7 +1,6 @@
 'use client';
 
 import { FaStar } from 'react-icons/fa';
-import { SiGoogle } from 'react-icons/si';
 
 interface Review {
   id: string;
@@ -90,16 +89,7 @@ export default function GoogleReviewsSection({
                     <div>
                       <p className='text-xs font-semibold text-gray-900 flex items-center gap-2'>
                         {review.author}
-                        {review.source === 'google' && (
-                          <span className='inline-flex items-center px-2 py-0.5 rounded bg-[#4285F4] text-white text-[10px] font-bold ml-1'>
-                            <SiGoogle className='mr-1' size={12} style={{ display: 'inline' }} />
-                            Google
-                          </span>
-                        )}
                       </p>
-                      {review.profession && (
-                        <p className='text-xs text-gray-600 truncate'>{review.profession}</p>
-                      )}
                     </div>
                   </div>
                 </div>
