@@ -73,7 +73,7 @@ const ServiceCard = ({
 }) => {
   return (
     <div
-      className={`relative group border rounded-xl px-4 py-4 text-left flex items-start flex-col font-medium ${
+      className={`relative group border rounded-xl px-4 py-4 text-left flex items-start flex-col font-medium transition-all duration-300 ease-in-out ${
         isSelected
           ? isAdditionalService
             ? 'border-none bg-[#e0e0e0] text-gray-900'
@@ -104,7 +104,7 @@ const ServiceCard = ({
       {showRemoveButton && (
         <button
           type='button'
-          className='absolute top-0 right-0 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-colors'
+          className='absolute top-0 right-0 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-all duration-300 ease-in-out'
           style={{ lineHeight: 1, transform: 'translate(50%,-50%)' }}
           onClick={(e) => {
             e.stopPropagation();
@@ -182,7 +182,7 @@ export default function OnboardingSheet({
       case 0:
         return (
           <div>
-            <SheetTitle className='mb-12'>Choose a Service</SheetTitle>
+            <SheetTitle className='mb-8'>Choose a Service</SheetTitle>
             {!selectedService ? (
               <div className='flex flex-col gap-3'>
                 {services.map((service) => {
