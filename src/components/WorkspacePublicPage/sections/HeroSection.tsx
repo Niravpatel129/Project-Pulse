@@ -1,5 +1,6 @@
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { StarFilledIcon } from '@radix-ui/react-icons';
+import { CheckIcon } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 
@@ -64,15 +65,22 @@ export default function HeroSection({
   // Onboarding flow state
   const [step, setStep] = React.useState(0);
   const [selectedService, setSelectedService] = React.useState<string | null>(null);
+  const [additionalSelectedServices, setAdditionalSelectedServices] = React.useState<string[]>([]);
   const [additionalNotes, setAdditionalNotes] = React.useState('');
   const [contactForm, setContactForm] = React.useState({ name: '', email: '', phone: '' });
   const [submitted, setSubmitted] = React.useState(false);
 
   // Example services (could be from CMS)
-  const services = [
-    'Professional Resume Writing',
-    'Same-Day Rush Service',
-    'Specialized Industries',
+  type Service = {
+    name: string;
+    price: string;
+    subtitle: string;
+  };
+  const services: Service[] = [
+    { name: 'Professional Resume Writing', price: '$99', subtitle: '2-3 business days' },
+    { name: 'Same-Day Rush Service', price: '$49', subtitle: 'Delivered today' },
+    { name: 'Specialized Industries', price: '$129', subtitle: '1 session' },
+    { name: 'Free Consulting', price: 'Free', subtitle: '20 mins' },
   ];
 
   // Reset flow when sheet closes
@@ -80,6 +88,7 @@ export default function HeroSection({
     if (!showSheet) {
       setStep(0);
       setSelectedService(null);
+      setAdditionalSelectedServices([]);
       setAdditionalNotes('');
       setContactForm({ name: '', email: '', phone: '' });
       setSubmitted(false);
@@ -120,25 +129,122 @@ export default function HeroSection({
         return (
           <div>
             <SheetTitle className='mb-12'>Choose a Service</SheetTitle>
-            <div className='flex flex-col gap-3'>
-              {services.map((service) => {
-                return (
-                  <button
-                    key={service}
-                    className={`border rounded px-4 py-3 text-left hover:bg-gray-100 transition flex items-center justify-between text-lg font-medium ${
-                      selectedService === service ? 'border-black bg-gray-50' : 'border-gray-200'
-                    }`}
-                    onClick={() => {
-                      return setSelectedService(service);
-                    }}
-                    style={{ minHeight: 44 }}
-                  >
-                    <span>{service}</span>
-                    <span className='text-xl'>{selectedService === service ? '▸' : ''}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* If no service selected, show all. If selected, show only that one with checkmark */}
+            {!selectedService ? (
+              <div className='flex flex-col gap-3'>
+                {services.map((service) => {
+                  return (
+                    <button
+                      key={service.name}
+                      className={`relative border rounded px-4 py-4 text-left hover:bg-gray-100 transition flex items-start flex-col text-lg font-medium border-gray-200 min-h-[100px]`}
+                      onClick={() => {
+                        setSelectedService(service.name);
+                      }}
+                    >
+                      <span>{service.name}</span>
+                      <span className='text-gray-500 text-sm mt-1'>{service.subtitle}</span>
+                      {/* Price badge attached bottom right */}
+                      <span
+                        className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-base font-semibold shadow-sm ${
+                          service.price === 'Free' ? 'text-green-600' : 'text-gray-800'
+                        }`}
+                      >
+                        {service.price}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <>
+                {/* Show only selected service with checkmark */}
+                <div className='flex flex-col gap-3 mb-6'>
+                  {(() => {
+                    const service = services.find((s) => {
+                      return s.name === selectedService;
+                    });
+                    if (!service) return null;
+                    return (
+                      <div
+                        className={`relative group border rounded px-4 py-4 text-left flex items-start flex-col text-lg font-medium border-black bg-gray-50 min-h-[100px]`}
+                      >
+                        <span>{service.name}</span>
+                        <span className='text-gray-500 text-sm mt-1'>{service.subtitle}</span>
+                        <span
+                          className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-base font-semibold shadow-sm ${
+                            service.price === 'Free' ? 'text-green-600' : 'text-gray-800'
+                          }`}
+                        >
+                          {service.price}
+                        </span>
+                        <button
+                          type='button'
+                          className='absolute top-0 right-0 text-lg font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-colors'
+                          style={{ lineHeight: 1, transform: 'translate(50%,-50%)' }}
+                          onClick={() => {
+                            if (document.activeElement)
+                              (document.activeElement as HTMLElement).blur();
+                            setSelectedService(null);
+                            setAdditionalSelectedServices([]);
+                          }}
+                          aria-label='Start over'
+                        >
+                          <span className='text-black group-hover:hidden'>
+                            <CheckIcon className='w-4 h-4' />
+                          </span>
+                          <span className='text-gray-400 group-hover:text-black hidden group-hover:inline'>
+                            ×
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+                {/* Anything else you wish to add? */}
+                <div className='mb-2 mt-2 text-base font-semibold'>
+                  Anything else you wish to add?
+                </div>
+                <div className='flex flex-col gap-2 mb-4'>
+                  {services
+                    .filter((s) => {
+                      return s.name !== selectedService;
+                    })
+                    .map((service) => {
+                      const isSelected = additionalSelectedServices.includes(service.name);
+                      return (
+                        <button
+                          key={service.name}
+                          type='button'
+                          className={`relative border rounded px-4 py-4 text-left flex items-start flex-col text-lg font-medium transition min-h-[100px] ${
+                            isSelected
+                              ? 'border-black bg-gray-300 shadow-inner scale-[0.97] translate-y-[1px] rounded-md'
+                              : 'border-gray-200 hover:bg-gray-100'
+                          }`}
+                          onClick={() => {
+                            setAdditionalSelectedServices((prev) => {
+                              return isSelected
+                                ? prev.filter((s) => {
+                                    return s !== service.name;
+                                  })
+                                : [...prev, service.name];
+                            });
+                          }}
+                        >
+                          <span>{service.name}</span>
+                          <span className='text-gray-500 text-sm mt-1'>{service.subtitle}</span>
+                          <span
+                            className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-base font-semibold shadow-sm ${
+                              service.price === 'Free' ? 'text-green-600' : 'text-gray-800'
+                            }`}
+                          >
+                            {service.price}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </>
+            )}
             {/* Primary CTA at bottom right, only after selection */}
             <div className='flex justify-end mt-8'>
               <button
@@ -152,7 +258,7 @@ export default function HeroSection({
                   transitionDuration: '300ms',
                 }}
                 onClick={() => {
-                  return setStep(1);
+                  setStep(1);
                 }}
                 disabled={!selectedService}
                 aria-disabled={!selectedService}
@@ -181,7 +287,10 @@ export default function HeroSection({
           <div>
             <SheetTitle className='mb-4'>Contact Details</SheetTitle>
             <div className='mb-2'>
-              Service: <span className='font-semibold'>{selectedService}</span>
+              Service(s):{' '}
+              <span className='font-semibold'>
+                {[selectedService, ...additionalSelectedServices].filter(Boolean).join(', ')}
+              </span>
             </div>
             {additionalNotes && (
               <div className='mb-2'>
