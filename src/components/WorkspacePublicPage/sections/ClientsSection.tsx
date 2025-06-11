@@ -70,7 +70,7 @@ export default function ClientsSection({ title, subtitle, clients = [], id }: Cl
     <section id={id} className='py-16 bg-white overflow-hidden'>
       <div className='container mx-auto px-4 mb-12'>
         <div className='max-w-4xl mx-auto text-center'>
-          <h2 className='text-3xl font-bold mb-4'>{title}</h2>
+          <h2 className='text-5xl font-bold mb-4'>{title}</h2>
           <p className='text-lg text-gray-600'>{subtitle}</p>
         </div>
       </div>

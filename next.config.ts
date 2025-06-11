@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       'vercel.com',
       'img.freepik.com',
       'cdn.prod.website-files.com',
+      'hebbkx1anhila5yf.public.blob.vercel-storage.com',
     ],
   },
   async headers() {

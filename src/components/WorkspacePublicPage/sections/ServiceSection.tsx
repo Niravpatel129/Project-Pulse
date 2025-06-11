@@ -1,3 +1,7 @@
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { useState } from 'react';
+
 interface Service {
   icon: string;
   title: string;
@@ -38,7 +42,23 @@ export default function ServiceSection({
   primaryColor = '#7C3AED',
   layout = 'grid',
 }: ServiceSectionProps) {
+  const [activeTab, setActiveTab] = useState(0);
+
   if (services.length === 0) return null;
+
+  const handlePrevious = () => {
+    setActiveTab((prev) => {
+      return prev === 0 ? services.length - 1 : prev - 1;
+    });
+  };
+
+  const handleNext = () => {
+    setActiveTab((prev) => {
+      return prev === services.length - 1 ? 0 : prev + 1;
+    });
+  };
+
+  const currentService = services[activeTab];
 
   const bgClasses = {
     white: 'bg-white',
@@ -67,9 +87,7 @@ export default function ServiceSection({
           )}
           <div className='text-center mb-6'>
             <div className='text-4xl mb-4'>{service.icon}</div>
-            <h3 className='text-xl font-semibold mb-3' style={{ color: primaryColor }}>
-              {service.title}
-            </h3>
+            <h3 className='text-xl font-semibold mb-3'>{service.title}</h3>
             <p className='text-gray-600 mb-6'>{service.description}</p>
           </div>
           {renderFeatures(service.features)}
@@ -83,9 +101,7 @@ export default function ServiceSection({
         <div key={index} className='flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm'>
           <div className='text-3xl flex-shrink-0'>{service.icon}</div>
           <div className='flex-1'>
-            <h3 className='text-lg font-semibold mb-2' style={{ color: primaryColor }}>
-              {service.title}
-            </h3>
+            <h3 className='text-lg font-semibold mb-2'>{service.title}</h3>
             <p className='text-gray-600 mb-3'>{service.description}</p>
             {renderFeatures(service.features, true)}
           </div>
@@ -98,9 +114,7 @@ export default function ServiceSection({
       <div key={index} className={baseClasses}>
         <div className='text-center mb-6'>
           <div className='text-4xl mb-4'>{service.icon}</div>
-          <h3 className='text-xl font-semibold mb-3' style={{ color: primaryColor }}>
-            {service.title}
-          </h3>
+          <h3 className='text-xl font-semibold mb-3'>{service.title}</h3>
           <p className='text-gray-600 mb-6'>{service.description}</p>
         </div>
         {renderFeatures(service.features)}
@@ -132,9 +146,7 @@ export default function ServiceSection({
         {features.map((feature, featureIndex) => {
           return (
             <div key={featureIndex} className='flex items-center'>
-              <span className='mr-3 text-lg' style={{ color: primaryColor }}>
-                ✓
-              </span>
+              <span className='mr-3 text-lg'>✓</span>
               <span className='text-gray-700 text-sm'>{feature}</span>
             </div>
           );
@@ -150,25 +162,8 @@ export default function ServiceSection({
     const text = variant === 'pricing' ? 'Choose Plan' : 'Learn More';
 
     return (
-      <div className='mt-6 pt-6 border-t border-gray-100'>
-        <a
-          href={url}
-          className='block w-full py-3 px-4 rounded-lg font-medium transition-colors duration-300 border-2 text-center'
-          style={{
-            borderColor: primaryColor,
-            color: primaryColor,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = primaryColor;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = primaryColor;
-          }}
-        >
-          {text}
-        </a>
+      <div className=''>
+        <Button className=''>{text}</Button>
       </div>
     );
   };
@@ -184,22 +179,96 @@ export default function ServiceSection({
 
   return (
     <section id={id} className={`py-16 ${bgClasses}`}>
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-4 max-w-5xl'>
         <div className='max-w-6xl mx-auto'>
           <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold mb-4'>{title}</h2>
+            <h2 className='text-5xl font-bold mb-4'>{title}</h2>
             <p className='text-lg text-gray-600 max-w-3xl mx-auto'>{subtitle}</p>
           </div>
 
-          {renderLayout()}
+          {/* Custom Tabs */}
+          <div className='flex justify-center mb-12'>
+            <div className='flex flex-wrap justify-center border-b border-gray-200'>
+              {services.map((service, index) => {
+                return (
+                  <button
+                    key={service.title}
+                    onClick={() => {
+                      return setActiveTab(index);
+                    }}
+                    className={`py-3 px-6 focus:outline-none transition-colors duration-200 ease-in-out text-base relative ${
+                      activeTab === index
+                        ? 'text-gray-900 font-semibold'
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    <span
+                      className={`mr-2 font-mono text-sm ${
+                        activeTab === index ? 'text-gray-700' : 'text-gray-400'
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    {service.title}
+                    {activeTab === index && (
+                      <div className='absolute bottom-0 left-0 w-full h-0.5 bg-gray-900'></div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className='relative bg-white rounded-2xl shadow-xl overflow-hidden min-h-[550px]'>
+            {/* Blurred background image */}
+            <Image
+              width={1000}
+              height={1000}
+              src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/gen-images/public/images/restaurant-blurred-bg-aN2fnA4yLMGweDLJTwWhghbSeI49SI.png'
+              alt='Abstract restaurant background'
+              className='absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none'
+              style={{ zIndex: 0 }}
+            />
+            <div className='relative z-10 flex flex-col md:flex-row h-full'>
+              <div className='w-full md:w-1/2 p-8 py-16 sm:p-12 md:p-16 flex flex-col justify-center'>
+                <p className='text-lg sm:text-xl md:text-2xl text-gray-700 mb-3'>
+                  {currentService.title}
+                </p>
+                <h3 className='text-xl sm:text-2xl md:text-3xl font-bold leading-tight mb-4'>
+                  {currentService.description}
+                </h3>
+                {renderFeatures(currentService.features)}
+              </div>
+              {/* You can add an image or illustration here if your service has one */}
+            </div>
+          </div>
+
+          {/* Previous/Next Navigation */}
+          <div className='flex justify-between items-center mt-12'>
+            <button onClick={handlePrevious} className='flex items-center space-x-3 group'>
+              <div className='w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition-colors group-hover:bg-gray-200'>
+                <span className='material-icons text-gray-600'>&#8592;</span>
+              </div>
+              <span className='text-gray-600 font-medium transition-colors group-hover:text-gray-900'>
+                Previous
+              </span>
+            </button>
+            <button onClick={handleNext} className='flex items-center space-x-3 group'>
+              <span className='text-gray-600 font-medium transition-colors group-hover:text-gray-900'>
+                Next
+              </span>
+              <div className='w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition-colors group-hover:bg-gray-200'>
+                <span className='material-icons text-gray-600'>&#8594;</span>
+              </div>
+            </button>
+          </div>
 
           {/* Global CTA */}
           {showCTA && variant !== 'pricing' && (
             <div className='text-center mt-12'>
               <div className='bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto'>
-                <h3 className='text-2xl font-bold mb-4' style={{ color: primaryColor }}>
-                  Ready to Get Started?
-                </h3>
+                <h3 className='text-2xl font-bold mb-4'>Ready to Get Started?</h3>
                 <p className='text-gray-600 mb-6'>
                   Don&apos;t let another opportunity pass by. Get your professional service today.
                 </p>

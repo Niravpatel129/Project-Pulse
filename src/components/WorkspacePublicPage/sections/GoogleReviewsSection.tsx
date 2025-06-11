@@ -97,29 +97,6 @@ export default function GoogleReviewsSection({
             })}
           </div>
         </div>
-        {/* Call to Action */}
-        <div className='text-center mt-12'>
-          <div className='bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto'>
-            <h3 className='text-2xl font-bold mb-4' style={{ color: primaryColor }}>
-              Join Our Satisfied Clients
-            </h3>
-            <p className='text-gray-600 mb-6'>
-              Ready to get the same results? Let&apos;s create your professional resume today.
-            </p>
-            <div className='space-y-4'>
-              <a
-                href='tel:4377743721'
-                className='inline-block px-8 py-3 rounded-lg font-semibold text-white transition-colors duration-300'
-                style={{ backgroundColor: primaryColor }}
-              >
-                Call Now - (437) 774-3721
-              </a>
-              <p className='text-sm text-gray-500'>
-                Free consultation • Same-day response • 60-day guarantee
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
