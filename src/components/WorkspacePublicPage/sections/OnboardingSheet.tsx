@@ -2,6 +2,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { CheckIcon } from 'lucide-react';
 import React from 'react';
 
+// Types and Interfaces
 interface OnboardingSheetButton {
   type: 'skip' | 'callOrText';
   text: string;
@@ -21,6 +22,7 @@ type Service = {
   subtitle: string;
 };
 
+// Constants
 const services: Service[] = [
   { name: 'Professional Resume Writing', price: '$99', subtitle: '2-3 business days' },
   { name: 'Same-Day Rush Service', price: '$49', subtitle: 'Delivered today' },
@@ -28,12 +30,93 @@ const services: Service[] = [
   { name: 'Free Consulting', price: 'Free', subtitle: '20 mins' },
 ];
 
+// Common Components
+const PriceTag = ({ price }: { price: string }) => {
+  return (
+    <span
+      className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-sm font-semibold shadow-sm ${
+        price === 'Free' ? 'text-green-600' : 'text-gray-800'
+      }`}
+    >
+      {price}
+    </span>
+  );
+};
+
+const ServiceCard = ({
+  service,
+  isSelected,
+  onClick,
+  showRemoveButton,
+  onRemove,
+}: {
+  service: Service;
+  isSelected: boolean;
+  onClick?: () => void;
+  showRemoveButton?: boolean;
+  onRemove?: () => void;
+}) => {
+  return (
+    <div
+      className={`relative group border rounded px-4 py-4 text-left flex items-start flex-col font-medium ${
+        isSelected ? 'border-black bg-gray-50' : 'border-gray-200'
+      } min-h-[100px] ${onClick ? 'hover:bg-gray-100 transition cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
+      <span>{service.name}</span>
+      <span className='text-gray-500 text-sm'>{service.subtitle}</span>
+      <PriceTag price={service.price} />
+      {showRemoveButton && (
+        <button
+          type='button'
+          className='absolute top-0 right-0 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-colors'
+          style={{ lineHeight: 1, transform: 'translate(50%,-50%)' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (document.activeElement) (document.activeElement as HTMLElement).blur();
+            onRemove?.();
+          }}
+          aria-label='Start over'
+        >
+          <span className='text-black group-hover:hidden'>
+            <CheckIcon className='w-4 h-4' />
+          </span>
+          <span className='text-gray-400 group-hover:text-black hidden group-hover:inline'>×</span>
+        </button>
+      )}
+    </div>
+  );
+};
+
+const Button = ({
+  children,
+  variant = 'primary',
+  className = '',
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary';
+}) => {
+  return (
+    <button
+      className={`px-4 py-2 rounded ${
+        variant === 'primary'
+          ? 'bg-black text-white hover:bg-gray-800'
+          : 'border border-gray-300 bg-white hover:bg-gray-50'
+      } ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Component
 export default function OnboardingSheet({
   open,
   onOpenChange,
   buttons = [],
 }: OnboardingSheetProps) {
-  // Onboarding flow state
+  // State Management
   const [step, setStep] = React.useState(0);
   const [selectedService, setSelectedService] = React.useState<string | null>(null);
   const [additionalSelectedServices, setAdditionalSelectedServices] = React.useState<string[]>([]);
@@ -41,7 +124,7 @@ export default function OnboardingSheet({
   const [contactForm, setContactForm] = React.useState({ name: '', email: '', phone: '' });
   const [submitted, setSubmitted] = React.useState(false);
 
-  // Reset flow when sheet closes
+  // Effects
   React.useEffect(() => {
     if (!open) {
       setStep(0);
@@ -53,7 +136,7 @@ export default function OnboardingSheet({
     }
   }, [open]);
 
-  // Helper for contextual primary CTA text
+  // Helper Functions
   const getPrimaryButtonText = () => {
     if (!selectedService) return 'Continue';
     if (selectedService === 'Professional Resume Writing') return 'Continue to Details';
@@ -71,95 +154,53 @@ export default function OnboardingSheet({
           <div className='text-muted-foreground mb-4'>
             We received your request. We&apos;ll be in touch soon.
           </div>
-          <button
-            className='mt-2 px-4 py-2 rounded bg-black text-white'
+          <Button
             onClick={() => {
               return onOpenChange(false);
             }}
           >
             Close
-          </button>
+          </Button>
         </div>
       );
     }
+
     switch (step) {
       case 0:
         return (
           <div>
             <SheetTitle className='mb-12'>Choose a Service</SheetTitle>
-            {/* If no service selected, show all. If selected, show only that one with checkmark */}
             {!selectedService ? (
               <div className='flex flex-col gap-3'>
                 {services.map((service) => {
                   return (
-                    <button
+                    <ServiceCard
                       key={service.name}
-                      className={`relative border rounded px-4 py-4 text-left hover:bg-gray-100 transition flex items-start flex-col font-medium border-gray-200 min-h-[100px]`}
+                      service={service}
+                      isSelected={false}
                       onClick={() => {
-                        setSelectedService(service.name);
+                        return setSelectedService(service.name);
                       }}
-                    >
-                      <span>{service.name}</span>
-                      <span className='text-gray-500 text-sm'>{service.subtitle}</span>
-                      {/* Price badge attached bottom right */}
-                      <span
-                        className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-base font-semibold shadow-sm ${
-                          service.price === 'Free' ? 'text-green-600' : 'text-gray-800'
-                        }`}
-                      >
-                        {service.price}
-                      </span>
-                    </button>
+                    />
                   );
                 })}
               </div>
             ) : (
               <>
-                {/* Show only selected service with checkmark */}
-                <div className='flex flex-col gap-3 mb-6'>
-                  {(() => {
-                    const service = services.find((s) => {
+                <ServiceCard
+                  service={
+                    services.find((s) => {
                       return s.name === selectedService;
-                    });
-                    if (!service) return null;
-                    return (
-                      <div
-                        className={`relative group border rounded px-4 py-4 text-left flex items-start flex-col font-medium border-black bg-gray-50 min-h-[100px]`}
-                      >
-                        <span>{service.name}</span>
-                        <span className='text-gray-500 text-sm'>{service.subtitle}</span>
-                        <span
-                          className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-base font-semibold shadow-sm ${
-                            service.price === 'Free' ? 'text-green-600' : 'text-gray-800'
-                          }`}
-                        >
-                          {service.price}
-                        </span>
-                        <button
-                          type='button'
-                          className='absolute top-0 right-0 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-colors'
-                          style={{ lineHeight: 1, transform: 'translate(50%,-50%)' }}
-                          onClick={() => {
-                            if (document.activeElement)
-                              (document.activeElement as HTMLElement).blur();
-                            setSelectedService(null);
-                            setAdditionalSelectedServices([]);
-                          }}
-                          aria-label='Start over'
-                        >
-                          <span className='text-black group-hover:hidden'>
-                            <CheckIcon className='w-4 h-4' />
-                          </span>
-                          <span className='text-gray-400 group-hover:text-black hidden group-hover:inline'>
-                            ×
-                          </span>
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
-                {/* Anything else you wish to add? */}
-                <div className='mb-2 mt-2 text-base font-semibold'>
+                    }) as Service
+                  }
+                  isSelected={true}
+                  showRemoveButton
+                  onRemove={() => {
+                    setSelectedService(null);
+                    setAdditionalSelectedServices([]);
+                  }}
+                />
+                <div className='mb-2 mt-6 text-base font-semibold'>
                   Anything else you wish to add?
                 </div>
                 <div className='flex flex-col gap-6 mb-4'>
@@ -170,14 +211,10 @@ export default function OnboardingSheet({
                     .map((service) => {
                       const isSelected = additionalSelectedServices.includes(service.name);
                       return (
-                        <button
+                        <ServiceCard
                           key={service.name}
-                          type='button'
-                          className={`relative border rounded px-4 py-4 text-left flex items-start flex-col font-medium transition min-h-[100px] ${
-                            isSelected
-                              ? 'border-black bg-gray-300 shadow-inner scale-[0.97] translate-y-[1px] rounded-md'
-                              : 'border-gray-200 hover:bg-gray-100'
-                          }`}
+                          service={service}
+                          isSelected={isSelected}
                           onClick={() => {
                             setAdditionalSelectedServices((prev) => {
                               return isSelected
@@ -187,26 +224,15 @@ export default function OnboardingSheet({
                                 : [...prev, service.name];
                             });
                           }}
-                        >
-                          <span>{service.name}</span>
-                          <span className='text-gray-500 text-sm'>{service.subtitle}</span>
-                          <span
-                            className={`absolute -bottom-2 -right-2 bg-gray-200 border border-gray-300 rounded-full px-4 py-1 text-base font-semibold shadow-sm ${
-                              service.price === 'Free' ? 'text-green-600' : 'text-gray-800'
-                            }`}
-                          >
-                            {service.price}
-                          </span>
-                        </button>
+                        />
                       );
                     })}
                 </div>
               </>
             )}
-            {/* Primary CTA at bottom right, only after selection */}
             <div className='flex justify-end mt-8'>
-              <button
-                className={`px-8 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-black text-white min-w-[180px] min-h-[44px] ${
+              <Button
+                className={`min-w-[180px] min-h-[44px] ${
                   selectedService
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 translate-y-4 pointer-events-none'
@@ -216,13 +242,13 @@ export default function OnboardingSheet({
                   transitionDuration: '300ms',
                 }}
                 onClick={() => {
-                  setStep(1);
+                  return setStep(1);
                 }}
                 disabled={!selectedService}
                 aria-disabled={!selectedService}
               >
                 {getPrimaryButtonText()}
-              </button>
+              </Button>
             </div>
           </div>
         );
@@ -296,16 +322,14 @@ export default function OnboardingSheet({
     }
   };
 
-  // Navigation buttons
-  const renderNav = () => {
-    if (submitted) return null;
-    // For step 0, nav row is not shown (handled in renderStep)
-    if (step === 0) return null;
+  const renderNavigation = () => {
+    if (submitted || step === 0) return null;
+
     return (
       <div className='flex justify-between items-center mt-8 gap-2'>
         {step > 0 && (
-          <button
-            className='px-4 py-2 rounded border border-gray-300 bg-white hover:bg-gray-50'
+          <Button
+            variant='secondary'
             onClick={() => {
               return setStep((s) => {
                 return s - 1;
@@ -313,17 +337,16 @@ export default function OnboardingSheet({
             }}
           >
             Back
-          </button>
+          </Button>
         )}
-        {/* CMS-driven buttons to the left of Next/Submit for steps > 0 */}
         {step > 0 && buttons.length > 0 && (
           <div className='flex gap-2'>
             {buttons.map((btn, i) => {
               if (btn.type === 'skip') {
                 return (
-                  <button
+                  <Button
                     key={i}
-                    className='px-4 py-2 rounded border border-gray-300 bg-white hover:bg-gray-50'
+                    variant='secondary'
                     onClick={() => {
                       if (btn.action === 'closeSheet') onOpenChange(false);
                       else if (btn.action === 'nextStep')
@@ -333,7 +356,7 @@ export default function OnboardingSheet({
                     }}
                   >
                     {btn.text}
-                  </button>
+                  </Button>
                 );
               }
               if (btn.type === 'callOrText' && btn.url) {
@@ -353,8 +376,7 @@ export default function OnboardingSheet({
         )}
         <div className='flex-1' />
         {step < 2 && (
-          <button
-            className='px-4 py-2 rounded bg-black text-white disabled:opacity-50'
+          <Button
             onClick={() => {
               return setStep((s) => {
                 return s + 1;
@@ -363,30 +385,29 @@ export default function OnboardingSheet({
             disabled={step === 0 && !selectedService}
           >
             Next
-          </button>
+          </Button>
         )}
         {step === 2 && (
-          <button
-            className='px-4 py-2 rounded bg-black text-white disabled:opacity-50'
+          <Button
             onClick={() => {
               return setSubmitted(true);
             }}
             disabled={!contactForm.name || !contactForm.email}
           >
             Submit
-          </button>
+          </Button>
         )}
       </div>
     );
   };
 
+  // Main Render
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='right'
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-3'
       >
-        {/* Prefer to Talk? Call or Text button - top right ghost button */}
         {buttons.find((btn) => {
           return btn.type === 'callOrText' && btn.url;
         }) && (
@@ -404,7 +425,7 @@ export default function OnboardingSheet({
         )}
         <div className='mt-4 flex-1 flex flex-col'>
           {renderStep()}
-          {renderNav()}
+          {renderNavigation()}
         </div>
       </SheetContent>
     </Sheet>
