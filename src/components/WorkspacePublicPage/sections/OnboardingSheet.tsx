@@ -180,7 +180,13 @@ export default function OnboardingSheet({
   const [selectedService, setSelectedService] = React.useState<string | null>(null);
   const [additionalSelectedServices, setAdditionalSelectedServices] = React.useState<string[]>([]);
   const [additionalNotes, setAdditionalNotes] = React.useState('');
-  const [contactForm, setContactForm] = React.useState({ name: '', email: '', phone: '' });
+  const [contactForm, setContactForm] = React.useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+    consent: false,
+  });
   const [submitted, setSubmitted] = React.useState(false);
 
   React.useEffect(() => {
@@ -189,7 +195,7 @@ export default function OnboardingSheet({
       setSelectedService(null);
       setAdditionalSelectedServices([]);
       setAdditionalNotes('');
-      setContactForm({ name: '', email: '', phone: '' });
+      setContactForm({ name: '', email: '', phone: '', message: '', consent: false });
       setSubmitted(false);
     }
   }, [open]);
@@ -295,7 +301,7 @@ export default function OnboardingSheet({
                 </>
               )}
             </div>
-            <div className='mt-auto border-t pt-4'>
+            <div className='mt-auto border-t pt-4 mb-6'>
               <Button
                 className={`w-full min-h-[44px] bg-black hover:bg-black/80 ${
                   selectedService
@@ -332,40 +338,82 @@ export default function OnboardingSheet({
                 Notes: <span className='text-muted-foreground'>{additionalNotes}</span>
               </div>
             )}
-            <input
-              className='w-full border rounded p-2 mb-2'
-              placeholder='Full Name'
-              value={contactForm.name}
-              onChange={(e) => {
-                return setContactForm((f) => {
-                  return { ...f, name: e.target.value };
-                });
-              }}
-              required
-            />
-            <input
-              className='w-full border rounded p-2 mb-2'
-              placeholder='Email'
-              type='email'
-              value={contactForm.email}
-              onChange={(e) => {
-                return setContactForm((f) => {
-                  return { ...f, email: e.target.value };
-                });
-              }}
-              required
-            />
-            <input
-              className='w-full border rounded p-2 mb-2'
-              placeholder='Phone (optional)'
-              type='tel'
-              value={contactForm.phone}
-              onChange={(e) => {
-                return setContactForm((f) => {
-                  return { ...f, phone: e.target.value };
-                });
-              }}
-            />
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium mb-1'>Name *</label>
+                <input
+                  className='w-full border rounded p-2'
+                  placeholder='Jane Smith'
+                  value={contactForm.name}
+                  onChange={(e) => {
+                    return setContactForm((f) => {
+                      return { ...f, name: e.target.value };
+                    });
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium mb-1'>Email address *</label>
+                <input
+                  className='w-full border rounded p-2'
+                  placeholder='email@website.com'
+                  type='email'
+                  value={contactForm.email}
+                  onChange={(e) => {
+                    return setContactForm((f) => {
+                      return { ...f, email: e.target.value };
+                    });
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium mb-1'>Phone number *</label>
+                <input
+                  className='w-full border rounded p-2'
+                  placeholder='555-555-5555'
+                  type='tel'
+                  value={contactForm.phone}
+                  onChange={(e) => {
+                    return setContactForm((f) => {
+                      return { ...f, phone: e.target.value };
+                    });
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium mb-1'>Message</label>
+                <textarea
+                  className='w-full border rounded p-2 min-h-[100px]'
+                  placeholder='Your message here...'
+                  value={contactForm.message}
+                  onChange={(e) => {
+                    return setContactForm((f) => {
+                      return { ...f, message: e.target.value };
+                    });
+                  }}
+                />
+              </div>
+              <div className='flex items-start gap-2'>
+                <input
+                  type='checkbox'
+                  id='consent'
+                  checked={contactForm.consent}
+                  onChange={(e) => {
+                    return setContactForm((f) => {
+                      return { ...f, consent: e.target.checked };
+                    });
+                  }}
+                  required
+                  className='mt-1'
+                />
+                <label htmlFor='consent' className='text-sm'>
+                  I allow this website to store my submission so they can respond to my inquiry. *
+                </label>
+              </div>
+            </div>
           </div>
         );
       default:
@@ -422,7 +470,9 @@ export default function OnboardingSheet({
             onClick={() => {
               return setSubmitted(true);
             }}
-            disabled={!contactForm.name || !contactForm.email}
+            disabled={
+              !contactForm.name || !contactForm.email || !contactForm.phone || !contactForm.consent
+            }
           >
             Submit
           </Button>
