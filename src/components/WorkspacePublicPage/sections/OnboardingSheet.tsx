@@ -48,7 +48,7 @@ const PriceTag = ({
           ? isAdditionalService
             ? 'bg-white text-gray-800'
             : price === 'Free'
-            ? 'bg-green-500 text-white'
+            ? 'bg-white text-green-600'
             : 'bg-gray-200 text-gray-800'
           : price === 'Free'
           ? 'bg-green-500 text-white'
@@ -92,10 +92,10 @@ const ServiceCard = ({
       }`}
       onClick={onClick}
     >
-      <span>{service.name}</span>
+      <span className={isSelected && !isAdditionalService ? 'text-white' : ''}>{service.name}</span>
       <span
         className={`text-sm ${
-          isSelected ? (isAdditionalService ? 'text-gray-700' : 'text-gray-200') : 'text-gray-500'
+          isSelected ? (isAdditionalService ? 'text-gray-700' : 'text-gray-300') : 'text-gray-500'
         }`}
       >
         {service.subtitle}
