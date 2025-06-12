@@ -320,20 +320,6 @@ export default function OnboardingSheet({
       case 1:
         return (
           <div>
-            <SheetTitle className='mb-4'>Anything you wish to add?</SheetTitle>
-            <textarea
-              className='w-full border rounded p-2 min-h-[80px]'
-              placeholder='Let us know any details, preferences, or questions...'
-              value={additionalNotes}
-              onChange={(e) => {
-                return setAdditionalNotes(e.target.value);
-              }}
-            />
-          </div>
-        );
-      case 2:
-        return (
-          <div>
             <SheetTitle className='mb-4'>Contact Details</SheetTitle>
             <div className='mb-2'>
               Service(s):{' '}
@@ -430,19 +416,8 @@ export default function OnboardingSheet({
           </div>
         )}
         <div className='flex-1' />
-        {step < 2 && (
-          <Button
-            onClick={() => {
-              return setStep((s) => {
-                return s + 1;
-              });
-            }}
-            disabled={step === 0 && !selectedService}
-          >
-            Next
-          </Button>
-        )}
-        {step === 2 && (
+
+        {step === 1 && (
           <Button
             onClick={() => {
               return setSubmitted(true);
