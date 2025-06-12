@@ -425,58 +425,64 @@ export default function OnboardingSheet({
     if (submitted || step === 0) return null;
 
     return (
-      <div className='flex justify-between items-center mt-8 gap-2'>
-        {step > 0 && (
-          <Button
-            variant='secondary'
-            onClick={() => {
-              return setStep((s) => {
-                return s - 1;
-              });
-            }}
-          >
-            Back
-          </Button>
-        )}
-        {step > 0 && buttons.length > 0 && (
-          <div className='flex gap-2'>
-            {buttons.map((btn, i) => {
-              if (btn.type === 'skip') {
-                return (
-                  <Button
-                    key={i}
-                    variant='secondary'
-                    onClick={() => {
-                      if (btn.action === 'closeSheet') onOpenChange(false);
-                      else if (btn.action === 'nextStep')
-                        setStep((s) => {
-                          return Math.min(s + 1, 2);
-                        });
-                    }}
-                  >
-                    {btn.text}
-                  </Button>
-                );
+      <div className='mt-auto border-t pt-4 mb-6'>
+        <div className='flex gap-2'>
+          {step > 0 && (
+            <Button
+              variant='secondary'
+              onClick={() => {
+                return setStep((s) => {
+                  return s - 1;
+                });
+              }}
+              className='flex-1'
+            >
+              Back
+            </Button>
+          )}
+          {step > 0 && buttons.length > 0 && (
+            <div className='flex gap-2'>
+              {buttons.map((btn, i) => {
+                if (btn.type === 'skip') {
+                  return (
+                    <Button
+                      key={i}
+                      variant='secondary'
+                      onClick={() => {
+                        if (btn.action === 'closeSheet') onOpenChange(false);
+                        else if (btn.action === 'nextStep')
+                          setStep((s) => {
+                            return Math.min(s + 1, 2);
+                          });
+                      }}
+                    >
+                      {btn.text}
+                    </Button>
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+          )}
+
+          {step === 1 && (
+            <Button
+              onClick={() => {
+                return setSubmitted(true);
+              }}
+              disabled={
+                !contactForm.name ||
+                !contactForm.email ||
+                !contactForm.phone ||
+                !contactForm.consent
               }
-
-              return null;
-            })}
-          </div>
-        )}
-        <div className='flex-1' />
-
-        {step === 1 && (
-          <Button
-            onClick={() => {
-              return setSubmitted(true);
-            }}
-            disabled={
-              !contactForm.name || !contactForm.email || !contactForm.phone || !contactForm.consent
-            }
-          >
-            Submit
-          </Button>
-        )}
+              className='w-full'
+            >
+              Submit
+            </Button>
+          )}
+        </div>
       </div>
     );
   };
