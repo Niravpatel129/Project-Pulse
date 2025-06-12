@@ -137,7 +137,6 @@ export default function OnboardingSheet({
   const [contactForm, setContactForm] = React.useState({ name: '', email: '', phone: '' });
   const [submitted, setSubmitted] = React.useState(false);
 
-  // Effects
   React.useEffect(() => {
     if (!open) {
       setStep(0);
@@ -149,7 +148,6 @@ export default function OnboardingSheet({
     }
   }, [open]);
 
-  // Helper Functions
   const getPrimaryButtonText = () => {
     if (!selectedService) return 'Continue';
     if (selectedService === 'Professional Resume Writing') return 'Continue to Details';
@@ -158,7 +156,6 @@ export default function OnboardingSheet({
     return 'Continue';
   };
 
-  // Steps rendering
   const renderStep = () => {
     if (submitted) {
       return (
