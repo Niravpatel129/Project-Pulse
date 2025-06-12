@@ -47,9 +47,13 @@ const PriceTag = ({
         isSelected
           ? isAdditionalService
             ? 'bg-white text-gray-800'
+            : price === 'Free'
+            ? 'bg-green-500 text-white'
             : 'bg-gray-200 text-gray-800'
+          : price === 'Free'
+          ? 'bg-green-500 text-white'
           : 'bg-gray-200 text-gray-800'
-      } ${price === 'Free' ? 'bg-green-500 text-white' : ''}`}
+      }`}
     >
       {price}
     </span>
@@ -123,6 +127,48 @@ const ServiceCard = ({
   );
 };
 
+// Add Cart Summary Component
+const CartSummary = ({
+  selectedService,
+  additionalServices,
+}: {
+  selectedService: string | null;
+  additionalServices: string[];
+}) => {
+  const allServices = [selectedService, ...additionalServices].filter(Boolean);
+  const total = allServices.reduce((sum, serviceName) => {
+    const service = services.find((s) => {
+      return s.name === serviceName;
+    });
+    if (!service) return sum;
+    return sum + (service.price === 'Free' ? 0 : parseInt(service.price.replace('$', '')));
+  }, 0);
+
+  return (
+    <div className='border-t pt-4 mt-4'>
+      <div className='text-sm font-medium mb-2'>Selected Services:</div>
+      <div className='space-y-1 mb-2'>
+        {allServices.map((serviceName) => {
+          const service = services.find((s) => {
+            return s.name === serviceName;
+          });
+          if (!service) return null;
+          return (
+            <div key={serviceName} className='flex justify-between text-sm'>
+              <span>{service.name}</span>
+              <span>{service.price}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className='flex justify-between font-semibold border-t pt-2'>
+        <span>Total</span>
+        <span>${total}</span>
+      </div>
+    </div>
+  );
+};
+
 // Component
 export default function OnboardingSheet({
   open,
@@ -150,10 +196,16 @@ export default function OnboardingSheet({
 
   const getPrimaryButtonText = () => {
     if (!selectedService) return 'Continue';
-    if (selectedService === 'Professional Resume Writing') return 'Continue to Details';
-    if (selectedService === 'Same-Day Rush Service') return 'Rush My Resume';
-    if (selectedService === 'Specialized Industries') return 'Start Now';
-    return 'Continue';
+    const total = [selectedService, ...additionalSelectedServices]
+      .filter(Boolean)
+      .reduce((sum, serviceName) => {
+        const service = services.find((s) => {
+          return s.name === serviceName;
+        });
+        if (!service) return sum;
+        return sum + (service.price === 'Free' ? 0 : parseInt(service.price.replace('$', '')));
+      }, 0);
+    return `View Order $${total}`;
   };
 
   const renderStep = () => {
@@ -178,72 +230,74 @@ export default function OnboardingSheet({
     switch (step) {
       case 0:
         return (
-          <div>
-            <SheetTitle className='mb-8'>Choose a Service</SheetTitle>
-            {!selectedService ? (
-              <div className='flex flex-col gap-3'>
-                {services.map((service) => {
-                  return (
-                    <ServiceCard
-                      key={service.name}
-                      service={service}
-                      isSelected={false}
-                      onClick={() => {
-                        return setSelectedService(service.name);
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <>
-                <ServiceCard
-                  service={
-                    services.find((s) => {
-                      return s.name === selectedService;
-                    }) as Service
-                  }
-                  isSelected={true}
-                  showRemoveButton
-                  onRemove={() => {
-                    setSelectedService(null);
-                    setAdditionalSelectedServices([]);
-                  }}
-                />
-                <div className='mb-2 mt-6 text-base font-semibold'>
-                  Anything else you wish to add?
+          <div className='flex flex-col h-full'>
+            <div className='flex-1'>
+              <SheetTitle className='mb-8'>Choose a Service</SheetTitle>
+              {!selectedService ? (
+                <div className='flex flex-col gap-3'>
+                  {services.map((service) => {
+                    return (
+                      <ServiceCard
+                        key={service.name}
+                        service={service}
+                        isSelected={false}
+                        onClick={() => {
+                          return setSelectedService(service.name);
+                        }}
+                      />
+                    );
+                  })}
                 </div>
-                <div className='flex flex-col gap-6 mb-4'>
-                  {services
-                    .filter((s) => {
-                      return s.name !== selectedService;
-                    })
-                    .map((service) => {
-                      const isSelected = additionalSelectedServices.includes(service.name);
-                      return (
-                        <ServiceCard
-                          key={service.name}
-                          service={service}
-                          isSelected={isSelected}
-                          isAdditionalService={true}
-                          onClick={() => {
-                            setAdditionalSelectedServices((prev) => {
-                              return isSelected
-                                ? prev.filter((s) => {
-                                    return s !== service.name;
-                                  })
-                                : [...prev, service.name];
-                            });
-                          }}
-                        />
-                      );
-                    })}
-                </div>
-              </>
-            )}
-            <div className='flex justify-end mt-8'>
+              ) : (
+                <>
+                  <ServiceCard
+                    service={
+                      services.find((s) => {
+                        return s.name === selectedService;
+                      }) as Service
+                    }
+                    isSelected={true}
+                    showRemoveButton
+                    onRemove={() => {
+                      setSelectedService(null);
+                      setAdditionalSelectedServices([]);
+                    }}
+                  />
+                  <div className='mb-2 mt-6 text-base font-semibold'>
+                    Anything else you wish to add?
+                  </div>
+                  <div className='flex flex-col gap-6 mb-4'>
+                    {services
+                      .filter((s) => {
+                        return s.name !== selectedService;
+                      })
+                      .map((service) => {
+                        const isSelected = additionalSelectedServices.includes(service.name);
+                        return (
+                          <ServiceCard
+                            key={service.name}
+                            service={service}
+                            isSelected={isSelected}
+                            isAdditionalService={true}
+                            onClick={() => {
+                              setAdditionalSelectedServices((prev) => {
+                                return isSelected
+                                  ? prev.filter((s) => {
+                                      return s !== service.name;
+                                    })
+                                  : [...prev, service.name];
+                              });
+                            }}
+                          />
+                        );
+                      })}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className='mt-auto border-t pt-4'>
               <Button
-                className={`min-w-[180px] min-h-[44px] bg-black hover:bg-black/80 ${
+                className={`w-full min-h-[44px] bg-black hover:bg-black/80 ${
                   selectedService
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 translate-y-4 pointer-events-none'
