@@ -41,6 +41,7 @@ const InvoiceFromTo = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toTextareaRef = useRef<HTMLTextAreaElement>(null);
   const { clients } = useClients();
+  console.log('🚀 clients:', clients);
 
   useEffect(() => {
     if (toAddress) {
@@ -71,6 +72,7 @@ const InvoiceFromTo = ({
   }, [toContent]);
 
   const handleEditCustomer = (e: React.MouseEvent, client: any) => {
+    console.log('🚀 client 12:', client);
     e.stopPropagation();
     setEditingCustomer(client);
     setIsNewCustomerDialogOpen(true);

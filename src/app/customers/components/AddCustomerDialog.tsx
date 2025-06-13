@@ -35,6 +35,7 @@ export function AddCustomerDialog({
   onEdit,
   initialData,
 }: AddCustomerDialogProps) {
+  console.log('🚀 initialData:', initialData);
   const [activeTab, setActiveTab] = useState<'contact' | 'billing' | 'shipping' | 'more'>(
     'contact',
   );
@@ -75,8 +76,34 @@ export function AddCustomerDialog({
   useLayoutEffect(() => {
     if (initialData && open) {
       setNewCustomer({
-        ...newCustomer,
-        ...initialData,
+        name: initialData.user?.name || '',
+        contactName: `${initialData.contact?.firstName || ''} ${
+          initialData.contact?.lastName || ''
+        }`.trim(),
+        contactEmail: initialData.user?.email || '',
+        contactPhone: initialData.phone || '',
+        industry: '',
+        type: 'Individual',
+        totalSpent: initialData.totalSpent || 0,
+        projects: 0,
+        rating: 0,
+        status: initialData.isActive ? 'Active' : 'Inactive',
+        address: {
+          street: initialData.address?.street || '',
+          city: initialData.address?.city || '',
+          state: initialData.address?.state || '',
+          country: initialData.address?.country || '',
+          zip: initialData.address?.zip || '',
+        },
+        shippingAddress: {
+          street: initialData.shippingAddress?.street || '',
+          city: initialData.shippingAddress?.city || '',
+          state: initialData.shippingAddress?.state || '',
+          country: initialData.shippingAddress?.country || '',
+          zip: initialData.shippingAddress?.zip || '',
+        },
+        website: initialData.website || '',
+        internalNotes: initialData.internalNotes || '',
       });
 
       const sameAddress =
@@ -158,7 +185,7 @@ export function AddCustomerDialog({
 
   const updateClientMutation = useMutation({
     mutationFn: async (clientData: any) => {
-      const response = await newRequest.put(`/clients/${initialData.id}`, clientData);
+      const response = await newRequest.put(`/clients/${initialData._id}`, clientData);
       return response.data;
     },
     onSuccess: () => {
