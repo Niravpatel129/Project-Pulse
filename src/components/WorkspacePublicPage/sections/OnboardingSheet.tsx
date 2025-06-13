@@ -698,7 +698,7 @@ export default function OnboardingSheet({
                 !contactForm.phone ||
                 !contactForm.consent
               }
-              className='w-full min-h-[44px]'
+              className='w-full min-h-[44px] rounded-full'
             >
               Submit
             </Button>
@@ -715,7 +715,7 @@ export default function OnboardingSheet({
                 !callbackSchedule.name ||
                 !callbackSchedule.phone
               }
-              className='w-full min-h-[44px]'
+              className='w-full min-h-[44px] rounded-full'
             >
               Schedule Callback
             </Button>
