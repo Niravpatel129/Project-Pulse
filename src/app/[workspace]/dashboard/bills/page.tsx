@@ -1,6 +1,5 @@
 'use client';
 
-import InvoiceSheet from '@/components/InvoiceSheet/InvoiceSheet';
 import TakePaymentDialog from '@/components/payments/TakePaymentDialog';
 import {
   AlertDialog,
@@ -289,13 +288,7 @@ const Bills = () => {
         </div>
       </div>
       <div className='flex h-full bg-white dark:bg-[#1A1A1A]'>
-        <motion.div
-          className='flex-1 py-4 px-4 overflow-hidden'
-          animate={{
-            marginRight: !isMobile && selectedInvoice ? '400px' : '0',
-            transition: { duration: 0.3, ease: 'easeInOut' },
-          }}
-        >
+        <motion.div className='flex-1 py-4 px-4 overflow-hidden' animate={{}}>
           <div className='mb-4'>
             <InvoiceCards
               onFilter={(status) => {
@@ -548,50 +541,17 @@ const Bills = () => {
             )}
           </div>
         </motion.div>
-        {selectedInvoice &&
-          (isMobile ? (
-            <Sheet
-              open={!!selectedInvoice}
-              onOpenChange={() => {
-                return setSelectedInvoice(null);
-              }}
-            >
-              <SheetContent side='right' className='w-full sm:max-w-lg p-0'>
-                <SheetHeader className='sr-only'>
-                  <SheetTitle>Invoice Preview</SheetTitle>
-                </SheetHeader>
-                <InvoicePreview2
-                  selectedInvoice={selectedInvoice}
-                  setSelectedInvoice={setSelectedInvoice}
-                  setEditingInvoice={setEditingInvoice}
-                  onMarkAsPaid={(invoiceId, paymentDate) => {
-                    markAsPaidMutation.mutate({ invoiceId, paymentDate });
-                  }}
-                  onCancel={(invoiceId) => {
-                    setPendingAction({
-                      type: 'cancel',
-                      invoiceId,
-                    });
-                    setShowConfirmDialog(true);
-                  }}
-                  onDelete={(invoiceId) => {
-                    setPendingAction({
-                      type: 'delete',
-                      invoiceId,
-                    });
-                    setShowConfirmDialog(true);
-                  }}
-                  onTakePayment={handleTakePayment}
-                />
-              </SheetContent>
-            </Sheet>
-          ) : (
-            <motion.div
-              className='fixed right-0 z-9 top-[53px] h-[calc(100vh-55px)] w-[400px] bg-white dark:bg-[#1A1A1A]'
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
+        {selectedInvoice && (
+          <Sheet
+            open={!!selectedInvoice}
+            onOpenChange={() => {
+              return setSelectedInvoice(null);
+            }}
+          >
+            <SheetContent side='right' className='w-full sm:max-w-lg p-0'>
+              <SheetHeader className='sr-only'>
+                <SheetTitle>Invoice Preview</SheetTitle>
+              </SheetHeader>
               <InvoicePreview2
                 selectedInvoice={selectedInvoice}
                 setSelectedInvoice={setSelectedInvoice}
@@ -615,13 +575,9 @@ const Bills = () => {
                 }}
                 onTakePayment={handleTakePayment}
               />
-            </motion.div>
-          ))}
-        <InvoiceSheet
-          open={!!editingInvoice}
-          onOpenChange={setEditingInvoice}
-          existingInvoice={editingInvoice}
-        />
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
