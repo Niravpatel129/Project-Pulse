@@ -29,10 +29,6 @@ export default function GoogleReviewsSection({
   subtitle,
   reviews = [],
   id,
-  showGoogleBadge = true,
-  averageRating = 5.0,
-  totalReviews = 0,
-  primaryColor = '#7C3AED',
 }: GoogleReviewsSectionProps) {
   const renderStars = (rating: number) => {
     return (
@@ -50,17 +46,12 @@ export default function GoogleReviewsSection({
     );
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   return (
-    <section id={id} className='py-16 bg-gray-50 overflow-hidden mb-22 relative'>
+    <section
+      id={id}
+      className='py-16 overflow-hidden mb-22 relative'
+      style={{ background: 'linear-gradient(rgb(245, 243, 240), rgb(254, 253, 253))' }}
+    >
       <div className='container mx-auto px-2 max-w-6xl'>
         {/* Header Section */}
         <div className='max-w-4xl mx-auto text-center mb-30'>

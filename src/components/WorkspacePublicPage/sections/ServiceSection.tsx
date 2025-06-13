@@ -60,12 +60,6 @@ export default function ServiceSection({
 
   const currentService = services[activeTab];
 
-  const bgClasses = {
-    white: 'bg-white',
-    gray: 'bg-gray-50',
-    transparent: 'bg-transparent',
-  }[backgroundColor];
-
   const gridCols = {
     1: 'grid-cols-1',
     2: 'md:grid-cols-2',
@@ -178,7 +172,7 @@ export default function ServiceSection({
   };
 
   return (
-    <section id={id} className={`py-16 ${bgClasses}`}>
+    <section id={id} className={`py-16 bg-white`}>
       <div className='container mx-auto px-4 max-w-5xl'>
         <div className='max-w-6xl mx-auto'>
           <div className='text-center mb-12'>
