@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeftIcon, CheckIcon } from 'lucide-react';
 import React from 'react';
 
@@ -235,7 +236,12 @@ export default function OnboardingSheet({
   const renderStep = () => {
     if (submitted) {
       return (
-        <div className='flex flex-col items-center justify-center h-full'>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className='flex flex-col items-center justify-center h-full'
+        >
           <div className='text-2xl font-bold mb-2'>Thank you!</div>
           <div className='text-muted-foreground mb-4'>
             {step === 2
@@ -249,413 +255,436 @@ export default function OnboardingSheet({
           >
             Close
           </Button>
-        </div>
+        </motion.div>
       );
     }
 
-    switch (step) {
-      case 0:
-        return (
-          <div className='flex flex-col h-full'>
-            <div className='flex-1'>
-              {!selectedService ? (
-                <div className='flex flex-col gap-3'>
-                  {services.map((service) => {
-                    return (
-                      <ServiceCard
-                        key={service.name}
-                        service={service}
-                        isSelected={false}
-                        onClick={() => {
-                          return setSelectedService(service.name);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <>
-                  <ServiceCard
-                    service={
-                      services.find((s) => {
-                        return s.name === selectedService;
-                      }) as Service
-                    }
-                    isSelected={true}
-                    showRemoveButton
-                    onRemove={() => {
-                      setSelectedService(null);
-                      setAdditionalSelectedServices([]);
-                    }}
-                  />
-                  <div className='mb-2 mt-6 text-base font-semibold'>
-                    Anything else you wish to add?
-                  </div>
-                  <div className='flex flex-col gap-6 mb-4 animate-slide-up'>
-                    {services
-                      .filter((s) => {
-                        return s.name !== selectedService;
-                      })
-                      .map((service) => {
-                        const isSelected = additionalSelectedServices.includes(service.name);
-                        return (
+    return (
+      <AnimatePresence mode='wait'>
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className='flex-1'
+        >
+          {(() => {
+            switch (step) {
+              case 0:
+                return (
+                  <div className='flex flex-col h-full'>
+                    <div className='flex-1'>
+                      {!selectedService ? (
+                        <div className='flex flex-col gap-3'>
+                          {services.map((service) => {
+                            return (
+                              <ServiceCard
+                                key={service.name}
+                                service={service}
+                                isSelected={false}
+                                onClick={() => {
+                                  return setSelectedService(service.name);
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <>
                           <ServiceCard
-                            key={service.name}
-                            service={service}
-                            isSelected={isSelected}
-                            isAdditionalService={true}
-                            onClick={() => {
-                              setAdditionalSelectedServices((prev) => {
-                                return isSelected
-                                  ? prev.filter((s) => {
-                                      return s !== service.name;
-                                    })
-                                  : [...prev, service.name];
-                              });
+                            service={
+                              services.find((s) => {
+                                return s.name === selectedService;
+                              }) as Service
+                            }
+                            isSelected={true}
+                            showRemoveButton
+                            onRemove={() => {
+                              setSelectedService(null);
+                              setAdditionalSelectedServices([]);
                             }}
                           />
-                        );
-                      })}
+                          <div className='mb-2 mt-6 text-base font-semibold'>
+                            Anything else you wish to add?
+                          </div>
+                          <div className='flex flex-col gap-6 mb-4 animate-slide-up'>
+                            {services
+                              .filter((s) => {
+                                return s.name !== selectedService;
+                              })
+                              .map((service) => {
+                                const isSelected = additionalSelectedServices.includes(
+                                  service.name,
+                                );
+                                return (
+                                  <ServiceCard
+                                    key={service.name}
+                                    service={service}
+                                    isSelected={isSelected}
+                                    isAdditionalService={true}
+                                    onClick={() => {
+                                      setAdditionalSelectedServices((prev) => {
+                                        return isSelected
+                                          ? prev.filter((s) => {
+                                              return s !== service.name;
+                                            })
+                                          : [...prev, service.name];
+                                      });
+                                    }}
+                                  />
+                                );
+                              })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className='mt-auto border-t pt-5'>
+                      <Button
+                        className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 transition-all duration-300 ease-in-out ${
+                          selectedService
+                            ? 'opacity-100 translate-y-0 pointer-events-auto'
+                            : 'opacity-0 translate-y-4 pointer-events-none'
+                        }`}
+                        style={{
+                          transitionProperty: 'opacity, transform',
+                          transitionDuration: '300ms',
+                          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                        onClick={() => {
+                          return setStep(1);
+                        }}
+                        disabled={!selectedService}
+                        aria-disabled={!selectedService}
+                      >
+                        {getPrimaryButtonText()}
+                      </Button>
+                    </div>
                   </div>
-                </>
-              )}
-            </div>
-            <div className='mt-auto border-t pt-5'>
-              <Button
-                className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 transition-all duration-300 ease-in-out ${
-                  selectedService
-                    ? 'opacity-100 translate-y-0 pointer-events-auto'
-                    : 'opacity-0 translate-y-4 pointer-events-none'
-                }`}
-                style={{
-                  transitionProperty: 'opacity, transform',
-                  transitionDuration: '300ms',
-                  transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-                onClick={() => {
-                  return setStep(1);
-                }}
-                disabled={!selectedService}
-                aria-disabled={!selectedService}
-              >
-                {getPrimaryButtonText()}
-              </Button>
-            </div>
-          </div>
-        );
-      case 1:
-        return (
-          <div>
-            <div className='mb-4'>
-              Service(s):{' '}
-              <span className='font-semibold text-base'>
-                {[selectedService, ...additionalSelectedServices].filter(Boolean).join(', ')}
-              </span>
-            </div>
-            {additionalNotes && (
-              <div className='mb-4'>
-                Notes: <span className='text-muted-foreground text-sm'>{additionalNotes}</span>
-              </div>
-            )}
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-sm font-medium mb-1.5'>Name *</label>
-                <input
-                  className='w-full border rounded p-2.5 text-base'
-                  placeholder='Jane Smith'
-                  value={contactForm.name}
-                  onChange={(e) => {
-                    return setContactForm((f) => {
-                      return { ...f, name: e.target.value };
-                    });
-                  }}
-                  required
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-medium mb-1.5'>Email address *</label>
-                <input
-                  className='w-full border rounded p-2.5 text-base'
-                  placeholder='email@website.com'
-                  type='email'
-                  value={contactForm.email}
-                  onChange={(e) => {
-                    return setContactForm((f) => {
-                      return { ...f, email: e.target.value };
-                    });
-                  }}
-                  required
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-medium mb-1.5'>Phone number *</label>
-                <input
-                  className='w-full border rounded p-2.5 text-base'
-                  placeholder='555-555-5555'
-                  type='tel'
-                  value={contactForm.phone}
-                  onChange={(e) => {
-                    return setContactForm((f) => {
-                      return { ...f, phone: e.target.value };
-                    });
-                  }}
-                  required
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-medium mb-1.5'>Message</label>
-                <textarea
-                  className='w-full border rounded p-2.5 text-base min-h-[100px]'
-                  placeholder='Your message here...'
-                  value={contactForm.message}
-                  onChange={(e) => {
-                    return setContactForm((f) => {
-                      return { ...f, message: e.target.value };
-                    });
-                  }}
-                />
-              </div>
-              <div className='flex items-start gap-2'>
-                <input
-                  type='checkbox'
-                  id='consent'
-                  checked={contactForm.consent}
-                  onChange={(e) => {
-                    return setContactForm((f) => {
-                      return { ...f, consent: e.target.checked };
-                    });
-                  }}
-                  required
-                  className='mt-1'
-                />
-                <label htmlFor='consent' className='text-sm'>
-                  I allow this website to store my submission so they can respond to my inquiry. *
-                </label>
-              </div>
-            </div>
-          </div>
-        );
-      case 2:
-        return (
-          <div className='space-y-8 max-w-2xl mx-auto'>
-            <div className='space-y-6'>
-              {/* Immediate Call Section */}
-              <div
-                className='border rounded-xl p-6 bg-gradient-to-br from-gray-50 to-white hover:shadow-lg transition-all duration-300 cursor-pointer group'
-                onClick={() => {
-                  const phoneNumber = buttons.find((btn) => {
-                    return btn.type === 'callOrText' && btn.url;
-                  })?.url;
-                  if (phoneNumber) {
-                    window.location.href = phoneNumber;
-                  }
-                }}
-              >
-                <div className='flex items-center gap-4'>
-                  <div className='w-12 h-12 rounded-full bg-black flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      className='h-6 w-6 text-white'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'
-                      />
-                    </svg>
-                  </div>
-                  <div className='flex-grow'>
-                    <h3 className='text-lg font-semibold mb-1'>Call Now</h3>
-                    <p className='text-muted-foreground text-sm'>
-                      Get immediate assistance from our team
-                    </p>
-                  </div>
-                  <Button
-                    className='bg-black hover:bg-black/90 text-white px-6 text-base'
-                    size='lg'
-                  >
-                    Start Call
-                  </Button>
-                </div>
-              </div>
-
-              <div className='relative'>
-                <div className='absolute inset-0 flex items-center'>
-                  <div className='w-full border-t border-gray-200'></div>
-                </div>
-                <div className='relative flex justify-center'>
-                  <span className='bg-white px-4 text-sm text-gray-500'>or</span>
-                </div>
-              </div>
-
-              {/* Schedule Callback Section */}
-              <div className='border rounded-xl p-6 bg-white hover:shadow-lg transition-all duration-300'>
-                <div className='flex items-center gap-4 mb-6'>
-                  <div className='w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      className='h-6 w-6 text-gray-600'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                      />
-                    </svg>
-                  </div>
+                );
+              case 1:
+                return (
                   <div>
-                    <h3 className='text-lg font-semibold mb-1'>Schedule a Callback</h3>
-                    <p className='text-muted-foreground text-sm'>
-                      Choose a time that works for you
-                    </p>
-                  </div>
-                </div>
-
-                <div className='space-y-4'>
-                  <div className='flex items-center justify-between p-4 bg-gray-50 rounded-lg'>
-                    <div>
-                      <h4 className='font-medium text-base'>Callback Timing</h4>
-                      <p className='text-sm text-muted-foreground'>
-                        {callbackSchedule.isASAP
-                          ? 'We&apos;ll call you back as soon as possible'
-                          : 'Choose a specific time for your callback'}
-                      </p>
+                    <div className='mb-4'>
+                      Service(s):{' '}
+                      <span className='font-semibold text-base'>
+                        {[selectedService, ...additionalSelectedServices]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </span>
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <button
-                        type='button'
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          callbackSchedule.isASAP
-                            ? 'bg-black text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-100'
-                        }`}
-                        onClick={() => {
-                          return setCallbackSchedule((prev) => {
-                            return { ...prev, isASAP: true };
-                          });
-                        }}
-                      >
-                        ASAP
-                      </button>
-                      <button
-                        type='button'
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          !callbackSchedule.isASAP
-                            ? 'bg-black text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-100'
-                        }`}
-                        onClick={() => {
-                          return setCallbackSchedule((prev) => {
-                            return { ...prev, isASAP: false };
-                          });
-                        }}
-                      >
-                        Schedule
-                      </button>
-                    </div>
-                  </div>
-
-                  {!callbackSchedule.isASAP && (
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                      <div className='space-y-2'>
-                        <label className='block text-sm font-medium text-gray-700'>
-                          Preferred Date *
-                        </label>
-                        <input
-                          type='date'
-                          className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                          value={callbackSchedule.date}
-                          onChange={(e) => {
-                            return setCallbackSchedule((prev) => {
-                              return { ...prev, date: e.target.value };
-                            });
-                          }}
-                          min={new Date().toISOString().split('T')[0]}
-                          required
-                        />
+                    {additionalNotes && (
+                      <div className='mb-4'>
+                        Notes:{' '}
+                        <span className='text-muted-foreground text-sm'>{additionalNotes}</span>
                       </div>
-                      <div className='space-y-2'>
-                        <label className='block text-sm font-medium text-gray-700'>
-                          Preferred Time *
-                        </label>
+                    )}
+                    <div className='space-y-4'>
+                      <div>
+                        <label className='block text-sm font-medium mb-1.5'>Name *</label>
                         <input
-                          type='time'
-                          className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                          value={callbackSchedule.time}
+                          className='w-full border rounded p-2.5 text-base'
+                          placeholder='Jane Smith'
+                          value={contactForm.name}
                           onChange={(e) => {
-                            return setCallbackSchedule((prev) => {
-                              return { ...prev, time: e.target.value };
+                            return setContactForm((f) => {
+                              return { ...f, name: e.target.value };
                             });
                           }}
                           required
                         />
                       </div>
+                      <div>
+                        <label className='block text-sm font-medium mb-1.5'>Email address *</label>
+                        <input
+                          className='w-full border rounded p-2.5 text-base'
+                          placeholder='email@website.com'
+                          type='email'
+                          value={contactForm.email}
+                          onChange={(e) => {
+                            return setContactForm((f) => {
+                              return { ...f, email: e.target.value };
+                            });
+                          }}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-sm font-medium mb-1.5'>Phone number *</label>
+                        <input
+                          className='w-full border rounded p-2.5 text-base'
+                          placeholder='555-555-5555'
+                          type='tel'
+                          value={contactForm.phone}
+                          onChange={(e) => {
+                            return setContactForm((f) => {
+                              return { ...f, phone: e.target.value };
+                            });
+                          }}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-sm font-medium mb-1.5'>Message</label>
+                        <textarea
+                          className='w-full border rounded p-2.5 text-base min-h-[100px]'
+                          placeholder='Your message here...'
+                          value={contactForm.message}
+                          onChange={(e) => {
+                            return setContactForm((f) => {
+                              return { ...f, message: e.target.value };
+                            });
+                          }}
+                        />
+                      </div>
+                      <div className='flex items-start gap-2'>
+                        <input
+                          type='checkbox'
+                          id='consent'
+                          checked={contactForm.consent}
+                          onChange={(e) => {
+                            return setContactForm((f) => {
+                              return { ...f, consent: e.target.checked };
+                            });
+                          }}
+                          required
+                          className='mt-1'
+                        />
+                        <label htmlFor='consent' className='text-sm'>
+                          I allow this website to store my submission so they can respond to my
+                          inquiry. *
+                        </label>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                );
+              case 2:
+                return (
+                  <div className='space-y-8 max-w-2xl mx-auto'>
+                    <div className='space-y-6'>
+                      {/* Immediate Call Section */}
+                      <div
+                        className='border rounded-xl p-6 bg-gradient-to-br from-gray-50 to-white hover:shadow-lg transition-all duration-300 cursor-pointer group'
+                        onClick={() => {
+                          const phoneNumber = buttons.find((btn) => {
+                            return btn.type === 'callOrText' && btn.url;
+                          })?.url;
+                          if (phoneNumber) {
+                            window.location.href = phoneNumber;
+                          }
+                        }}
+                      >
+                        <div className='flex items-center gap-4'>
+                          <div className='w-12 h-12 rounded-full bg-black flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300'>
+                            <svg
+                              xmlns='http://www.w3.org/2000/svg'
+                              className='h-6 w-6 text-white'
+                              fill='none'
+                              viewBox='0 0 24 24'
+                              stroke='currentColor'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'
+                              />
+                            </svg>
+                          </div>
+                          <div className='flex-grow'>
+                            <h3 className='text-lg font-semibold mb-1'>Call Now</h3>
+                            <p className='text-muted-foreground text-sm'>
+                              Get immediate assistance from our team
+                            </p>
+                          </div>
+                          <Button
+                            className='bg-black hover:bg-black/90 text-white px-6 text-base'
+                            size='lg'
+                          >
+                            Start Call
+                          </Button>
+                        </div>
+                      </div>
 
-                  <div className='space-y-2'>
-                    <label className='block text-sm font-medium text-gray-700'>Your Name *</label>
-                    <input
-                      type='text'
-                      className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                      placeholder='Jane Smith'
-                      value={callbackSchedule.name}
-                      onChange={(e) => {
-                        return setCallbackSchedule((prev) => {
-                          return { ...prev, name: e.target.value };
-                        });
-                      }}
-                      required
-                    />
+                      <div className='relative'>
+                        <div className='absolute inset-0 flex items-center'>
+                          <div className='w-full border-t border-gray-200'></div>
+                        </div>
+                        <div className='relative flex justify-center'>
+                          <span className='bg-white px-4 text-sm text-gray-500'>or</span>
+                        </div>
+                      </div>
+
+                      {/* Schedule Callback Section */}
+                      <div className='border rounded-xl p-6 bg-white hover:shadow-lg transition-all duration-300'>
+                        <div className='flex items-center gap-4 mb-6'>
+                          <div className='w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0'>
+                            <svg
+                              xmlns='http://www.w3.org/2000/svg'
+                              className='h-6 w-6 text-gray-600'
+                              fill='none'
+                              viewBox='0 0 24 24'
+                              stroke='currentColor'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className='text-lg font-semibold mb-1'>Schedule a Callback</h3>
+                            <p className='text-muted-foreground text-sm'>
+                              Choose a time that works for you
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className='space-y-4'>
+                          <div className='flex items-center justify-between p-4 bg-gray-50 rounded-lg'>
+                            <div>
+                              <h4 className='font-medium text-base'>Callback Timing</h4>
+                              <p className='text-sm text-muted-foreground'>
+                                {callbackSchedule.isASAP
+                                  ? 'We&apos;ll call you back as soon as possible'
+                                  : 'Choose a specific time for your callback'}
+                              </p>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                              <button
+                                type='button'
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  callbackSchedule.isASAP
+                                    ? 'bg-black text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                                onClick={() => {
+                                  return setCallbackSchedule((prev) => {
+                                    return { ...prev, isASAP: true };
+                                  });
+                                }}
+                              >
+                                ASAP
+                              </button>
+                              <button
+                                type='button'
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  !callbackSchedule.isASAP
+                                    ? 'bg-black text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                                onClick={() => {
+                                  return setCallbackSchedule((prev) => {
+                                    return { ...prev, isASAP: false };
+                                  });
+                                }}
+                              >
+                                Schedule
+                              </button>
+                            </div>
+                          </div>
+
+                          {!callbackSchedule.isASAP && (
+                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                              <div className='space-y-2'>
+                                <label className='block text-sm font-medium text-gray-700'>
+                                  Preferred Date *
+                                </label>
+                                <input
+                                  type='date'
+                                  className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                                  value={callbackSchedule.date}
+                                  onChange={(e) => {
+                                    return setCallbackSchedule((prev) => {
+                                      return { ...prev, date: e.target.value };
+                                    });
+                                  }}
+                                  min={new Date().toISOString().split('T')[0]}
+                                  required
+                                />
+                              </div>
+                              <div className='space-y-2'>
+                                <label className='block text-sm font-medium text-gray-700'>
+                                  Preferred Time *
+                                </label>
+                                <input
+                                  type='time'
+                                  className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                                  value={callbackSchedule.time}
+                                  onChange={(e) => {
+                                    return setCallbackSchedule((prev) => {
+                                      return { ...prev, time: e.target.value };
+                                    });
+                                  }}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <div className='space-y-2'>
+                            <label className='block text-sm font-medium text-gray-700'>
+                              Your Name *
+                            </label>
+                            <input
+                              type='text'
+                              className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                              placeholder='Jane Smith'
+                              value={callbackSchedule.name}
+                              onChange={(e) => {
+                                return setCallbackSchedule((prev) => {
+                                  return { ...prev, name: e.target.value };
+                                });
+                              }}
+                              required
+                            />
+                          </div>
+                          <div className='space-y-2'>
+                            <label className='block text-sm font-medium text-gray-700'>
+                              Phone Number *
+                            </label>
+                            <input
+                              type='tel'
+                              className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                              placeholder='555-555-5555'
+                              value={callbackSchedule.phone}
+                              onChange={(e) => {
+                                return setCallbackSchedule((prev) => {
+                                  return { ...prev, phone: e.target.value };
+                                });
+                              }}
+                              required
+                            />
+                          </div>
+                          <div className='space-y-2'>
+                            <label className='block text-sm font-medium text-gray-700'>
+                              Additional Notes
+                            </label>
+                            <textarea
+                              className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 min-h-[100px] text-base'
+                              placeholder="Any specific topics you'd like to discuss?"
+                              value={callbackSchedule.notes}
+                              onChange={(e) => {
+                                return setCallbackSchedule((prev) => {
+                                  return { ...prev, notes: e.target.value };
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className='space-y-2'>
-                    <label className='block text-sm font-medium text-gray-700'>
-                      Phone Number *
-                    </label>
-                    <input
-                      type='tel'
-                      className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                      placeholder='555-555-5555'
-                      value={callbackSchedule.phone}
-                      onChange={(e) => {
-                        return setCallbackSchedule((prev) => {
-                          return { ...prev, phone: e.target.value };
-                        });
-                      }}
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <label className='block text-sm font-medium text-gray-700'>
-                      Additional Notes
-                    </label>
-                    <textarea
-                      className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 min-h-[100px] text-base'
-                      placeholder="Any specific topics you'd like to discuss?"
-                      value={callbackSchedule.notes}
-                      onChange={(e) => {
-                        return setCallbackSchedule((prev) => {
-                          return { ...prev, notes: e.target.value };
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
+                );
+              default:
+                return null;
+            }
+          })()}
+        </motion.div>
+      </AnimatePresence>
+    );
   };
 
   const renderNavigation = () => {
