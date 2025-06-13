@@ -17,6 +17,16 @@ interface OnboardingSheetProps {
   buttons?: OnboardingSheetButton[];
 }
 
+// Add new interface for callback scheduling
+interface CallbackSchedule {
+  date: string;
+  time: string;
+  name: string;
+  phone: string;
+  notes: string;
+  isASAP: boolean;
+}
+
 type Service = {
   name: string;
   price: string;
@@ -88,7 +98,9 @@ const ServiceCard = ({
       }`}
       onClick={onClick}
     >
-      <span className={isSelected && !isAdditionalService ? 'text-white' : ''}>{service.name}</span>
+      <span className={`text-base ${isSelected && !isAdditionalService ? 'text-white' : ''}`}>
+        {service.name}
+      </span>
       <span
         className={`text-sm ${
           isSelected ? (isAdditionalService ? 'text-gray-700' : 'text-gray-300') : 'text-gray-500'
@@ -142,7 +154,7 @@ const CartSummary = ({
 
   return (
     <div className='border-t pt-4 mt-4'>
-      <div className='text-sm font-medium mb-2'>Selected Services:</div>
+      <div className='text-base font-medium mb-2'>Selected Services:</div>
       <div className='space-y-1 mb-2'>
         {allServices.map((serviceName) => {
           const service = services.find((s) => {
@@ -157,7 +169,7 @@ const CartSummary = ({
           );
         })}
       </div>
-      <div className='flex justify-between font-semibold border-t pt-2'>
+      <div className='flex justify-between font-semibold text-base border-t pt-2'>
         <span>Total</span>
         <span>${total}</span>
       </div>
@@ -184,6 +196,14 @@ export default function OnboardingSheet({
     consent: false,
   });
   const [submitted, setSubmitted] = React.useState(false);
+  const [callbackSchedule, setCallbackSchedule] = React.useState<CallbackSchedule>({
+    date: '',
+    time: '',
+    name: '',
+    phone: '',
+    notes: '',
+    isASAP: true,
+  });
 
   React.useEffect(() => {
     if (!open) {
@@ -193,6 +213,7 @@ export default function OnboardingSheet({
       setAdditionalNotes('');
       setContactForm({ name: '', email: '', phone: '', message: '', consent: false });
       setSubmitted(false);
+      setCallbackSchedule({ date: '', time: '', name: '', phone: '', notes: '', isASAP: true });
     }
   }, [open]);
 
@@ -216,7 +237,9 @@ export default function OnboardingSheet({
         <div className='flex flex-col items-center justify-center h-full'>
           <div className='text-2xl font-bold mb-2'>Thank you!</div>
           <div className='text-muted-foreground mb-4'>
-            We received your request. We&apos;ll be in touch soon.
+            {step === 2
+              ? "We'll call you at your scheduled time."
+              : "We received your request. We'll be in touch soon."}
           </div>
           <Button
             onClick={() => {
@@ -321,22 +344,22 @@ export default function OnboardingSheet({
       case 1:
         return (
           <div>
-            <div className='mb-2'>
+            <div className='mb-4'>
               Service(s):{' '}
-              <span className='font-semibold'>
+              <span className='font-semibold text-base'>
                 {[selectedService, ...additionalSelectedServices].filter(Boolean).join(', ')}
               </span>
             </div>
             {additionalNotes && (
-              <div className='mb-2'>
-                Notes: <span className='text-muted-foreground'>{additionalNotes}</span>
+              <div className='mb-4'>
+                Notes: <span className='text-muted-foreground text-sm'>{additionalNotes}</span>
               </div>
             )}
             <div className='space-y-4'>
               <div>
-                <label className='block text-sm font-medium mb-1'>Name *</label>
+                <label className='block text-sm font-medium mb-1.5'>Name *</label>
                 <input
-                  className='w-full border rounded p-2'
+                  className='w-full border rounded p-2.5 text-base'
                   placeholder='Jane Smith'
                   value={contactForm.name}
                   onChange={(e) => {
@@ -348,9 +371,9 @@ export default function OnboardingSheet({
                 />
               </div>
               <div>
-                <label className='block text-sm font-medium mb-1'>Email address *</label>
+                <label className='block text-sm font-medium mb-1.5'>Email address *</label>
                 <input
-                  className='w-full border rounded p-2'
+                  className='w-full border rounded p-2.5 text-base'
                   placeholder='email@website.com'
                   type='email'
                   value={contactForm.email}
@@ -363,9 +386,9 @@ export default function OnboardingSheet({
                 />
               </div>
               <div>
-                <label className='block text-sm font-medium mb-1'>Phone number *</label>
+                <label className='block text-sm font-medium mb-1.5'>Phone number *</label>
                 <input
-                  className='w-full border rounded p-2'
+                  className='w-full border rounded p-2.5 text-base'
                   placeholder='555-555-5555'
                   type='tel'
                   value={contactForm.phone}
@@ -378,9 +401,9 @@ export default function OnboardingSheet({
                 />
               </div>
               <div>
-                <label className='block text-sm font-medium mb-1'>Message</label>
+                <label className='block text-sm font-medium mb-1.5'>Message</label>
                 <textarea
-                  className='w-full border rounded p-2 min-h-[100px]'
+                  className='w-full border rounded p-2.5 text-base min-h-[100px]'
                   placeholder='Your message here...'
                   value={contactForm.message}
                   onChange={(e) => {
@@ -406,6 +429,224 @@ export default function OnboardingSheet({
                 <label htmlFor='consent' className='text-sm'>
                   I allow this website to store my submission so they can respond to my inquiry. *
                 </label>
+              </div>
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div className='space-y-8 max-w-2xl mx-auto'>
+            <div className='space-y-6'>
+              {/* Immediate Call Section */}
+              <div
+                className='border rounded-xl p-6 bg-gradient-to-br from-gray-50 to-white hover:shadow-lg transition-all duration-300 cursor-pointer group'
+                onClick={() => {
+                  const phoneNumber = buttons.find((btn) => {
+                    return btn.type === 'callOrText' && btn.url;
+                  })?.url;
+                  if (phoneNumber) {
+                    window.location.href = phoneNumber;
+                  }
+                }}
+              >
+                <div className='flex items-center gap-4'>
+                  <div className='w-12 h-12 rounded-full bg-black flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300'>
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      className='h-6 w-6 text-white'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'
+                      />
+                    </svg>
+                  </div>
+                  <div className='flex-grow'>
+                    <h3 className='text-lg font-semibold mb-1'>Call Now</h3>
+                    <p className='text-muted-foreground text-sm'>
+                      Get immediate assistance from our team
+                    </p>
+                  </div>
+                  <Button
+                    className='bg-black hover:bg-black/90 text-white px-6 text-base'
+                    size='lg'
+                  >
+                    Start Call
+                  </Button>
+                </div>
+              </div>
+
+              <div className='relative'>
+                <div className='absolute inset-0 flex items-center'>
+                  <div className='w-full border-t border-gray-200'></div>
+                </div>
+                <div className='relative flex justify-center'>
+                  <span className='bg-white px-4 text-sm text-gray-500'>or</span>
+                </div>
+              </div>
+
+              {/* Schedule Callback Section */}
+              <div className='border rounded-xl p-6 bg-white hover:shadow-lg transition-all duration-300'>
+                <div className='flex items-center gap-4 mb-6'>
+                  <div className='w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0'>
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      className='h-6 w-6 text-gray-600'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className='text-lg font-semibold mb-1'>Schedule a Callback</h3>
+                    <p className='text-muted-foreground text-sm'>
+                      Choose a time that works for you
+                    </p>
+                  </div>
+                </div>
+
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between p-4 bg-gray-50 rounded-lg'>
+                    <div>
+                      <h4 className='font-medium text-base'>Callback Timing</h4>
+                      <p className='text-sm text-muted-foreground'>
+                        {callbackSchedule.isASAP
+                          ? 'We&apos;ll call you back as soon as possible'
+                          : 'Choose a specific time for your callback'}
+                      </p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <button
+                        type='button'
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          callbackSchedule.isASAP
+                            ? 'bg-black text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                        onClick={() => {
+                          return setCallbackSchedule((prev) => {
+                            return { ...prev, isASAP: true };
+                          });
+                        }}
+                      >
+                        ASAP
+                      </button>
+                      <button
+                        type='button'
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          !callbackSchedule.isASAP
+                            ? 'bg-black text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                        onClick={() => {
+                          return setCallbackSchedule((prev) => {
+                            return { ...prev, isASAP: false };
+                          });
+                        }}
+                      >
+                        Schedule
+                      </button>
+                    </div>
+                  </div>
+
+                  {!callbackSchedule.isASAP && (
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                      <div className='space-y-2'>
+                        <label className='block text-sm font-medium text-gray-700'>
+                          Preferred Date *
+                        </label>
+                        <input
+                          type='date'
+                          className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                          value={callbackSchedule.date}
+                          onChange={(e) => {
+                            return setCallbackSchedule((prev) => {
+                              return { ...prev, date: e.target.value };
+                            });
+                          }}
+                          min={new Date().toISOString().split('T')[0]}
+                          required
+                        />
+                      </div>
+                      <div className='space-y-2'>
+                        <label className='block text-sm font-medium text-gray-700'>
+                          Preferred Time *
+                        </label>
+                        <input
+                          type='time'
+                          className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                          value={callbackSchedule.time}
+                          onChange={(e) => {
+                            return setCallbackSchedule((prev) => {
+                              return { ...prev, time: e.target.value };
+                            });
+                          }}
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className='space-y-2'>
+                    <label className='block text-sm font-medium text-gray-700'>Your Name *</label>
+                    <input
+                      type='text'
+                      className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                      placeholder='Jane Smith'
+                      value={callbackSchedule.name}
+                      onChange={(e) => {
+                        return setCallbackSchedule((prev) => {
+                          return { ...prev, name: e.target.value };
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <label className='block text-sm font-medium text-gray-700'>
+                      Phone Number *
+                    </label>
+                    <input
+                      type='tel'
+                      className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+                      placeholder='555-555-5555'
+                      value={callbackSchedule.phone}
+                      onChange={(e) => {
+                        return setCallbackSchedule((prev) => {
+                          return { ...prev, phone: e.target.value };
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <label className='block text-sm font-medium text-gray-700'>
+                      Additional Notes
+                    </label>
+                    <textarea
+                      className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 min-h-[100px] text-base'
+                      placeholder="Any specific topics you'd like to discuss?"
+                      value={callbackSchedule.notes}
+                      onChange={(e) => {
+                        return setCallbackSchedule((prev) => {
+                          return { ...prev, notes: e.target.value };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -441,7 +682,6 @@ export default function OnboardingSheet({
                     </Button>
                   );
                 }
-
                 return null;
               })}
             </div>
@@ -463,6 +703,23 @@ export default function OnboardingSheet({
               Submit
             </Button>
           )}
+
+          {step === 2 && (
+            <Button
+              onClick={() => {
+                return setSubmitted(true);
+              }}
+              disabled={
+                !callbackSchedule.date ||
+                !callbackSchedule.time ||
+                !callbackSchedule.name ||
+                !callbackSchedule.phone
+              }
+              className='w-full min-h-[44px]'
+            >
+              Schedule Callback
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -475,32 +732,36 @@ export default function OnboardingSheet({
         side='right'
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-8'
       >
-        <div className='flex items-center justify-between mb-4'>
+        <div className='flex items-center justify-between mb-6'>
           <div className='flex items-center gap-1'>
-            {step === 1 && (
+            {step > 0 && (
               <ArrowLeftIcon
-                className='w-4 h-4 cursor-pointer mr-1 hover:text-gray-500'
+                className='w-5 h-5 cursor-pointer mr-1 hover:text-gray-500'
                 onClick={() => {
-                  return setStep(0);
+                  return setStep(step - 1);
                 }}
               />
             )}
-            <SheetTitle>{step === 0 ? 'Choose a Service' : 'Contact Details'}</SheetTitle>
+            <SheetTitle className='text-xl font-semibold'>
+              {step === 0
+                ? 'Choose a Service'
+                : step === 1
+                ? 'Contact Details'
+                : 'Schedule a Callback'}
+            </SheetTitle>
           </div>
           {buttons.find((btn) => {
             return btn.type === 'callOrText' && btn.url;
           }) && (
-            <a
-              href={
-                buttons.find((btn) => {
-                  return btn.type === 'callOrText' && btn.url;
-                })?.url
-              }
+            <button
+              onClick={() => {
+                return setStep(2);
+              }}
               className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
               style={{ minHeight: 36 }}
             >
-              📞 Prefer to Talk? Call or Text
-            </a>
+              📞 Prefer to Talk? Schedule a Callback
+            </button>
           )}
         </div>
         <div className='flex-1 flex flex-col'>
