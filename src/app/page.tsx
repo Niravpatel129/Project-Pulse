@@ -17,11 +17,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   // Parse subdomain to get workspace
   const subdomain = hostname.split('.')[0];
+  console.log(`[Page] Hostname: ${hostname}`);
+  console.log(`[Page] Subdomain: ${subdomain}`);
+  console.log(`[Page] Domain parts: ${hostname.split('.').length}`);
+  console.log(`[Page] Domain parts array:`, hostname.split('.'));
+
   const isCustomSubdomain =
     process.env.NODE_ENV === 'production'
       ? !['www', 'localhost:3000', 'pulse-app', 'hourblock'].includes(subdomain) &&
         hostname.split('.').length > 2
       : true;
+
+  console.log(`[Page] Is custom subdomain: ${isCustomSubdomain}`);
+  console.log(`[Page] NODE_ENV: ${process.env.NODE_ENV}`);
 
   // If we have a custom subdomain/domain (workspace), show their public branded page
   if (isCustomSubdomain) {

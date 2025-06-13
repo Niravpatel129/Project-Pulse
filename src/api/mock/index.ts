@@ -1,3 +1,4 @@
+import { mockInventoryCategories } from './data/inventory';
 import { handleInvoicesRequest } from './invoices';
 import { handleProjectFilesRequest } from './project-files';
 import { handleProjectsRequest } from './projects';
@@ -26,7 +27,13 @@ const API_HANDLERS: Record<string, ApiHandler> = {
     return Promise.resolve({});
   },
   '/inventory/categories': () => {
-    return Promise.resolve({});
+    return Promise.resolve({
+      items: mockInventoryCategories,
+      total: mockInventoryCategories.length,
+      page: 1,
+      limit: 100,
+      totalPages: 1,
+    });
   },
   '/invoices': handleInvoicesRequest,
   '/projects': handleProjectsRequest,

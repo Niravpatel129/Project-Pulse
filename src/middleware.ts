@@ -10,6 +10,11 @@ export function middleware(request: NextRequest) {
 
   // Parse subdomain
   const subdomain = hostname.split('.')[0];
+  console.log(`[Middleware] Hostname: ${hostname}`);
+  console.log(`[Middleware] Subdomain: ${subdomain}`);
+  console.log(`[Middleware] Domain parts: ${hostname.split('.').length}`);
+  console.log(`[Middleware] Domain parts array:`, hostname.split('.'));
+
   const isCustomSubdomain = ![
     'www',
     'localhost:3000',
@@ -17,6 +22,9 @@ export function middleware(request: NextRequest) {
     'pulse-app',
     'hourblock',
   ].includes(subdomain);
+
+  console.log(`[Middleware] Is custom subdomain: ${isCustomSubdomain}`);
+  console.log(`[Middleware] NODE_ENV: ${process.env.NODE_ENV}`);
 
   // Handle service worker related paths
   if (path === '/sw.js' || path.startsWith('/workbox-')) {

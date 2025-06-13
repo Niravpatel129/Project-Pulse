@@ -136,7 +136,9 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
       const newItem = await services.inventory.createInventoryItem(
         item as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
       );
-      setItems((prev) => {return [...prev, newItem]});
+      setItems((prev) => {
+        return [...prev, newItem];
+      });
       return newItem;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create inventory item'));
@@ -156,7 +158,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
 
     try {
       const updatedItem = await services.inventory.updateInventoryItem(id, updates);
-      setItems((prev) => {return prev.map((item) => {return (item.id === id ? updatedItem : item)})});
+      setItems((prev) => {
+        return prev.map((item) => {
+          return item.id === id ? updatedItem : item;
+        });
+      });
 
       if (currentItem?.id === id) {
         setCurrentItem(updatedItem);
@@ -180,7 +186,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
       const result = await services.inventory.deleteInventoryItem(id);
 
       if (result.success) {
-        setItems((prev) => {return prev.filter((item) => {return item.id !== id})});
+        setItems((prev) => {
+          return prev.filter((item) => {
+            return item.id !== id;
+          });
+        });
 
         if (currentItem?.id === id) {
           setCurrentItem(null);
@@ -209,7 +219,9 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
       const newCategory = await services.inventory.createInventoryCategory(
         category as Omit<InventoryCategory, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
       );
-      setCategories((prev) => {return [...prev, newCategory]});
+      setCategories((prev) => {
+        return [...prev, newCategory];
+      });
       return newCategory;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create inventory category'));
@@ -229,9 +241,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
 
     try {
       const updatedCategory = await services.inventory.updateInventoryCategory(id, updates);
-      setCategories((prev) =>
-        {return prev.map((category) => {return (category.id === id ? updatedCategory : category)})},
-      );
+      setCategories((prev) => {
+        return prev.map((category) => {
+          return category.id === id ? updatedCategory : category;
+        });
+      });
 
       if (currentCategory?.id === id) {
         setCurrentCategory(updatedCategory);
@@ -255,7 +269,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
       const result = await services.inventory.deleteInventoryCategory(id);
 
       if (result.success) {
-        setCategories((prev) => {return prev.filter((category) => {return category.id !== id})});
+        setCategories((prev) => {
+          return prev.filter((category) => {
+            return category.id !== id;
+          });
+        });
 
         if (currentCategory?.id === id) {
           setCurrentCategory(null);
@@ -297,8 +315,12 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
 
   // Load initial data
   useEffect(() => {
-    loadItems();
-    loadCategories();
+    // Only load data if we're in a workspace context
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/inventory') || pathname.includes('/workspace/')) {
+      loadItems();
+      loadCategories();
+    }
   }, [loadItems, loadCategories]);
 
   // Context value
