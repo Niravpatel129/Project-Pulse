@@ -435,7 +435,7 @@ export default function OnboardingSheet({
                   return s - 1;
                 });
               }}
-              className='flex-1'
+              className='flex-1 min-h-[44px]'
             >
               Back
             </Button>
@@ -477,7 +477,7 @@ export default function OnboardingSheet({
                 !contactForm.phone ||
                 !contactForm.consent
               }
-              className='w-full'
+              className='w-full min-h-[44px]'
             >
               Submit
             </Button>
