@@ -137,7 +137,7 @@ const InvoiceFromTo = ({
                       return (
                         <CommandItem
                           key={client._id}
-                          value={client.user.name}
+                          value={client._id}
                           onSelect={() => {
                             onCustomerSelect(client._id);
                             setToContent(`${client.user.name}\n${client.user.email}`);
