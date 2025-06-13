@@ -2,6 +2,7 @@
 
 import { useWorkspaceCMS } from '@/contexts/WorkspaceCMSContext';
 import '@/styles/workspace-public.css';
+import { motion } from 'framer-motion';
 import React from 'react';
 import {
   ClientsSection,
@@ -197,36 +198,75 @@ export default function HomePage() {
     >
       {/* Navigation */}
       {navigation.length > 0 && (
-        <nav className='bg-[#f5f4f0] absolute top-0 left-0 right-0 z-10'>
+        <motion.nav
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className='bg-[#f5f4f0] absolute top-0 left-0 right-0 z-10'
+        >
           <div className='container mx-auto px-4'>
             <div className='flex items-center justify-between h-16'>
-              <div className='sitename font-bold text-xl' style={{ color: contentPrimary }}>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className='sitename font-bold text-xl'
+                style={{ color: contentPrimary }}
+              >
                 {settings.siteName}
-              </div>
+              </motion.span>
               <div className='hidden md:flex space-x-8'>
-                {navigation.map((item) => {
+                {navigation.map((item, index) => {
                   return (
-                    <a
+                    <motion.a
                       key={item.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
                       href={item.url}
                       className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm'
                       target={item.target}
                     >
                       {item.label}
-                    </a>
+                    </motion.a>
                   );
                 })}
               </div>
             </div>
           </div>
-        </nav>
+        </motion.nav>
       )}
       {/* Render all sections */}
       {pageData.sections
         .sort((a, b) => {
           return a.order - b.order;
         })
-        .map(renderSection)}
+        .map((section, index) => {
+          const sectionWithAnimation = {
+            ...section,
+            title: (
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+              >
+                {section.title}
+              </motion.span>
+            ),
+            subtitle: (
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.2 + 0.1 }}
+              >
+                {section.subtitle}
+              </motion.span>
+            ),
+          };
+          return renderSection(sectionWithAnimation);
+        })}
 
       {/* Global OnboardingSheet */}
       <OnboardingSheet

@@ -44,7 +44,7 @@ export const printscala: WorkspaceCMSData = {
         {
           id: 'hero-1',
           type: 'heroSection',
-          title: 'Professional Resumes - Only $50',
+          title: 'Professional Resumes',
           subtitle:
             'Delivered in 24 - 48 hours • Trusted by 100+ Across the Greater Toronto Area • Land Interviews Within Weeks',
           order: 1,
