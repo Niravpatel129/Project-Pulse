@@ -65,29 +65,18 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`relative flex items-center justify-center text-gray-900 ${textAlignClass}`}
+      className={`relative flex items-center justify-center text-gray-900 ${textAlignClass} py-16`}
       style={{
         background: backgroundImage
           ? `linear-gradient(#f5f3f0,#fefdfd), url(${backgroundImage})`
           : 'linear-gradient(#f5f3f0,#fefdfd)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        minHeight,
       }}
     >
       {/* Content */}
-      <div className='relative z-10 container mx-auto px-4'>
-        <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''}`}>
-          <p className='mb-8 text-[#6b727f] flex items-center gap-1 w-full text-center justify-center text-sm'>
-            #1 Top-Rated Software
-            <span className='text-gray-500 flex items-center gap-0'>
-              <span className='flex items-center gap-0'>
-                4.8
-                <StarFilledIcon className='w-4 h-4' />
-              </span>
-              <span className='text-gray-500'>across 279 reviews</span>
-            </span>
-          </p>
+      <div className='relative z-10 container mx-auto px-4 pt-20'>
+        <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''} mt-20`}>
           <h1 className='text-4xl md:text-7xl font-bold mb-6 leading-tight'>{title}</h1>
 
           {/* <p className='text-xl md:text-2xl mb-8 text-gray-700'>{subtitle}</p> */}
@@ -144,9 +133,29 @@ export default function HeroSection({
               </p>
             )}
             {variant === 'default' && (
-              <p className='text-sm text-gray-600'>
-                Get started today • Professional results guaranteed
-              </p>
+              <div
+                className='mb-8 flex items-center gap-1 w-full text-center justify-center text-sm'
+                style={{ color: '#222', fontWeight: 400 }}
+              >
+                <span style={{ color: '#222', fontWeight: 400 }}>
+                  #1 Top-Rated Restaurant Software
+                </span>
+                <span
+                  className='flex items-center gap-0 ml-2'
+                  style={{ color: '#888', fontWeight: 400 }}
+                >
+                  <span
+                    className='flex items-center gap-0'
+                    style={{ color: '#888', fontWeight: 400 }}
+                  >
+                    4.8
+                    <StarFilledIcon className='w-4 h-4 ml-0.5' style={{ color: '#ddd' }} />
+                  </span>
+                  <span className='ml-1' style={{ color: '#bbb', fontWeight: 400 }}>
+                    across 279 reviews
+                  </span>
+                </span>
+              </div>
             )}
           </div>
         </div>
