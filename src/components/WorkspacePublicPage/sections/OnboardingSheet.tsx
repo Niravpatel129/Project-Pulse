@@ -661,7 +661,7 @@ export default function OnboardingSheet({
     if (submitted || step === 0) return null;
 
     return (
-      <div className='mt-auto border-t pt-4 mb-6'>
+      <div className='mt-auto border-t pt-5'>
         <div className='flex gap-2'>
           {step > 0 && buttons.length > 0 && (
             <div className='flex gap-2'>
@@ -699,7 +699,15 @@ export default function OnboardingSheet({
                 !contactForm.phone ||
                 !contactForm.consent
               }
-              className='w-full min-h-[44px] rounded-full'
+              className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 ${
+                contactForm.name && contactForm.email && contactForm.phone && contactForm.consent
+                  ? 'opacity-100 translate-y-0 pointer-events-auto'
+                  : 'opacity-0 translate-y-1 pointer-events-none'
+              }`}
+              style={{
+                transitionProperty: 'opacity, transform',
+                transitionDuration: '300ms',
+              }}
             >
               Submit
             </Button>
@@ -711,12 +719,21 @@ export default function OnboardingSheet({
                 return setSubmitted(true);
               }}
               disabled={
-                !callbackSchedule.date ||
-                !callbackSchedule.time ||
                 !callbackSchedule.name ||
-                !callbackSchedule.phone
+                !callbackSchedule.phone ||
+                (!callbackSchedule.isASAP && (!callbackSchedule.date || !callbackSchedule.time))
               }
-              className='w-full min-h-[44px] rounded-full'
+              className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 ${
+                callbackSchedule.name &&
+                callbackSchedule.phone &&
+                (callbackSchedule.isASAP || (callbackSchedule.date && callbackSchedule.time))
+                  ? 'opacity-100 translate-y-0 pointer-events-auto'
+                  : 'opacity-0 translate-y-1 pointer-events-none'
+              }`}
+              style={{
+                transitionProperty: 'opacity, transform',
+                transitionDuration: '300ms',
+              }}
             >
               Schedule Callback
             </Button>
@@ -731,7 +748,7 @@ export default function OnboardingSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='right'
-        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-8'
+        className='w-full sm:w-[800px] sm:!max-w-[600px] fixed right-0 sm:right-4 top-0 sm:top-4 bottom-0 sm:bottom-4 px-4 sm:px-12 bg-background max-h-[100vh] sm:max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-none sm:rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-4 sm:p-8'
       >
         <div className='flex items-center justify-between mb-6'>
           <div className='flex items-center gap-1'>
