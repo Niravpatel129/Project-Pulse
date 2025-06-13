@@ -84,6 +84,11 @@ const InvoicePreviewActions = ({
     }
   };
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleEdit();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -105,7 +110,7 @@ const InvoicePreviewActions = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownload}>Download</DropdownMenuItem>
         {readerId &&
           invoice.status?.toLowerCase() !== 'paid' &&
