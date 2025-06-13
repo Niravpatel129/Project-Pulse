@@ -492,7 +492,7 @@ export default function OnboardingSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='right'
-        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-3'
+        className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-8'
       >
         {buttons.find((btn) => {
           return btn.type === 'callOrText' && btn.url;
