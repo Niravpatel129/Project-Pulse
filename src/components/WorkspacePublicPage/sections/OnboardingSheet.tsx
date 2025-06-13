@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
-import { CheckIcon } from 'lucide-react';
+import { ArrowLeftIcon, CheckIcon } from 'lucide-react';
 import React from 'react';
 
 // Types and Interfaces
@@ -238,7 +238,6 @@ export default function OnboardingSheet({
         return (
           <div className='flex flex-col h-full'>
             <div className='flex-1'>
-              <SheetTitle className='mb-8'>Choose a Service</SheetTitle>
               {!selectedService ? (
                 <div className='flex flex-col gap-3'>
                   {services.map((service) => {
@@ -326,7 +325,6 @@ export default function OnboardingSheet({
       case 1:
         return (
           <div>
-            <SheetTitle className='mb-4'>Contact Details</SheetTitle>
             <div className='mb-2'>
               Service(s):{' '}
               <span className='font-semibold'>
@@ -427,19 +425,6 @@ export default function OnboardingSheet({
     return (
       <div className='mt-auto border-t pt-4 mb-6'>
         <div className='flex gap-2'>
-          {step > 0 && (
-            <Button
-              variant='secondary'
-              onClick={() => {
-                return setStep((s) => {
-                  return s - 1;
-                });
-              }}
-              className='flex-1 min-h-[44px]'
-            >
-              Back
-            </Button>
-          )}
           {step > 0 && buttons.length > 0 && (
             <div className='flex gap-2'>
               {buttons.map((btn, i) => {
@@ -494,22 +479,35 @@ export default function OnboardingSheet({
         side='right'
         className='w-[800px] !max-w-[600px] fixed right-4 top-4 bottom-4 px-12 bg-background max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-8'
       >
-        {buttons.find((btn) => {
-          return btn.type === 'callOrText' && btn.url;
-        }) && (
-          <a
-            href={
-              buttons.find((btn) => {
-                return btn.type === 'callOrText' && btn.url;
-              })?.url
-            }
-            className='absolute top-4 right-4 border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none z-20 font-medium text-sm'
-            style={{ minHeight: 36 }}
-          >
-            📞 Prefer to Talk? Call or Text
-          </a>
-        )}
-        <div className='mt-4 flex-1 flex flex-col'>
+        <div className='flex items-center justify-between mb-4'>
+          <div className='flex items-center gap-1'>
+            {step === 1 && (
+              <ArrowLeftIcon
+                className='w-4 h-4 cursor-pointer mr-1 hover:text-gray-500'
+                onClick={() => {
+                  return setStep(0);
+                }}
+              />
+            )}
+            <SheetTitle>{step === 0 ? 'Choose a Service' : 'Contact Details'}</SheetTitle>
+          </div>
+          {buttons.find((btn) => {
+            return btn.type === 'callOrText' && btn.url;
+          }) && (
+            <a
+              href={
+                buttons.find((btn) => {
+                  return btn.type === 'callOrText' && btn.url;
+                })?.url
+              }
+              className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
+              style={{ minHeight: 36 }}
+            >
+              📞 Prefer to Talk? Call or Text
+            </a>
+          )}
+        </div>
+        <div className='flex-1 flex flex-col'>
           {renderStep()}
           {renderNavigation()}
         </div>
