@@ -15,15 +15,34 @@ export default function MainHome({
 }) {
   const workspace = useGetWorkspaceFromUrl();
   const [workspaceData, setWorkspaceData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchWorkspaceData = async () => {
-      const workspaceData = await getWorkspaceConfig(workspace);
-      setWorkspaceData(workspaceData);
+      setIsLoading(true);
+      try {
+        const workspaceData = await getWorkspaceConfig(workspace);
+        setWorkspaceData(workspaceData);
+      } catch (error) {
+        console.error('[Page] Error fetching workspace data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchWorkspaceData();
   }, [workspace]);
+
+  if (isLoading) {
+    return (
+      <div className='min-h-screen bg-[#f8f5f4] flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+        </div>
+      </div>
+    );
+  }
+
   // If we have a custom subdomain/domain (workspace), show their public branded page
   if (isCustomSubdomain) {
     console.log(`[Page] Entering custom subdomain branch`);
