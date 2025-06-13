@@ -29,6 +29,11 @@ interface FooterSectionProps {
   primaryColor?: string;
   id?: string;
   socials?: SocialLinks;
+
+  // Onboarding sheet props
+  showSheet: boolean;
+  setShowSheet: (show: boolean) => void;
+  onOpenOnboardingSheet: () => void;
 }
 
 export default function FooterSection({
@@ -41,6 +46,9 @@ export default function FooterSection({
   primaryColor = '#7C3AED',
   id,
   socials = {},
+  showSheet,
+  setShowSheet,
+  onOpenOnboardingSheet,
 }: FooterSectionProps) {
   return (
     <footer
@@ -56,7 +64,9 @@ export default function FooterSection({
             <p className='text-xl mb-8' style={{ color: '#5a5a5a' }}>
               {subtitle}
             </p>
-            <Button className='font-semibold px-8 py-6'>Get Started</Button>
+            <Button className='font-semibold px-8 py-6' onClick={onOpenOnboardingSheet}>
+              Get Started
+            </Button>
           </div>
         </div>
       </div>

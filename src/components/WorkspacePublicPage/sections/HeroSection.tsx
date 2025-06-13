@@ -1,7 +1,6 @@
 import { StarFilledIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 import React from 'react';
-import OnboardingSheet from './OnboardingSheet';
 
 interface HeroSectionButton {
   type: 'skip' | 'callOrText';
@@ -29,6 +28,11 @@ interface HeroSectionProps {
   additionalContent?: React.ReactNode;
   buttonAction?: string;
   buttons?: HeroSectionButton[];
+
+  // Onboarding sheet props
+  showSheet: boolean;
+  setShowSheet: (show: boolean) => void;
+  onOpenOnboardingSheet: () => void;
 }
 
 export default function HeroSection({
@@ -48,18 +52,15 @@ export default function HeroSection({
   additionalContent,
   buttonAction,
   buttons = [],
+  showSheet,
+  setShowSheet,
+  onOpenOnboardingSheet,
 }: HeroSectionProps) {
   const textAlignClass = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
   }[textAlign];
-
-  // State for onboarding sheet
-  const [showSheet, setShowSheet] = React.useState(false);
-  const onOpenOnboardingSheet = () => {
-    return setShowSheet(true);
-  };
 
   return (
     <section
@@ -150,8 +151,6 @@ export default function HeroSection({
           </div>
         </div>
       </div>
-      {/* Sheet */}
-      <OnboardingSheet open={showSheet} onOpenChange={setShowSheet} buttons={buttons} />
     </section>
   );
 }

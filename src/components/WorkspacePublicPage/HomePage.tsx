@@ -14,6 +14,7 @@ import {
   SocialsSection,
   StorySection,
 } from './sections';
+import OnboardingSheet from './sections/OnboardingSheet';
 
 export default function HomePage() {
   const { cmsData, pageData } = useWorkspaceCMS();
@@ -33,6 +34,12 @@ export default function HomePage() {
   const secondaryColor = settings.theme?.secondaryColor || '#000000';
   const contentPrimary = settings.theme?.content?.primary || '#000000';
   const contentSecondary = settings.theme?.content?.secondary || '#000000';
+
+  // State for onboarding sheet
+  const [showSheet, setShowSheet] = React.useState(false);
+  const onOpenOnboardingSheet = () => {
+    return setShowSheet(true);
+  };
 
   // Helper function to get section ID based on type
   const getSectionId = (section: any) => {
@@ -70,6 +77,9 @@ export default function HomePage() {
             variant={section.variant}
             highlights={section.data.highlights}
             buttons={section.data.buttons}
+            showSheet={showSheet}
+            setShowSheet={setShowSheet}
+            onOpenOnboardingSheet={onOpenOnboardingSheet}
             {...commonProps}
           />
         );
@@ -169,6 +179,9 @@ export default function HomePage() {
             quickLinks={section.data.quickLinks}
             legalLinks={section.data.legalLinks}
             siteName={settings.siteName}
+            showSheet={showSheet}
+            setShowSheet={setShowSheet}
+            onOpenOnboardingSheet={onOpenOnboardingSheet}
             {...commonProps}
           />
         );
@@ -214,6 +227,17 @@ export default function HomePage() {
           return a.order - b.order;
         })
         .map(renderSection)}
+
+      {/* Global OnboardingSheet */}
+      <OnboardingSheet
+        open={showSheet}
+        onOpenChange={setShowSheet}
+        buttons={
+          pageData.sections.find((s) => {
+            return s.type === 'heroSection';
+          })?.data.buttons || []
+        }
+      />
     </div>
   );
 }
