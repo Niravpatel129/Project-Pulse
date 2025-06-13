@@ -1,5 +1,6 @@
 import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/FileUploadManagerModal';
 import { DateTooltip } from '@/components/ui/date-tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { XIcon } from 'lucide-react';
@@ -17,13 +18,14 @@ interface InvoicePreview2Props {
   onTakePayment?: (invoice: any) => void;
 }
 
-function formatCurrency(amount: number, currency: string = 'CAD') {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+function formatCurrency(
+  amount: number,
+  currency: string = 'CAD',
+  decimals: string = 'yes',
+  hidePrefix?: boolean,
+) {
+  const formattedAmount = decimals === 'yes' ? amount.toFixed(2) : Math.round(amount).toString();
+  return hidePrefix ? formattedAmount : `${currency} ${formattedAmount}`;
 }
 
 function formatDate(dateStr?: string) {
@@ -153,16 +155,193 @@ const InvoicePreview2: React.FC<InvoicePreview2Props> = ({
 
         {/* Amount */}
         <div className='px-6 pt-1 pb-5'>
-          <div
-            className={`text-3xl font-mono font-light text-gray-900 dark:text-gray-100 tracking-tight ${
-              selectedInvoice.status === 'cancelled' ? 'line-through' : ''
-            }`}
-          >
-            {formatCurrency(
-              selectedInvoice.totals?.total || 0,
-              selectedInvoice.settings?.currency || 'CAD',
-            )}
-          </div>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className={`text-3xl font-mono font-light text-gray-900 dark:text-gray-100 tracking-tight cursor-default ${
+                    selectedInvoice.status === 'cancelled' ? 'line-through' : ''
+                  }`}
+                >
+                  {formatCurrency(
+                    selectedInvoice.totals?.total || 0,
+                    selectedInvoice.settings?.currency || 'CAD',
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className='w-[400px] p-4 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 shadow-lg'>
+                <div className='space-y-6'>
+                  {/* Line Items */}
+                  <div className='space-y-2'>
+                    <div className='grid grid-cols-[1.5fr_15%_15%_15%] gap-4 items-end relative group mb-2 w-full pb-1 border-b border-gray-200 dark:border-neutral-800'>
+                      <div className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                        Description
+                      </div>
+                      <div className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                        Quantity
+                      </div>
+                      <div className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                        Price
+                      </div>
+                      <div className='text-[11px] text-[#878787] dark:text-gray-400 font-mono text-right'>
+                        Total
+                      </div>
+                    </div>
+                    {selectedInvoice?.items?.map((item) => {
+                      return (
+                        <div
+                          key={item._id}
+                          className='grid grid-cols-[1.5fr_15%_15%_15%] gap-4 items-start relative group mb-1 w-full py-1'
+                        >
+                          <div className='self-start'>
+                            <div className='font-mono leading-4'>
+                              <p>
+                                <span className='text-[11px] text-[#1D1D1F] dark:text-gray-100'>
+                                  {item.description}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className='text-[11px] self-start text-[#1D1D1F] dark:text-gray-100 font-mono'>
+                            {item.quantity}
+                          </div>
+                          <div className='text-[11px] self-start text-[#1D1D1F] dark:text-gray-100 font-mono'>
+                            {formatCurrency(
+                              item.price,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                              true,
+                            )}
+                          </div>
+                          <div className='text-[11px] text-right self-start text-[#1D1D1F] dark:text-gray-100 font-mono'>
+                            {formatCurrency(
+                              item.total,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                              true,
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Totals Breakdown */}
+                  <div className='space-y-2 pt-2 border-t border-gray-200 dark:border-neutral-800'>
+                    <div className='flex justify-between items-center py-1'>
+                      <span className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                        Subtotal
+                      </span>
+                      <span className='text-right font-mono text-[11px] text-[#878787] dark:text-gray-400'>
+                        {formatCurrency(
+                          selectedInvoice.totals.subtotal,
+                          selectedInvoice.settings.currency,
+                          selectedInvoice.settings.decimals,
+                        )}
+                      </span>
+                    </div>
+                    {selectedInvoice.settings?.discount?.enabled &&
+                      selectedInvoice.totals?.discount > 0 && (
+                        <div className='flex justify-between items-center py-1'>
+                          <span className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                            Discount
+                          </span>
+                          <span className='text-right font-mono text-[11px] text-[#878787] dark:text-gray-400'>
+                            {formatCurrency(
+                              selectedInvoice.totals.discount,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    {selectedInvoice.settings?.salesTax?.enabled &&
+                      selectedInvoice.totals?.taxAmount > 0 && (
+                        <div className='flex justify-between items-center py-1'>
+                          <span className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                            Sales Tax ({selectedInvoice.settings.salesTax.rate}%)
+                          </span>
+                          <span className='text-right font-mono text-[11px] text-[#878787] dark:text-gray-400'>
+                            {formatCurrency(
+                              selectedInvoice.totals.taxAmount,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    {selectedInvoice.settings?.vat?.enabled &&
+                      selectedInvoice.totals?.vatAmount > 0 && (
+                        <div className='flex justify-between items-center py-1'>
+                          <span className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                            VAT ({selectedInvoice.settings.vat.rate}%)
+                          </span>
+                          <span className='text-right font-mono text-[11px] text-[#878787] dark:text-gray-400'>
+                            {formatCurrency(
+                              selectedInvoice.totals.vatAmount,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    {selectedInvoice.settings?.deposit?.enabled && (
+                      <div className='flex justify-between items-center py-1'>
+                        <span className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                          Required Deposit ({selectedInvoice.settings.deposit.percentage}%)
+                        </span>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-right font-mono text-[11px] text-[#878787] dark:text-gray-400'>
+                            {formatCurrency(
+                              (selectedInvoice.totals.total *
+                                selectedInvoice.settings.deposit.percentage) /
+                                100,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                            )}
+                          </span>
+                          {selectedInvoice.status === 'partially_paid' && (
+                            <span className='text-[11px] font-mono text-[#00C969] bg-[#DDF1E4] dark:bg-[#1A2F1A] dark:text-[#00C969] px-2 py-0.5 rounded-full'>
+                              Paid
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div className='flex justify-between items-center py-2 border-t border-gray-200 dark:border-neutral-800'>
+                      <div className='mt-2 flex items-center gap-2 justify-between w-full'>
+                        <span className='text-[11px] text-[#878787] dark:text-gray-400 font-mono'>
+                          Total
+                        </span>
+                        <div className='flex flex-col items-end'>
+                          <span className='text-right font-mono text-[14px] text-[#1D1D1F] dark:text-gray-100'>
+                            {formatCurrency(
+                              selectedInvoice.totals.total,
+                              selectedInvoice.settings.currency,
+                              selectedInvoice.settings.decimals,
+                            )}
+                          </span>
+                          {selectedInvoice.status === 'partially_paid' && (
+                            <span className='text-[11px] font-mono text-[#878787] dark:text-gray-400'>
+                              Remaining:{' '}
+                              {formatCurrency(
+                                selectedInvoice.totals.total -
+                                  (selectedInvoice.totals.total *
+                                    selectedInvoice.settings.deposit.percentage) /
+                                    100,
+                                selectedInvoice.settings.currency,
+                                selectedInvoice.settings.decimals,
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Actions */}
