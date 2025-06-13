@@ -164,18 +164,18 @@ const InvoiceFromTo = ({
                         </CommandItem>
                       );
                     })}
-                    <CommandItem
-                      value='create-customer'
-                      onSelect={() => {
-                        setIsNewCustomerDialogOpen(true);
-                        setOpen(false);
-                      }}
-                      className='!text-[11px] text-[#0891B2] dark:text-[#8b5df8]'
-                    >
-                      <Plus className='mr-2 h-4 w-4' />
-                      Create Customer
-                    </CommandItem>
                   </CommandGroup>
+                  <CommandItem
+                    value='create-customer'
+                    onSelect={() => {
+                      setIsNewCustomerDialogOpen(true);
+                      setOpen(false);
+                    }}
+                    className='!text-[11px] text-[#0891B2] dark:text-[#8b5df8]'
+                  >
+                    <Plus className='mr-2 h-4 w-4' />
+                    Create Customer
+                  </CommandItem>
                 </Command>
               </PopoverContent>
             </Popover>
