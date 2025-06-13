@@ -47,11 +47,7 @@ const PriceTag = ({
         isSelected
           ? isAdditionalService
             ? 'bg-white text-gray-800'
-            : price === 'Free'
-            ? 'bg-white text-green-600'
             : 'bg-gray-200 text-gray-800'
-          : price === 'Free'
-          ? 'bg-green-500 text-white'
           : 'bg-gray-200 text-gray-800'
       }`}
     >
