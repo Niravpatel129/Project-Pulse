@@ -1,13 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-const extractWorkspaceId = (hostname: string) => {
-  const domain = hostname.split('.')[1];
-  console.log('🚀 domain:', domain);
-
-  return '1234567890';
-};
-
 export function middleware(request: NextRequest) {
   // Get the pathname of the request
   const path = request.nextUrl.pathname;
@@ -38,10 +31,6 @@ export function middleware(request: NextRequest) {
     // Don't apply subdomain redirects to service worker files
     return NextResponse.next();
   }
-
-  const workspaceId = extractWorkspaceId(hostname);
-  // set the workspaceId in the request headers
-  request.headers.set('workspaceId', workspaceId);
 
   // Development mode: Handle localhost:3000 or localhost:3001 as if it has a workspace
   const isDevelopment = process.env.NODE_ENV === 'development';
