@@ -185,6 +185,7 @@ export default function OnboardingSheet({
 }: OnboardingSheetProps) {
   // State Management
   const [step, setStep] = React.useState(0);
+  const [previousStep, setPreviousStep] = React.useState<number | null>(null);
   const [selectedService, setSelectedService] = React.useState<string | null>(null);
   const [additionalSelectedServices, setAdditionalSelectedServices] = React.useState<string[]>([]);
   const [additionalNotes, setAdditionalNotes] = React.useState('');
@@ -738,7 +739,12 @@ export default function OnboardingSheet({
               <ArrowLeftIcon
                 className='w-5 h-5 cursor-pointer mr-1 hover:text-gray-500'
                 onClick={() => {
-                  return setStep(step - 1);
+                  if (step === 2 && previousStep !== null) {
+                    setStep(previousStep);
+                    setPreviousStep(null);
+                  } else {
+                    setStep(step - 1);
+                  }
                 }}
               />
             )}
@@ -755,7 +761,8 @@ export default function OnboardingSheet({
           }) && (
             <button
               onClick={() => {
-                return setStep(2);
+                setPreviousStep(step);
+                setStep(2);
               }}
               className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
               style={{ minHeight: 36 }}
