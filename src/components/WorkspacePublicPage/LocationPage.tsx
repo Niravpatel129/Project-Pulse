@@ -1,24 +1,14 @@
 'use client';
 
-import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
+import { useWorkspaceCMS } from '@/contexts/WorkspaceCMSContext';
 import '@/styles/workspace-public.css';
 import Link from 'next/link';
 import React from 'react';
 import { ContactSection, GoogleReviewsSection, HeroSection, ServiceSection } from './sections';
 
-interface LocationPageProps {
-  workspace: string;
-  locationSlug: string;
-  cmsData: WorkspaceCMSData;
-  pageData: EnhancedCMSPage;
-}
+export default function LocationPage() {
+  const { cmsData, pageData, locationSlug } = useWorkspaceCMS();
 
-export default function LocationPage({
-  workspace,
-  locationSlug,
-  cmsData,
-  pageData,
-}: LocationPageProps) {
   // Add smooth scrolling to the document
   React.useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';

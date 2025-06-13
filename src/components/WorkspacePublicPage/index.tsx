@@ -1,6 +1,7 @@
 'use client';
 
-import { getWorkspaceCMS, getWorkspacePage } from '@/lib/cms';
+import { WorkspaceCMSData, WorkspaceCMSProvider } from '@/contexts/WorkspaceCMSContext';
+import { EnhancedCMSPage, getWorkspaceCMS, getWorkspacePage } from '@/lib/cms';
 import '@/styles/workspace-public.css';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -11,22 +12,20 @@ export interface WorkspacePublicPageProps {
   workspace: string;
   pageType?: 'home' | 'location';
   locationSlug?: string;
-  data?: any; // Legacy prop for backward compatibility
 }
 
 export default function WorkspacePublicPage({
   workspace,
   pageType = 'home',
   locationSlug,
-  data,
 }: WorkspacePublicPageProps) {
   console.log(
     `[WorkspacePublicPage] Initializing with workspace: ${workspace}, pageType: ${pageType}, locationSlug: ${locationSlug}`,
   );
-  const [cmsData, setCmsData] = useState(null);
-  const [pageData, setPageData] = useState(null);
+  const [cmsData, setCmsData] = useState<WorkspaceCMSData | null>(null);
+  const [pageData, setPageData] = useState<EnhancedCMSPage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -68,7 +67,7 @@ export default function WorkspacePublicPage({
         setPageData(page);
       } catch (err) {
         console.error('[WorkspacePublicPage] Error fetching workspace data:', err);
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setLoading(false);
         console.log(`[WorkspacePublicPage] Data fetch completed for workspace: ${workspace}`);
@@ -116,17 +115,19 @@ export default function WorkspacePublicPage({
     );
   }
 
-  // Render appropriate page component based on page type
-  if (pageType === 'location' && locationSlug) {
-    return (
-      <LocationPage
-        workspace={workspace}
-        locationSlug={locationSlug}
-        cmsData={cmsData}
-        pageData={pageData}
-      />
-    );
-  }
+  const contextValue = {
+    cmsData,
+    pageData,
+    loading,
+    error,
+    workspace,
+    pageType,
+    locationSlug,
+  };
 
-  return <HomePage workspace={workspace} cmsData={cmsData} pageData={pageData} />;
+  return (
+    <WorkspaceCMSProvider value={contextValue}>
+      {pageType === 'location' && locationSlug ? <LocationPage /> : <HomePage />}
+    </WorkspaceCMSProvider>
+  );
 }

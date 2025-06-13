@@ -1,6 +1,6 @@
 'use client';
 
-import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
+import { useWorkspaceCMS } from '@/contexts/WorkspaceCMSContext';
 import '@/styles/workspace-public.css';
 import React from 'react';
 import {
@@ -15,13 +15,9 @@ import {
   StorySection,
 } from './sections';
 
-interface HomePageProps {
-  workspace: string;
-  cmsData: WorkspaceCMSData;
-  pageData: EnhancedCMSPage;
-}
+export default function HomePage() {
+  const { cmsData, pageData } = useWorkspaceCMS();
 
-export default function HomePage({ workspace, cmsData, pageData }: HomePageProps) {
   // Add smooth scrolling to the document
   React.useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
@@ -31,7 +27,6 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
   }, []);
 
   const { settings, navigation } = cmsData;
-  const { sections } = pageData;
 
   // Get theme colors from CMS settings
   const primaryColor = settings.theme?.primaryColor || '#000000';
@@ -214,7 +209,7 @@ export default function HomePage({ workspace, cmsData, pageData }: HomePageProps
         </nav>
       )}
       {/* Render all sections */}
-      {sections
+      {pageData.sections
         .sort((a, b) => {
           return a.order - b.order;
         })

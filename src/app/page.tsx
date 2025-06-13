@@ -68,7 +68,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       return (
         <>
-          <WorkspacePublicPage workspace={workspaceSlug} pageType='home' data={workspaceData} />
+          <WorkspacePublicPage workspace={workspaceSlug} pageType='home' />
           {process.env.NODE_ENV === 'development' && <DevPanel currentWorkspace={workspaceSlug} />}
         </>
       );
