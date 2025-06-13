@@ -296,12 +296,12 @@ export default function OnboardingSheet({
                 </>
               )}
             </div>
-            <div className='mt-auto border-t pt-4 mb-6'>
+            <div className='mt-auto border-t pt-5'>
               <Button
-                className={`w-full min-h-[44px] bg-black hover:bg-black/80 ${
+                className={`w-full min-h-[50px]  rounded-full bg-black hover:bg-black/80 ${
                   selectedService
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
-                    : 'opacity-0 translate-y-4 pointer-events-none'
+                    : 'opacity-0 translate-y-1 pointer-events-none'
                 }`}
                 style={{
                   transitionProperty: 'opacity, transform',
