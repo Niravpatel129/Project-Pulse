@@ -12,6 +12,7 @@ export default function MainHome({
   isCustomSubdomain: boolean;
 }) {
   const { workspace, cms, page, isLoading } = useGetWorkspaceFromUrl();
+  console.log('🚀 cms:', cms);
   //   const [workspaceData, setWorkspaceData] = useState(null);
   //   const [isLoading, setIsLoading] = useState(true);
 

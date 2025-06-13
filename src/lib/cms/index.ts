@@ -60,20 +60,14 @@ export interface EnhancedCMSPage extends CMSPage {
  * Get workspace CMS data by workspace slug
  */
 export async function getWorkspaceCMS(workspaceSlug: string): Promise<WorkspaceCMSData | null> {
+  console.log('🚀 workspaceSlug:', workspaceSlug);
   try {
-    // In development, use our organized mock data
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] Fetching CMS data for workspace: ${workspaceSlug}`);
-      const mockData = getMockWorkspace(workspaceSlug);
-      if (mockData) {
-        console.log(`[DEV] Found mock data for workspace: ${workspaceSlug}`);
-        return mockData;
-      }
-      console.log(`[DEV] No mock data found for workspace: ${workspaceSlug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData) {
+      console.log(`[DEV] Found mock data for workspace: ${workspaceSlug}`);
+      return mockData;
     }
 
-    // In production, this would fetch from your backend/database
-    // For now, we'll return null if no mock data found
     return null;
   } catch (error) {
     console.error(`Error fetching CMS data for workspace ${workspaceSlug}:`, error);

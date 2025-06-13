@@ -25,7 +25,8 @@ const useGetWorkspaceFromUrl = () => {
     const getWorkspaceFromUrl = async () => {
       try {
         const locationSlug = searchParams.get('locationSlug');
-        const domain = window.location.hostname;
+        const domain =
+          process.env.NODE_ENV === 'development' ? 'www.printscala.com' : window.location.hostname;
         const subdomain = domain.split('.')[0];
 
         const response = await newRequest.get(`/workspaces/url`, {
@@ -34,15 +35,18 @@ const useGetWorkspaceFromUrl = () => {
             subdomain,
           },
         });
+        console.log('🚀 response:', response);
+        const workspaceName = response.data.data.name;
+        console.log('🚀 workspaceName:', workspaceName);
 
-        const cms = await getWorkspaceCMS(response.data.workspace.name);
-        const page = await getWorkspacePage(response.data.workspace.name, 'home');
-        const locationExists = await hasLocationPage(response.data.workspace.name, locationSlug);
+        const cms = await getWorkspaceCMS(workspaceName);
+        const page = await getWorkspacePage(workspaceName, 'home');
+        const locationExists = await hasLocationPage(workspaceName, locationSlug);
         setLocationExists(locationExists);
         setLocationSlug(locationSlug);
         setCms(cms);
         setPage(page);
-        setWorkspace(response.data.workspace);
+        setWorkspace(response.data.data.workspace);
       } catch (error) {
         // its okay if the workspace is not found, we will just show the main home page
         console.log('Error fetching workspace from url:', error);

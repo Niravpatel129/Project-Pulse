@@ -1,6 +1,7 @@
 import { WorkspaceCMSData } from '@/lib/cms';
 import { bolocreate } from './bolocreate';
 import { localservice } from './localservice';
+import { printscala } from './printscala';
 import { techcorp } from './techcorp';
 
 // Mock workspace data for development
@@ -8,6 +9,7 @@ export const MOCK_WORKSPACES: Record<string, WorkspaceCMSData> = {
   bolocreate,
   techcorp,
   localservice,
+  printscala,
   // Add more mock workspaces here as needed
 };
 
