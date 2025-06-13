@@ -75,13 +75,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if user is authenticated
-  // Check for auth token in cookies - our auth system stores it as 'user' cookie
   const userCookie = request.cookies.get('user')?.value;
-
-  // Also check localStorage via headers (though this won't work in middleware)
-  // This is just for debugging purposes
-  const authHeader = request.headers.get('Authorization');
 
   const isAuthenticated = !!userCookie;
 
