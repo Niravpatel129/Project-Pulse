@@ -19,7 +19,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const subdomain = hostname.split('.')[0];
   const isCustomSubdomain =
     process.env.NODE_ENV === 'production'
-      ? !['www', 'localhost:3000', 'pulse-app', 'hourblock'].includes(subdomain)
+      ? !['www', 'localhost:3000', 'pulse-app', 'hourblock'].includes(subdomain) &&
+        hostname.split('.').length > 2
       : true;
 
   // If we have a custom subdomain/domain (workspace), show their public branded page
@@ -65,7 +66,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center'>
       <div className='text-center'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-4'>Welcome</h1>
+        <h1 className='text-4xl font-bold text-gray-900 mb-4'>
+          Welcome, you are not on a workspace
+        </h1>
         <p className='text-xl text-gray-600 mb-8'></p>
         {process.env.NODE_ENV === 'development' && (
           <div className='bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto'>
