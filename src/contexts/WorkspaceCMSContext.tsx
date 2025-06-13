@@ -1,6 +1,7 @@
 import { EnhancedCMSPage } from '@/lib/cms';
 import { CMSPage, CMSSettings } from '@/types/cms';
-import { createContext, ReactNode, useContext } from 'react';
+import { newRequest } from '@/utils/newRequest';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 
 export interface WorkspaceCMSData {
   workspace: string;
@@ -36,6 +37,28 @@ interface WorkspaceCMSProviderProps {
 }
 
 export function WorkspaceCMSProvider({ children, value }: WorkspaceCMSProviderProps) {
+  console.log('Hello from workspace CMS');
+
+  useEffect(() => {
+    // whats the current domain and subdomain
+    const domain = window.location.hostname;
+    const subdomain = domain.split('.')[0];
+    console.log('🚀 domain:', domain);
+    console.log('🚀 subdomain:', subdomain);
+
+    const getWorkspaceId = async () => {
+      const response = await newRequest.get(`/workspaces/url`, {
+        params: {
+          domain,
+          subdomain,
+        },
+      });
+      console.log('🚀 response:', response);
+    };
+
+    getWorkspaceId();
+  }, []);
+
   return <WorkspaceCMSContext.Provider value={value}>{children}</WorkspaceCMSContext.Provider>;
 }
 
