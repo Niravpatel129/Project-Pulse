@@ -2,8 +2,6 @@
 
 import useGetWorkspaceFromUrl from '@/lib/cms/useGetWorkspaceFromUrl';
 import { DevPanel } from '@/lib/mock';
-import { getWorkspaceConfig } from '@/utils/workspace';
-import { useEffect, useState } from 'react';
 import WorkspacePublicPage from '../WorkspacePublicPage';
 
 export default function MainHome({
@@ -13,25 +11,25 @@ export default function MainHome({
   resolvedSearchParams: { workspace?: string };
   isCustomSubdomain: boolean;
 }) {
-  const workspace = useGetWorkspaceFromUrl();
-  const [workspaceData, setWorkspaceData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { workspace, cms, page, isLoading } = useGetWorkspaceFromUrl();
+  //   const [workspaceData, setWorkspaceData] = useState(null);
+  //   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchWorkspaceData = async () => {
-      setIsLoading(true);
-      try {
-        const workspaceData = await getWorkspaceConfig(workspace);
-        setWorkspaceData(workspaceData);
-      } catch (error) {
-        console.error('[Page] Error fetching workspace data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //   useEffect(() => {
+  //     const fetchWorkspaceData = async () => {
+  //       setIsLoading(true);
+  //       try {
+  //         const workspaceData = await getWorkspaceConfig(workspace);
+  //         setWorkspaceData(workspaceData);
+  //       } catch (error) {
+  //         console.error('[Page] Error fetching workspace data:', error);
+  //       } finally {
+  //         setIsLoading(false);
+  //       }
+  //     };
 
-    fetchWorkspaceData();
-  }, [workspace]);
+  //     fetchWorkspaceData();
+  //   }, [workspace]);
 
   if (isLoading) {
     return (
@@ -55,10 +53,16 @@ export default function MainHome({
     console.log(`[Page] Using workspace slug: ${workspaceSlug}`);
 
     try {
-      if (workspaceData) {
+      if (cms) {
         return (
           <>
-            <WorkspacePublicPage workspace={workspaceSlug} pageType='home' />
+            <WorkspacePublicPage
+              workspace={workspaceSlug}
+              pageType='home'
+              cms={cms}
+              page={page}
+              isLoading={isLoading}
+            />
             {process.env.NODE_ENV === 'development' && (
               <DevPanel currentWorkspace={workspaceSlug} />
             )}
