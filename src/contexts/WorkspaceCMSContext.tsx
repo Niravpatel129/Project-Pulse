@@ -47,13 +47,17 @@ export function WorkspaceCMSProvider({ children, value }: WorkspaceCMSProviderPr
     console.log('🚀 subdomain:', subdomain);
 
     const getWorkspaceId = async () => {
-      const response = await newRequest.get(`/workspaces/url`, {
-        params: {
-          domain,
-          subdomain,
-        },
-      });
-      console.log('🚀 response:', response);
+      try {
+        const response = await newRequest.get(`/workspaces/url`, {
+          params: {
+            domain,
+            subdomain,
+          },
+        });
+        console.log('🚀 response:', response);
+      } catch (error) {
+        console.log('🚀 error:', error);
+      }
     };
 
     getWorkspaceId();
