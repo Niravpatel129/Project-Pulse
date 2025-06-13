@@ -8,6 +8,7 @@ interface HomePageProps {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
+  console.log(`[Page] Starting page load`);
   // Await the searchParams promise
   const resolvedSearchParams = await searchParams;
 
@@ -17,16 +18,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   console.log(`[Page] Starting page load for hostname: ${hostname}`);
 
   // Parse subdomain to get workspace
-  const subdomain = hostname.split('.')[0];
+  const domainParts = hostname.split('.');
+  const subdomain = domainParts[0];
+  const isMainDomain = domainParts.length === 2;
+  const isWWW = subdomain === 'www';
+  const workspaceSlug = isWWW
+    ? hostname.replace('www.', '').replace('.com', '')
+    : isMainDomain
+    ? hostname.replace('.com', '')
+    : subdomain;
+
   console.log(`[Page] Hostname: ${hostname}`);
   console.log(`[Page] Subdomain: ${subdomain}`);
-  console.log(`[Page] Domain parts: ${hostname.split('.').length}`);
-  console.log(`[Page] Domain parts array:`, hostname.split('.'));
+  console.log(`[Page] Is main domain: ${isMainDomain}`);
+  console.log(`[Page] Is WWW: ${isWWW}`);
+  console.log(`[Page] Workspace slug: ${workspaceSlug}`);
 
   const isCustomSubdomain =
     process.env.NODE_ENV === 'production'
-      ? !['www', 'localhost:3000', 'pulse-app', 'hourblock'].includes(subdomain) &&
-        hostname.split('.').length > 2
+      ? !['localhost:3000', 'pulse-app', 'hourblock'].includes(workspaceSlug)
       : true;
 
   console.log(`[Page] Is custom subdomain: ${isCustomSubdomain}`);
@@ -41,17 +51,20 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   // If we have a custom subdomain/domain (workspace), show their public branded page
   if (isCustomSubdomain) {
+    console.log(`[Page] Entering custom subdomain branch`);
     // In development, allow workspace override via URL param
     const workspaceSlug =
       process.env.NODE_ENV === 'development' && resolvedSearchParams.workspace
         ? resolvedSearchParams.workspace
         : 'bolocreate'; // Default for testing
 
-    console.log(`[DEV] Using workspace: ${workspaceSlug}`);
+    console.log(`[Page] Using workspace slug: ${workspaceSlug}`);
 
     try {
       // Fetch workspace data from backend or mock
+      console.log(`[Page] Attempting to fetch workspace config for: ${workspaceSlug}`);
       const workspaceData = await getWorkspaceConfig(workspaceSlug);
+      console.log(`[Page] Successfully fetched workspace config for: ${workspaceSlug}`);
 
       return (
         <>
@@ -60,7 +73,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </>
       );
     } catch (error) {
-      console.error('Error loading workspace:', error);
+      console.error('[Page] Error loading workspace:', error);
       return (
         <div className='min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center'>
           <div className='text-center'>
