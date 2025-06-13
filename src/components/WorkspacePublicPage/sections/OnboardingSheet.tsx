@@ -93,7 +93,7 @@ const ServiceCard = ({
         onClick
           ? `hover:${
               isAdditionalService ? 'bg-[#e0e0e0]' : 'bg-gray-100'
-            } transition cursor-pointer`
+            } transition cursor-pointer hover:scale-[1.02] active:scale-[0.98]`
           : ''
       }`}
       onClick={onClick}
@@ -116,7 +116,7 @@ const ServiceCard = ({
       {showRemoveButton && (
         <button
           type='button'
-          className='absolute top-0 right-0 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-all duration-300 ease-in-out'
+          className='absolute top-0 right-0 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center p-0 border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:scale-110 active:scale-95'
           style={{ lineHeight: 1, transform: 'translate(50%,-50%)' }}
           onClick={(e) => {
             e.stopPropagation();
@@ -291,7 +291,7 @@ export default function OnboardingSheet({
                   <div className='mb-2 mt-6 text-base font-semibold'>
                     Anything else you wish to add?
                   </div>
-                  <div className='flex flex-col gap-6 mb-4'>
+                  <div className='flex flex-col gap-6 mb-4 animate-slide-up'>
                     {services
                       .filter((s) => {
                         return s.name !== selectedService;
@@ -322,14 +322,15 @@ export default function OnboardingSheet({
             </div>
             <div className='mt-auto border-t pt-5'>
               <Button
-                className={`w-full min-h-[50px]  rounded-full bg-black hover:bg-black/80 ${
+                className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 transition-all duration-300 ease-in-out ${
                   selectedService
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
-                    : 'opacity-0 translate-y-1 pointer-events-none'
+                    : 'opacity-0 translate-y-4 pointer-events-none'
                 }`}
                 style={{
                   transitionProperty: 'opacity, transform',
                   transitionDuration: '300ms',
+                  transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
                 onClick={() => {
                   return setStep(1);
