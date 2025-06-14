@@ -19,7 +19,7 @@ export default function InstagramSection({
   sectionNumber,
 }: InstagramSectionProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeHeight, setIframeHeight] = useState(600);
+  const [iframeHeight, setIframeHeight] = useState(1200);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
