@@ -1,5 +1,6 @@
 'use client';
 
+import { ApiProvider } from '@/contexts/ApiContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProjectFilesProvider } from '@/contexts/ProjectFilesContext';
 import { WorkspaceProvider } from '@/contexts/WorkspaceContext';
@@ -14,11 +15,13 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <WorkspaceProvider>
-            <ProjectFilesProvider>{children}</ProjectFilesProvider>
-          </WorkspaceProvider>
-        </AuthProvider>
+        <ApiProvider>
+          <AuthProvider>
+            <WorkspaceProvider>
+              <ProjectFilesProvider>{children}</ProjectFilesProvider>
+            </WorkspaceProvider>
+          </AuthProvider>
+        </ApiProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
