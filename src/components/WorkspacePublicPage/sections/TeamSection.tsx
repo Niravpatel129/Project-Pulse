@@ -39,7 +39,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
           {team.map((member, idx) => {
             return (
               <div key={member.name} className='flex flex-col items-center'>
-                <div className='w-full h-80 mb-6'>
+                <div className='w-full h-96 mb-6'>
                   <Image
                     src={member.image}
                     alt={member.name}
