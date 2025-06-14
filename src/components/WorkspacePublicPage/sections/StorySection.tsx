@@ -28,6 +28,7 @@ export default function StorySection({
   story,
   primaryColor = '#7C3AED',
   id,
+  sectionNumber,
 }: StorySectionProps) {
   if (!story) return null;
 
@@ -35,7 +36,7 @@ export default function StorySection({
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
         <div className='max-w-6xl mx-auto'>
-          <SectionHeader number='03' title={title} subtitle={subtitle} />
+          <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
 
           <div className='grid md:grid-cols-2 gap-12 mb-12'>
             <div>

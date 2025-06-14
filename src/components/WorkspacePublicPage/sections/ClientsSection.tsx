@@ -18,7 +18,13 @@ interface ClientsSectionProps {
   sectionNumber?: string;
 }
 
-export default function ClientsSection({ title, subtitle, clients = [], id }: ClientsSectionProps) {
+export default function ClientsSection({
+  title,
+  subtitle,
+  clients = [],
+  id,
+  sectionNumber,
+}: ClientsSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,7 +77,7 @@ export default function ClientsSection({ title, subtitle, clients = [], id }: Cl
   return (
     <section id={id} className='py-16 bg-white overflow-hidden'>
       <div className='container mx-auto px-4'>
-        <SectionHeader number='05' title={title} subtitle={subtitle} />
+        <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
       </div>
 
       {/* Full Width Scrolling Carousel */}

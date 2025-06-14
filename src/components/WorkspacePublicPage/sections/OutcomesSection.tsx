@@ -21,12 +21,14 @@ export default function OutcomesSection({
   subtitle,
   outcomes = [],
   primaryColor = '#7C3AED',
+  secondaryColor,
   id,
+  sectionNumber,
 }: OutcomesSectionProps) {
   return (
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
-        <SectionHeader number='07' title={title} subtitle={subtitle} />
+        <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
 
         <div className='max-w-6xl mx-auto'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-8'>

@@ -63,8 +63,6 @@ export default function HomePage() {
   const renderSection = (section: any) => {
     const commonProps = { primaryColor, secondaryColor };
     const sectionId = getSectionId(section);
-    // Format the order number to be two digits with leading zero
-    const sectionNumber = String(section.order).padStart(2, '0');
 
     switch (section.type) {
       case 'heroSection':
@@ -84,7 +82,7 @@ export default function HomePage() {
             showSheet={showSheet}
             setShowSheet={setShowSheet}
             onOpenOnboardingSheet={onOpenOnboardingSheet}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
             {...commonProps}
           />
         );
@@ -99,7 +97,7 @@ export default function HomePage() {
             variant={section.variant}
             columns={section.columns}
             primaryColor={primaryColor}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
           />
         );
       case 'contactSection':
@@ -114,7 +112,7 @@ export default function HomePage() {
             variant={section.variant}
             layout={section.layout}
             primaryColor={primaryColor}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
           />
         );
       case 'clientsSection':
@@ -125,7 +123,7 @@ export default function HomePage() {
             title={section.title}
             subtitle={section.subtitle}
             clients={section.data.clients}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
           />
         );
       case 'googleReviewsSection':
@@ -140,7 +138,7 @@ export default function HomePage() {
             averageRating={section.data.averageRating}
             totalReviews={section.data.totalReviews}
             primaryColor={primaryColor}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
           />
         );
       case 'outcomesSection':
@@ -151,7 +149,7 @@ export default function HomePage() {
             title={section.title}
             subtitle={section.subtitle}
             outcomes={section.data.outcomes}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
             {...commonProps}
           />
         );
@@ -163,7 +161,7 @@ export default function HomePage() {
             title={section.title}
             subtitle={section.subtitle}
             story={section.data.story}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
             {...commonProps}
           />
         );
@@ -176,7 +174,7 @@ export default function HomePage() {
             subtitle={section.subtitle}
             socialLinks={section.data.socialLinks}
             testimonials={section.data.testimonials}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
             {...commonProps}
           />
         );
@@ -194,7 +192,7 @@ export default function HomePage() {
             showSheet={showSheet}
             setShowSheet={setShowSheet}
             onOpenOnboardingSheet={onOpenOnboardingSheet}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
             {...commonProps}
           />
         );
@@ -213,7 +211,7 @@ export default function HomePage() {
                 image: member.image || '/images/avatars/default-avatar.png',
               };
             })}
-            sectionNumber={sectionNumber}
+            sectionNumber={section.sectionNumber}
           />
         );
       default:
@@ -305,6 +303,8 @@ export default function HomePage() {
                   {section.subtitle}
                 </motion.span>
               ),
+            // Add sectionNumber based on index
+            sectionNumber: String(index + 1).padStart(2, '0'),
           };
           return renderSection(sectionWithAnimation);
         })}

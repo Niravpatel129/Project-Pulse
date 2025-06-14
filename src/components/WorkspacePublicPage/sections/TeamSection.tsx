@@ -25,7 +25,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
   buttonText = 'Read more',
   onButtonClick,
   team,
-  sectionNumber = '04',
+  sectionNumber,
 }) => {
   return (
     <section id={id} className='py-16 bg-white'>
