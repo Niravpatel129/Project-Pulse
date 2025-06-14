@@ -500,6 +500,15 @@ export default function OnboardingSheet({
                           <Button
                             className='bg-black hover:bg-black/90 text-white px-6 text-base'
                             size='lg'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const phoneNumber = buttons.find((btn) => {
+                                return btn.type === 'callOrText' && btn.url;
+                              })?.url;
+                              if (phoneNumber) {
+                                window.location.href = phoneNumber;
+                              }
+                            }}
                           >
                             Start Call
                           </Button>

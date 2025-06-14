@@ -15,7 +15,7 @@ export const bolocreate: WorkspaceCMSData = {
     },
     contact: {
       email: 'gtaresumebuilder@gmail.com',
-      phone: '437 774 3721',
+      phone: 'tel:4377743721',
     },
     socialMedia: {
       linkedin: 'https://linkedin.com/company/gta-resume-builder',
@@ -53,7 +53,7 @@ export const bolocreate: WorkspaceCMSData = {
             buttonText: 'Get Started',
             buttonAction: 'openOnboardingSheet',
             backgroundImage: '/images/resume-hero-bg.jpg',
-            buttons: [{ type: 'getStarted', text: 'Get Started', url: 'tel:4377743721' }],
+            buttons: [{ type: 'callOrText', text: 'Get Started', url: 'tel:4377743721' }],
           },
         },
         {
