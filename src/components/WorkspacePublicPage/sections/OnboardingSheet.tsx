@@ -261,6 +261,11 @@ export default function OnboardingSheet({
     return `View Order $${total}`;
   };
 
+  // Memoize the button text to only update when it actually changes
+  const buttonText = React.useMemo(() => {
+    return getPrimaryButtonText();
+  }, [selectedService, additionalSelectedServices]);
+
   const renderStep = () => {
     if (submitted) {
       return (
@@ -411,7 +416,15 @@ export default function OnboardingSheet({
                         disabled={!selectedService}
                         aria-disabled={!selectedService}
                       >
-                        {getPrimaryButtonText()}
+                        <motion.div
+                          key={buttonText}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                        >
+                          {buttonText}
+                        </motion.div>
                       </Button>
                     </div>
                   </div>
