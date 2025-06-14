@@ -93,6 +93,94 @@
   * {
     @apply border-border;
   }
+
+  html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    cursor: url('/cursor.png'), auto;
+  }
+
+  /* Preserve other cursor types */
+  a,
+  button,
+  [role='button'],
+  input[type='submit'],
+  input[type='button'],
+  input[type='reset'],
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='search'],
+  input[type='tel'],
+  input[type='url'],
+  textarea,
+  [contenteditable='true'] {
+    cursor: text;
+  }
+
+  .cursor-move {
+    cursor: move;
+  }
+
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
+
+  .cursor-wait {
+    cursor: wait;
+  }
+
+  .cursor-help {
+    cursor: help;
+  }
+
+  .cursor-zoom-in {
+    cursor: zoom-in;
+  }
+
+  .cursor-zoom-out {
+    cursor: zoom-out;
+  }
+
+  .cursor-grab {
+    cursor: grab;
+  }
+
+  .cursor-grabbing {
+    cursor: grabbing;
+  }
+
+  .cursor-col-resize {
+    cursor: col-resize;
+  }
+
+  .cursor-row-resize {
+    cursor: row-resize;
+  }
+
+  .cursor-ew-resize {
+    cursor: ew-resize;
+  }
+
+  .cursor-ns-resize {
+    cursor: ns-resize;
+  }
+
+  .cursor-nesw-resize {
+    cursor: nesw-resize;
+  }
+
+  .cursor-nwse-resize {
+    cursor: nwse-resize;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
@@ -125,11 +213,6 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: #313037 transparent;
-  }
-
-  html {
-    overflow-x: hidden;
-    scroll-behavior: smooth;
   }
 
   /* Responsive text sizes */
