@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
+import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SectionHeader from './SectionHeader';
 
 interface Service {
@@ -44,6 +45,40 @@ export default function ServiceSection({
   layout = 'grid',
 }: ServiceSectionProps) {
   const [activeTab, setActiveTab] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const autoSwitchInterval = useRef<NodeJS.Timeout | null>(null);
+  const PROGRESS_DURATION = 5000; // 5 seconds per tab
+
+  useEffect(() => {
+    // Start auto-switching
+    autoSwitchInterval.current = setInterval(() => {
+      setActiveTab((prev) => {
+        return prev === services.length - 1 ? 0 : prev + 1;
+      });
+    }, PROGRESS_DURATION);
+
+    // Start progress animation
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          return 0;
+        }
+        return prev + 100 / (PROGRESS_DURATION / 100); // Increment progress every 100ms
+      });
+    }, 100);
+
+    return () => {
+      if (autoSwitchInterval.current) {
+        clearInterval(autoSwitchInterval.current);
+      }
+      clearInterval(progressInterval);
+    };
+  }, [services.length]);
+
+  // Reset progress when tab changes
+  useEffect(() => {
+    setProgress(0);
+  }, [activeTab]);
 
   if (services.length === 0) return null;
 
@@ -185,7 +220,7 @@ export default function ServiceSection({
                   <button
                     key={service.title}
                     onClick={() => {
-                      return setActiveTab(index);
+                      setActiveTab(index);
                     }}
                     className={`py-3 px-6 focus:outline-none transition-colors duration-200 ease-in-out text-base relative flex-1 text-center ${
                       activeTab === index
@@ -202,7 +237,12 @@ export default function ServiceSection({
                     </span>
                     {service.title}
                     {activeTab === index && (
-                      <div className='absolute bottom-0 left-0 w-full h-0.5 bg-gray-900'></div>
+                      <motion.div
+                        className='absolute bottom-0 left-0 h-0.5 bg-gray-900'
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.1, ease: 'linear' }}
+                      />
                     )}
                   </button>
                 );
@@ -221,38 +261,72 @@ export default function ServiceSection({
               className='absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none'
               style={{ zIndex: 0 }}
             />
-            <div className='relative z-10 flex flex-col md:flex-row h-full'>
-              <div className='w-full md:w-1/2 p-8 py-16 sm:p-12 md:p-16 flex flex-col justify-center'>
-                <p className='text-lg sm:text-xl md:text-2xl text-gray-700 mb-3'>
-                  {currentService.title}
-                </p>
-                <h3 className='text-xl sm:text-2xl md:text-3xl font-bold leading-tight mb-4'>
-                  {currentService.description}
-                </h3>
-                {renderFeatures(currentService.features)}
-              </div>
-              {/* You can add an image or illustration here if your service has one */}
-            </div>
+            <AnimatePresence mode='wait'>
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className='relative z-10 flex flex-col md:flex-row h-full'
+              >
+                <div className='w-full md:w-1/2 p-8 py-16 sm:p-12 md:p-16 flex flex-col justify-center'>
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className='text-lg sm:text-xl md:text-2xl text-gray-700 mb-3'
+                  >
+                    {currentService.title}
+                  </motion.p>
+                  <motion.h3
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className='text-xl sm:text-2xl md:text-3xl font-bold leading-tight mb-4'
+                  >
+                    {currentService.description}
+                  </motion.h3>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    {renderFeatures(currentService.features)}
+                  </motion.div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Previous/Next Navigation */}
           <div className='flex justify-between items-center mt-12'>
-            <button onClick={handlePrevious} className='flex items-center space-x-3 group'>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePrevious}
+              className='flex items-center space-x-3 group'
+            >
               <div className='w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition-colors group-hover:bg-gray-200'>
                 <span className='material-icons text-gray-600'>&#8592;</span>
               </div>
               <span className='text-gray-600 font-medium transition-colors group-hover:text-gray-900'>
                 Previous
               </span>
-            </button>
-            <button onClick={handleNext} className='flex items-center space-x-3 group'>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNext}
+              className='flex items-center space-x-3 group'
+            >
               <span className='text-gray-600 font-medium transition-colors group-hover:text-gray-900'>
                 Next
               </span>
               <div className='w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition-colors group-hover:bg-gray-200'>
                 <span className='material-icons text-gray-600'>&#8594;</span>
               </div>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
