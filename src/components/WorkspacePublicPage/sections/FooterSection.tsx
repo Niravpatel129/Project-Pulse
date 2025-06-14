@@ -34,6 +34,7 @@ interface FooterSectionProps {
   showSheet: boolean;
   setShowSheet: (show: boolean) => void;
   onOpenOnboardingSheet: () => void;
+  sectionNumber?: string;
 }
 
 export default function FooterSection({
@@ -49,6 +50,7 @@ export default function FooterSection({
   showSheet,
   setShowSheet,
   onOpenOnboardingSheet,
+  sectionNumber,
 }: FooterSectionProps) {
   return (
     <footer

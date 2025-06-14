@@ -19,6 +19,7 @@ interface StorySectionProps {
   story?: Story;
   primaryColor?: string;
   id?: string;
+  sectionNumber?: string;
 }
 
 export default function StorySection({

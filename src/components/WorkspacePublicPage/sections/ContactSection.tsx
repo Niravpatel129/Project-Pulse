@@ -50,6 +50,7 @@ interface ContactSectionProps {
     url: string;
     style: 'primary' | 'secondary';
   }>;
+  sectionNumber?: string;
 }
 
 export default function ContactSection({
@@ -66,6 +67,7 @@ export default function ContactSection({
   showServiceAreas = true,
   primaryColor = '#7C3AED',
   ctaButtons = [],
+  sectionNumber,
 }: ContactSectionProps) {
   const bgClasses = {
     white: 'bg-white',

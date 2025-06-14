@@ -20,6 +20,7 @@ interface SocialsSectionProps {
   testimonials?: Testimonial[];
   primaryColor?: string;
   id?: string;
+  sectionNumber?: string;
 }
 
 export default function SocialsSection({

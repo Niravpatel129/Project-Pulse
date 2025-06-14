@@ -15,6 +15,7 @@ interface TeamSectionProps {
   buttonText?: string;
   onButtonClick?: () => void;
   team: TeamMember[];
+  sectionNumber?: string;
 }
 
 const TeamSection: React.FC<TeamSectionProps> = ({
@@ -24,12 +25,13 @@ const TeamSection: React.FC<TeamSectionProps> = ({
   buttonText = 'Read more',
   onButtonClick,
   team,
+  sectionNumber = '04',
 }) => {
   return (
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
         <SectionHeader
-          number='04'
+          number={sectionNumber}
           title={title}
           subtitle={subtitle}
           buttonText={buttonText}

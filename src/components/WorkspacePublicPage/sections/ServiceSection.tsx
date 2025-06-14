@@ -28,6 +28,7 @@ interface ServiceSectionProps {
   ctaUrl?: string;
   primaryColor?: string;
   layout?: 'grid' | 'carousel' | 'stacked';
+  sectionNumber?: string;
 }
 
 export default function ServiceSection({
@@ -43,6 +44,7 @@ export default function ServiceSection({
   ctaUrl = 'tel:4377743721',
   primaryColor = '#7C3AED',
   layout = 'grid',
+  sectionNumber,
 }: ServiceSectionProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -210,7 +212,7 @@ export default function ServiceSection({
   return (
     <section id={id} className={`py-16 bg-white`}>
       <div className='container mx-auto px-4 max-w-5xl'>
-        <SectionHeader number='02' title={title} subtitle={subtitle} />
+        <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
         <div className='max-w-6xl mx-auto'>
           {/* Custom Tabs */}
           <div className='flex justify-center mb-12'>

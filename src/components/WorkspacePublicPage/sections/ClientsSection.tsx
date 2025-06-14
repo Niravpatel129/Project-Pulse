@@ -15,6 +15,7 @@ interface ClientsSectionProps {
   subtitle?: string;
   clients?: Client[];
   id?: string;
+  sectionNumber?: string;
 }
 
 export default function ClientsSection({ title, subtitle, clients = [], id }: ClientsSectionProps) {

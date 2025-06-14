@@ -23,6 +23,7 @@ interface GoogleReviewsSectionProps {
   averageRating?: number;
   totalReviews?: number;
   primaryColor?: string;
+  sectionNumber?: string;
 }
 
 export default function GoogleReviewsSection({

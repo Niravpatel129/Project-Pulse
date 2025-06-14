@@ -11,7 +11,9 @@ interface OutcomesSectionProps {
   subtitle?: string;
   outcomes?: Outcome[];
   primaryColor?: string;
+  secondaryColor?: string;
   id?: string;
+  sectionNumber?: string;
 }
 
 export default function OutcomesSection({

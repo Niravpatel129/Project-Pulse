@@ -29,6 +29,7 @@ interface HeroSectionProps {
   showSheet: boolean;
   setShowSheet: (show: boolean) => void;
   onOpenOnboardingSheet: () => void;
+  sectionNumber?: string;
 }
 
 const AnimatedText = ({
@@ -193,6 +194,7 @@ export default function HeroSection({
   showSheet,
   setShowSheet,
   onOpenOnboardingSheet,
+  sectionNumber,
 }: HeroSectionProps) {
   const textAlignClass = {
     left: 'text-left',
