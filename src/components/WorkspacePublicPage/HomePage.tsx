@@ -10,6 +10,7 @@ import {
   FooterSection,
   GoogleReviewsSection,
   HeroSection,
+  InstagramSection,
   OutcomesSection,
   ServiceSection,
   SocialsSection,
@@ -211,6 +212,18 @@ export default function HomePage() {
                 image: member.image || '/images/avatars/default-avatar.png',
               };
             })}
+            sectionNumber={section.sectionNumber}
+          />
+        );
+      case 'instagramSection':
+        return (
+          <InstagramSection
+            key={section.id}
+            id={sectionId}
+            title={section.title}
+            subtitle={section.subtitle}
+            instagramUrl={section.data.instagramUrl}
+            primaryColor={primaryColor}
             sectionNumber={section.sectionNumber}
           />
         );

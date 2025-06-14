@@ -261,11 +261,21 @@ export const bolocreate: WorkspaceCMSData = {
           },
         },
         {
+          id: 'instagram-1',
+          type: 'instagramSection',
+          title: 'Follow Our Journey',
+          subtitle: 'See our latest projects and behind-the-scenes moments',
+          order: 5,
+          data: {
+            instagramUrl: 'https://www.instagram.com/lukedobsonn',
+          },
+        },
+        {
           id: 'services-1',
           type: 'serviceSection',
           title: 'Our Resume Writing Services',
           subtitle: 'Expert, ATS-compliant, interview-ready resumes for every profession',
-          order: 5,
+          order: 6,
           variant: 'default',
           columns: 3,
           data: {
@@ -303,7 +313,7 @@ export const bolocreate: WorkspaceCMSData = {
           type: 'onboardingServiceSection',
           title: 'Start Your Resume in Minutes',
           subtitle: 'Interactive onboarding to match you with the perfect resume service',
-          order: 6,
+          order: 7,
           variant: 'onboarding',
           data: {
             description:
