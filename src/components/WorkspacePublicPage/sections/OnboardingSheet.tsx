@@ -273,21 +273,52 @@ export default function OnboardingSheet({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className='flex flex-col items-center justify-center h-full'
+          className='flex flex-col items-center justify-center h-full py-12'
         >
-          <div className='text-2xl font-bold mb-2'>Thank you!</div>
-          <div className='text-muted-foreground mb-4'>
-            {step === 2
-              ? "We'll call you at your scheduled time."
-              : "We received your request. We'll be in touch soon."}
-          </div>
-          <Button
-            onClick={() => {
-              return onOpenChange(false);
-            }}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
+            className='w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6'
           >
-            Close
-          </Button>
+            <CheckIcon className='w-10 h-10 text-green-600' />
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className='text-3xl font-bold mb-3 text-center'
+          >
+            Thank You!
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className='text-muted-foreground text-lg mb-8 text-center max-w-md'
+          >
+            {step === 2
+              ? "We'll call you at your scheduled time. Looking forward to our conversation!"
+              : "We've received your request and will be in touch with you shortly."}
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className='w-full max-w-sm'
+          >
+            <Button
+              onClick={() => {
+                return onOpenChange(false);
+              }}
+              className='w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 transition-all duration-300'
+            >
+              Close
+            </Button>
+          </motion.div>
         </motion.div>
       );
     }
