@@ -277,7 +277,44 @@ export default function SettingsPage() {
   );
   const [newEmail, setNewEmail] = useState('');
 
-  // Fetch Gmail status
+  // Add polling function
+  const [isConnectingGmail, setIsConnectingGmail] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [lastAuthAttempt, setLastAuthAttempt] = useState<number | null>(null);
+
+  // Add polling function
+  const startPollingGmailStatus = () => {
+    // Clear any existing polling
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+
+    // Start new polling
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+    }, 2000); // Poll every 2 seconds
+
+    setPollingInterval(interval);
+
+    // Stop polling after 30 seconds (15 attempts)
+    setTimeout(() => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
+    }, 30000);
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  // Fetch Gmail status with polling logic
   const { data: gmailStatus } = useQuery<GmailStatus>({
     queryKey: ['gmail-status'],
     queryFn: async () => {
@@ -285,6 +322,55 @@ export default function SettingsPage() {
       return response.data;
     },
   });
+
+  // Effect to handle Gmail status updates
+  useEffect(() => {
+    if (gmailStatus && lastAuthAttempt) {
+      // If we have a recent auth attempt and the status shows connected,
+      // we can stop polling
+      if (gmailStatus.connected) {
+        const timeSinceAuth = Date.now() - lastAuthAttempt;
+        if (timeSinceAuth < 30000) {
+          // Within 30 seconds
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+          }
+        }
+      }
+    }
+  }, [gmailStatus, lastAuthAttempt, pollingInterval]);
+
+  // Effect to check for recent auth attempts when page loads
+  useEffect(() => {
+    const checkRecentAuth = async () => {
+      try {
+        const response = await newRequest.get('/gmail/status');
+        const data = response.data as GmailStatus;
+
+        // If we have integrations but they're not connected yet,
+        // this might indicate a recent auth attempt
+        if (data.integrations?.length > 0 && !data.connected) {
+          setLastAuthAttempt(Date.now());
+          startPollingGmailStatus();
+        }
+      } catch (error) {
+        console.error('Failed to check Gmail status:', error);
+      }
+    };
+
+    checkRecentAuth();
+  }, []);
+
+  // Update the GMAIL_AUTH_SUCCESS handler in both places
+  const handleGmailAuthSuccess = () => {
+    setLastAuthAttempt(Date.now());
+    queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+    startPollingGmailStatus();
+    setIsAddingEmail(false);
+    setIsConnectingGmail(false);
+    toast.success('Gmail account connected successfully');
+  };
 
   // Fetch email integrations
   const { data: emailIntegrationsData } = useQuery<EmailIntegration[]>({
@@ -336,41 +422,6 @@ export default function SettingsPage() {
       toast.error('Failed to remove email integration');
     },
   });
-
-  const [isConnectingGmail, setIsConnectingGmail] = useState(false);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
-
-  // Add polling function
-  const startPollingGmailStatus = () => {
-    // Clear any existing polling
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-    }
-
-    // Start new polling
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
-    }, 2000); // Poll every 2 seconds
-
-    setPollingInterval(interval);
-
-    // Stop polling after 30 seconds (15 attempts)
-    setTimeout(() => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-      }
-    }, 30000);
-  };
-
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
 
   const handleSaveBasicSettings = () => {
     // Prepare update data with all form fields
@@ -1109,13 +1160,7 @@ export default function SettingsPage() {
 
                                             if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
                                               window.removeEventListener('message', messageHandler);
-                                              queryClient.invalidateQueries({
-                                                queryKey: ['gmail-status'],
-                                              });
-                                              startPollingGmailStatus(); // Start polling after successful auth
-                                              setIsAddingEmail(false);
-                                              setIsConnectingGmail(false);
-                                              toast.success('Gmail account connected successfully');
+                                              handleGmailAuthSuccess();
                                             }
 
                                             if (event.data?.type === 'GMAIL_AUTH_ERROR') {
@@ -1473,13 +1518,7 @@ export default function SettingsPage() {
 
                           if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
                             window.removeEventListener('message', messageHandler);
-                            queryClient.invalidateQueries({
-                              queryKey: ['gmail-status'],
-                            });
-                            startPollingGmailStatus(); // Start polling after successful auth
-                            setIsAddingEmail(false);
-                            setIsConnectingGmail(false);
-                            toast.success('Gmail account connected successfully');
+                            handleGmailAuthSuccess();
                           }
 
                           if (event.data?.type === 'GMAIL_AUTH_ERROR') {
