@@ -42,6 +42,35 @@ const services: Service[] = [
   { name: 'Free Consulting', price: 'Free', subtitle: '20 mins' },
 ];
 
+// Add animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.4,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10, scale: 0.95 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 400,
+      damping: 15,
+      mass: 0.5,
+      velocity: 2,
+      delay: 0.1,
+    },
+  },
+};
+
 // Common Components
 const PriceTag = ({
   price,
@@ -276,20 +305,26 @@ export default function OnboardingSheet({
                   <div className='flex flex-col h-full'>
                     <div className='flex-1'>
                       {!selectedService ? (
-                        <div className='flex flex-col gap-3'>
+                        <motion.div
+                          className='flex flex-col gap-3'
+                          variants={containerVariants}
+                          initial='hidden'
+                          animate='show'
+                        >
                           {services.map((service) => {
                             return (
-                              <ServiceCard
-                                key={service.name}
-                                service={service}
-                                isSelected={false}
-                                onClick={() => {
-                                  return setSelectedService(service.name);
-                                }}
-                              />
+                              <motion.div key={service.name} variants={itemVariants}>
+                                <ServiceCard
+                                  service={service}
+                                  isSelected={false}
+                                  onClick={() => {
+                                    return setSelectedService(service.name);
+                                  }}
+                                />
+                              </motion.div>
                             );
                           })}
-                        </div>
+                        </motion.div>
                       ) : (
                         <>
                           <ServiceCard
