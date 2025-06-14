@@ -15,3 +15,5 @@ export { default as StorySection } from './StorySection';
 export { default as LocationContactSection } from './LocationContactSection';
 export { default as LocationHeroSection } from './LocationHeroSection';
 export { default as LocationServicesSection } from './LocationServicesSection';
+
+export { default as TeamSection } from './TeamSection';

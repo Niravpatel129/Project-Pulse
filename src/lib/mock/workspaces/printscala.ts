@@ -57,11 +57,44 @@ export const printscala: WorkspaceCMSData = {
           },
         },
         {
+          id: 'team-1',
+          type: 'teamSection',
+          title: 'Our team',
+          subtitle:
+            'We craft solutions that amplify key characteristics, achieving a harmonious balance of function and intent. Through careful analysis and collaborative engagement, our spaces transcend the conventional.',
+          order: 2,
+          data: {
+            buttonText: 'Read more',
+            team: [
+              {
+                name: 'Michael Scott',
+                role: 'Co-Founder, Chief Architect',
+                image: '/images/avatars/avatar1.png',
+              },
+              {
+                name: 'Chandler Rigs',
+                role: 'Co-Founder, Architect',
+                image: '/images/avatars/avatar2.png',
+              },
+              {
+                name: 'Isabella Rodriguez',
+                role: 'Architect',
+                image: '/images/avatars/avatar3.png',
+              },
+              {
+                name: 'Ava Wilson',
+                role: '3D Artist',
+                image: '/images/avatars/avatar4.png',
+              },
+            ],
+          },
+        },
+        {
           id: 'clients-1',
           type: 'clientsSection',
           title: 'Client Success Stories',
           subtitle: 'Results that Speak for Themselves - Land Interviews Within Weeks',
-          order: 2,
+          order: 3,
           data: {
             clients: [
               {
@@ -157,7 +190,7 @@ export const printscala: WorkspaceCMSData = {
           title: "See why we're rated #1 in the business",
           subtitle:
             'Real Google Reviews from Real Clients - Trusted by 100+ Professionals Across the GTA',
-          order: 3,
+          order: 4,
           variant: 'default',
           data: {
             reviews: [
@@ -232,7 +265,7 @@ export const printscala: WorkspaceCMSData = {
           type: 'serviceSection',
           title: 'Our Resume Writing Services',
           subtitle: 'Expert, ATS-compliant, interview-ready resumes for every profession',
-          order: 3,
+          order: 5,
           variant: 'default',
           columns: 3,
           data: {
@@ -270,7 +303,7 @@ export const printscala: WorkspaceCMSData = {
           type: 'onboardingServiceSection',
           title: 'Start Your Resume in Minutes',
           subtitle: 'Interactive onboarding to match you with the perfect resume service',
-          order: 4,
+          order: 6,
           variant: 'onboarding',
           data: {
             description:

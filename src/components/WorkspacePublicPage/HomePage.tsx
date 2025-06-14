@@ -14,6 +14,7 @@ import {
   ServiceSection,
   SocialsSection,
   StorySection,
+  TeamSection,
 } from './sections';
 import OnboardingSheet from './sections/OnboardingSheet';
 
@@ -184,6 +185,23 @@ export default function HomePage() {
             setShowSheet={setShowSheet}
             onOpenOnboardingSheet={onOpenOnboardingSheet}
             {...commonProps}
+          />
+        );
+      case 'teamSection':
+        return (
+          <TeamSection
+            key={section.id}
+            id={sectionId}
+            title={section.title}
+            subtitle={section.subtitle}
+            buttonText={section.data.buttonText}
+            onButtonClick={section.data.onButtonClick}
+            team={section.data.team.map((member: any) => {
+              return {
+                ...member,
+                image: member.image || '/images/avatars/default-avatar.png',
+              };
+            })}
           />
         );
       default:
