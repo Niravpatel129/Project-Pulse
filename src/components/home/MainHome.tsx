@@ -3,6 +3,7 @@
 import useGetWorkspaceFromUrl from '@/lib/cms/useGetWorkspaceFromUrl';
 import { DevPanel } from '@/lib/mock';
 import WorkspacePublicPage from '../WorkspacePublicPage';
+import HourBlockHome from './HourBlockHome';
 
 export default function MainHome({
   resolvedSearchParams,
@@ -89,24 +90,11 @@ export default function MainHome({
     }
   }
 
-  // If no workspace subdomain, show workspace selection/onboarding
+  // If no workspace subdomain, show the HourBlock homepage
   return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center'>
-      <div className='text-center'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-4'>
-          Welcome, you are not on a workspace
-        </h1>
-        <p className='text-xl text-gray-600 mb-8'></p>
-        {process.env.NODE_ENV === 'development' && (
-          <div className='bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto'>
-            <h2 className='text-lg font-semibold mb-4'>Development Mode</h2>
-            <p className='text-sm text-gray-600 mb-4'>
-              Click the dev panel to test different workspaces
-            </p>
-          </div>
-        )}
-      </div>
+    <>
+      <HourBlockHome />
       {process.env.NODE_ENV === 'development' && <DevPanel />}
-    </div>
+    </>
   );
 }
