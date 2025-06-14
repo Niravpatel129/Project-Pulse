@@ -803,20 +803,16 @@ export default function OnboardingSheet({
                 : 'Schedule a Callback'}
             </SheetTitle>
           </div>
-          {buttons.find((btn) => {
-            return btn.type === 'callOrText' && btn.url;
-          }) && (
-            <button
-              onClick={() => {
-                setPreviousStep(step);
-                setStep(2);
-              }}
-              className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
-              style={{ minHeight: 36 }}
-            >
-              📞 Prefer to Talk? Schedule a Callback
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setPreviousStep(step);
+              setStep(2);
+            }}
+            className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
+            style={{ minHeight: 36 }}
+          >
+            📞 Prefer to Talk? Schedule a Callback
+          </button>
         </div>
         <div className='flex-1 flex flex-col'>
           {renderStep()}
