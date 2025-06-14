@@ -1,15 +1,18 @@
+import Providers from '@/components/Providers';
 import { DynamicFavicon } from '@/components/shared/DynamicFavicon';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { QueryClient } from '@tanstack/react-query';
 import { Metadata, Viewport } from 'next';
-import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
 import Script from 'next/script';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
+
+// Create a client
+const queryClient = new QueryClient();
 
 // Workspace-specific colors
 const workspaceColors = {
@@ -195,12 +198,10 @@ export default function RootLayout({
         <DynamicFavicon subdomain={subdomain} />
       </head>
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
-        <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
