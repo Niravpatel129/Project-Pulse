@@ -887,40 +887,42 @@ export default function OnboardingSheet({
         side='right'
         className='w-full sm:w-[800px] sm:!max-w-[600px] fixed right-0 sm:right-4 top-0 sm:top-4 bottom-0 sm:bottom-4 px-4 sm:px-12 bg-background max-h-[100vh] sm:max-h-[calc(100vh-2rem)] overflow-y-auto border rounded-none sm:rounded-lg shadow-lg [&>button]:hidden scrollbar-hide flex flex-col p-4 sm:p-8'
       >
-        <div className='flex items-center justify-between mb-6'>
-          <div className='flex items-center gap-1'>
-            {step > 0 && (
-              <ArrowLeftIcon
-                className='w-5 h-5 cursor-pointer mr-1 hover:text-gray-500'
-                onClick={() => {
-                  if (step === 2 && previousStep !== null) {
-                    setStep(previousStep);
-                    setPreviousStep(null);
-                  } else {
-                    setStep(step - 1);
-                  }
-                }}
-              />
-            )}
-            <SheetTitle className='text-xl font-semibold'>
-              {step === 0
-                ? 'Choose a Service'
-                : step === 1
-                ? 'Contact Details'
-                : 'Schedule a Callback'}
-            </SheetTitle>
+        {!submitted && (
+          <div className='flex items-center justify-between mb-6'>
+            <div className='flex items-center gap-1'>
+              {step > 0 && (
+                <ArrowLeftIcon
+                  className='w-5 h-5 cursor-pointer mr-1 hover:text-gray-500'
+                  onClick={() => {
+                    if (step === 2 && previousStep !== null) {
+                      setStep(previousStep);
+                      setPreviousStep(null);
+                    } else {
+                      setStep(step - 1);
+                    }
+                  }}
+                />
+              )}
+              <SheetTitle className='text-xl font-semibold'>
+                {step === 0
+                  ? 'Choose a Service'
+                  : step === 1
+                  ? 'Contact Details'
+                  : 'Schedule a Callback'}
+              </SheetTitle>
+            </div>
+            <button
+              onClick={() => {
+                setPreviousStep(step);
+                setStep(2);
+              }}
+              className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
+              style={{ minHeight: 36 }}
+            >
+              📞 Prefer to Talk? Schedule a Callback
+            </button>
           </div>
-          <button
-            onClick={() => {
-              setPreviousStep(step);
-              setStep(2);
-            }}
-            className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
-            style={{ minHeight: 36 }}
-          >
-            📞 Prefer to Talk? Schedule a Callback
-          </button>
-        </div>
+        )}
         <div className='flex-1 flex flex-col'>
           {renderStep()}
           {renderNavigation()}
