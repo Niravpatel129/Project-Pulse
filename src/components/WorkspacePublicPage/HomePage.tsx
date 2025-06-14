@@ -36,13 +36,6 @@ export default function HomePage() {
   const primaryColor = settings.theme?.primaryColor || '#000000';
   const secondaryColor = settings.theme?.secondaryColor || '#000000';
   const contentPrimary = settings.theme?.content?.primary || '#000000';
-  const contentSecondary = settings.theme?.content?.secondary || '#000000';
-
-  // State for onboarding sheet
-  const [showSheet, setShowSheet] = React.useState(false);
-  const onOpenOnboardingSheet = () => {
-    return setShowSheet(true);
-  };
 
   // Helper function to get section ID based on type
   const getSectionId = (section: any) => {
@@ -53,15 +46,87 @@ export default function HomePage() {
         return 'services';
       case 'storySection':
         return 'about';
-      case 'footerSection':
-        return 'contact';
+      case 'teamSection':
+        return 'team';
+      case 'clientsSection':
+        return 'clients';
+      case 'googleReviewsSection':
+        return 'reviews';
+      case 'outcomesSection':
+        return 'outcomes';
+      case 'instagramSection':
+        return 'gallery';
+
       default:
-        return section.type;
+        return section.type.replace('Section', '').toLowerCase();
     }
+  };
+
+  // Helper function to get navigation label based on section type
+  const getNavigationLabel = (section: any) => {
+    switch (section.type) {
+      case 'heroSection':
+        return 'Home';
+      case 'serviceSection':
+        return 'Services';
+      case 'storySection':
+        return 'About';
+      case 'teamSection':
+        return 'Team';
+      case 'clientsSection':
+        return 'Clients';
+      case 'googleReviewsSection':
+        return 'Reviews';
+      case 'outcomesSection':
+        return 'Results';
+      case 'instagramSection':
+        return 'Gallery';
+      case 'contactSection':
+      case 'footerSection':
+        return 'Contact';
+      default:
+        return section.type.replace('Section', '');
+    }
+  };
+
+  // Generate navigation items from sections
+  const sectionNavigation = React.useMemo(() => {
+    const navItems = pageData.sections
+      .filter((section) => {
+        // Only include sections that should be in navigation
+        const sectionId = getSectionId(section);
+        return [
+          'home',
+          'services',
+          'about',
+          'team',
+          'clients',
+          'reviews',
+          'outcomes',
+          'gallery',
+          'contact',
+        ].includes(sectionId);
+      })
+      .map((section) => {
+        return {
+          id: section.id,
+          label: getNavigationLabel(section),
+          url: `#${getSectionId(section)}`,
+          target: '_self',
+        };
+      });
+    return navItems;
+  }, [pageData.sections]);
+
+  // State for onboarding sheet
+  const [showSheet, setShowSheet] = React.useState(false);
+  const onOpenOnboardingSheet = () => {
+    return setShowSheet(true);
   };
 
   // Helper function to render sections based on type
   const renderSection = (section: any) => {
+    console.log('🚀 section:', section.type);
     const commonProps = { primaryColor, secondaryColor };
     const sectionId = getSectionId(section);
 
@@ -257,7 +322,7 @@ export default function HomePage() {
                 {settings.siteName}
               </motion.span>
               <div className='hidden md:flex space-x-8'>
-                {navigation.map((item, index) => {
+                {sectionNavigation.map((item, index) => {
                   return (
                     <motion.a
                       key={item.id}

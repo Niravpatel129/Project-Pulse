@@ -62,7 +62,7 @@ export const printscala: WorkspaceCMSData = {
           title: 'Our team',
           subtitle:
             'We craft solutions that amplify key characteristics, achieving a harmonious balance of function and intent. Through careful analysis and collaborative engagement, our spaces transcend the conventional.',
-          order: 2,
+          order: 3,
           data: {
             buttonText: 'Read more',
             team: [
@@ -94,7 +94,7 @@ export const printscala: WorkspaceCMSData = {
           type: 'clientsSection',
           title: 'Client Success Stories',
           subtitle: 'Results that Speak for Themselves - Land Interviews Within Weeks',
-          order: 3,
+          order: 4,
           data: {
             clients: [
               {
@@ -190,7 +190,7 @@ export const printscala: WorkspaceCMSData = {
           title: "See why we're rated #1 in the business",
           subtitle:
             'Real Google Reviews from Real Clients - Trusted by 100+ Professionals Across the GTA',
-          order: 4,
+          order: 5,
           variant: 'default',
           data: {
             reviews: [
@@ -335,6 +335,52 @@ export const printscala: WorkspaceCMSData = {
           order: 9,
           data: {
             instagramUrl: 'https://www.instagram.com/lukedobsonn',
+          },
+        },
+        {
+          id: 'services-1',
+          type: 'serviceSection',
+          title: 'Professional Resume Writing Services',
+          subtitle: 'Expert resume writing tailored to your industry and career goals',
+          order: 9,
+          variant: 'default',
+          columns: 3,
+          data: {
+            services: [
+              {
+                icon: '📝',
+                title: 'Professional Resume Writing',
+                description:
+                  'Get a professionally written resume that highlights your skills and experience.',
+                features: [
+                  'ATS-Optimized Format',
+                  'Industry-Specific Keywords',
+                  '24-48 Hour Turnaround',
+                ],
+              },
+              {
+                icon: '🎯',
+                title: 'Career Change Resumes',
+                description:
+                  'Transition smoothly to a new industry with a resume that emphasizes transferable skills.',
+                features: [
+                  'Transferable Skills Focus',
+                  'Industry Research',
+                  'Career Path Planning',
+                ],
+              },
+              {
+                icon: '📈',
+                title: 'Executive Resume Writing',
+                description:
+                  'Stand out in senior-level positions with an executive resume that showcases leadership.',
+                features: [
+                  'Leadership Highlighting',
+                  'Strategic Achievements',
+                  'Board-Ready Format',
+                ],
+              },
+            ],
           },
         },
         {
