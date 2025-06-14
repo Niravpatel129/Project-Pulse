@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React from 'react';
 import SectionHeader from './SectionHeader';
 
@@ -37,17 +38,19 @@ const TeamSection: React.FC<TeamSectionProps> = ({
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8'>
           {team.map((member, idx) => {
             return (
-              <div
-                key={member.name}
-                className='bg-gray-100 rounded-xl flex flex-col items-center p-6 shadow-sm'
-              >
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className='w-32 h-32 rounded-xl object-cover mb-4'
-                />
-                <div className='font-semibold text-lg text-gray-900 mb-1'>{member.name}</div>
-                <div className='text-gray-500 text-sm'>{member.role}</div>
+              <div key={member.name} className='flex flex-col items-center'>
+                <div className='w-full h-80 mb-6'>
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    width={400}
+                    height={640}
+                    className='w-full h-full rounded-2xl object-cover'
+                    sizes='100vw'
+                  />
+                </div>
+                <div className='font-semibold text-xl text-gray-900 mb-1'>{member.name}</div>
+                <div className='text-gray-400 text-base font-mono tracking-wide'>{member.role}</div>
               </div>
             );
           })}

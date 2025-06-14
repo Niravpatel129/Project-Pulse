@@ -26,14 +26,6 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
         </div>
         {subtitle && <div className='mt-4 text-gray-600 max-w-2xl'>{subtitle}</div>}
       </div>
-      {buttonText && (
-        <button
-          className='bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium px-5 py-2 rounded-lg shadow-sm transition'
-          onClick={onButtonClick}
-        >
-          {buttonText}
-        </button>
-      )}
     </div>
   );
 };
