@@ -46,7 +46,7 @@ export default function HourBlockHome() {
       <main className='flex-1 flex items-center justify-center px-4'>
         <div className='max-w-[980px] mx-auto text-center'>
           <h1 className='text-[80px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6 leading-[1.05]'>
-            Time Management,
+            Business Management
             <br />
             <span className='text-[#86868b] font-[400]'>Simplified.</span>
           </h1>
@@ -60,7 +60,7 @@ export default function HourBlockHome() {
               <SheetTrigger asChild>
                 <Button
                   size='lg'
-                  className='w-full sm:w-auto bg-[#2997ff] text-white hover:bg-[#0077ed] text-[17px] font-[400] tracking-[-0.022em] px-8 py-6 h-auto'
+                  className='w-full sm:w-auto bg-[#fff] text-[#000] hover:bg-[#f0f0f0] text-[17px] font-[400] tracking-[-0.022em] px-8 py-6 h-auto'
                 >
                   Get Started
                   <ArrowRight className='ml-2 h-4 w-4' />
@@ -80,15 +80,6 @@ export default function HourBlockHome() {
                 </div>
               </SheetContent>
             </Sheet>
-            <Link href='/login'>
-              <Button
-                size='lg'
-                variant='outline'
-                className='w-full sm:w-auto border-[#333333] text-[#2997ff] hover:bg-[#1d1d1f] hover:text-[#2997ff] text-[17px] font-[400] tracking-[-0.022em] px-8 py-6 h-auto'
-              >
-                Sign In
-              </Button>
-            </Link>
           </div>
         </div>
       </main>
