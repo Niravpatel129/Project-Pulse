@@ -64,7 +64,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: -10, scale: 0.8 },
   show: {
     opacity: 1,
     y: 0,
@@ -402,9 +402,14 @@ export default function OnboardingSheet({
                             animate='show'
                             exit='exit'
                           >
-                            {services.map((service) => {
+                            {services.map((service, index) => {
                               return (
-                                <motion.div key={service.name} variants={itemVariants} layout>
+                                <motion.div
+                                  key={service.name}
+                                  variants={itemVariants}
+                                  layout
+                                  custom={index}
+                                >
                                   <ServiceCard
                                     service={service}
                                     isSelected={false}
