@@ -120,10 +120,10 @@ export default function PrivacyPage() {
               contact us at:
               <br />
               <a
-                href='mailto:privacy@pulse.com'
+                href='mailto:privacy@hourblock.com'
                 className='text-[#2997ff] hover:text-[#0077ed] transition-colors'
               >
-                privacy@pulse.com
+                privacy@hourblock.com
               </a>
             </p>
           </section>

@@ -122,10 +122,10 @@ export default function TermsPage() {
               If you have any questions about these Terms of Service, please contact us at:
               <br />
               <a
-                href='mailto:terms@pulse.com'
+                href='mailto:terms@hourblock.com'
                 className='text-[#2997ff] hover:text-[#0077ed] transition-colors'
               >
-                terms@pulse.com
+                terms@hourblock.com
               </a>
             </p>
           </section>
