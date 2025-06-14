@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ProjectFilesProvider } from '@/contexts/ProjectFilesContext';
 import { WorkspaceProvider } from '@/contexts/WorkspaceContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
@@ -14,7 +15,9 @@ export default function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <WorkspaceProvider>{children}</WorkspaceProvider>
+          <WorkspaceProvider>
+            <ProjectFilesProvider>{children}</ProjectFilesProvider>
+          </WorkspaceProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
