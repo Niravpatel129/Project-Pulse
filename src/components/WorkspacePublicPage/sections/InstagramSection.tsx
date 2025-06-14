@@ -19,38 +19,32 @@ export default function InstagramSection({
   sectionNumber,
 }: InstagramSectionProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeHeight, setIframeHeight] = useState(() => {
-    // Set initial height based on viewport width
-    return window.innerWidth < 768 ? 600 : 1200;
-  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [iframeHeight, setIframeHeight] = useState(600);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (iframeRef.current?.contentWindow) {
-        try {
-          const height = iframeRef.current.contentWindow.document.body.scrollHeight;
-          // Adjust height based on viewport width
-          const adjustedHeight = window.innerWidth < 768 ? Math.min(height, 800) : height;
-          setIframeHeight(adjustedHeight);
-        } catch (e) {
-          // Handle cross-origin errors silently
-        }
+    const calculateHeight = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        // Calculate height based on width with a 1.5:1 aspect ratio
+        const calculatedHeight = Math.round(width * 1.3);
+        // Set minimum and maximum heights
+        const height = Math.min(Math.max(calculatedHeight, 400), 1200);
+        setIframeHeight(height);
       }
     };
 
-    const iframe = iframeRef.current;
-    if (iframe) {
-      iframe.onload = () => {
-        handleResize();
-        // Additional resize after a short delay to catch any late-loading content
-        setTimeout(handleResize, 1000);
-      };
-    }
+    const handleResize = () => {
+      calculateHeight();
+    };
+
+    // Initial calculation
+    calculateHeight();
 
     window.addEventListener('resize', handleResize);
     return () => {
-      return window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -59,14 +53,14 @@ export default function InstagramSection({
   }
 
   return (
-    <section id={id} className='pt-16 pb-0 bg-white'>
+    <section id={id} className='pt-16 -mb-32 md:mb-0  bg-white'>
       <div className='container mx-auto px-4'>
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
         <div className='max-w-8xl mx-auto'>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
             {/* Instagram Embed */}
             <div className='col-span-full'>
-              <div className='w-full'>
+              <div className='w-full' ref={containerRef}>
                 {error ? (
                   <div className='p-4 text-center text-red-500 bg-red-50 rounded-lg'>{error}</div>
                 ) : (
