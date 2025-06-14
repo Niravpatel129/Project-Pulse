@@ -15,9 +15,13 @@ export function middleware(request: NextRequest) {
   console.log(`[Middleware] Domain parts: ${hostname.split('.').length}`);
   console.log(`[Middleware] Domain parts array:`, hostname.split('.'));
 
-  const isCustomSubdomain =
-    !['www', 'localhost:3000', 'localhost:3001', 'pulse-app', 'hourblock'].includes(subdomain) &&
-    hostname.split('.').length > 2;
+  const isCustomSubdomain = ![
+    'www',
+    'localhost:3000',
+    'localhost:3001',
+    'pulse-app',
+    'hourblock',
+  ].includes(subdomain);
 
   console.log(`[Middleware] Is custom subdomain: ${isCustomSubdomain}`);
   console.log(`[Middleware] NODE_ENV: ${process.env.NODE_ENV}`);
