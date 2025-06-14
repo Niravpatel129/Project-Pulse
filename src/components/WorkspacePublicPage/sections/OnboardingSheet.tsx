@@ -48,8 +48,17 @@ const containerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
+      staggerChildren: 0.02,
+      delayChildren: 0.1,
+      duration: 0.2,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: 0.02,
+      staggerDirection: -1,
+      duration: 0.2,
     },
   },
 };
@@ -62,10 +71,24 @@ const itemVariants = {
     scale: 1,
     transition: {
       type: 'spring',
-      stiffness: 400,
-      damping: 15,
-      mass: 0.5,
-      velocity: 2,
+      stiffness: 500,
+      damping: 20,
+      mass: 0.3,
+      velocity: 3,
+      duration: 0.2,
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.8,
+    y: -10,
+    transition: {
+      type: 'spring',
+      stiffness: 500,
+      damping: 20,
+      mass: 0.3,
+      velocity: 3,
+      duration: 0.2,
     },
   },
 };
@@ -234,6 +257,29 @@ export default function OnboardingSheet({
     notes: '',
     isASAP: true,
   });
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const [pendingService, setPendingService] = React.useState<string | null>(null);
+
+  const handleServiceSelect = React.useCallback(
+    (serviceName: string) => {
+      if (!isAnimating) {
+        setIsAnimating(true);
+        setSelectedService(serviceName);
+      }
+    },
+    [isAnimating],
+  );
+
+  React.useEffect(() => {
+    if (selectedService) {
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 400); // Slightly longer than animation duration to ensure smooth transition
+      return () => {
+        return clearTimeout(timer);
+      };
+    }
+  }, [selectedService]);
 
   React.useEffect(() => {
     if (!open) {
@@ -346,95 +392,120 @@ export default function OnboardingSheet({
                 return (
                   <div className='flex flex-col h-full'>
                     <div className='flex-1'>
-                      {!selectedService ? (
-                        <motion.div
-                          className='flex flex-col gap-3'
-                          variants={containerVariants}
-                          initial='hidden'
-                          animate='show'
-                        >
-                          {services.map((service) => {
-                            return (
-                              <motion.div key={service.name} variants={itemVariants}>
-                                <ServiceCard
-                                  service={service}
-                                  isSelected={false}
-                                  onClick={() => {
-                                    return setSelectedService(service.name);
-                                  }}
-                                />
-                              </motion.div>
-                            );
-                          })}
-                        </motion.div>
-                      ) : (
-                        <>
-                          <ServiceCard
-                            service={
-                              services.find((s) => {
-                                return s.name === selectedService;
-                              }) as Service
-                            }
-                            isSelected={true}
-                            showRemoveButton
-                            onRemove={() => {
-                              setSelectedService(null);
-                              setAdditionalSelectedServices([]);
-                            }}
-                          />
-                          <div className='mb-2 mt-6 text-base font-semibold'>
-                            Anything else you wish to add?
-                          </div>
+                      <AnimatePresence mode='wait'>
+                        {!selectedService ? (
                           <motion.div
-                            className='flex flex-col gap-3 mb-4'
+                            key='service-list'
+                            className='flex flex-col gap-3'
                             variants={containerVariants}
                             initial='hidden'
                             animate='show'
+                            exit='exit'
                           >
-                            {services
-                              .filter((s) => {
-                                return s.name !== selectedService;
-                              })
-                              .map((service, index) => {
-                                const isSelected = additionalSelectedServices.includes(
-                                  service.name,
-                                );
-                                return (
-                                  <motion.div
-                                    key={service.name}
-                                    variants={{
-                                      hidden: { opacity: 0, y: 20 },
-                                      show: {
-                                        opacity: 1,
-                                        y: 0,
-                                        transition: {
-                                          delay: index * 0.2, // 800ms delay between each item
-                                          duration: 0.3,
-                                          ease: 'easeOut',
-                                        },
-                                      },
+                            {services.map((service) => {
+                              return (
+                                <motion.div key={service.name} variants={itemVariants} layout>
+                                  <ServiceCard
+                                    service={service}
+                                    isSelected={false}
+                                    onClick={() => {
+                                      return handleServiceSelect(service.name);
                                     }}
-                                  >
-                                    <ServiceCard
-                                      service={service}
-                                      isSelected={isSelected}
-                                      isAdditionalService={true}
-                                      onClick={() => {
-                                        setAdditionalSelectedServices((prev) => {
-                                          return isSelected
-                                            ? prev.filter((s) => {
-                                                return s !== service.name;
-                                              })
-                                            : [...prev, service.name];
-                                        });
-                                      }}
-                                    />
-                                  </motion.div>
-                                );
-                              })}
+                                  />
+                                </motion.div>
+                              );
+                            })}
                           </motion.div>
-                        </>
-                      )}
+                        ) : (
+                          <motion.div
+                            key='selected-service'
+                            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                            animate={{
+                              opacity: 1,
+                              scale: 1,
+                              y: 0,
+                              transition: {
+                                type: 'spring',
+                                stiffness: 500,
+                                damping: 20,
+                                mass: 0.3,
+                                velocity: 3,
+                                duration: 0.2,
+                              },
+                            }}
+                            layout
+                          >
+                            <ServiceCard
+                              service={
+                                services.find((s) => {
+                                  return s.name === selectedService;
+                                }) as Service
+                              }
+                              isSelected={true}
+                              showRemoveButton
+                              onRemove={() => {
+                                setSelectedService(null);
+                                setAdditionalSelectedServices([]);
+                              }}
+                            />
+                            <div className='mb-2 mt-6 text-base font-semibold'>
+                              Anything else you wish to add?
+                            </div>
+                            <motion.div
+                              className='flex flex-col gap-3 mb-4'
+                              variants={containerVariants}
+                              initial='hidden'
+                              animate='show'
+                            >
+                              {services
+                                .filter((s) => {
+                                  return s.name !== selectedService;
+                                })
+                                .map((service, index) => {
+                                  const isSelected = additionalSelectedServices.includes(
+                                    service.name,
+                                  );
+                                  return (
+                                    <motion.div
+                                      key={service.name}
+                                      variants={{
+                                        hidden: { opacity: 0, y: 20, scale: 0.95 },
+                                        show: {
+                                          opacity: 1,
+                                          y: 0,
+                                          scale: 1,
+                                          transition: {
+                                            type: 'spring',
+                                            stiffness: 400,
+                                            damping: 20,
+                                            mass: 0.5,
+                                            delay: index * 0.1,
+                                          },
+                                        },
+                                      }}
+                                      layout
+                                    >
+                                      <ServiceCard
+                                        service={service}
+                                        isSelected={isSelected}
+                                        isAdditionalService={true}
+                                        onClick={() => {
+                                          setAdditionalSelectedServices((prev) => {
+                                            return isSelected
+                                              ? prev.filter((s) => {
+                                                  return s !== service.name;
+                                                })
+                                              : [...prev, service.name];
+                                          });
+                                        }}
+                                      />
+                                    </motion.div>
+                                  );
+                                })}
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                     <div className='mt-auto border-t pt-5'>
                       <Button
