@@ -19,7 +19,10 @@ export default function InstagramSection({
   sectionNumber,
 }: InstagramSectionProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeHeight, setIframeHeight] = useState(1200);
+  const [iframeHeight, setIframeHeight] = useState(() => {
+    // Set initial height based on viewport width
+    return window.innerWidth < 768 ? 600 : 1200;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,7 +30,9 @@ export default function InstagramSection({
       if (iframeRef.current?.contentWindow) {
         try {
           const height = iframeRef.current.contentWindow.document.body.scrollHeight;
-          setIframeHeight(height);
+          // Adjust height based on viewport width
+          const adjustedHeight = window.innerWidth < 768 ? Math.min(height, 800) : height;
+          setIframeHeight(adjustedHeight);
         } catch (e) {
           // Handle cross-origin errors silently
         }
