@@ -8,6 +8,7 @@ import { ContactSection, GoogleReviewsSection, HeroSection, ServiceSection } fro
 
 export default function LocationPage() {
   const { cmsData, pageData, locationSlug } = useWorkspaceCMS();
+  const [showSheet, setShowSheet] = React.useState(false);
 
   // Add smooth scrolling to the document
   React.useEffect(() => {
@@ -58,6 +59,11 @@ export default function LocationPage() {
             backgroundImage={section.data.backgroundImage}
             variant={section.variant}
             highlights={section.data.highlights}
+            showSheet={showSheet}
+            setShowSheet={setShowSheet}
+            onOpenOnboardingSheet={() => {
+              return setShowSheet(true);
+            }}
             {...commonProps}
           />
         );
