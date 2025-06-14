@@ -48,14 +48,14 @@ const containerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.4,
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 10, scale: 0.95 },
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
   show: {
     opacity: 1,
     y: 0,
@@ -66,7 +66,6 @@ const itemVariants = {
       damping: 15,
       mass: 0.5,
       velocity: 2,
-      delay: 0.1,
     },
   },
 };
