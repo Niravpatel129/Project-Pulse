@@ -69,22 +69,22 @@ export const printscala: WorkspaceCMSData = {
               {
                 name: 'Michael Scott',
                 role: 'Co-Founder, Chief Architect',
-                image: '/images/avatars/avatar1.png',
+                image: 'https://i.postimg.cc/mrR8sf7p/a4.avif',
               },
               {
                 name: 'Chandler Rigs',
                 role: 'Co-Founder, Architect',
-                image: '/images/avatars/avatar2.png',
+                image: 'https://i.postimg.cc/mrR8sf7p/a4.avif',
               },
               {
                 name: 'Isabella Rodriguez',
                 role: 'Architect',
-                image: '/images/avatars/avatar3.png',
+                image: 'https://i.postimg.cc/mrR8sf7p/a4.avif',
               },
               {
                 name: 'Ava Wilson',
                 role: '3D Artist',
-                image: '/images/avatars/avatar4.png',
+                image: 'https://i.postimg.cc/mrR8sf7p/a4.avif',
               },
             ],
           },
