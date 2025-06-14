@@ -179,7 +179,7 @@ export default function ServiceSection({
         <div className='max-w-6xl mx-auto'>
           {/* Custom Tabs */}
           <div className='flex justify-center mb-12'>
-            <div className='flex flex-wrap justify-center border-b border-gray-200'>
+            <div className='flex w-full justify-between border-b border-gray-200'>
               {services.map((service, index) => {
                 return (
                   <button
@@ -187,7 +187,7 @@ export default function ServiceSection({
                     onClick={() => {
                       return setActiveTab(index);
                     }}
-                    className={`py-3 px-6 focus:outline-none transition-colors duration-200 ease-in-out text-base relative ${
+                    className={`py-3 px-6 focus:outline-none transition-colors duration-200 ease-in-out text-base relative flex-1 text-center ${
                       activeTab === index
                         ? 'text-gray-900 font-semibold'
                         : 'text-gray-500 hover:text-gray-800'
