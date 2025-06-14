@@ -387,6 +387,7 @@ export default function SettingsPage() {
   const handleGmailAuthSuccess = () => {
     setLastAuthAttempt(Date.now());
     queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+    queryClient.invalidateQueries({ queryKey: ['email-integrations'] });
     startPollingGmailStatus();
     setIsAddingEmail(false);
     setIsConnectingGmail(false);
@@ -1143,6 +1144,7 @@ export default function SettingsPage() {
                                   size='sm'
                                   onClick={() => {
                                     setIsConnectingGmail(true);
+                                    setIsAddingEmail(false);
                                     // Gmail integration logic
                                     const width = 600;
                                     const height = 600;
@@ -1501,6 +1503,7 @@ export default function SettingsPage() {
                 console.log('selectedIntegrationType', selectedIntegrationType);
                 if (selectedIntegrationType === 'gmail') {
                   setIsConnectingGmail(true);
+                  setIsAddingEmail(false);
                   // Gmail integration logic
                   const width = 600;
                   const height = 600;
