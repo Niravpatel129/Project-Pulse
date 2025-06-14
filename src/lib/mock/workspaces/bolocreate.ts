@@ -261,54 +261,6 @@ export const bolocreate: WorkspaceCMSData = {
           },
         },
         {
-          id: 'instagram-1',
-          type: 'instagramSection',
-          title: 'Follow Our Journey',
-          subtitle: 'See our latest projects and behind-the-scenes moments',
-          order: 5,
-          data: {
-            instagramUrl: 'https://www.instagram.com/lukedobsonn',
-          },
-        },
-        {
-          id: 'services-1',
-          type: 'serviceSection',
-          title: 'Our Resume Writing Services',
-          subtitle: 'Expert, ATS-compliant, interview-ready resumes for every profession',
-          order: 6,
-          variant: 'default',
-          columns: 3,
-          data: {
-            services: [
-              {
-                icon: '📄',
-                title: 'Professional Resume Writing',
-                description:
-                  'Custom-crafted resumes that get past ATS systems and land you interviews. No templates - personalized for your industry.',
-                features: [
-                  'ATS-Compliant Format',
-                  'Industry-Specific Keywords',
-                  '60-Day Interview Guarantee',
-                ],
-              },
-              {
-                icon: '⚡',
-                title: 'Same-Day Rush Service',
-                description:
-                  'Need your resume urgently? Our same-day delivery service gets you interview-ready in hours, not days.',
-                features: ['24-Hour Delivery', 'Priority Support', 'Rush Processing'],
-              },
-              {
-                icon: '🎯',
-                title: 'Specialized Industries',
-                description:
-                  'Expert resume writing for PSWs, security guards, warehouse workers, customer service, and office admin roles.',
-                features: ['Healthcare & PSW', 'Security & Safety', 'Warehouse & Logistics'],
-              },
-            ],
-          },
-        },
-        {
           id: 'onboarding-services-1',
           type: 'onboardingServiceSection',
           title: 'Start Your Resume in Minutes',
@@ -373,6 +325,16 @@ export const bolocreate: WorkspaceCMSData = {
               position: 'right',
               style: 'shadcn',
             },
+          },
+        },
+        {
+          id: 'instagram-1',
+          type: 'instagramSection',
+          title: 'Follow Our Journey',
+          subtitle: 'See our latest projects and behind-the-scenes moments',
+          order: 9,
+          data: {
+            instagramUrl: 'https://www.instagram.com/lukedobsonn',
           },
         },
         {

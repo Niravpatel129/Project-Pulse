@@ -25,10 +25,11 @@ export default function InstagramSection({
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
             {/* Instagram Embed */}
             <div className='col-span-full'>
-              <div className='aspect-w-16 aspect-h-9'>
+              <div className='w-full'>
                 <iframe
                   src={`${instagramUrl}/embed`}
-                  className='w-full h-[600px] border-0'
+                  className='w-full'
+                  style={{ height: '600px' }}
                   allowFullScreen
                   loading='lazy'
                   allow='encrypted-media'
