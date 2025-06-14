@@ -110,8 +110,9 @@
   [type='button'],
   [type='submit'],
   [type='reset'],
-  .cursor-pointer {
-    cursor: pointer;
+  .cursor-pointer,
+  [class*='cursor-pointer'] {
+    cursor: url('/cursor_hand.png'), pointer !important;
   }
 
   input[type='text'],
@@ -121,64 +122,65 @@
   input[type='tel'],
   input[type='url'],
   textarea,
-  [contenteditable='true'] {
-    cursor: text;
+  [contenteditable='true'],
+  .cursor-text {
+    cursor: text !important;
   }
 
   .cursor-move {
-    cursor: move;
+    cursor: move !important;
   }
 
   .cursor-not-allowed {
-    cursor: not-allowed;
+    cursor: not-allowed !important;
   }
 
   .cursor-wait {
-    cursor: wait;
+    cursor: wait !important;
   }
 
   .cursor-help {
-    cursor: help;
+    cursor: help !important;
   }
 
   .cursor-zoom-in {
-    cursor: zoom-in;
+    cursor: zoom-in !important;
   }
 
   .cursor-zoom-out {
-    cursor: zoom-out;
+    cursor: zoom-out !important;
   }
 
   .cursor-grab {
-    cursor: grab;
+    cursor: grab !important;
   }
 
   .cursor-grabbing {
-    cursor: grabbing;
+    cursor: grabbing !important;
   }
 
   .cursor-col-resize {
-    cursor: col-resize;
+    cursor: col-resize !important;
   }
 
   .cursor-row-resize {
-    cursor: row-resize;
+    cursor: row-resize !important;
   }
 
   .cursor-ew-resize {
-    cursor: ew-resize;
+    cursor: ew-resize !important;
   }
 
   .cursor-ns-resize {
-    cursor: ns-resize;
+    cursor: ns-resize !important;
   }
 
   .cursor-nesw-resize {
-    cursor: nesw-resize;
+    cursor: nesw-resize !important;
   }
 
   .cursor-nwse-resize {
-    cursor: nwse-resize;
+    cursor: nwse-resize !important;
   }
 
   body {
