@@ -32,6 +32,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Handle privacy and terms pages - they should be accessible without workspace routing
+  if (path === '/privacy' || path === '/terms') {
+    return NextResponse.next();
+  }
+
   // Development mode: Handle localhost:3000 or localhost:3001 as if it has a workspace
   const isDevelopment = process.env.NODE_ENV === 'development';
   const isLocalhost = hostname === 'localhost:3000' || hostname === 'localhost:3001';

@@ -7,7 +7,6 @@ import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
 import Script from 'next/script';
-import ClientLayout from './ClientLayout';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -198,10 +197,8 @@ export default function RootLayout({
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
         <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
           <AuthProvider>
-            <ClientLayout>
-              {children}
-              <Toaster />
-            </ClientLayout>
+            {children}
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
       </body>

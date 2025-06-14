@@ -95,6 +95,6 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children, params }: Props) {
+export default function WorkspaceLayout({ children }: Props) {
   return <ClientLayout>{children}</ClientLayout>;
 }
