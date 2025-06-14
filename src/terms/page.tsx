@@ -19,42 +19,41 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              By accessing and using our services, you agree to be bound by these Terms of Service
-              and all applicable laws and regulations. If you do not agree with any of these terms,
-              you are prohibited from using or accessing our services.
+              By accessing or using Pulse, you agree to be bound by these Terms of Service and all
+              applicable laws and regulations. If you do not agree with any of these terms, you are
+              prohibited from using or accessing our services.
             </p>
           </section>
 
           <section>
             <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
-              2. Use License
+              2. Use of Service
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              Permission is granted to temporarily access our services for personal, non-commercial
-              transitory viewing only. This is the grant of a license, not a transfer of title, and
-              under this license you may not:
+              You agree to use our service only for lawful purposes and in accordance with these
+              Terms. You agree not to:
             </p>
             <ul className='list-disc pl-6 mt-4 space-y-2 text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              <li>Modify or copy the materials</li>
-              <li>Use the materials for any commercial purpose</li>
-              <li>Attempt to decompile or reverse engineer any software</li>
-              <li>Remove any copyright or other proprietary notations</li>
-              <li>Transfer the materials to another person</li>
+              <li>Use the service for any illegal purpose</li>
+              <li>Attempt to gain unauthorized access to any part of the service</li>
+              <li>Interfere with or disrupt the service or servers</li>
+              <li>Use automated systems or software to extract data from the service</li>
+              <li>Engage in any activity that could disable, overburden, or impair the service</li>
             </ul>
           </section>
 
           <section>
             <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
-              3. User Responsibilities
+              3. User Accounts
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              As a user of our services, you agree to:
+              When you create an account using Google OAuth:
             </p>
             <ul className='list-disc pl-6 mt-4 space-y-2 text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              <li>Provide accurate and complete information</li>
-              <li>Maintain the security of your account</li>
-              <li>Comply with all applicable laws and regulations</li>
-              <li>Not engage in any unauthorized or harmful activities</li>
+              <li>You must provide accurate and complete information</li>
+              <li>You are responsible for maintaining the security of your account</li>
+              <li>You must notify us immediately of any unauthorized access</li>
+              <li>We reserve the right to disable any account at any time</li>
             </ul>
           </section>
 
@@ -71,36 +70,62 @@ export default function TermsPage() {
 
           <section>
             <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
-              5. Limitation of Liability
+              5. Termination
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              In no event shall we be liable for any damages arising out of the use or inability to
-              use our services, even if we have been notified of the possibility of such damages.
+              We may terminate or suspend your access to our service immediately, without prior
+              notice or liability, for any reason, including if you breach these Terms. Upon
+              termination, your right to use the service will immediately cease.
             </p>
           </section>
 
           <section>
             <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
-              6. Governing Law
+              6. Disclaimer of Warranties
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              These terms shall be governed by and construed in accordance with the laws of the
-              jurisdiction in which we operate, without regard to its conflict of law provisions.
+              The service is provided &quot;as is&quot; and &quot;as available&quot; without any
+              warranties of any kind, either express or implied. We do not warrant that the service
+              will be uninterrupted, timely, secure, or error-free.
             </p>
           </section>
 
           <section>
             <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
-              7. Contact Information
+              7. Limitation of Liability
+            </h2>
+            <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
+              In no event shall Pulse, its directors, employees, partners, agents, suppliers, or
+              affiliates be liable for any indirect, incidental, special, consequential, or punitive
+              damages, including without limitation, loss of profits, data, use, goodwill, or other
+              intangible losses.
+            </p>
+          </section>
+
+          <section>
+            <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
+              8. Governing Law
+            </h2>
+            <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
+              These Terms shall be governed by and construed in accordance with the laws of the
+              United States, without regard to its conflict of law provisions. Our failure to
+              enforce any right or provision of these Terms will not be considered a waiver of those
+              rights.
+            </p>
+          </section>
+
+          <section>
+            <h2 className='text-[28px] font-[600] tracking-[-0.015em] text-[#f5f5f7] mb-6'>
+              9. Contact Information
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
               If you have any questions about these Terms of Service, please contact us at:
               <br />
               <a
-                href='mailto:terms@example.com'
+                href='mailto:terms@pulse.com'
                 className='text-[#2997ff] hover:text-[#0077ed] transition-colors'
               >
-                terms@example.com
+                terms@pulse.com
               </a>
             </p>
           </section>
