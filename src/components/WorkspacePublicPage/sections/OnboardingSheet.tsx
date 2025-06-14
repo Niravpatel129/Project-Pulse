@@ -70,7 +70,7 @@ const itemVariants = {
     y: 0,
     scale: 1,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 400,
       damping: 25,
       mass: 0.4,
@@ -83,7 +83,7 @@ const itemVariants = {
     scale: 0.8,
     y: -10,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 400,
       damping: 25,
       mass: 0.4,
@@ -91,7 +91,7 @@ const itemVariants = {
       duration: 0.3,
     },
   },
-};
+} as const;
 
 // Common Components
 const PriceTag = ({
