@@ -257,7 +257,12 @@ export default function HomePage() {
       {/* Render all sections */}
       {pageData.sections
         .sort((a, b) => {
-          return a.order - b.order;
+          // First sort by order
+          const orderDiff = a.order - b.order;
+          if (orderDiff !== 0) return orderDiff;
+
+          // If orders are equal, sort by type (case-insensitive)
+          return a.type.toLowerCase().localeCompare(b.type.toLowerCase());
         })
         .map((section, index) => {
           const sectionWithAnimation = {
