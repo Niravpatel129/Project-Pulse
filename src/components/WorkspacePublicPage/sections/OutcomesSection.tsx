@@ -30,7 +30,7 @@ export default function OutcomesSection({
       <div className='container mx-auto px-4'>
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
 
-        <div className='max-w-6xl mx-auto'>
+        <div className='max-w-8xl mx-auto'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-8'>
             {outcomes.map((outcome, index) => {
               return (

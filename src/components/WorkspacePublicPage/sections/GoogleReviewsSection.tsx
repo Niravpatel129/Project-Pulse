@@ -55,7 +55,7 @@ export default function GoogleReviewsSection({
       className='py-16 overflow-hidden mb-22 relative'
       style={{ background: 'linear-gradient(rgb(245, 243, 240), rgb(254, 253, 253))' }}
     >
-      <div className='container mx-auto px-2 max-w-6xl'>
+      <div className='container mx-auto px-2 max-w-8xl'>
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
         {/* Reviews Grid with fade and podium effect */}
         <div className='relative mt-20'>

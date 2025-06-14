@@ -167,7 +167,7 @@ export default function LocationPage() {
       {/* Location-specific footer */}
       <footer className='bg-gray-900 text-white py-12'>
         <div className='container mx-auto px-4'>
-          <div className='max-w-6xl mx-auto'>
+          <div className='max-w-8xl mx-auto'>
             <div className='grid md:grid-cols-3 gap-8'>
               <div>
                 <h3 className='text-xl font-bold mb-4' style={{ color: primaryColor }}>

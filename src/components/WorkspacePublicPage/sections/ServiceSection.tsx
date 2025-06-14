@@ -211,9 +211,9 @@ export default function ServiceSection({
 
   return (
     <section id={id} className={`py-16 bg-white`}>
-      <div className='container mx-auto px-4 max-w-5xl'>
+      <div className='container mx-auto px-4 max-w-8xl'>
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
-        <div className='max-w-6xl mx-auto'>
+        <div className='max-w-8xl mx-auto'>
           {/* Custom Tabs */}
           <div className='flex justify-center mb-12'>
             <div className='flex w-full justify-between border-b border-gray-200'>
@@ -253,7 +253,7 @@ export default function ServiceSection({
           </div>
 
           {/* Tab Content */}
-          <div className='relative bg-white rounded-2xl shadow-xl overflow-hidden min-h-[550px]'>
+          <div className='relative bg-white rounded-2xl shadow-xl overflow-hidden min-h-[80vh]'>
             {/* Blurred background image */}
             <Image
               width={1000}

@@ -35,7 +35,7 @@ export default function StorySection({
   return (
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
-        <div className='max-w-6xl mx-auto'>
+        <div className='max-w-8xl mx-auto'>
           <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
 
           <div className='grid md:grid-cols-2 gap-12 mb-12'>
