@@ -48,17 +48,17 @@ const containerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.02,
+      staggerChildren: 0.03,
       delayChildren: 0.1,
-      duration: 0.2,
+      duration: 0.3,
     },
   },
   exit: {
     opacity: 0,
     transition: {
-      staggerChildren: 0.02,
+      staggerChildren: 0.03,
       staggerDirection: -1,
-      duration: 0.2,
+      duration: 0.3,
     },
   },
 };
@@ -71,11 +71,11 @@ const itemVariants = {
     scale: 1,
     transition: {
       type: 'spring',
-      stiffness: 500,
-      damping: 20,
-      mass: 0.3,
-      velocity: 3,
-      duration: 0.2,
+      stiffness: 400,
+      damping: 25,
+      mass: 0.4,
+      velocity: 2,
+      duration: 0.3,
     },
   },
   exit: {
@@ -84,11 +84,11 @@ const itemVariants = {
     y: -10,
     transition: {
       type: 'spring',
-      stiffness: 500,
-      damping: 20,
-      mass: 0.3,
-      velocity: 3,
-      duration: 0.2,
+      stiffness: 400,
+      damping: 25,
+      mass: 0.4,
+      velocity: 2,
+      duration: 0.3,
     },
   },
 };
@@ -426,11 +426,11 @@ export default function OnboardingSheet({
                               y: 0,
                               transition: {
                                 type: 'spring',
-                                stiffness: 500,
-                                damping: 20,
-                                mass: 0.3,
-                                velocity: 3,
-                                duration: 0.2,
+                                stiffness: 400,
+                                damping: 25,
+                                mass: 0.4,
+                                velocity: 2,
+                                duration: 0.3,
                               },
                             }}
                             layout
