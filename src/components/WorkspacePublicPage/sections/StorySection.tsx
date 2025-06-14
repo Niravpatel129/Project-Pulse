@@ -1,3 +1,5 @@
+import SectionHeader from './SectionHeader';
+
 interface Milestone {
   year: string;
   event: string;
@@ -32,10 +34,7 @@ export default function StorySection({
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
         <div className='max-w-6xl mx-auto'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold mb-4'>{title}</h2>
-            <p className='text-lg text-gray-600'>{subtitle}</p>
-          </div>
+          <SectionHeader number='03' title={title} subtitle={subtitle} />
 
           <div className='grid md:grid-cols-2 gap-12 mb-12'>
             <div>

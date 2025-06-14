@@ -1,6 +1,7 @@
 'use client';
 
 import { FaStar } from 'react-icons/fa';
+import SectionHeader from './SectionHeader';
 
 interface Review {
   id: string;
@@ -53,10 +54,7 @@ export default function GoogleReviewsSection({
       style={{ background: 'linear-gradient(rgb(245, 243, 240), rgb(254, 253, 253))' }}
     >
       <div className='container mx-auto px-2 max-w-6xl'>
-        {/* Header Section */}
-        <div className='max-w-4xl mx-auto text-center mb-30'>
-          <h2 className='text-5xl font-bold mb-4 max-w-4xl mx-auto'>{title}</h2>
-        </div>
+        <SectionHeader number='06' title={title} subtitle={subtitle} />
         {/* Reviews Grid with fade and podium effect */}
         <div className='relative mt-20'>
           <div className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'>

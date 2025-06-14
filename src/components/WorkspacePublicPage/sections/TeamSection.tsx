@@ -1,4 +1,5 @@
 import React from 'react';
+import SectionHeader from './SectionHeader';
 
 interface TeamMember {
   name: string;
@@ -26,23 +27,13 @@ const TeamSection: React.FC<TeamSectionProps> = ({
   return (
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
-        <div className='flex items-center justify-between mb-8'>
-          <div>
-            <div className='text-3xl font-semibold flex items-baseline gap-4'>
-              <span className='text-gray-300 text-4xl font-bold'>04</span>
-              <span>{title}</span>
-            </div>
-            <div className='mt-4 text-gray-600 max-w-2xl'>{subtitle}</div>
-          </div>
-          {buttonText && (
-            <button
-              className='bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium px-5 py-2 rounded-lg shadow-sm transition'
-              onClick={onButtonClick}
-            >
-              {buttonText}
-            </button>
-          )}
-        </div>
+        <SectionHeader
+          number='04'
+          title={title}
+          subtitle={subtitle}
+          buttonText={buttonText}
+          onButtonClick={onButtonClick}
+        />
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8'>
           {team.map((member, idx) => {
             return (

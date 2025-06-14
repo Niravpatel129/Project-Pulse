@@ -17,3 +17,5 @@ export { default as LocationHeroSection } from './LocationHeroSection';
 export { default as LocationServicesSection } from './LocationServicesSection';
 
 export { default as TeamSection } from './TeamSection';
+
+export { default as SectionHeader } from './SectionHeader';

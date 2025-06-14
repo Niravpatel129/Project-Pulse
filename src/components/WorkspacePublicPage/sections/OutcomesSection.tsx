@@ -1,3 +1,5 @@
+import SectionHeader from './SectionHeader';
+
 interface Outcome {
   metric: string;
   label: string;
@@ -20,14 +22,11 @@ export default function OutcomesSection({
   id,
 }: OutcomesSectionProps) {
   return (
-    <section id={id} className='py-16 bg-gray-50'>
+    <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
-        <div className='max-w-6xl mx-auto'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold mb-4'>{title}</h2>
-            <p className='text-lg text-gray-600'>{subtitle}</p>
-          </div>
+        <SectionHeader number='07' title={title} subtitle={subtitle} />
 
+        <div className='max-w-6xl mx-auto'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-8'>
             {outcomes.map((outcome, index) => {
               return (

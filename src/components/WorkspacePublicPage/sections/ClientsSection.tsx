@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import SectionHeader from './SectionHeader';
 
 interface Client {
   name: string;
@@ -68,11 +69,8 @@ export default function ClientsSection({ title, subtitle, clients = [], id }: Cl
 
   return (
     <section id={id} className='py-16 bg-white overflow-hidden'>
-      <div className='container mx-auto px-4 mb-12'>
-        <div className='max-w-4xl mx-auto text-center'>
-          <h2 className='text-5xl font-bold mb-4'>{title}</h2>
-          <p className='text-lg text-gray-600'>{subtitle}</p>
-        </div>
+      <div className='container mx-auto px-4'>
+        <SectionHeader number='05' title={title} subtitle={subtitle} />
       </div>
 
       {/* Full Width Scrolling Carousel */}

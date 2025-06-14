@@ -1,3 +1,5 @@
+import SectionHeader from './SectionHeader';
+
 interface SocialLink {
   platform: string;
   url: string;
@@ -29,14 +31,10 @@ export default function SocialsSection({
   id,
 }: SocialsSectionProps) {
   return (
-    <section id={id} className='py-16 bg-gray-50'>
+    <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
+        <SectionHeader number='08' title={title} subtitle={subtitle} />
         <div className='max-w-6xl mx-auto'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold mb-4'>{title}</h2>
-            <p className='text-lg text-gray-600'>{subtitle}</p>
-          </div>
-
           {/* Social Links */}
           <div className='flex justify-center space-x-6 mb-16'>
             {socialLinks.map((social, index) => {

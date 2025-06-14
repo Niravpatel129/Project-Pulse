@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { useState } from 'react';
+import SectionHeader from './SectionHeader';
 
 interface Service {
   icon: string;
@@ -174,12 +175,8 @@ export default function ServiceSection({
   return (
     <section id={id} className={`py-16 bg-white`}>
       <div className='container mx-auto px-4 max-w-5xl'>
+        <SectionHeader number='02' title={title} subtitle={subtitle} />
         <div className='max-w-6xl mx-auto'>
-          <div className='text-center mb-12'>
-            <h2 className='text-5xl font-bold mb-4'>{title}</h2>
-            <p className='text-lg text-gray-600 max-w-3xl mx-auto'>{subtitle}</p>
-          </div>
-
           {/* Custom Tabs */}
           <div className='flex justify-center mb-12'>
             <div className='flex flex-wrap justify-center border-b border-gray-200'>
