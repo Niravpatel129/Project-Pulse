@@ -14,24 +14,6 @@ export default function MainHome({
 }) {
   const { workspace, cms, page, isLoading } = useGetWorkspaceFromUrl();
   console.log('🚀 cms:', cms);
-  //   const [workspaceData, setWorkspaceData] = useState(null);
-  //   const [isLoading, setIsLoading] = useState(true);
-
-  //   useEffect(() => {
-  //     const fetchWorkspaceData = async () => {
-  //       setIsLoading(true);
-  //       try {
-  //         const workspaceData = await getWorkspaceConfig(workspace);
-  //         setWorkspaceData(workspaceData);
-  //       } catch (error) {
-  //         console.error('[Page] Error fetching workspace data:', error);
-  //       } finally {
-  //         setIsLoading(false);
-  //       }
-  //     };
-
-  //     fetchWorkspaceData();
-  //   }, [workspace]);
 
   if (isLoading) {
     return (
