@@ -244,26 +244,32 @@ export default function HomePage() {
         .map((section, index) => {
           const sectionWithAnimation = {
             ...section,
-            title: (
-              <motion.span
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-              >
-                {section.title}
-              </motion.span>
-            ),
-            subtitle: (
-              <motion.span
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 + 0.1 }}
-              >
-                {section.subtitle}
-              </motion.span>
-            ),
+            title:
+              section.type === 'footerSection' ? (
+                section.title
+              ) : (
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  {section.title}
+                </motion.span>
+              ),
+            subtitle:
+              section.type === 'footerSection' ? (
+                section.subtitle
+              ) : (
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.5, delay: index * 0.1 + 0.05 }}
+                >
+                  {section.subtitle}
+                </motion.span>
+              ),
           };
           return renderSection(sectionWithAnimation);
         })}

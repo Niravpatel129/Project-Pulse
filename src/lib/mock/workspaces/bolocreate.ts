@@ -53,7 +53,7 @@ export const bolocreate: WorkspaceCMSData = {
             buttonText: 'Get Started',
             buttonAction: 'openOnboardingSheet',
             backgroundImage: '/images/resume-hero-bg.jpg',
-            buttons: [{ type: 'callOrText', text: 'Call or Text Instead', url: 'tel:4377743721' }],
+            buttons: [{ type: 'getStarted', text: 'Get Started', url: 'tel:4377743721' }],
           },
         },
         {

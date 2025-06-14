@@ -1,6 +1,5 @@
 import { StarFilledIcon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 import React from 'react';
 
 interface HeroSectionButton {
@@ -103,6 +102,77 @@ const AnimatedSubtitle = ({
   );
 };
 
+const AnimatedHighlight = ({
+  text,
+  index,
+  primaryColor,
+}: {
+  text: string;
+  index: number;
+  primaryColor: string;
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.8 + index * 0.1, duration: 0.5 }}
+      className='flex items-center space-x-2'
+    >
+      <motion.div
+        initial={{ scale: 0 }}
+        whileInView={{ scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.8 + index * 0.1, type: 'spring', stiffness: 200 }}
+      >
+        <StarFilledIcon className='w-5 h-5' style={{ color: primaryColor }} />
+      </motion.div>
+      <span className='text-lg'>{text}</span>
+    </motion.div>
+  );
+};
+
+const AnimatedButton = ({
+  text = 'Get Started',
+  index,
+  onOpenOnboardingSheet,
+}: {
+  text?: string;
+  index: number;
+  onOpenOnboardingSheet: () => void;
+}) => {
+  const buttonContent = (
+    <motion.button
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      whileHover={{
+        backgroundColor: '#fff',
+        color: '#000',
+      }}
+      whileTap={{
+        scale: 0.98,
+      }}
+      transition={{
+        delay: 1.2 + index * 0.1,
+        duration: 0.4,
+        backgroundColor: { duration: 0.15 },
+        color: { duration: 0.15 },
+      }}
+      className='px-8 py-4 text-lg font-medium rounded-full border-2 border-black'
+      style={{
+        backgroundColor: '#000',
+        color: '#fff',
+      }}
+      onClick={onOpenOnboardingSheet}
+    >
+      {text}
+    </motion.button>
+  );
+
+  return buttonContent;
+};
+
 export default function HeroSection({
   title,
   subtitle,
@@ -157,37 +227,51 @@ export default function HeroSection({
             <AnimatedSubtitle text={subtitle} className='text-xl md:text-2xl mb-8 text-gray-700' />
           )}
 
-          {/* Highlights (for location variant or key points) */}
+          {/* Highlights */}
           {highlights.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              className='space-y-4 mb-8'
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-              className='mb-8'
+              transition={{ delay: 0.6, duration: 0.5 }}
             >
-              <div
-                className={`grid ${
-                  highlights.length <= 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
-                } gap-4 max-w-3xl ${textAlign === 'center' ? 'mx-auto' : ''}`}
-              >
-                {highlights.map((highlight, index) => {
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.8 + index * 0.1, duration: 0.5 }}
-                      className='bg-white bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-200'
-                    >
-                      <p className='text-sm font-medium text-gray-800'>{highlight}</p>
-                    </motion.div>
-                  );
-                })}
-              </div>
+              {highlights.map((highlight, index) => {
+                return (
+                  <AnimatedHighlight
+                    key={index}
+                    text={highlight}
+                    index={index}
+                    primaryColor={primaryColor}
+                  />
+                );
+              })}
             </motion.div>
           )}
+
+          {/* CTA Buttons */}
+          <motion.div
+            className='space-y-4'
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 1, duration: 0.5 }}
+          >
+            {buttons.length > 0 ? (
+              buttons.map((button, index) => {
+                return (
+                  <AnimatedButton
+                    key={index}
+                    text={button.text}
+                    index={index}
+                    onOpenOnboardingSheet={onOpenOnboardingSheet}
+                  />
+                );
+              })
+            ) : (
+              <AnimatedButton index={0} onOpenOnboardingSheet={onOpenOnboardingSheet} />
+            )}
+          </motion.div>
 
           {/* Additional Content */}
           {additionalContent && (
@@ -195,85 +279,11 @@ export default function HeroSection({
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.9, duration: 0.5 }}
-              className='mb-8'
+              transition={{ delay: 1.4, duration: 0.5 }}
             >
               {additionalContent}
             </motion.div>
           )}
-
-          {/* CTA Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 1, duration: 0.5 }}
-            className='space-y-4 flex items-center justify-center flex-col'
-          >
-            {/* If buttonAction is present, render a button */}
-            {buttonText && buttonAction && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type='button'
-                className='inline-block px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 shadow-lg bg-black text-white mt-4'
-                onClick={onOpenOnboardingSheet}
-              >
-                {buttonText}
-              </motion.button>
-            )}
-            {/* If buttonUrl is present, render the link */}
-            {buttonText && buttonUrl && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link
-                  href={buttonUrl}
-                  className='inline-block px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 shadow-lg bg-black text-white mt-4'
-                >
-                  {buttonText}
-                </Link>
-              </motion.div>
-            )}
-            {variant === 'location' && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 1.1, duration: 0.5 }}
-                className='text-sm text-gray-600'
-              >
-                Call or text anytime • Free consultation • Same-day response
-              </motion.p>
-            )}
-            {variant === 'default' && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 1.1, duration: 0.5 }}
-                className='mb-8 flex items-center gap-1 w-full text-center justify-center text-sm'
-                style={{ color: '#222', fontWeight: 400 }}
-              >
-                <span style={{ color: '#222', fontWeight: 400 }}>
-                  #1 Top-Rated Restaurant Software
-                </span>
-                <span
-                  className='flex items-center gap-0 ml-2'
-                  style={{ color: '#888', fontWeight: 400 }}
-                >
-                  <span
-                    className='flex items-center gap-0'
-                    style={{ color: '#888', fontWeight: 400 }}
-                  >
-                    4.8
-                    <StarFilledIcon className='w-4 h-4 ml-0.5' style={{ color: '#ddd' }} />
-                  </span>
-                  <span className='ml-1' style={{ color: '#bbb', fontWeight: 400 }}>
-                    across 279 reviews
-                  </span>
-                </span>
-              </motion.div>
-            )}
-          </motion.div>
         </div>
       </div>
     </section>
