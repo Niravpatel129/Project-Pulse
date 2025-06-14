@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import SectionHeader from './SectionHeader';
 
 interface InstagramSectionProps {
@@ -17,6 +18,41 @@ export default function InstagramSection({
   id,
   sectionNumber,
 }: InstagramSectionProps) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeHeight, setIframeHeight] = useState(600);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (iframeRef.current?.contentWindow) {
+        try {
+          const height = iframeRef.current.contentWindow.document.body.scrollHeight;
+          setIframeHeight(height);
+        } catch (e) {
+          // Handle cross-origin errors silently
+        }
+      }
+    };
+
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.onload = () => {
+        handleResize();
+        // Additional resize after a short delay to catch any late-loading content
+        setTimeout(handleResize, 1000);
+      };
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      return window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  if (!instagramUrl) {
+    return null;
+  }
+
   return (
     <section id={id} className='py-16 bg-white'>
       <div className='container mx-auto px-4'>
@@ -26,14 +62,22 @@ export default function InstagramSection({
             {/* Instagram Embed */}
             <div className='col-span-full'>
               <div className='w-full'>
-                <iframe
-                  src={`${instagramUrl}/embed`}
-                  className='w-full'
-                  style={{ height: '600px' }}
-                  allowFullScreen
-                  loading='lazy'
-                  allow='encrypted-media'
-                />
+                {error ? (
+                  <div className='p-4 text-center text-red-500 bg-red-50 rounded-lg'>{error}</div>
+                ) : (
+                  <iframe
+                    ref={iframeRef}
+                    src={`${instagramUrl}/embed`}
+                    className='w-full'
+                    style={{ height: `${iframeHeight}px` }}
+                    allowFullScreen
+                    loading='lazy'
+                    allow='encrypted-media'
+                    onError={() => {
+                      return setError('Failed to load Instagram content');
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>
