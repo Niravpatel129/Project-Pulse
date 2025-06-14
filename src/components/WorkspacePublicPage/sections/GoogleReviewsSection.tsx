@@ -1,5 +1,7 @@
 'use client';
 
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import { FaStar } from 'react-icons/fa';
 import SectionHeader from './SectionHeader';
 
@@ -33,6 +35,30 @@ export default function GoogleReviewsSection({
   id,
   sectionNumber,
 }: GoogleReviewsSectionProps) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+      },
+    },
+  };
+
   const renderStars = (rating: number) => {
     return (
       <div className='flex items-center space-x-1 mb-4'>
@@ -59,13 +85,20 @@ export default function GoogleReviewsSection({
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
         {/* Reviews Grid with fade and podium effect */}
         <div className='relative mt-20'>
-          <div className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'>
+          <motion.div
+            ref={ref}
+            variants={containerVariants}
+            initial='hidden'
+            animate={isInView ? 'visible' : 'hidden'}
+            className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'
+          >
             {reviews.map((review, idx) => {
               // For podium effect: middle column in each row on large screens
               const isMiddle = idx % 3 === 1;
               return (
-                <div
+                <motion.div
                   key={review.id}
+                  variants={itemVariants}
                   className={
                     `hp-reviews_item bg-white rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 w-full` +
                     (isMiddle ? ' lg:mt-[-40px] lg:mb-8 ' : '')
@@ -90,10 +123,10 @@ export default function GoogleReviewsSection({
                       </div>
                     </div>
                   </a>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
