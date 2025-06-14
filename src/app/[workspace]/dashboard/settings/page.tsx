@@ -338,6 +338,39 @@ export default function SettingsPage() {
   });
 
   const [isConnectingGmail, setIsConnectingGmail] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Add polling function
+  const startPollingGmailStatus = () => {
+    // Clear any existing polling
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+
+    // Start new polling
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+    }, 2000); // Poll every 2 seconds
+
+    setPollingInterval(interval);
+
+    // Stop polling after 30 seconds (15 attempts)
+    setTimeout(() => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
+    }, 30000);
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   const handleSaveBasicSettings = () => {
     // Prepare update data with all form fields
@@ -1079,6 +1112,7 @@ export default function SettingsPage() {
                                               queryClient.invalidateQueries({
                                                 queryKey: ['gmail-status'],
                                               });
+                                              startPollingGmailStatus(); // Start polling after successful auth
                                               setIsAddingEmail(false);
                                               setIsConnectingGmail(false);
                                               toast.success('Gmail account connected successfully');
@@ -1442,6 +1476,7 @@ export default function SettingsPage() {
                             queryClient.invalidateQueries({
                               queryKey: ['gmail-status'],
                             });
+                            startPollingGmailStatus(); // Start polling after successful auth
                             setIsAddingEmail(false);
                             setIsConnectingGmail(false);
                             toast.success('Gmail account connected successfully');
