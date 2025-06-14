@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = headersList.get('host') || '';
   const hostname = host.split(':')[0];
   const subdomain = hostname.split('.')[0];
-  const isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app';
+  const isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
 
   // Always use the default logo here; client will update favicon if needed
   const logoUrl = '/favicon.ico';
@@ -38,24 +38,24 @@ export async function generateMetadata(): Promise<Metadata> {
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
     : '#0070f3';
-  const appName = isSubdomain ? `${subdomain}` : 'Pulse';
+  const appName = isSubdomain ? `${subdomain}` : 'Hour Block';
 
   return {
     title: {
-      template: '%s | Pulse',
+      template: '%s | Hour Block',
       default: appName,
     },
     description:
-      'Streamline your workflows, manage projects, and collaborate with your team effectively using Pulse.',
+      'Streamline your workflows, manage projects, and collaborate with your team effectively using Hour Block.',
     keywords: ['project management', 'team collaboration', 'workflow', 'dashboard', 'productivity'],
-    authors: [{ name: 'Pulse Team' }],
-    creator: 'Pulse',
-    publisher: 'Pulse',
+    authors: [{ name: 'Hour Block Team' }],
+    creator: 'Hour Block',
+    publisher: 'Hour Block',
     applicationName: appName,
     formatDetection: {
       telephone: false,
     },
-    metadataBase: new URL('https://pulse-app.com'),
+    metadataBase: new URL('https://hourblock.com'),
     alternates: {
       canonical: '/',
     },
@@ -64,8 +64,8 @@ export async function generateMetadata(): Promise<Metadata> {
       title: appName,
       description:
         'Streamline your workflows, manage projects, and collaborate with your team effectively.',
-      url: 'https://pulse-app.com',
-      siteName: 'Pulse',
+      url: 'https://hourblock.com',
+      siteName: 'Hour Block',
       locale: 'en_US',
       type: 'website',
       images: [
@@ -73,7 +73,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: '/og-image-home.jpg',
           width: 1200,
           height: 630,
-          alt: 'Pulse Project Management',
+          alt: 'Hour Block Project Management',
         },
       ],
     },
@@ -82,7 +82,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: appName,
       description:
         'Streamline your workflows, manage projects, and collaborate with your team effectively.',
-      creator: '@PulseApp',
+      creator: '@HourBlock',
       images: ['/og-image-home.jpg'],
     },
     icons: {
@@ -132,17 +132,17 @@ export default function RootLayout({
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     const sd = hostname.split('.')[0];
-    if (hostname !== 'localhost' && sd !== 'www' && sd !== 'pulse-app') {
+    if (hostname !== 'localhost' && sd !== 'www' && sd !== 'hour-block') {
       subdomain = sd;
     }
   }
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
-        <meta name='application-name' content='Pulse App' />
+        <meta name='application-name' content='Hour Block App' />
         <meta name='apple-mobile-web-app-capable' content='yes' />
         <meta name='apple-mobile-web-app-status-bar-style' content='default' />
-        <meta name='apple-mobile-web-app-title' content='Pulse' />
+        <meta name='apple-mobile-web-app-title' content='Hour Block' />
         <meta name='format-detection' content='telephone=no' />
         <meta name='mobile-web-app-capable' content='yes' />
         <meta name='theme-color' content='#0070f3' />
@@ -155,7 +155,7 @@ export default function RootLayout({
                 // Get hostname and check if it's a subdomain
                 var hostname = window.location.hostname;
                 var subdomain = hostname.split('.')[0];
-                var isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app';
+                var isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
                 
                 // Choose the service worker URL based on whether it's a subdomain
                 var swUrl = isSubdomain ? '/api/sw' : '/sw.js';
