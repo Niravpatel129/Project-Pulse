@@ -148,9 +148,12 @@ export default function SettingsPage() {
       setWorkspaceLogo((workspaceData.data as ExtendedWorkspace).logo || null);
       setTempLogoUrl(null); // Reset temp logo when workspace data changes
       setLogoFile(null); // Reset logo file when workspace data changes
+
+      // Invalidate Gmail status when workspace data changes
+      queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
     }
     console.log('🚀 workspace:', workspaceData);
-  }, [workspaceData]);
+  }, [workspaceData, queryClient]);
 
   // Set origin in client-side only
   useEffect(() => {
@@ -360,7 +363,25 @@ export default function SettingsPage() {
     };
 
     checkRecentAuth();
-  }, []);
+
+    // Add visibility change event listener
+    const handleVisibilityChange = () => {
+      console.log('visibility change', document.visibilityState);
+      if (document.visibilityState === 'visible') {
+        console.log('window became visible');
+        queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+      }
+    };
+
+    console.log('Setting up visibility change listener');
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      console.log('Cleaning up visibility change listener');
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [queryClient]);
 
   // Update the GMAIL_AUTH_SUCCESS handler in both places
   const handleGmailAuthSuccess = () => {
