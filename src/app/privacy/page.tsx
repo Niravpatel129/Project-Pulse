@@ -19,10 +19,10 @@ export default function PrivacyPage() {
               Introduction
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              At Pulse, we take your privacy seriously. This Privacy Policy explains how we collect,
-              use, disclose, and safeguard your information when you use our service. Please read
-              this privacy policy carefully. If you do not agree with the terms of this privacy
-              policy, please do not access the service.
+              At Hour Block, we take your privacy seriously. This Privacy Policy explains how we
+              collect, use, disclose, and safeguard your information when you use our service.
+              Please read this privacy policy carefully. If you do not agree with the terms of this
+              privacy policy, please do not access the service.
             </p>
           </section>
 

@@ -19,9 +19,9 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              By accessing or using Pulse, you agree to be bound by these Terms of Service and all
-              applicable laws and regulations. If you do not agree with any of these terms, you are
-              prohibited from using or accessing our services.
+              By accessing or using Hour Block, you agree to be bound by these Terms of Service and
+              all applicable laws and regulations. If you do not agree with any of these terms, you
+              are prohibited from using or accessing our services.
             </p>
           </section>
 
@@ -95,10 +95,10 @@ export default function TermsPage() {
               7. Limitation of Liability
             </h2>
             <p className='text-[17px] text-[#86868b] font-[400] tracking-[-0.022em] leading-[1.47059]'>
-              In no event shall Pulse, its directors, employees, partners, agents, suppliers, or
-              affiliates be liable for any indirect, incidental, special, consequential, or punitive
-              damages, including without limitation, loss of profits, data, use, goodwill, or other
-              intangible losses.
+              In no event shall Hour Block, its directors, employees, partners, agents, suppliers,
+              or affiliates be liable for any indirect, incidental, special, consequential, or
+              punitive damages, including without limitation, loss of profits, data, use, goodwill,
+              or other intangible losses.
             </p>
           </section>
 
