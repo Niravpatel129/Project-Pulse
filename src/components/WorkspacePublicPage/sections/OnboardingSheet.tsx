@@ -237,13 +237,20 @@ export default function OnboardingSheet({
 
   React.useEffect(() => {
     if (!open) {
-      setStep(0);
-      setSelectedService(null);
-      setAdditionalSelectedServices([]);
-      setAdditionalNotes('');
-      setContactForm({ name: '', email: '', phone: '', message: '', consent: false });
-      setSubmitted(false);
-      setCallbackSchedule({ date: '', time: '', name: '', phone: '', notes: '', isASAP: true });
+      // Add a small delay to allow the closing animation to complete
+      const timeoutId = setTimeout(() => {
+        setStep(0);
+        setSelectedService(null);
+        setAdditionalSelectedServices([]);
+        setAdditionalNotes('');
+        setContactForm({ name: '', email: '', phone: '', message: '', consent: false });
+        setSubmitted(false);
+        setCallbackSchedule({ date: '', time: '', name: '', phone: '', notes: '', isASAP: true });
+      }, 300); // Match this with the animation duration
+
+      return () => {
+        return clearTimeout(timeoutId);
+      };
     }
   }, [open]);
 
