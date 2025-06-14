@@ -342,34 +342,54 @@ export default function OnboardingSheet({
                           <div className='mb-2 mt-6 text-base font-semibold'>
                             Anything else you wish to add?
                           </div>
-                          <div className='flex flex-col gap-6 mb-4 animate-slide-up'>
+                          <motion.div
+                            className='flex flex-col gap-3 mb-4'
+                            variants={containerVariants}
+                            initial='hidden'
+                            animate='show'
+                          >
                             {services
                               .filter((s) => {
                                 return s.name !== selectedService;
                               })
-                              .map((service) => {
+                              .map((service, index) => {
                                 const isSelected = additionalSelectedServices.includes(
                                   service.name,
                                 );
                                 return (
-                                  <ServiceCard
+                                  <motion.div
                                     key={service.name}
-                                    service={service}
-                                    isSelected={isSelected}
-                                    isAdditionalService={true}
-                                    onClick={() => {
-                                      setAdditionalSelectedServices((prev) => {
-                                        return isSelected
-                                          ? prev.filter((s) => {
-                                              return s !== service.name;
-                                            })
-                                          : [...prev, service.name];
-                                      });
+                                    variants={{
+                                      hidden: { opacity: 0, y: 20 },
+                                      show: {
+                                        opacity: 1,
+                                        y: 0,
+                                        transition: {
+                                          delay: index * 0.2, // 800ms delay between each item
+                                          duration: 0.3,
+                                          ease: 'easeOut',
+                                        },
+                                      },
                                     }}
-                                  />
+                                  >
+                                    <ServiceCard
+                                      service={service}
+                                      isSelected={isSelected}
+                                      isAdditionalService={true}
+                                      onClick={() => {
+                                        setAdditionalSelectedServices((prev) => {
+                                          return isSelected
+                                            ? prev.filter((s) => {
+                                                return s !== service.name;
+                                              })
+                                            : [...prev, service.name];
+                                        });
+                                      }}
+                                    />
+                                  </motion.div>
                                 );
                               })}
-                          </div>
+                          </motion.div>
                         </>
                       )}
                     </div>
@@ -378,7 +398,7 @@ export default function OnboardingSheet({
                         className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 transition-all duration-300 ease-in-out ${
                           selectedService
                             ? 'opacity-100 translate-y-0 pointer-events-auto'
-                            : 'opacity-0 translate-y-4 pointer-events-none'
+                            : 'opacity-0 pointer-events-none'
                         }`}
                         style={{
                           transitionProperty: 'opacity, transform',
