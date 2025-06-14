@@ -21,6 +21,55 @@ import OnboardingSheet from './sections/OnboardingSheet';
 
 export default function HomePage() {
   const { cmsData, pageData } = useWorkspaceCMS();
+  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = React.useState(false);
+
+  // Add mouse move handler
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+      setIsVisible(true);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      return window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  // Add rainbow animation styles
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes rainbow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .rainbow-blur {
+        background: linear-gradient(
+          45deg,
+          #ff0000,
+          #ff7300,
+          #fffb00,
+          #48ff00,
+          #00ffd5,
+          #002bff,
+          #7a00ff,
+          #ff00c8,
+          #ff0000
+        );
+        background-size: 400% 400%;
+        animation: rainbow 8s ease infinite;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    };
+  }, []);
 
   // Add smooth scrolling to the document
   React.useEffect(() => {
@@ -302,6 +351,22 @@ export default function HomePage() {
       className='workspace-public-page min-h-screen w-full bg-[#f5f4f0]'
       style={{ scrollBehavior: 'smooth' }}
     >
+      {/* Cursor Ring */}
+      <motion.div
+        className='fixed pointer-events-none z-0'
+        animate={{
+          x: mousePosition.x - 40,
+          y: mousePosition.y - 40,
+          opacity: isVisible ? 0.15 : 0,
+        }}
+        transition={{
+          type: 'tween',
+          duration: 0.1,
+        }}
+      >
+        <div className='w-20 h-20 rounded-full rainbow-blur blur-xl' />
+      </motion.div>
+
       {/* Navigation */}
       {navigation.length > 0 && (
         <motion.nav
