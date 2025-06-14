@@ -72,17 +72,24 @@ export default function GoogleReviewsSection({
                   }
                   style={isMiddle ? { zIndex: 30, minHeight: 180 } : { minHeight: 180 }}
                 >
-                  {renderStars(review.rating)}
-                  <p className='text-sm text-gray-700 mb-2 leading-snug'>
-                    &ldquo;{review.text}&rdquo;
-                  </p>
-                  <div className='row-meta flex items-center mt-auto'>
-                    <div>
-                      <p className='text-xs font-semibold text-gray-900 flex items-center gap-2'>
-                        {review.author}
-                      </p>
+                  <a
+                    href='https://g.co/kgs/waq8Rav'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='block h-full'
+                  >
+                    {renderStars(review.rating)}
+                    <p className='text-sm text-gray-700 mb-2 leading-snug'>
+                      &ldquo;{review.text}&rdquo;
+                    </p>
+                    <div className='row-meta flex items-center mt-auto'>
+                      <div>
+                        <p className='text-xs font-semibold text-gray-900 flex items-center gap-2'>
+                          {review.author}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 </div>
               );
             })}
