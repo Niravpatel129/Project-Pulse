@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, Variants } from 'framer-motion';
 import {
   ArrowLeft,
   ChevronRightIcon,
@@ -41,25 +41,25 @@ import ModuleDialog from '../../ProjectPage/ProjectModules/ModuleDialog';
 import { useQuickInvoice } from './hooks/useQuickInvoice';
 
 // Animation variants for various components
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.2 } },
   exit: { opacity: 0, transition: { duration: 0.15 } },
 };
 
-const slideIn = {
+const slideIn: Variants = {
   hidden: { x: 20, opacity: 0 },
   visible: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 500, damping: 30 } },
   exit: { x: -20, opacity: 0, transition: { duration: 0.15 } },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } },
   exit: { opacity: 0, y: -20, transition: { duration: 0.2 } },
 };
 
-const listVariants = {
+const listVariants: Variants = {
   visible: {
     transition: {
       staggerChildren: 0.05,
@@ -68,7 +68,7 @@ const listVariants = {
   },
 };
 
-const sidebarVariants = {
+const sidebarVariants: Variants = {
   hidden: { x: 20, opacity: 0 },
   visible: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } },
   exit: { x: 20, opacity: 0, transition: { duration: 0.2 } },
