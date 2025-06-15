@@ -50,6 +50,10 @@ interface ContactSectionProps {
     url: string;
     style: 'primary' | 'secondary';
   }>;
+  ctaHeading?: string;
+  ctaParagraph?: string;
+  mobileCTAHeading?: string;
+  mobileCTAParagraph?: string;
   sectionNumber?: string;
 }
 
@@ -67,6 +71,10 @@ export default function ContactSection({
   showServiceAreas = true,
   primaryColor = '#7C3AED',
   ctaButtons = [],
+  ctaHeading,
+  ctaParagraph,
+  mobileCTAHeading,
+  mobileCTAParagraph,
   sectionNumber,
 }: ContactSectionProps) {
   const bgClasses = {
@@ -267,12 +275,13 @@ export default function ContactSection({
       <div className='text-center'>
         <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-8'>
           <h3 className='text-xl font-bold mb-4' style={{ color: primaryColor }}>
-            Ready to Get Started?
+            {ctaHeading || 'Ready to Get Started?'}
           </h3>
           <p className='text-gray-600 mb-6'>
-            {variant === 'location'
-              ? 'Get your professional service today and start seeing results next week.'
-              : 'Contact us today for a free consultation and see how we can help you succeed.'}
+            {ctaParagraph ||
+              (variant === 'location'
+                ? 'Get your professional service today and start seeing results next week.'
+                : 'Contact us today for a free consultation and see how we can help you succeed.')}
           </p>
           <div className='space-y-3'>
             {defaultCTAButtons.map((button, index) => {
@@ -336,10 +345,10 @@ export default function ContactSection({
           <div className='lg:hidden mt-8'>
             <div className='bg-white border-2 border-gray-200 rounded-lg p-6 text-center'>
               <h4 className='text-lg font-semibold mb-2' style={{ color: primaryColor }}>
-                Join Our Success Stories
+                {mobileCTAHeading || 'Join Our Success Stories'}
               </h4>
               <p className='text-gray-600 text-sm mb-4'>
-                Ready to be our next success story? Get started today!
+                {mobileCTAParagraph || 'Ready to be our next success story? Get started today!'}
               </p>
               <div className='flex space-x-3'>
                 <a

@@ -13,7 +13,6 @@ import {
   InstagramSection,
   OutcomesSection,
   ServiceSection,
-  SocialsSection,
   StorySection,
   TeamSection,
 } from './sections';
@@ -229,6 +228,10 @@ export default function HomePage() {
             variant={section.variant}
             layout={section.layout}
             primaryColor={primaryColor}
+            ctaHeading={section.data.ctaHeading}
+            ctaParagraph={section.data.ctaParagraph}
+            mobileCTAHeading={section.data.mobileCTAHeading}
+            mobileCTAParagraph={section.data.mobileCTAParagraph}
             sectionNumber={section.sectionNumber}
           />
         );
@@ -268,6 +271,7 @@ export default function HomePage() {
             outcomes={section.data.outcomes}
             sectionNumber={section.sectionNumber}
             {...commonProps}
+            closingSentence={section.data.closingSentence}
           />
         );
       case 'storySection':
@@ -278,19 +282,6 @@ export default function HomePage() {
             title={section.title}
             subtitle={section.subtitle}
             story={section.data.story}
-            sectionNumber={section.sectionNumber}
-            {...commonProps}
-          />
-        );
-      case 'socialsSection':
-        return (
-          <SocialsSection
-            key={section.id}
-            id={sectionId}
-            title={section.title}
-            subtitle={section.subtitle}
-            socialLinks={section.data.socialLinks}
-            testimonials={section.data.testimonials}
             sectionNumber={section.sectionNumber}
             {...commonProps}
           />
@@ -309,6 +300,8 @@ export default function HomePage() {
             setShowSheet={setShowSheet}
             onOpenOnboardingSheet={onOpenOnboardingSheet}
             sectionNumber={section.sectionNumber}
+            tagline={section.data.tagline}
+            ctaButtonText={section.data.ctaButtonText}
             {...commonProps}
           />
         );

@@ -14,6 +14,7 @@ interface OutcomesSectionProps {
   secondaryColor?: string;
   id?: string;
   sectionNumber?: string;
+  closingSentence?: string;
 }
 
 export default function OutcomesSection({
@@ -24,6 +25,7 @@ export default function OutcomesSection({
   secondaryColor,
   id,
   sectionNumber,
+  closingSentence,
 }: OutcomesSectionProps) {
   return (
     <section id={id} className='py-16 bg-white'>
@@ -54,8 +56,8 @@ export default function OutcomesSection({
 
           <div className='mt-12 text-center'>
             <p className='text-gray-600 max-w-2xl mx-auto'>
-              These numbers represent our commitment to delivering exceptional results for every
-              client. Your success is our success.
+              {closingSentence ||
+                'These numbers represent our commitment to delivering exceptional results for every client. Your success is our success.'}
             </p>
           </div>
         </div>

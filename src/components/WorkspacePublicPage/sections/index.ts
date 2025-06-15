@@ -8,7 +8,6 @@ export { default as ClientsSection } from './ClientsSection';
 export { default as FooterSection } from './FooterSection';
 export { default as GoogleReviewsSection } from './GoogleReviewsSection';
 export { default as OutcomesSection } from './OutcomesSection';
-export { default as SocialsSection } from './SocialsSection';
 export { default as StorySection } from './StorySection';
 
 // Legacy location-specific sections (deprecated - use generic sections with variants instead)

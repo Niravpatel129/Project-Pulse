@@ -259,6 +259,7 @@ export const printscala: WorkspaceCMSData = {
             totalReviews: 127,
           },
         },
+
         {
           id: 'onboarding-services-1',
           type: 'onboardingServiceSection',
@@ -399,6 +400,8 @@ export const printscala: WorkspaceCMSData = {
               instagram: 'https://instagram.com/gtaresumebuilder',
               facebook: 'https://facebook.com/gtaresumebuilder',
             },
+            tagline: 'Building success through innovation and dedication.',
+            ctaButtonText: 'Get Started',
           },
         },
       ],
@@ -527,6 +530,11 @@ export const printscala: WorkspaceCMSData = {
                   rating: 5,
                 },
               ],
+              ctaHeading: 'Ready to Get Started?',
+              ctaParagraph:
+                'Get your professional resume today and start landing interviews next week.',
+              mobileCTAHeading: 'Join Our Success Stories',
+              mobileCTAParagraph: 'Ready to be our next success story? Get started today!',
             },
           },
         ],
@@ -651,6 +659,11 @@ export const printscala: WorkspaceCMSData = {
                   rating: 5,
                 },
               ],
+              ctaHeading: 'Ready to Get Started?',
+              ctaParagraph:
+                'Get your professional resume today and start landing interviews next week.',
+              mobileCTAHeading: 'Join Our Success Stories',
+              mobileCTAParagraph: 'Ready to be our next success story? Get started today!',
             },
           },
         ],

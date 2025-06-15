@@ -27,6 +27,8 @@ interface FooterSectionProps {
   setShowSheet: (show: boolean) => void;
   onOpenOnboardingSheet: () => void;
   sectionNumber?: string;
+  tagline?: string;
+  ctaButtonText?: string;
 }
 
 export default function FooterSection({
@@ -41,6 +43,8 @@ export default function FooterSection({
   setShowSheet,
   onOpenOnboardingSheet,
   sectionNumber,
+  tagline = 'Building success through innovation and dedication.',
+  ctaButtonText = 'Get Started',
 }: FooterSectionProps) {
   return (
     <footer
@@ -57,7 +61,7 @@ export default function FooterSection({
               {subtitle}
             </p>
             <Button className='font-semibold px-8 py-6' onClick={onOpenOnboardingSheet}>
-              Get Started
+              {ctaButtonText}
             </Button>
           </div>
         </div>
@@ -72,7 +76,7 @@ export default function FooterSection({
               <div>
                 <h3 className='text-lg font-semibold mb-4'>{siteName}</h3>
                 <p className='mb-4' style={{ color: '#5a5a5a' }}>
-                  Building success through innovation and dedication.
+                  {tagline}
                 </p>
                 {contact && (
                   <div className='space-y-2 text-sm' style={{ color: '#5a5a5a' }}>
@@ -136,7 +140,9 @@ export default function FooterSection({
       <div className='border-t py-8' style={{ borderColor: '#e0ded8' }}>
         <div className='container mx-auto px-4'>
           <div className='text-center' style={{ color: '#5a5a5a' }}>
-            <p>&copy; 2024 {siteName}. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
