@@ -45,22 +45,38 @@ export default function GoogleReviewsSection({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
-        delayChildren: 0.05,
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
       },
     },
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: {
+      opacity: 0,
+    },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
-        type: 'spring',
-        stiffness: 300,
-        damping: 20,
+        duration: 0.6,
+        ease: [0.22, 1, 0.36, 1],
       },
+    },
+  };
+
+  const starVariants: Variants = {
+    hidden: { scale: 0, opacity: 0 },
+    visible: (i: number) => {
+      return {
+        scale: 1,
+        opacity: 1,
+        transition: {
+          delay: i * 0.1,
+          type: 'spring',
+          stiffness: 500,
+          damping: 15,
+        },
+      };
     },
   };
 
