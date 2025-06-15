@@ -54,25 +54,33 @@ const AnimatedText = ({
   return (
     <motion.h1
       className={className}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      {textContent.split(' ').map((word, index, array) => {
+      {textContent.split('').map((char, index) => {
+        // Preserve spaces with proper width
+        if (char === ' ') {
+          return <span key={index} className='inline-block w-2 md:w-4 lg:w-6' />;
+        }
+
         return (
-          <React.Fragment key={index}>
-            <motion.span
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
-              className='inline-block'
-            >
-              {word}
-            </motion.span>
-            {index < array.length - 1 && <span className='inline-block w-2 md:w-4 lg:w-6' />}
-          </React.Fragment>
+          <motion.span
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{
+              delay: index * 0.03, // Faster stagger between letters
+              duration: 0.3,
+              type: 'spring',
+              stiffness: 200,
+            }}
+            className='inline-block'
+          >
+            {char}
+          </motion.span>
         );
       })}
     </motion.h1>
