@@ -1,6 +1,6 @@
 import { StarFilledIcon } from '@radix-ui/react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 interface HeroSectionButton {
   type: 'skip' | 'callOrText';
@@ -42,6 +42,11 @@ const AnimatedText = ({
   text: string | React.ReactNode;
   className?: string;
 }) => {
+  const [isScrambled, setIsScrambled] = useState(false);
+  const clickCount = useRef(0);
+  const clickTimer = useRef<ReturnType<typeof setTimeout>>();
+  const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
+
   // Extract text content from React node if needed
   const textContent = React.isValidElement(text)
     ? (text.props as { children: string }).children
@@ -51,6 +56,39 @@ const AnimatedText = ({
 
   if (!textContent) return null;
 
+  const handleClick = () => {
+    clickCount.current += 1;
+
+    // Clear existing timer
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+    }
+
+    // Set new timer
+    clickTimer.current = setTimeout(() => {
+      clickCount.current = 0;
+    }, 1000);
+
+    // If 4 clicks within 1 second
+    if (clickCount.current === 4) {
+      setIsScrambled(true);
+      // Generate random positions for each letter
+      const newPositions = textContent.split('').map(() => {
+        return {
+          x: (Math.random() - 0.5) * 200,
+          y: (Math.random() - 0.5) * 200,
+        };
+      });
+      setPositions(newPositions);
+
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setIsScrambled(false);
+        setPositions([]);
+      }, 2000);
+    }
+  };
+
   return (
     <motion.h1
       className={className}
@@ -58,6 +96,7 @@ const AnimatedText = ({
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
+      onClick={handleClick}
     >
       {textContent.split('').map((char, index) => {
         // Preserve spaces with proper width
@@ -82,6 +121,21 @@ const AnimatedText = ({
             dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
             dragElastic={0.7}
             whileDrag={{ scale: 1.2, rotate: 5 }}
+            animate={
+              isScrambled
+                ? {
+                    x: positions[index]?.x || 0,
+                    y: positions[index]?.y || 0,
+                    rotate: Math.random() * 360,
+                    scale: 1.2,
+                  }
+                : {
+                    x: 0,
+                    y: 0,
+                    rotate: 0,
+                    scale: 1,
+                  }
+            }
           >
             {char}
           </motion.span>
