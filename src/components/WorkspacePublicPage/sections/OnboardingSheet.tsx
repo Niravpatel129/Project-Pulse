@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { useWorkspaceCMS } from '@/contexts/WorkspaceCMSContext';
+import { newRequest } from '@/utils/newRequest';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeftIcon, CheckIcon } from 'lucide-react';
 import React from 'react';
@@ -259,6 +261,8 @@ export default function OnboardingSheet({
   });
   const [isAnimating, setIsAnimating] = React.useState(false);
   const [pendingService, setPendingService] = React.useState<string | null>(null);
+  const { cmsData } = useWorkspaceCMS();
+  const [loading, setLoading] = React.useState(false);
 
   const handleServiceSelect = React.useCallback(
     (serviceName: string) => {
@@ -318,6 +322,47 @@ export default function OnboardingSheet({
   const buttonText = React.useMemo(() => {
     return getPrimaryButtonText();
   }, [selectedService, additionalSelectedServices]);
+
+  // Helper to submit the contact form (step 1)
+  const handleContactSubmit = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await newRequest.post('/public/inbound', {
+        cmsEmail: cmsData?.settings?.contact?.email,
+        type: 'contact',
+        selectedService,
+        additionalServices: additionalSelectedServices,
+        additionalNotes,
+        contactForm,
+      });
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to submit the callback scheduling form (step 2)
+  const handleCallbackSubmit = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await newRequest.post('/public/inbound', {
+        cmsEmail: cmsData?.settings?.contact?.email,
+        type: 'callback',
+        selectedService,
+        additionalServices: additionalSelectedServices,
+        callbackSchedule,
+      });
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Error scheduling callback:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderStep = () => {
     if (submitted) {
@@ -910,10 +955,9 @@ export default function OnboardingSheet({
 
           {step === 1 && (
             <Button
-              onClick={() => {
-                return setSubmitted(true);
-              }}
+              onClick={handleContactSubmit}
               disabled={
+                loading ||
                 !contactForm.name ||
                 !contactForm.email ||
                 !contactForm.phone ||
@@ -935,10 +979,9 @@ export default function OnboardingSheet({
 
           {step === 2 && (
             <Button
-              onClick={() => {
-                return setSubmitted(true);
-              }}
+              onClick={handleCallbackSubmit}
               disabled={
+                loading ||
                 !callbackSchedule.name ||
                 !callbackSchedule.phone ||
                 (!callbackSchedule.isASAP && (!callbackSchedule.date || !callbackSchedule.time))

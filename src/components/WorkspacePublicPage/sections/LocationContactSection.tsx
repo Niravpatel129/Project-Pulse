@@ -128,7 +128,7 @@ export default function LocationContactSection({
                       Call Now: {contact?.phone || '(437) 774-3721'}
                     </a>
                     <a
-                      href={`mailto:${contact?.email || 'gtaresumebuilder@gmail.com'}`}
+                      href={`mailto:${contact?.email || 'niravpatelp129@gmail.com'}`}
                       className='block w-full py-3 px-6 rounded-lg font-semibold border-2 transition-colors duration-300'
                       style={{
                         borderColor: primaryColor,
