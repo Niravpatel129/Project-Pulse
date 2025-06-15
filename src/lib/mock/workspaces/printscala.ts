@@ -394,15 +394,11 @@ export const printscala: WorkspaceCMSData = {
               phone: '437 774 3721 (Call or Text)',
               address: '1495 Sandalwood Pkwy E, Brampton, ON L6R 1T2',
             },
-            quickLinks: [
-              { label: 'Resume Writing', url: '#services' },
-              { label: 'Success Stories', url: '#success' },
-              { label: 'Schedule Appointment', url: '#contact' },
-            ],
-            legalLinks: [
-              { label: 'Privacy Policy', url: '/privacy' },
-              { label: 'Terms of Service', url: '/terms' },
-            ],
+            socials: {
+              linkedin: 'https://linkedin.com/company/gta-resume-builder',
+              instagram: 'https://instagram.com/gtaresumebuilder',
+              facebook: 'https://facebook.com/gtaresumebuilder',
+            },
           },
         },
       ],

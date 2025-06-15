@@ -304,9 +304,8 @@ export default function HomePage() {
             title={section.title}
             subtitle={section.subtitle}
             contact={section.data.contact}
-            quickLinks={section.data.quickLinks}
-            legalLinks={section.data.legalLinks}
             siteName={settings.siteName}
+            socials={section.data.socials}
             showSheet={showSheet}
             setShowSheet={setShowSheet}
             onOpenOnboardingSheet={onOpenOnboardingSheet}

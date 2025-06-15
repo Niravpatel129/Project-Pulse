@@ -1,15 +1,11 @@
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
 
 interface Contact {
   email: string;
   phone: string;
   address: string;
-}
-
-interface Link {
-  label: string;
-  url: string;
 }
 
 interface SocialLinks {
@@ -23,14 +19,10 @@ interface FooterSectionProps {
   title?: string;
   subtitle?: string;
   contact?: Contact;
-  quickLinks?: Link[];
-  legalLinks?: Link[];
   siteName?: string;
   primaryColor?: string;
   id?: string;
   socials?: SocialLinks;
-
-  // Onboarding sheet props
   showSheet: boolean;
   setShowSheet: (show: boolean) => void;
   onOpenOnboardingSheet: () => void;
@@ -41,8 +33,6 @@ export default function FooterSection({
   title,
   subtitle,
   contact,
-  quickLinks = [],
-  legalLinks = [],
   siteName = 'Pulse Solutions',
   primaryColor = '#7C3AED',
   id,
@@ -73,11 +63,11 @@ export default function FooterSection({
         </div>
       </div>
 
-      {/* Footer Links */}
+      {/* Footer Content */}
       <div className='py-12'>
         <div className='container mx-auto px-4'>
           <div className='max-w-8xl mx-auto'>
-            <div className='grid md:grid-cols-4 gap-8'>
+            <div className='flex justify-between items-start'>
               {/* Company Info */}
               <div>
                 <h3 className='text-lg font-semibold mb-4'>{siteName}</h3>
@@ -91,84 +81,52 @@ export default function FooterSection({
                     <div>{contact.email}</div>
                   </div>
                 )}
-                {/* Socials */}
-                {socials && (
-                  <div className='flex space-x-4 mt-4'>
-                    {socials.linkedin && (
-                      <a
-                        href={socials.linkedin}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        aria-label='LinkedIn'
-                      >
-                        <FaLinkedin size={24} />
-                      </a>
-                    )}
-                    {socials.instagram && (
-                      <a
-                        href={socials.instagram}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        aria-label='Instagram'
-                      >
-                        <FaInstagram size={24} />
-                      </a>
-                    )}
-                    {socials.facebook && (
-                      <a
-                        href={socials.facebook}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        aria-label='Facebook'
-                      >
-                        <FaFacebook size={24} />
-                      </a>
-                    )}
-                  </div>
-                )}
               </div>
 
-              {/* Quick Links */}
-              <div>
-                <h4 className='font-semibold mb-4'>Quick Links</h4>
-                <ul className='space-y-2' style={{ color: '#5a5a5a' }}>
-                  {quickLinks.map((link, index) => {
-                    return (
-                      <li key={index}>
-                        <a href={link.url} className='hover:underline' style={{ color: '#080a0c' }}>
-                          {link.label}
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              {/* Services */}
-              <div>
-                <h4 className='font-semibold mb-4'>Services</h4>
-                <ul className='space-y-2' style={{ color: '#5a5a5a' }}>
-                  <li>Digital Transformation</li>
-                  <li>Business Consulting</li>
-                  <li>Custom Development</li>
-                </ul>
-              </div>
-
-              {/* Legal */}
-              <div>
-                <h4 className='font-semibold mb-4'>Legal</h4>
-                <ul className='space-y-2' style={{ color: '#5a5a5a' }}>
-                  {legalLinks.map((link, index) => {
-                    return (
-                      <li key={index}>
-                        <a href={link.url} className='hover:underline' style={{ color: '#080a0c' }}>
-                          {link.label}
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+              {/* Socials */}
+              {socials && (
+                <div className='flex space-x-6'>
+                  {socials.linkedin && (
+                    <motion.a
+                      href={socials.linkedin}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      aria-label='LinkedIn'
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                      className='text-[#222222] hover:text-gray-900 transition-colors'
+                    >
+                      <FaLinkedin size={24} />
+                    </motion.a>
+                  )}
+                  {socials.instagram && (
+                    <motion.a
+                      href={socials.instagram}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      aria-label='Instagram'
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                      className='text-[#222222] hover:text-gray-900 transition-colors'
+                    >
+                      <FaInstagram size={24} />
+                    </motion.a>
+                  )}
+                  {socials.facebook && (
+                    <motion.a
+                      href={socials.facebook}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      aria-label='Facebook'
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                      className='text-[#222222] hover:text-gray-900 transition-colors'
+                    >
+                      <FaFacebook size={24} />
+                    </motion.a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
