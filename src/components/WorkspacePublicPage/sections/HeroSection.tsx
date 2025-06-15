@@ -71,7 +71,7 @@ const AnimatedText = ({
             >
               {word}
             </motion.span>
-            {index < array.length - 1 && <span className='inline-block w-4' />}
+            {index < array.length - 1 && <span className='inline-block w-2 md:w-4 lg:w-6' />}
           </React.Fragment>
         );
       })}
@@ -214,7 +214,7 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`bg-white flex items-center justify-center text-gray-900 h-[60vh] md:h-[87vh] relative ${textAlignClass} p-4 md:p-3`}
+      className={`bg-white flex items-center justify-center text-gray-900 h-[60vh] md:h-[89vh] relative ${textAlignClass} p-4 pb-0 md:pb-0 md:p-3`}
       style={{
         // background: backgroundImage
         //   ? `linear-gradient(#f5f3f0,#fefdfd))`
@@ -330,7 +330,7 @@ export default function HeroSection({
             {title && (
               <AnimatedText
                 text={title}
-                className='text-4xl md:text-8xl font-bold mb-3 leading-tight text-left flex'
+                className='text-4xl md:text-6xl lg:text-[110px] font-bold leading-tight text-left flex flex-wrap'
               />
             )}
 
