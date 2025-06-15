@@ -228,7 +228,7 @@ export default function HeroSection({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className='absolute top-10 left-0 right-0 z-10 px-4 md:px-0'
+          className='absolute top-10 left-0 right-0 px-4 md:px-0 z-20'
         >
           <div className='container px-4'>
             <div className='flex items-center justify-between h-16'>
@@ -241,7 +241,7 @@ export default function HeroSection({
               >
                 {settings.siteName}
               </motion.span>
-              <div className='hidden md:flex space-x-8'>
+              <div className='hidden md:flex space-x-4'>
                 {sectionNavigation.map((item, index) => {
                   return (
                     <motion.a
@@ -250,7 +250,7 @@ export default function HeroSection({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
                       href={item.url}
-                      className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm'
+                      className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm hover:bg-gray-100 rounded-md px-2 py-1'
                       target={item.target}
                     >
                       {item.label}
