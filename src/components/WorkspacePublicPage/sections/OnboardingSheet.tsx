@@ -1002,7 +1002,7 @@ export default function OnboardingSheet({
               className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
               style={{ minHeight: 36 }}
             >
-              📞 Prefer to Talk? Schedule a Callback
+              📞 Skip and Call Us
             </button>
           </div>
         )}
