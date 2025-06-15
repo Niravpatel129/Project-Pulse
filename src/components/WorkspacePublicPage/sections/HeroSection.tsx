@@ -252,10 +252,21 @@ export default function HeroSection({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
                         href={item.url}
-                        className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm hover:bg-gray-100 rounded-md px-2 py-1'
+                        className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm rounded-md px-2 py-1 relative'
                         target={item.target}
+                        whileHover='hover'
                       >
-                        {item.label}
+                        <motion.div
+                          className='absolute inset-0 bg-gray-100 rounded-md'
+                          variants={{
+                            hover: {
+                              width: '100%',
+                              transition: { duration: 0.3 },
+                            },
+                          }}
+                          initial={{ width: 0 }}
+                        />
+                        <span className='relative z-10'>{item.label}</span>
                       </motion.a>
                     );
                   })}
@@ -309,13 +320,24 @@ export default function HeroSection({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
                       href={item.url}
-                      className='block text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm hover:bg-gray-100 rounded-md px-2 py-2'
+                      className='block text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm rounded-md px-2 py-2 relative'
                       target={item.target}
                       onClick={() => {
                         return setIsMobileMenuOpen(false);
                       }}
+                      whileHover='hover'
                     >
-                      {item.label}
+                      <motion.div
+                        className='absolute inset-0 bg-gray-100 rounded-md'
+                        variants={{
+                          hover: {
+                            width: '100%',
+                            transition: { duration: 0.3 },
+                          },
+                        }}
+                        initial={{ width: 0 }}
+                      />
+                      <span className='relative z-10'>{item.label}</span>
                     </motion.a>
                   );
                 })}
