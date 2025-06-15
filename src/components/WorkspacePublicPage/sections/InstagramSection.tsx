@@ -53,7 +53,7 @@ export default function InstagramSection({
   }
 
   return (
-    <section id={id} className='pt-16 -mb-32 md:mb-32  bg-white'>
+    <section id={id} className='pt-16  bg-white'>
       <div className='container mx-auto px-4'>
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
         <div className='max-w-8xl mx-auto'>
