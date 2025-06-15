@@ -43,18 +43,19 @@ export default function GoogleReviewsSection({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
+        duration: 0.3,
       },
     },
   };
@@ -93,7 +94,7 @@ export default function GoogleReviewsSection({
             className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'
           >
             {reviews.map((review, idx) => {
-              // For podium effect: middle column in each row on large screens
+              // For podium effect: middle column in each row on large screens only
               const isMiddle = idx % 3 === 1;
               return (
                 <motion.div
@@ -103,7 +104,12 @@ export default function GoogleReviewsSection({
                     `hp-reviews_item bg-white rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 w-full` +
                     (isMiddle ? ' lg:mt-[-40px] lg:mb-8 ' : '')
                   }
-                  style={isMiddle ? { zIndex: 30, minHeight: 180 } : { minHeight: 180 }}
+                  style={{
+                    minHeight: 180,
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    ...(isMiddle ? { zIndex: 30 } : {}),
+                  }}
                 >
                   <a
                     href='https://g.co/kgs/waq8Rav'
