@@ -72,12 +72,16 @@ const AnimatedText = ({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{
-              delay: index * 0.03, // Faster stagger between letters
+              delay: index * 0.03,
               duration: 0.3,
               type: 'spring',
               stiffness: 200,
             }}
             className='inline-block'
+            drag
+            dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+            dragElastic={0.7}
+            whileDrag={{ scale: 1.2, rotate: 5 }}
           >
             {char}
           </motion.span>
