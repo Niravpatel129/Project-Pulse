@@ -44,7 +44,7 @@ const AnimatedText = ({
 }) => {
   const [isScrambled, setIsScrambled] = useState(false);
   const clickCount = useRef(0);
-  const clickTimer = useRef<ReturnType<typeof setTimeout>>();
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
 
   // Extract text content from React node if needed
