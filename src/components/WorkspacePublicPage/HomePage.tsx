@@ -104,7 +104,7 @@ export default function HomePage() {
       case 'outcomesSection':
         return 'outcomes';
       case 'instagramSection':
-        return 'gallery';
+        return 'socials';
 
       default:
         return section.type.replace('Section', '').toLowerCase();
@@ -129,7 +129,7 @@ export default function HomePage() {
       case 'outcomesSection':
         return 'Results';
       case 'instagramSection':
-        return 'Gallery';
+        return 'Socials';
       case 'contactSection':
       case 'footerSection':
         return 'Contact';
@@ -152,7 +152,7 @@ export default function HomePage() {
           'clients',
           'reviews',
           'outcomes',
-          'gallery',
+          'socials',
           'contact',
         ].includes(sectionId);
       })
