@@ -973,7 +973,7 @@ export default function OnboardingSheet({
         {!submitted && (
           <div className='flex items-center justify-between mb-6'>
             <div className='flex items-center gap-1'>
-              {step > 0 && (
+              {step > 0 ? (
                 <ArrowLeftIcon
                   className='w-5 h-5 cursor-pointer mr-1 hover:text-gray-500'
                   onClick={() => {
@@ -983,6 +983,13 @@ export default function OnboardingSheet({
                     } else {
                       setStep(step - 1);
                     }
+                  }}
+                />
+              ) : (
+                <ArrowLeftIcon
+                  className='w-5 h-5 cursor-pointer mr-1 hover:text-gray-500 sm:hidden'
+                  onClick={() => {
+                    return onOpenChange(false);
                   }}
                 />
               )}
