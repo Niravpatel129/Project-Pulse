@@ -1,6 +1,6 @@
 import { StarFilledIcon } from '@radix-ui/react-icons';
-import { motion } from 'framer-motion';
-import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState } from 'react';
 
 interface HeroSectionButton {
   type: 'skip' | 'callOrText';
@@ -204,6 +204,7 @@ export default function HeroSection({
   settings,
   sectionNavigation,
 }: HeroSectionProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const textAlignClass = {
     left: 'text-left',
     center: 'text-center',
@@ -213,7 +214,7 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`bg-white relative flex items-center justify-center text-gray-900 h-[60vh] md:h-[87vh] ${textAlignClass} p-4 md:p-3`}
+      className={`bg-white flex items-center justify-center text-gray-900 h-[60vh] md:h-[87vh] relative ${textAlignClass} p-4 md:p-3`}
       style={{
         // background: backgroundImage
         //   ? `linear-gradient(#f5f3f0,#fefdfd))`
@@ -223,60 +224,120 @@ export default function HeroSection({
         minHeight,
       }}
     >
-      {navigation.length > 0 && (
-        <motion.nav
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className='absolute top-10 left-0 right-0 px-4 md:px-0 z-20'
-        >
-          <div className='container px-4'>
-            <div className='flex items-center justify-between h-16'>
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className='sitename font-bold text-xl'
-                style={{ color: 'black' }}
-              >
-                {settings.siteName}
-              </motion.span>
-              <div className='hidden md:flex space-x-4'>
+      <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden flex items-center justify-center p-6 relative'>
+        {navigation.length > 0 && (
+          <motion.nav
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className='absolute top-10 left-0 right-0 z-20 w-full'
+          >
+            <div className='container mx-auto px-6'>
+              <div className='flex items-center justify-between h-16'>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className='sitename font-bold text-xl'
+                  style={{ color: 'black' }}
+                >
+                  {settings.siteName}
+                </motion.span>
+                <div className='hidden md:flex space-x-4'>
+                  {sectionNavigation.map((item, index) => {
+                    return (
+                      <motion.a
+                        key={item.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                        href={item.url}
+                        className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm hover:bg-gray-100 rounded-md px-2 py-1'
+                        target={item.target}
+                      >
+                        {item.label}
+                      </motion.a>
+                    );
+                  })}
+                </div>
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => {
+                    return setIsMobileMenuOpen(!isMobileMenuOpen);
+                  }}
+                  className='md:hidden px-0 py-1 rounded-md  focus:outline-none'
+                >
+                  <div className='w-6 h-6 flex flex-col justify-around'>
+                    <span
+                      className={`block w-full h-0.5 bg-black transform transition-all duration-300 ${
+                        isMobileMenuOpen ? 'rotate-45 translate-y-2.5' : ''
+                      }`}
+                    />
+                    <span
+                      className={`block w-full h-0.5 bg-black transition-all duration-300 ${
+                        isMobileMenuOpen ? 'opacity-0' : ''
+                      }`}
+                    />
+                    <span
+                      className={`block w-full h-0.5 bg-black transform transition-all duration-300 ${
+                        isMobileMenuOpen ? '-rotate-45 -translate-y-2.5' : ''
+                      }`}
+                    />
+                  </div>
+                </button>
+              </div>
+            </div>
+          </motion.nav>
+        )}
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className='md:hidden absolute top-20 left-0 right-0 bg-white shadow-lg z-20'
+            >
+              <div className='px-4 py-2 space-y-2'>
                 {sectionNavigation.map((item, index) => {
                   return (
                     <motion.a
                       key={item.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
                       href={item.url}
-                      className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm hover:bg-gray-100 rounded-md px-2 py-1'
+                      className='block text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm hover:bg-gray-100 rounded-md px-2 py-2'
                       target={item.target}
+                      onClick={() => {
+                        return setIsMobileMenuOpen(false);
+                      }}
                     >
                       {item.label}
                     </motion.a>
                   );
                 })}
               </div>
-            </div>
-          </div>
-        </motion.nav>
-      )}
-      <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden'>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Content */}
-        <div className='relative z-10 container mx-auto px-4 pt-20'>
-          <div className={`${textAlign === 'center' ? 'mx-auto' : ''} mt-[10%]`}>
+        <div className='relative mx-auto '>
+          <div className={`${textAlign === 'center' ? 'mx-auto' : ''}`}>
             {title && (
               <AnimatedText
                 text={title}
-                className='text-3xl md:text-8xl font-bold mb-3 leading-tight text-left flex'
+                className='text-4xl md:text-8xl font-bold mb-3 leading-tight text-left flex'
               />
             )}
 
             {subtitle && (
               <AnimatedSubtitle
                 text={subtitle}
-                className='text-2xl md:text-2xl mb-8 text-[#3d3c43] text-left  max-w-[80%] md:max-w-[60%] font-bold'
+                className='text-xl md:text-2xl mb-8 text-[#3d3c43] text-left  max-w-[80%] md:max-w-[60%] font-bold'
               />
             )}
 
