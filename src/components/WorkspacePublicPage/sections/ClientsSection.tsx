@@ -31,6 +31,40 @@ export default function ClientsSection({
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: false });
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
+  const clickTimeouts = useRef<{ [key: number]: NodeJS.Timeout }>({});
+  const clickCounts = useRef<{ [key: number]: number }>({});
+
+  const handleClick = (index: number) => {
+    clickCounts.current[index] = (clickCounts.current[index] || 0) + 1;
+
+    // Clear existing timeout
+    if (clickTimeouts.current[index]) {
+      clearTimeout(clickTimeouts.current[index]);
+    }
+
+    // Set new timeout
+    clickTimeouts.current[index] = setTimeout(() => {
+      if (clickCounts.current[index] === 3) {
+        setFlippedIndices((prev) => {
+          return prev.includes(index)
+            ? prev.filter((i) => {
+                return i !== index;
+              })
+            : [...prev, index];
+        });
+      }
+      clickCounts.current[index] = 0;
+    }, 300); // 300ms window for triple click
+  };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(clickTimeouts.current).forEach((timeout) => {
+        return clearTimeout(timeout);
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (isInView) {
@@ -69,13 +103,7 @@ export default function ClientsSection({
                 className='relative w-[368px] h-[480px] rounded-xl overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0 cursor-pointer'
                 style={{ perspective: '1000px' }}
                 onClick={() => {
-                  setFlippedIndices((prev) => {
-                    return prev.includes(index)
-                      ? prev.filter((i) => {
-                          return i !== index;
-                        })
-                      : [...prev, index];
-                  });
+                  return handleClick(index);
                 }}
                 animate={{
                   rotateX: flippedIndices.includes(index) ? 180 : 0,
