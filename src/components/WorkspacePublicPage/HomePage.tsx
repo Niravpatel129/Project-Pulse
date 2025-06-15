@@ -175,7 +175,6 @@ export default function HomePage() {
 
   // Helper function to render sections based on type
   const renderSection = (section: any) => {
-    console.log('🚀 section:', section.type);
     const commonProps = { primaryColor, secondaryColor };
     const sectionId = getSectionId(section);
 
