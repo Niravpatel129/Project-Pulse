@@ -2,7 +2,7 @@
 
 import { motion, useAnimationControls, useInView } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SectionHeader from './SectionHeader';
 
 interface Client {
@@ -30,6 +30,7 @@ export default function ClientsSection({
   const controls = useAnimationControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: false });
+  const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
 
   useEffect(() => {
     if (isInView) {
@@ -63,52 +64,88 @@ export default function ClientsSection({
         <motion.div animate={controls} className='flex gap-6 px-6'>
           {duplicatedClients.map((client, index) => {
             return (
-              <div
+              <motion.div
                 key={`${client.name}-${index}`}
-                className='relative w-[368px] h-[480px] rounded-xl overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0'
+                className='relative w-[368px] h-[480px] rounded-xl overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0 cursor-pointer'
+                style={{ perspective: '1000px' }}
+                onClick={() => {
+                  setFlippedIndices((prev) => {
+                    return prev.includes(index)
+                      ? prev.filter((i) => {
+                          return i !== index;
+                        })
+                      : [...prev, index];
+                  });
+                }}
+                animate={{
+                  rotateX: flippedIndices.includes(index) ? 180 : 0,
+                }}
+                transition={{ duration: 0.6, ease: 'easeInOut' }}
               >
-                {/* Background Image Container */}
-                <div className='absolute inset-0 overflow-hidden'>
-                  {/* Background Image */}
-                  <Image
-                    src={client.logo}
-                    alt={`${client.name}'s logo`}
-                    fill
-                    unoptimized
-                    className='object-cover transition-transform duration-700 ease-out group-hover:scale-110'
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                  {/* Overlay for better text readability */}
-                  <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 group-hover:from-black/50 group-hover:to-black/70 transition-all duration-300'></div>
-                </div>
-
-                {/* Fallback when image doesn't load */}
-                <div className='absolute inset-0 bg-gradient-to-br from-gray-500 to-white-600 opacity-80'>
-                  <div className='absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 group-hover:from-black/30 group-hover:to-black/50 transition-all duration-300'></div>
-                </div>
-
-                {/* Content */}
-                <div className='relative h-full flex flex-col justify-between p-6 text-white z-10'>
-                  {/* Top Left - Name and Profession */}
-                  <div className='space-y-1'>
-                    <h3 className='text-xl font-bold text-white drop-shadow-lg'>{client.name}</h3>
-                    {client.profession && (
-                      <p className='text-sm text-white/90 drop-shadow-md'>{client.profession}</p>
-                    )}
+                {/* Front of card */}
+                <motion.div
+                  className='absolute inset-0 w-full h-full'
+                  style={{ backfaceVisibility: 'hidden' }}
+                >
+                  {/* Background Image Container */}
+                  <div className='absolute inset-0 overflow-hidden'>
+                    {/* Background Image */}
+                    <Image
+                      src={client.logo}
+                      alt={`${client.name}'s logo`}
+                      fill
+                      unoptimized
+                      className='object-cover transition-transform duration-700 ease-out group-hover:scale-110'
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    {/* Overlay for better text readability */}
+                    <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 group-hover:from-black/50 group-hover:to-black/70 transition-all duration-300'></div>
                   </div>
 
-                  {/* Bottom - Results */}
-                  {client.result && (
-                    <div className=''>
-                      <p className='text-xl font-semibold text-white drop-shadow-lg leading-relaxed'>
-                        {client.result}
-                      </p>
+                  {/* Fallback when image doesn't load */}
+                  <div className='absolute inset-0 bg-gradient-to-br from-gray-500 to-white-600 opacity-80'>
+                    <div className='absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 group-hover:from-black/30 group-hover:to-black/50 transition-all duration-300'></div>
+                  </div>
+
+                  {/* Content */}
+                  <div className='relative h-full flex flex-col justify-between p-6 text-white z-10'>
+                    {/* Top Left - Name and Profession */}
+                    <div className='space-y-1'>
+                      <h3 className='text-xl font-bold text-white drop-shadow-lg'>{client.name}</h3>
+                      {client.profession && (
+                        <p className='text-sm text-white/90 drop-shadow-md'>{client.profession}</p>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+
+                    {/* Bottom - Results */}
+                    {client.result && (
+                      <div className=''>
+                        <p className='text-xl font-semibold text-white drop-shadow-lg leading-relaxed'>
+                          {client.result}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+
+                {/* Back of card */}
+                <motion.div
+                  className='absolute inset-0 w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 p-6 flex items-center justify-center'
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    rotateX: 180,
+                    transform: 'rotateX(180deg)',
+                  }}
+                >
+                  <div className='text-white text-center'>
+                    <h3 className='text-2xl font-bold mb-4'>{client.name}</h3>
+                    {client.profession && <p className='text-lg mb-6'>{client.profession}</p>}
+                    {client.result && <p className='text-xl font-semibold'>{client.result}</p>}
+                  </div>
+                </motion.div>
+              </motion.div>
             );
           })}
         </motion.div>
