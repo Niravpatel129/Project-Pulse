@@ -1,7 +1,7 @@
 'use client';
 
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, Variants } from 'framer-motion';
 import { useRef } from 'react';
 import { FaStar } from 'react-icons/fa';
 import SectionHeader from './SectionHeader';
@@ -40,24 +40,26 @@ export default function GoogleReviewsSection({
   const isInView = useInView(ref, { once: true, amount: 0.2 });
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
+        staggerChildren: 0.05,
+        delayChildren: 0.05,
       },
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.3,
+        type: 'spring',
+        stiffness: 300,
+        damping: 20,
       },
     },
   };
