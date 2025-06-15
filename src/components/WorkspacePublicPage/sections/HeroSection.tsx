@@ -59,18 +59,20 @@ const AnimatedText = ({
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      {textContent.split('').map((char, index) => {
+      {textContent.split(' ').map((word, index, array) => {
         return (
-          <motion.span
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.03, duration: 0.3 }}
-            className='inline-block'
-          >
-            {char === ' ' ? '\u00A0' : char}
-          </motion.span>
+          <React.Fragment key={index}>
+            <motion.span
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              className='inline-block'
+            >
+              {word}
+            </motion.span>
+            {index < array.length - 1 && <span className='inline-block w-4' />}
+          </React.Fragment>
         );
       })}
     </motion.h1>
@@ -211,7 +213,7 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`bg-white relative flex items-center justify-center text-gray-900 h-[100vh] md:h-[87vh] ${textAlignClass} p-4 md:p-3`}
+      className={`bg-white relative flex items-center justify-center text-gray-900 h-[60vh] md:h-[87vh] ${textAlignClass} p-4 md:p-3`}
       style={{
         // background: backgroundImage
         //   ? `linear-gradient(#f5f3f0,#fefdfd))`
@@ -267,14 +269,14 @@ export default function HeroSection({
             {title && (
               <AnimatedText
                 text={title}
-                className='text-4xl md:text-8xl font-bold mb-3 leading-tight text-left'
+                className='text-3xl md:text-8xl font-bold mb-3 leading-tight text-left flex'
               />
             )}
 
             {subtitle && (
               <AnimatedSubtitle
                 text={subtitle}
-                className='text-xl md:text-2xl mb-8 text-gray-700 text-left max-w-[50%] font-bold'
+                className='text-2xl md:text-2xl mb-8 text-[#3d3c43] text-left  max-w-[80%] md:max-w-[60%] font-bold'
               />
             )}
 
