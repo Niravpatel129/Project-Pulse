@@ -1,8 +1,10 @@
 import Providers from '@/components/Providers';
 import { DynamicFavicon } from '@/components/shared/DynamicFavicon';
 import { Toaster } from '@/components/ui/toaster';
+import { DEV_CONFIG, getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
 import { cn } from '@/lib/utils';
-import { QueryClient } from '@tanstack/react-query';
+import { fetchCMSSettings } from '@/utils/cms';
+import { newRequest } from '@/utils/newRequest';
 import { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
@@ -10,9 +12,6 @@ import Script from 'next/script';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
-
-// Create a client
-const queryClient = new QueryClient();
 
 // Workspace-specific colors
 const workspaceColors = {
@@ -38,15 +37,84 @@ export async function generateMetadata(): Promise<Metadata> {
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
     : '#0070f3';
-  const appName = isSubdomain ? `${subdomain}` : 'Hour Block';
+
+  // Default values for HourBlock main site
+  let appName = 'Hour Block';
+  let siteDescription =
+    'Streamline your workflows, manage projects, and collaborate with your team effectively using Hour Block.';
+
+  // Handle development mode on localhost
+  if (process.env.NODE_ENV === 'development' && hostname === 'localhost') {
+    // Use default mock workspace in development
+    const workspaceSlug = DEV_CONFIG.defaultWorkspace;
+    console.log(`[DEV] Using default mock workspace: ${workspaceSlug}`);
+    const mockData = getMockWorkspace(workspaceSlug);
+    if (mockData) {
+      appName = mockData.settings.siteName || workspaceSlug;
+      siteDescription = mockData.settings.siteDescription || siteDescription;
+    } else {
+      appName = workspaceSlug;
+    }
+  }
+  // Handle custom subdomains
+  else if (isSubdomain) {
+    try {
+      // In development, use mock data if available
+      if (process.env.NODE_ENV === 'development') {
+        const workspaceSlug = subdomain;
+        if (hasMockWorkspace(workspaceSlug)) {
+          console.log(`[DEV] Using mock data for workspace: ${workspaceSlug}`);
+          const mockData = getMockWorkspace(workspaceSlug);
+          if (mockData) {
+            appName = mockData.settings.siteName || workspaceSlug;
+            siteDescription = mockData.settings.siteDescription || siteDescription;
+          } else {
+            appName = workspaceSlug;
+          }
+        } else {
+          // Fallback to default mock workspace in development
+          console.log(`[DEV] Using default mock workspace: ${DEV_CONFIG.defaultWorkspace}`);
+          const defaultMockData = getMockWorkspace(DEV_CONFIG.defaultWorkspace);
+          if (defaultMockData) {
+            appName = defaultMockData.settings.siteName || DEV_CONFIG.defaultWorkspace;
+            siteDescription = defaultMockData.settings.siteDescription || siteDescription;
+          } else {
+            appName = DEV_CONFIG.defaultWorkspace;
+          }
+        }
+      } else {
+        // Production: get workspace data from API
+        const domain = hostname;
+        const response = await newRequest.get(`/workspaces/url`, {
+          params: {
+            domain,
+            subdomain,
+          },
+        });
+
+        const workspaceName = response.data.data.name;
+
+        // Then fetch CMS settings for the workspace
+        const settings = await fetchCMSSettings(workspaceName);
+        if (settings) {
+          appName = settings.siteName || workspaceName;
+          siteDescription = settings.siteDescription || siteDescription;
+        } else {
+          appName = workspaceName;
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching workspace data for ${subdomain}:`, error);
+      appName = subdomain;
+    }
+  }
 
   return {
     title: {
       template: '%s | Hour Block',
       default: appName,
     },
-    description:
-      'Streamline your workflows, manage projects, and collaborate with your team effectively using Hour Block.',
+    description: siteDescription,
     keywords: ['project management', 'team collaboration', 'workflow', 'dashboard', 'productivity'],
     authors: [{ name: 'Hour Block Team' }],
     creator: 'Hour Block',
@@ -62,8 +130,7 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: isSubdomain ? `/api/manifest/${subdomain}` : '/manifest.json',
     openGraph: {
       title: appName,
-      description:
-        'Streamline your workflows, manage projects, and collaborate with your team effectively.',
+      description: siteDescription,
       url: 'https://hourblock.com',
       siteName: 'Hour Block',
       locale: 'en_US',
@@ -80,8 +147,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: appName,
-      description:
-        'Streamline your workflows, manage projects, and collaborate with your team effectively.',
+      description: siteDescription,
       creator: '@HourBlock',
       images: ['/og-image-home.jpg'],
     },
