@@ -84,7 +84,7 @@ export default function GoogleReviewsSection({
       <div className='container mx-auto px-2 max-w-8xl'>
         <SectionHeader number={sectionNumber} title={title} subtitle={subtitle} />
         {/* Reviews Grid with fade and podium effect */}
-        <div className='relative mt-20'>
+        <div className='relative mt-10 md:mt-20'>
           <motion.div
             ref={ref}
             variants={containerVariants}

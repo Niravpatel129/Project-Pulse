@@ -92,7 +92,7 @@ export const bolocreate: WorkspaceCMSData = {
         {
           id: 'clients-1',
           type: 'clientsSection',
-          title: 'Client Success Stories',
+          title: 'Client Success',
           subtitle: 'Results that Speak for Themselves - Land Interviews Within Weeks',
           order: 4,
           data: {
