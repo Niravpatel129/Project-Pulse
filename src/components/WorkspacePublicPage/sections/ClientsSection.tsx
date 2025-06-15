@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useAnimationControls, useInView } from 'framer-motion';
+import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import SectionHeader from './SectionHeader';
 
@@ -69,10 +70,14 @@ export default function ClientsSection({
                 {/* Background Image Container */}
                 <div className='absolute inset-0 overflow-hidden'>
                   {/* Background Image */}
-                  <div
-                    className='absolute inset-0 bg-cover bg-center bg-gray-300 transition-transform duration-700 ease-out group-hover:scale-110'
-                    style={{
-                      backgroundImage: `url(${client.logo})`,
+                  <Image
+                    src={client.logo}
+                    alt={`${client.name}'s logo`}
+                    fill
+                    unoptimized
+                    className='object-cover transition-transform duration-700 ease-out group-hover:scale-110'
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
                     }}
                   />
                   {/* Overlay for better text readability */}
