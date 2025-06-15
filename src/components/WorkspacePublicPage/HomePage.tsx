@@ -198,6 +198,9 @@ export default function HomePage() {
             setShowSheet={setShowSheet}
             onOpenOnboardingSheet={onOpenOnboardingSheet}
             sectionNumber={section.sectionNumber}
+            navigation={navigation}
+            sectionNavigation={sectionNavigation}
+            settings={settings}
             {...commonProps}
           />
         );
@@ -366,9 +369,8 @@ export default function HomePage() {
       >
         <div className='w-20 h-20 rounded-full rainbow-blur blur-xl' />
       </motion.div>
-
       {/* Navigation */}
-      {navigation.length > 0 && (
+      {/* {navigation.length > 0 && (
         <motion.nav
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -406,7 +408,7 @@ export default function HomePage() {
             </div>
           </div>
         </motion.nav>
-      )}
+      )} */}
       {/* Render all sections */}
       {pageData.sections
         .sort((a, b) => {
@@ -451,7 +453,6 @@ export default function HomePage() {
           };
           return renderSection(sectionWithAnimation);
         })}
-
       {/* Global OnboardingSheet */}
       <OnboardingSheet
         open={showSheet}

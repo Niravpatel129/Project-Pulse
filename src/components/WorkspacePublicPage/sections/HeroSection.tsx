@@ -30,6 +30,9 @@ interface HeroSectionProps {
   setShowSheet: (show: boolean) => void;
   onOpenOnboardingSheet: () => void;
   sectionNumber?: string;
+  navigation?: any;
+  settings?: any;
+  sectionNavigation?: any;
 }
 
 const AnimatedText = ({
@@ -195,6 +198,9 @@ export default function HeroSection({
   setShowSheet,
   onOpenOnboardingSheet,
   sectionNumber,
+  navigation,
+  settings,
+  sectionNavigation,
 }: HeroSectionProps) {
   const textAlignClass = {
     left: 'text-left',
@@ -205,87 +211,131 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`relative flex items-center justify-center text-gray-900 ${textAlignClass} py-16`}
+      className={`bg-white relative flex items-center justify-center text-gray-900 h-[87vh] ${textAlignClass} p-3`}
       style={{
-        background: backgroundImage
-          ? `linear-gradient(#f5f3f0,#fefdfd), url(${backgroundImage})`
-          : 'linear-gradient(#f5f3f0,#fefdfd)',
+        // background: backgroundImage
+        //   ? `linear-gradient(#f5f3f0,#fefdfd))`
+        //   : 'linear-gradient(#f5f3f0,#fefdfd)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         minHeight,
       }}
     >
-      {/* Content */}
-      <div className='relative z-10 container mx-auto px-4 pt-20'>
-        <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''} mt-20`}>
-          {title && (
-            <AnimatedText
-              text={title}
-              className='text-4xl md:text-7xl font-bold mb-6 leading-tight'
-            />
-          )}
+      {navigation.length > 0 && (
+        <motion.nav
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className='absolute top-10 left-0 right-0 z-10'
+        >
+          <div className='container mx-auto px-4'>
+            <div className='flex items-center justify-between h-16'>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className='sitename font-bold text-xl'
+                style={{ color: 'black' }}
+              >
+                {settings.siteName}
+              </motion.span>
+              <div className='hidden md:flex space-x-8'>
+                {sectionNavigation.map((item, index) => {
+                  return (
+                    <motion.a
+                      key={item.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                      href={item.url}
+                      className='text-[#222222] hover:text-gray-900 transition-colors font-semibold text-sm'
+                      target={item.target}
+                    >
+                      {item.label}
+                    </motion.a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </motion.nav>
+      )}
+      <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden'>
+        {/* Content */}
+        <div className='relative z-10 container mx-auto px-4 pt-20'>
+          <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''} mt-20`}>
+            {title && (
+              <AnimatedText
+                text={title}
+                className='text-4xl md:text-7xl font-bold mb-6 leading-tight'
+              />
+            )}
 
-          {subtitle && (
-            <AnimatedSubtitle text={subtitle} className='text-xl md:text-2xl mb-8 text-gray-700' />
-          )}
+            {subtitle && (
+              <AnimatedSubtitle
+                text={subtitle}
+                className='text-xl md:text-2xl mb-8 text-gray-700'
+              />
+            )}
 
-          {/* Highlights */}
-          {highlights.length > 0 && (
+            {/* Highlights */}
+            {highlights.length > 0 && (
+              <motion.div
+                className='space-y-4 mb-8'
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+              >
+                {highlights.map((highlight, index) => {
+                  return (
+                    <AnimatedHighlight
+                      key={index}
+                      text={highlight}
+                      index={index}
+                      primaryColor={primaryColor}
+                    />
+                  );
+                })}
+              </motion.div>
+            )}
+
+            {/* CTA Buttons */}
             <motion.div
-              className='space-y-4 mb-8'
+              className='space-y-4'
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.6, duration: 0.5 }}
+              transition={{ delay: 1, duration: 0.5 }}
             >
-              {highlights.map((highlight, index) => {
-                return (
-                  <AnimatedHighlight
-                    key={index}
-                    text={highlight}
-                    index={index}
-                    primaryColor={primaryColor}
-                  />
-                );
-              })}
+              {buttons.length > 0 ? (
+                buttons.map((button, index) => {
+                  return (
+                    <AnimatedButton
+                      key={index}
+                      text={button.text}
+                      index={index}
+                      onOpenOnboardingSheet={onOpenOnboardingSheet}
+                    />
+                  );
+                })
+              ) : (
+                <AnimatedButton index={0} onOpenOnboardingSheet={onOpenOnboardingSheet} />
+              )}
             </motion.div>
-          )}
 
-          {/* CTA Buttons */}
-          <motion.div
-            className='space-y-4'
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 1, duration: 0.5 }}
-          >
-            {buttons.length > 0 ? (
-              buttons.map((button, index) => {
-                return (
-                  <AnimatedButton
-                    key={index}
-                    text={button.text}
-                    index={index}
-                    onOpenOnboardingSheet={onOpenOnboardingSheet}
-                  />
-                );
-              })
-            ) : (
-              <AnimatedButton index={0} onOpenOnboardingSheet={onOpenOnboardingSheet} />
+            {/* Additional Content */}
+            {additionalContent && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 1.4, duration: 0.5 }}
+              >
+                {additionalContent}
+              </motion.div>
             )}
-          </motion.div>
-
-          {/* Additional Content */}
-          {additionalContent && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 1.4, duration: 0.5 }}
-            >
-              {additionalContent}
-            </motion.div>
-          )}
+          </div>
         </div>
       </div>
     </section>
