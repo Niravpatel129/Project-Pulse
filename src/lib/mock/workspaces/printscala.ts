@@ -45,7 +45,7 @@ export const printscala: WorkspaceCMSData = {
           id: 'hero-1',
           type: 'heroSection',
           title: 'Professional Resumes.',
-          subtitle: 'We build resumes that get you interviews and brand you as a professional.',
+          subtitle: 'We build resumes that get you interviews, starting with a free consultation.',
           order: 1,
           variant: 'default',
           data: {
