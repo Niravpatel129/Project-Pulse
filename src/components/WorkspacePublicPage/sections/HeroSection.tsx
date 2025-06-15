@@ -224,7 +224,7 @@ export default function HeroSection({
         minHeight,
       }}
     >
-      <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden flex items-center p-6 relative'>
+      <div className='bg-[linear-gradient(60deg,var(--tw-gradient-stops))] from-[#fff1be] from-25% via-[#ee87cb] via-65% to-[#b060ff] sm:bg-[linear-gradient(60deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden flex items-center p-6 relative'>
         {navigation.length > 0 && (
           <motion.nav
             initial={{ opacity: 0, y: -20 }}
