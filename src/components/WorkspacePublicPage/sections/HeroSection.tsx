@@ -163,7 +163,7 @@ const AnimatedButton = ({
         backgroundColor: { duration: 0.15 },
         color: { duration: 0.15 },
       }}
-      className='px-8 py-4 text-lg font-medium rounded-full border-2 border-black'
+      className='px-6 py-2 text-lg font-medium rounded-full border-2 border-black'
       style={{
         backgroundColor: '#000',
         color: '#fff',
@@ -211,7 +211,7 @@ export default function HeroSection({
   return (
     <section
       id={id}
-      className={`bg-white relative flex items-center justify-center text-gray-900 h-[87vh] ${textAlignClass} p-3`}
+      className={`bg-white relative flex items-center justify-center text-gray-900 h-[100vh] md:h-[87vh] ${textAlignClass} p-4 md:p-3`}
       style={{
         // background: backgroundImage
         //   ? `linear-gradient(#f5f3f0,#fefdfd))`
@@ -226,9 +226,9 @@ export default function HeroSection({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className='absolute top-10 left-0 right-0 z-10'
+          className='absolute top-10 left-0 right-0 z-10 px-4 md:px-0'
         >
-          <div className='container mx-auto px-4'>
+          <div className='container px-4'>
             <div className='flex items-center justify-between h-16'>
               <motion.span
                 initial={{ opacity: 0 }}
@@ -263,25 +263,25 @@ export default function HeroSection({
       <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden'>
         {/* Content */}
         <div className='relative z-10 container mx-auto px-4 pt-20'>
-          <div className={`max-w-4xl ${textAlign === 'center' ? 'mx-auto' : ''} mt-20`}>
+          <div className={`${textAlign === 'center' ? 'mx-auto' : ''} mt-[10%]`}>
             {title && (
               <AnimatedText
                 text={title}
-                className='text-4xl md:text-7xl font-bold mb-6 leading-tight'
+                className='text-4xl md:text-8xl font-bold mb-3 leading-tight text-left'
               />
             )}
 
             {subtitle && (
               <AnimatedSubtitle
                 text={subtitle}
-                className='text-xl md:text-2xl mb-8 text-gray-700'
+                className='text-xl md:text-2xl mb-8 text-gray-700 text-left max-w-[50%] font-bold'
               />
             )}
 
             {/* Highlights */}
             {highlights.length > 0 && (
               <motion.div
-                className='space-y-4 mb-8'
+                className='space-y-4 mb-10'
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -302,7 +302,7 @@ export default function HeroSection({
 
             {/* CTA Buttons */}
             <motion.div
-              className='space-y-4'
+              className='space-y-4 flex flex-col md:flex-row'
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
