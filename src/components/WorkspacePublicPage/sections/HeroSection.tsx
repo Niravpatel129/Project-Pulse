@@ -224,7 +224,7 @@ export default function HeroSection({
         minHeight,
       }}
     >
-      <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden flex items-center justify-center p-6 relative'>
+      <div className='bg-[linear-gradient(115deg,var(--tw-gradient-stops))] from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] sm:bg-[linear-gradient(145deg,var(--tw-gradient-stops))] w-full h-full rounded-[30px] overflow-hidden flex items-center p-6 relative'>
         {navigation.length > 0 && (
           <motion.nav
             initial={{ opacity: 0, y: -20 }}
@@ -325,8 +325,8 @@ export default function HeroSection({
         </AnimatePresence>
 
         {/* Content */}
-        <div className='relative mx-auto '>
-          <div className={`${textAlign === 'center' ? 'mx-auto' : ''}`}>
+        <div className='container mx-auto px-6'>
+          <div className='mx-auto'>
             {title && (
               <AnimatedText
                 text={title}
