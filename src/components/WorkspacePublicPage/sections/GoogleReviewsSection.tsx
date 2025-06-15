@@ -1,5 +1,6 @@
 'use client';
 
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { FaStar } from 'react-icons/fa';
@@ -37,6 +38,7 @@ export default function GoogleReviewsSection({
 }: GoogleReviewsSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -88,9 +90,9 @@ export default function GoogleReviewsSection({
         <div className='relative mt-10 md:mt-20'>
           <motion.div
             ref={ref}
-            variants={containerVariants}
-            initial='hidden'
-            animate={isInView ? 'visible' : 'hidden'}
+            variants={isMobile ? {} : containerVariants}
+            initial={isMobile ? false : 'hidden'}
+            animate={isMobile ? false : isInView ? 'visible' : 'hidden'}
             className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'
           >
             {reviews.map((review, idx) => {
@@ -99,7 +101,7 @@ export default function GoogleReviewsSection({
               return (
                 <motion.div
                   key={review.id}
-                  variants={itemVariants}
+                  variants={isMobile ? {} : itemVariants}
                   className={
                     `hp-reviews_item bg-white rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 w-full` +
                     (isMiddle ? ' lg:mt-[-40px] lg:mb-8 ' : '')
