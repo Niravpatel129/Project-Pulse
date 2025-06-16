@@ -248,7 +248,7 @@ export default function CustomersPage() {
 
   const addLabelMutation = useMutation({
     mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
-      await newRequest.patch(`/clients/${customerId}/labels`, { label });
+      await newRequest.patch(`/clients/${customerId}/labels`, { labels: [label] });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
