@@ -1,8 +1,10 @@
+import { SendInvoiceDialog } from '@/app/[workspace]/dashboard/bills/SendInvoiceDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
-import { Copy, Download } from 'lucide-react';
-import React from 'react';
+import { Copy, Download, Send } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface InvoiceCreatedConfirmationProps {
   createdInvoiceData: any;
@@ -17,6 +19,8 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
   onCreateAnother,
   isEditing,
 }) => {
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
+
   return (
     <div className='h-full bg-neutral-50 dark:bg-neutral-900 flex flex-col'>
       <div className='flex-1 overflow-y-auto p-8'>
@@ -78,61 +82,94 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
             <div className='text-xs text-neutral-400 dark:text-neutral-500 uppercase tracking-wide'>
               Share
             </div>
-            <div className='flex gap-2'>
-              <Input
-                value={`${window.location.origin}/i/${createdInvoiceData._id}`}
-                readOnly
-                className='flex-1 text-xs font-mono bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 focus:border-neutral-300 dark:focus:border-neutral-600 transition-colors'
-              />
-              <Button
-                variant='outline'
-                size='icon'
-                className='shrink-0 border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-150'
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    `${window.location.origin}/i/${createdInvoiceData._id}`,
-                  );
-                }}
-              >
-                <Copy className='h-3 w-3 text-neutral-500 dark:text-neutral-400' />
-              </Button>
-              <Button
-                variant='outline'
-                size='icon'
-                className='shrink-0 border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-150'
-                onClick={async () => {
-                  try {
-                    const response = await newRequest.get(
-                      `/invoices2/${createdInvoiceData._id}/download`,
-                      { responseType: 'blob' },
-                    );
+            <TooltipProvider delayDuration={0}>
+              <div className='flex gap-2'>
+                <Input
+                  value={`${window.location.origin}/i/${createdInvoiceData._id}`}
+                  readOnly
+                  className='flex-1 text-xs font-mono bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 focus:border-neutral-300 dark:focus:border-neutral-600 transition-colors'
+                />
 
-                    // Create a blob from the PDF data
-                    const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+                {/* Copy */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='shrink-0 border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-150'
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/i/${createdInvoiceData._id}`,
+                        );
+                      }}
+                    >
+                      <Copy className='h-3 w-3 text-neutral-500 dark:text-neutral-400' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy link</TooltipContent>
+                </Tooltip>
 
-                    // Create a URL for the blob
-                    const url = window.URL.createObjectURL(pdfBlob);
+                {/* Download */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='shrink-0 border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-150'
+                      onClick={async () => {
+                        try {
+                          const response = await newRequest.get(
+                            `/invoices2/${createdInvoiceData._id}/download`,
+                            { responseType: 'blob' },
+                          );
 
-                    // Create a temporary link element
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `Invoice-${createdInvoiceData.invoiceNumber}.pdf`;
+                          // Create a blob from the PDF data
+                          const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
 
-                    // Append to body, click, and remove
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                          // Create a URL for the blob
+                          const url = window.URL.createObjectURL(pdfBlob);
 
-                    // Clean up the URL object
-                    window.URL.revokeObjectURL(url);
-                  } catch (error) {
-                    console.error('Error downloading PDF:', error);
-                  }
-                }}
-              >
-                <Download className='h-3 w-3 text-neutral-500 dark:text-neutral-400' />
-              </Button>
-            </div>
+                          // Create a temporary link element
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `Invoice-${createdInvoiceData.invoiceNumber}.pdf`;
+
+                          // Append to body, click, and remove
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+
+                          // Clean up the URL object
+                          window.URL.revokeObjectURL(url);
+                        } catch (error) {
+                          console.error('Error downloading PDF:', error);
+                        }
+                      }}
+                    >
+                      <Download className='h-3 w-3 text-neutral-500 dark:text-neutral-400' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Download PDF</TooltipContent>
+                </Tooltip>
+
+                {/* Send */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='shrink-0 border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-150'
+                      onClick={() => {
+                        return setIsSendDialogOpen(true);
+                      }}
+                    >
+                      <Send className='h-3 w-3 text-neutral-500 dark:text-neutral-400' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Send invoice</TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           </div>
         </div>
       </div>
@@ -157,6 +194,14 @@ const InvoiceCreatedConfirmation: React.FC<InvoiceCreatedConfirmationProps> = ({
           )}
         </div>
       </div>
+
+      <SendInvoiceDialog
+        isOpen={isSendDialogOpen}
+        onClose={() => {
+          return setIsSendDialogOpen(false);
+        }}
+        invoice={createdInvoiceData}
+      />
     </div>
   );
 };

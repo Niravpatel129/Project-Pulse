@@ -672,8 +672,9 @@ const InvoiceSheet = ({
 
     const id = createdInvoiceData?._id || createdInvoiceData?.id;
     if (id) {
-      router.push(`/dashboard/invoices?inv=${id}`);
       onOpenChange(false);
+
+      window.open(`/i/${id}`, '_blank');
     }
   };
 
