@@ -7,12 +7,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenu as LabelMenu,
-  DropdownMenuContent as LabelMenuContent,
-  DropdownMenuItem as LabelMenuItem,
-  DropdownMenuSeparator as LabelMenuSeparator,
-  DropdownMenuTrigger as LabelMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input as DropdownInput, Input } from '@/components/ui/input';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -108,6 +104,7 @@ const LabelSelector = ({
   onRemove: (customer: Customer, label: string) => void;
 }) => {
   const [input, setInput] = useState('');
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = () => {
     const trimmed = input.trim();
@@ -118,87 +115,88 @@ const LabelSelector = ({
   };
 
   return (
-    <LabelMenu>
-      <LabelMenuTrigger asChild>
-        <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
-          {customer.labels && customer.labels.length > 0 ? (
-            customer.labels.map((l) => {
-              return (
-                <Badge
-                  key={l}
-                  variant='secondary'
-                  className='mb-0.5 group relative px-2.5 transition-[padding,background] duration-150 ease-in-out hover:pr-7'
-                  onClick={(e) => {
-                    // Only open dropdown if not clicking the remove button
-                    if ((e.target as HTMLElement).closest('button')) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                  }}
-                >
-                  <span className='truncate block'>{l}</span>
-                  <button
-                    type='button'
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
+    <div className='relative'>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
+            {customer.labels && customer.labels.length > 0 ? (
+              customer.labels.map((l) => {
+                return (
+                  <Badge
+                    key={l}
+                    variant='secondary'
+                    className='mb-0.5 group relative px-2.5 transition-[padding,background] duration-150 ease-in-out hover:pr-7'
                     onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onRemove(customer, l);
+                      return e.stopPropagation();
                     }}
-                    className='absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 inline-flex items-center justify-center opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity duration-150 ease-in-out text-muted-foreground'
                   >
-                    ×
-                  </button>
-                </Badge>
-              );
-            })
-          ) : (
-            <span className='text-muted-foreground text-xs'>Add label</span>
-          )}
-          <Tag className='w-3 h-3 text-muted-foreground' />
-        </div>
-      </LabelMenuTrigger>
-      <LabelMenuContent className='w-56'>
-        <div className='px-2 py-2'>
-          <DropdownInput
-            placeholder='Create or search'
-            value={input}
-            onChange={(e) => {
-              return setInput(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-        </div>
-        <LabelMenuSeparator />
-        {labelOptions.length === 0 && <LabelMenuItem disabled>No labels yet</LabelMenuItem>}
-        {labelOptions.map((l) => {
-          return (
-            <LabelMenuItem
-              key={l}
-              onSelect={() => {
-                return onAdd(customer, l);
+                    <span className='truncate block'>{l}</span>
+                    <button
+                      type='button'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove(customer, l);
+                      }}
+                      className='absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 inline-flex items-center justify-center opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity duration-150 ease-in-out text-muted-foreground'
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                );
+              })
+            ) : (
+              <span className='text-muted-foreground text-xs'>Add label</span>
+            )}
+            <Tag className='w-3 h-3 text-muted-foreground' />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className='w-56' align='start'>
+          <div className='px-2 py-2'>
+            <DropdownInput
+              placeholder='Create or search'
+              value={input}
+              onChange={(e) => {
+                return setInput(e.target.value);
               }}
-            >
-              {l}
-            </LabelMenuItem>
-          );
-        })}
-        {input.trim() && !labelOptions.includes(input.trim()) && (
-          <>
-            <LabelMenuSeparator />
-            <LabelMenuItem onSelect={handleSubmit}>+ Add &quot;{input.trim()}&quot;</LabelMenuItem>
-          </>
-        )}
-      </LabelMenuContent>
-    </LabelMenu>
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+            />
+          </div>
+          <DropdownMenuSeparator />
+          {labelOptions.length === 0 && <DropdownMenuItem disabled>No labels yet</DropdownMenuItem>}
+          {labelOptions.map((l) => {
+            return (
+              <DropdownMenuItem
+                key={l}
+                onSelect={() => {
+                  onAdd(customer, l);
+                  setOpen(false);
+                }}
+              >
+                {l}
+              </DropdownMenuItem>
+            );
+          })}
+          {input.trim() && !labelOptions.includes(input.trim()) && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => {
+                  handleSubmit();
+                  setOpen(false);
+                }}
+              >
+                + Add &quot;{input.trim()}&quot;
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 
