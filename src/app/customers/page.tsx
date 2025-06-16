@@ -1,333 +1,367 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useSidebar } from '@/components/ui/sidebar';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useClients } from '@/hooks/useClients';
-import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Loader2, Plus, Search, UserRound } from 'lucide-react';
-import { useLayoutEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { AddCustomerDialog } from './components/AddCustomerDialog';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Loader2, MoreHorizontal, Plus, UserRound } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { useMemo, useState } from 'react';
+import { FiSidebar } from 'react-icons/fi';
+
+interface Customer {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email?: string;
+  };
+  phone?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+const TABLE_HEADERS = [
+  { id: 'name', label: 'Name', className: 'px-4 py-3 w-[220px]' },
+  { id: 'email', label: 'Email', className: 'px-4 py-3 w-[250px]' },
+  { id: 'phone', label: 'Phone', className: 'px-4 py-3 w-[180px]' },
+  { id: 'status', label: 'Status', className: 'px-4 py-3 w-[120px]' },
+  { id: 'createdAt', label: 'Created', className: 'px-4 py-3 w-[180px]' },
+  { id: 'actions', label: 'Actions', className: 'px-4 py-3 w-[80px]' },
+];
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+      }`}
+    >
+      {active ? 'Active' : 'Inactive'}
+    </span>
+  );
+}
+
+// Lazy-load the (large) dialog so it only mounts when actually opened.
+const AddCustomerDialog = dynamic<any>(
+  () => {
+    return import('@/app/customers/components/AddCustomerDialog').then((m) => {
+      return m.AddCustomerDialog;
+    });
+  },
+  { ssr: false },
+);
 
 export default function CustomersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortColumn, setSortColumn] = useState('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [customerModalOpen, setCustomerModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contact' | 'billing' | 'shipping' | 'more'>(
-    'contact',
-  );
-  const [newCustomer, setNewCustomer] = useState({
-    name: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    industry: '',
-    type: 'Individual',
-    totalSpent: 0,
-    projects: 0,
-    rating: 0,
-    status: 'Active',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      country: '',
-      zip: '',
-    },
-    shippingAddress: {
-      street: '',
-      city: '',
-      state: '',
-      country: '',
-      zip: '',
-    },
-    website: '',
-    internalNotes: '',
+  const { toggleSidebar } = useSidebar();
+  const { clients: rawClients, isLoading } = useClients();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [visibleColumns, setVisibleColumns] = useLocalStorage('customer-visible-columns', {
+    Name: true,
+    Email: true,
+    Phone: true,
+    Status: true,
+    Created: true,
+    Actions: true,
   });
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const tabContentRef = useRef<HTMLDivElement>(null);
-  const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
-  const { clients: apiClients, isLoading: isLoadingClients } = useClients();
-  const queryClient = useQueryClient();
 
-  useLayoutEffect(() => {
-    if (tabContentRef.current) {
-      setTabContentHeight(tabContentRef.current.scrollHeight);
-    }
-  }, [activeTab, customerModalOpen]);
-
-  const resetCustomerForm = () => {
-    setNewCustomer({
-      name: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      industry: '',
-      type: 'Individual',
-      totalSpent: 0,
-      projects: 0,
-      rating: 0,
-      status: 'Active',
-      address: {
-        street: '',
-        city: '',
-        state: '',
-        country: '',
-        zip: '',
-      },
-      shippingAddress: {
-        street: '',
-        city: '',
-        state: '',
-        country: '',
-        zip: '',
-      },
-      website: '',
-      internalNotes: '',
+  const customers: Customer[] = useMemo(() => {
+    return rawClients.map((c: any) => {
+      return {
+        _id: c._id,
+        user: c.user,
+        phone: c.phone,
+        isActive: c.isActive,
+        createdAt: c.createdAt,
+      } as Customer;
     });
-    setActiveTab('contact');
-  };
+  }, [rawClients]);
 
-  const validateEmail = (email: string) => {
-    if (!email) return true;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  // Derived counts and filtered list are memoized to avoid expensive recalculations
+  const { totalCustomers, activeCustomers, inactiveCustomers, filteredCustomers } = useMemo(() => {
+    const total = customers.length;
+    const active = customers.filter((c) => {
+      return c.isActive;
+    }).length;
+    const inactive = total - active;
 
-  const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const email = e.target.value;
-    if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError(null);
-    }
-  };
+    const list = customers.filter((c) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        c.user.name.toLowerCase().includes(q) || c.user.email?.toLowerCase().includes(q);
+      const matchesStatus =
+        statusFilter === 'all' || (statusFilter === 'active' ? c.isActive : !c.isActive);
+      return matchesSearch && matchesStatus;
+    });
 
-  const createClientMutation = useMutation({
-    mutationFn: async (clientData: any) => {
-      const response = await newRequest.post('/clients', clientData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      setCustomerModalOpen(false);
-      resetCustomerForm();
-      toast.success('Customer added successfully');
-    },
-  });
+    return {
+      totalCustomers: total,
+      activeCustomers: active,
+      inactiveCustomers: inactive,
+      filteredCustomers: list,
+    } as const;
+  }, [customers, search, statusFilter]);
 
-  const handleCreateCustomer = () => {
-    if (!newCustomer.name) return;
-
-    const clientData = {
-      user: {
-        name: newCustomer.name,
-        email: newCustomer.contactEmail,
+  const columns = TABLE_HEADERS.map((header) => {
+    return {
+      id: header.id,
+      accessorKey: header.id,
+      header: header.label,
+      meta: { className: header.className },
+      cell: ({ row }: { row: { original: Customer } }) => {
+        const customer = row.original;
+        switch (header.id) {
+          case 'name':
+            return (
+              <div className='flex items-center gap-2 max-w-[220px]'>
+                <div className='w-8 h-8 rounded-full bg-muted flex items-center justify-center'>
+                  <UserRound className='w-4 h-4 text-muted-foreground' />
+                </div>
+                <span className='font-medium truncate'>{customer.user.name}</span>
+              </div>
+            );
+          case 'email':
+            return <span className='truncate'>{customer.user.email || '-'}</span>;
+          case 'phone':
+            return <span>{customer.phone || '-'}</span>;
+          case 'status':
+            return <StatusBadge active={customer.isActive} />;
+          case 'createdAt':
+            return <span>{formatDate(customer.createdAt)}</span>;
+          case 'actions':
+            return (
+              <Button variant='ghost' size='icon' className='h-8 w-8 p-0'>
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            );
+          default:
+            return null;
+        }
       },
-      phone: newCustomer.contactPhone,
-      address: newCustomer.address,
-      shippingAddress: newCustomer.shippingAddress,
-      contact: {
-        firstName: newCustomer.contactName.split(' ')[0] || '',
-        lastName: newCustomer.contactName.split(' ').slice(1).join(' ') || '',
-      },
-      industry: newCustomer.industry,
-      type: newCustomer.type,
-      status: newCustomer.status,
-      website: newCustomer.website,
-      internalNotes: newCustomer.internalNotes,
     };
-
-    createClientMutation.mutate(clientData);
-  };
-
-  // Function to handle column sorting
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  // Filter clients based on search query and status filter
-  const filteredClients = apiClients.filter((client) => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      client.user.name.toLowerCase().includes(searchLower) ||
-      client.user.email?.toLowerCase().includes(searchLower) ||
-      client.contact?.firstName?.toLowerCase().includes(searchLower) ||
-      client.contact?.lastName?.toLowerCase().includes(searchLower);
-
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
   });
 
-  // Sort the filtered clients
-  const sortedClients = [...filteredClients].sort((a, b) => {
-    let comparison = 0;
-
-    if (sortColumn === 'totalSpent' || sortColumn === 'projects' || sortColumn === 'rating') {
-      comparison = (a[sortColumn] || 0) - (b[sortColumn] || 0);
-    } else {
-      const aValue = String(a[sortColumn] || '').toLowerCase();
-      const bValue = String(b[sortColumn] || '').toLowerCase();
-      comparison = aValue.localeCompare(bValue);
-    }
-
-    return sortDirection === 'asc' ? comparison : -comparison;
+  const table = useReactTable({
+    data: filteredCustomers,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
-  const deleteClientMutation = useMutation({
-    mutationFn: async (clientId: string) => {
-      const response = await newRequest.delete(`/clients/${clientId}`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      toast.success('Client deleted successfully');
-    },
-  });
-
-  const handleDeleteClient = (clientId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this client?')) {
-      deleteClientMutation.mutate(clientId);
-    }
+  const toggleColumn = (column: string) => {
+    setVisibleColumns((prev) => {
+      return { ...prev, [column]: !prev[column] };
+    });
   };
 
   return (
-    <div className='flex flex-col h-full w-full mt-2'>
-      <div className='flex items-center justify-between px-4 py-2 border-b border-[#E4E4E7] dark:border-[#232428]'>
+    <div className='flex flex-col h-full w-full'>
+      {/* Header */}
+      <div className='flex items-center justify-between px-4 pb-2 pt-3 border-b border-[#E4E4E7] dark:border-[#232428] bg-background'>
         <div className='flex items-center gap-2'>
-          <h1 className='text-lg font-semibold text-[#3F3F46] dark:text-white'>Customers</h1>
-        </div>
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            className='bg-[#F4F4F5] dark:bg-[#232323] border-[#E4E4E7] dark:border-[#333] text-[#3F3F46] dark:text-white text-sm h-8 px-4'
-            onClick={() => {
-              setCustomerModalOpen(true);
-            }}
-          >
-            <Plus className='w-4 h-4 mr-2' />
-            Add Customer
+          <Button variant='ghost' size='icon' onClick={toggleSidebar}>
+            <FiSidebar size={20} className='text-muted-foreground' />
           </Button>
+          <h1 className='text-lg font-semibold'>Customers</h1>
+        </div>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => {
+            return setAddDialogOpen(true);
+          }}
+          className='h-8 px-4'
+        >
+          <Plus className='w-4 h-4 mr-2' /> Add Customer
+        </Button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className='px-4 pt-4'>
+        <div className='grid grid-cols-3 gap-2 sm:gap-4 mb-6'>
+          <SummaryCard label='Total' count={totalCustomers} />
+          <SummaryCard label='Active' count={activeCustomers} />
+          <SummaryCard label='Inactive' count={inactiveCustomers} />
         </div>
       </div>
 
-      <div className='px-4 py-2'>
-        <div className='relative'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
+      {/* Controls */}
+      <div className='px-4 flex items-center gap-2 mb-4'>
+        <div className='relative w-full max-w-xs'>
           <Input
-            type='text'
             placeholder='Search customers...'
-            value={searchQuery}
+            className='pl-9'
+            value={search}
             onChange={(e) => {
-              return setSearchQuery(e.target.value);
+              return setSearch(e.target.value);
             }}
-            className='w-full pl-9 bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#3F3F46]/60 dark:focus-visible:ring-[#8C8C8C]'
           />
+          <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'>
+            <svg
+              width='14'
+              height='14'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+            >
+              <circle cx='11' cy='11' r='8' />
+              <line x1='21' y1='21' x2='16.65' y2='16.65' />
+            </svg>
+          </span>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' size='icon' className='w-9 h-9'>
+              <svg
+                width='16'
+                height='16'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                viewBox='0 0 24 24'
+              >
+                <path d='M4 4h16v2H4zm2 6h12v2H6zm4 6h4v2h-4z' />
+              </svg>
+              <span className='sr-only'>Columns</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-48'>
+            <DropdownMenuItem className='font-medium text-sm text-muted-foreground'>
+              Visible Columns
+            </DropdownMenuItem>
+            {Object.entries(visibleColumns).map(([column, isVisible]) => {
+              return (
+                <DropdownMenuItem
+                  key={column}
+                  className='flex items-center gap-2'
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    toggleColumn(column);
+                  }}
+                >
+                  <Checkbox
+                    checked={isVisible}
+                    onCheckedChange={() => {
+                      return toggleColumn(column);
+                    }}
+                  />
+                  <span>{column}</span>
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
-        <div className='px-3'>
-          <div className='grid grid-cols-12 gap-4 py-2 text-sm font-medium text-[#3F3F46]/60 dark:text-[#8C8C8C] border-b border-[#E4E4E7] dark:border-[#232428]'>
-            <div
-              className='col-span-4 cursor-pointer'
-              onClick={() => {
-                return handleSort('name');
-              }}
-            >
-              Name
-            </div>
-            <div
-              className='col-span-3 cursor-pointer'
-              onClick={() => {
-                return handleSort('contact');
-              }}
-            >
-              Contact
-            </div>
-            <div
-              className='col-span-2 cursor-pointer'
-              onClick={() => {
-                return handleSort('totalSpent');
-              }}
-            >
-              Total Spent (USD)
-            </div>
+      {/* Table */}
+      <div className='flex-1 overflow-auto px-4'>
+        {isLoading ? (
+          <div className='flex items-center justify-center h-40'>
+            <Loader2 className='w-6 h-6 animate-spin text-muted-foreground' />
           </div>
-
-          {isLoadingClients ? (
-            <div className='flex items-center justify-center h-32'>
-              <Loader2 className='w-6 h-6 text-[#3F3F46]/60 dark:text-[#8C8C8C] animate-spin' />
-            </div>
-          ) : sortedClients.length === 0 ? (
-            <div className='flex flex-col items-center justify-center h-32 text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
-              <p className='text-lg'>No customers found</p>
-              <p className='text-sm mt-2'>Add your first customer to get started</p>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              {sortedClients.map((client) => {
-                return (
-                  <div
-                    key={client._id}
-                    className='grid grid-cols-12 gap-4 py-3 text-sm border-b border-[#E4E4E7] dark:border-[#232428] hover:bg-[#F4F4F5] dark:hover:bg-[#252525] transition-colors'
-                  >
-                    <div className='col-span-4'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-8 h-8 rounded-full bg-[#E4E4E7] dark:bg-[#373737] flex items-center justify-center text-[#3F3F46] dark:text-[#9f9f9f]'>
-                          <UserRound className='w-4 h-4' />
-                        </div>
-                        <div>
-                          <div className='font-medium text-[#3F3F46] dark:text-white'>
-                            {client.user.name}
-                          </div>
-                          <div className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
-                            {client.industry || 'No industry'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='col-span-3'>
-                      <div className='flex flex-col'>
-                        <div className='text-[#3F3F46] dark:text-white'>
-                          {client.contact?.firstName} {client.contact?.lastName}
-                        </div>
-                        <div className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
-                          {client.user.email || 'No email'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className='col-span-2 text-[#3F3F46] dark:text-white'>
-                      {client.totalSpent?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }) || '0.00'}
-                    </div>
-                  </div>
-                );
-              })}
-            </motion.div>
-          )}
-        </div>
+        ) : filteredCustomers.length === 0 ? (
+          <div className='flex flex-col items-center justify-center h-40 text-muted-foreground'>
+            No customers found
+          </div>
+        ) : (
+          <div>
+            <Table>
+              <TableHeader>
+                <TableRow className='bg-muted/50'>
+                  {table.getHeaderGroups()[0].headers.map((header) => {
+                    if (
+                      !visibleColumns[
+                        header.column.id.charAt(0).toUpperCase() + header.column.id.slice(1)
+                      ]
+                    )
+                      return null;
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={(header.column.columnDef.meta as any).className}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => {
+                  return (
+                    <TableRow key={row.id} className='divide-x divide-muted-foreground/10'>
+                      {row.getVisibleCells().map((cell) => {
+                        if (
+                          !visibleColumns[
+                            cell.column.id.charAt(0).toUpperCase() + cell.column.id.slice(1)
+                          ]
+                        )
+                          return null;
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={(cell.column.columnDef.meta as any).className}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
 
-      <AddCustomerDialog open={customerModalOpen} onOpenChange={setCustomerModalOpen} />
+      <AddCustomerDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+    </div>
+  );
+}
+
+function SummaryCard({ label, count }: { label: string; count: number }) {
+  return (
+    <div className='border bg-background text-card-foreground rounded-lg h-[100px] flex flex-col justify-center px-4'>
+      <p className='text-sm text-muted-foreground'>{label}</p>
+      <p className='text-2xl font-mono font-medium'>{count.toLocaleString()}</p>
     </div>
   );
 }
