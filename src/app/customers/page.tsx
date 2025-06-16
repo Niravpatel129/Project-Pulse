@@ -120,15 +120,7 @@ const LabelSelector = ({
   return (
     <LabelMenu>
       <LabelMenuTrigger asChild>
-        <div
-          className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'
-          onClick={(e) => {
-            // Only open dropdown if not clicking the remove button
-            if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-              e.preventDefault();
-            }
-          }}
-        >
+        <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
           {customer.labels && customer.labels.length > 0 ? (
             customer.labels.map((l) => {
               return (
@@ -136,9 +128,21 @@ const LabelSelector = ({
                   key={l}
                   variant='secondary'
                   className='mb-0.5 group relative px-2.5 transition-[padding,background] duration-150 ease-in-out hover:pr-7'
+                  onClick={(e) => {
+                    // Only open dropdown if not clicking the remove button
+                    if ((e.target as HTMLElement).closest('button')) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                  }}
                 >
                   <span className='truncate block'>{l}</span>
                   <button
+                    type='button'
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -274,17 +278,72 @@ export default function CustomersPage() {
     mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
       await newRequest.patch(`/clients/${customerId}/labels`, { labels: [label] });
     },
-    onSuccess: () => {
+    onMutate: async ({ customerId, label }) => {
+      await queryClient.cancelQueries({ queryKey: ['clients'] });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['clients']);
+
+      // Optimistically update the client
+      queryClient.setQueryData(['clients'], (old: any) => {
+        const oldData = old?.data || [];
+        return {
+          ...old,
+          data: oldData.map((client: any) => {
+            if (client._id === customerId) {
+              return {
+                ...client,
+                labels: [...(client.labels || []), label],
+              };
+            }
+            return client;
+          }),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, { customerId, label }, context) => {
+      queryClient.setQueryData(['clients'], context?.previousData);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
   });
 
   const removeLabelMutation = useMutation({
     mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
-      // Send a request to remove the label
       await newRequest.delete(`/clients/${customerId}/labels/${encodeURIComponent(label)}`);
     },
-    onSuccess: () => {
+    onMutate: async ({ customerId, label }) => {
+      await queryClient.cancelQueries({ queryKey: ['clients'] });
+
+      const previousData = queryClient.getQueryData(['clients']);
+
+      queryClient.setQueryData(['clients'], (old: any) => {
+        const oldData = old?.data || [];
+        return {
+          ...old,
+          data: oldData.map((client: any) => {
+            if (client._id === customerId) {
+              return {
+                ...client,
+                labels: (client.labels || []).filter((l) => {
+                  return l !== label;
+                }),
+              };
+            }
+            return client;
+          }),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, { customerId, label }, context) => {
+      queryClient.setQueryData(['clients'], context?.previousData);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
   });
