@@ -20,7 +20,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
-import { RiFileListFill, RiInboxFill, RiSettingsFill } from 'react-icons/ri';
+import { RiFileListFill, RiInboxFill, RiSettingsFill, RiUserFill } from 'react-icons/ri';
 
 // Custom hook for media queries
 function useMediaQuery(query: string) {
@@ -107,11 +107,11 @@ export default function AppSidebar() {
       {
         name: 'Payments',
         items: [
-          // {
-          //   name: 'Invoices',
-          //   href: '/dashboard/invoices',
-          //   icon: RiFileListFill,
-          // },
+          {
+            name: 'Customers',
+            href: '/dashboard/customers',
+            icon: RiUserFill,
+          },
           {
             name: 'Invoices',
             href: '/dashboard/bills',
