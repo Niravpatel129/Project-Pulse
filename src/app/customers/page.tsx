@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -7,6 +8,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenu as LabelMenu,
+  DropdownMenuContent as LabelMenuContent,
+  DropdownMenuItem as LabelMenuItem,
+  DropdownMenuSeparator as LabelMenuSeparator,
+  DropdownMenuTrigger as LabelMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -20,6 +26,8 @@ import {
 } from '@/components/ui/table';
 import { useClients } from '@/hooks/useClients';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   flexRender,
   getCoreRowModel,
@@ -27,9 +35,9 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Loader2, MoreHorizontal, Plus, UserRound } from 'lucide-react';
+import { Loader2, MoreHorizontal, Plus, Tag, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FiSidebar } from 'react-icons/fi';
 
 interface Customer {
@@ -42,12 +50,16 @@ interface Customer {
   phone?: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt?: string;
+  labels?: string[];
 }
 
 const TABLE_HEADERS = [
   { id: 'name', label: 'Name', className: 'px-4 py-3 w-[220px]' },
   { id: 'email', label: 'Email', className: 'px-4 py-3 w-[250px]' },
   { id: 'phone', label: 'Phone', className: 'px-4 py-3 w-[180px]' },
+  { id: 'labels', label: 'Labels', className: 'px-4 py-3 w-[220px]' },
+  { id: 'updatedAt', label: 'Updated', className: 'px-4 py-3 w-[180px]' },
   { id: 'status', label: 'Status', className: 'px-4 py-3 w-[120px]' },
   { id: 'createdAt', label: 'Created', className: 'px-4 py-3 w-[180px]' },
   { id: 'actions', label: 'Actions', className: 'px-4 py-3 w-[80px]' },
@@ -94,6 +106,8 @@ export default function CustomersPage() {
     Name: true,
     Email: true,
     Phone: true,
+    Labels: true,
+    Updated: true,
     Status: true,
     Created: true,
     Actions: true,
@@ -107,6 +121,8 @@ export default function CustomersPage() {
         phone: c.phone,
         isActive: c.isActive,
         createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        labels: c.labels,
       } as Customer;
     });
   }, [rawClients]);
@@ -136,6 +152,46 @@ export default function CustomersPage() {
     } as const;
   }, [customers, search, statusFilter]);
 
+  const queryClient = useQueryClient();
+
+  // Collect label options from existing customers
+  const [labelOptions, setLabelOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const allLabels = new Set<string>();
+    rawClients.forEach((c: any) => {
+      (c.labels || []).forEach((l: string) => {
+        return allLabels.add(l);
+      });
+    });
+    setLabelOptions(Array.from(allLabels));
+  }, [rawClients]);
+
+  const addLabelMutation = useMutation({
+    mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
+      await newRequest.patch(`/clients/${customerId}/labels`, { label });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
+  });
+
+  const handleAddLabel = (customer: Customer, label: string) => {
+    if (!customer.labels?.includes(label)) {
+      addLabelMutation.mutate({ customerId: customer._id, label });
+    }
+  };
+
+  const handleCreateLabel = (customer: Customer) => {
+    const newLabel = prompt('New label name');
+    if (newLabel) {
+      setLabelOptions((prev) => {
+        return prev.includes(newLabel) ? prev : [...prev, newLabel];
+      });
+      handleAddLabel(customer, newLabel);
+    }
+  };
+
   const columns = TABLE_HEADERS.map((header) => {
     return {
       id: header.id,
@@ -158,6 +214,51 @@ export default function CustomersPage() {
             return <span className='truncate'>{customer.user.email || '-'}</span>;
           case 'phone':
             return <span>{customer.phone || '-'}</span>;
+          case 'labels':
+            return (
+              <LabelMenu>
+                <LabelMenuTrigger asChild>
+                  <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
+                    {customer.labels && customer.labels.length > 0 ? (
+                      customer.labels.map((l) => {
+                        return (
+                          <Badge key={l} variant='secondary' className='mb-0.5'>
+                            {l}
+                          </Badge>
+                        );
+                      })
+                    ) : (
+                      <span className='text-muted-foreground text-xs'>Add label</span>
+                    )}
+                    <Tag className='w-3 h-3 text-muted-foreground' />
+                  </div>
+                </LabelMenuTrigger>
+                <LabelMenuContent>
+                  {labelOptions.map((l) => {
+                    return (
+                      <LabelMenuItem
+                        key={l}
+                        onSelect={() => {
+                          return handleAddLabel(customer, l);
+                        }}
+                      >
+                        {l}
+                      </LabelMenuItem>
+                    );
+                  })}
+                  <LabelMenuSeparator />
+                  <LabelMenuItem
+                    onSelect={() => {
+                      return handleCreateLabel(customer);
+                    }}
+                  >
+                    + Create label
+                  </LabelMenuItem>
+                </LabelMenuContent>
+              </LabelMenu>
+            );
+          case 'updatedAt':
+            return <span>{customer.updatedAt ? formatDate(customer.updatedAt) : '-'}</span>;
           case 'status':
             return <StatusBadge active={customer.isActive} />;
           case 'createdAt':
