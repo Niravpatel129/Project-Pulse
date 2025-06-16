@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator as LabelMenuSeparator,
   DropdownMenuTrigger as LabelMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+import { Input as DropdownInput, Input } from '@/components/ui/input';
 import { useSidebar } from '@/components/ui/sidebar';
 import {
   Table,
@@ -94,6 +94,85 @@ const AddCustomerDialog = dynamic<any>(
   },
   { ssr: false },
 );
+
+// Inline label selector component for cleaner UX
+const LabelSelector = ({
+  customer,
+  labelOptions,
+  onAdd,
+}: {
+  customer: Customer;
+  labelOptions: string[];
+  onAdd: (customer: Customer, label: string) => void;
+}) => {
+  const [input, setInput] = useState('');
+
+  const handleSubmit = () => {
+    const trimmed = input.trim();
+    if (trimmed) {
+      onAdd(customer, trimmed);
+      setInput('');
+    }
+  };
+
+  return (
+    <LabelMenu>
+      <LabelMenuTrigger asChild>
+        <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
+          {customer.labels && customer.labels.length > 0 ? (
+            customer.labels.map((l) => {
+              return (
+                <Badge key={l} variant='secondary' className='mb-0.5'>
+                  {l}
+                </Badge>
+              );
+            })
+          ) : (
+            <span className='text-muted-foreground text-xs'>Add label</span>
+          )}
+          <Tag className='w-3 h-3 text-muted-foreground' />
+        </div>
+      </LabelMenuTrigger>
+      <LabelMenuContent className='w-56'>
+        <div className='px-2 py-2'>
+          <DropdownInput
+            placeholder='Create or search'
+            value={input}
+            onChange={(e) => {
+              return setInput(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+          />
+        </div>
+        <LabelMenuSeparator />
+        {labelOptions.length === 0 && <LabelMenuItem disabled>No labels yet</LabelMenuItem>}
+        {labelOptions.map((l) => {
+          return (
+            <LabelMenuItem
+              key={l}
+              onSelect={() => {
+                return onAdd(customer, l);
+              }}
+            >
+              {l}
+            </LabelMenuItem>
+          );
+        })}
+        {input.trim() && !labelOptions.includes(input.trim()) && (
+          <>
+            <LabelMenuSeparator />
+            <LabelMenuItem onSelect={handleSubmit}>+ Add &quot;{input.trim()}&quot;</LabelMenuItem>
+          </>
+        )}
+      </LabelMenuContent>
+    </LabelMenu>
+  );
+};
 
 export default function CustomersPage() {
   const { toggleSidebar } = useSidebar();
@@ -216,46 +295,11 @@ export default function CustomersPage() {
             return <span>{customer.phone || '-'}</span>;
           case 'labels':
             return (
-              <LabelMenu>
-                <LabelMenuTrigger asChild>
-                  <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
-                    {customer.labels && customer.labels.length > 0 ? (
-                      customer.labels.map((l) => {
-                        return (
-                          <Badge key={l} variant='secondary' className='mb-0.5'>
-                            {l}
-                          </Badge>
-                        );
-                      })
-                    ) : (
-                      <span className='text-muted-foreground text-xs'>Add label</span>
-                    )}
-                    <Tag className='w-3 h-3 text-muted-foreground' />
-                  </div>
-                </LabelMenuTrigger>
-                <LabelMenuContent>
-                  {labelOptions.map((l) => {
-                    return (
-                      <LabelMenuItem
-                        key={l}
-                        onSelect={() => {
-                          return handleAddLabel(customer, l);
-                        }}
-                      >
-                        {l}
-                      </LabelMenuItem>
-                    );
-                  })}
-                  <LabelMenuSeparator />
-                  <LabelMenuItem
-                    onSelect={() => {
-                      return handleCreateLabel(customer);
-                    }}
-                  >
-                    + Create label
-                  </LabelMenuItem>
-                </LabelMenuContent>
-              </LabelMenu>
+              <LabelSelector
+                customer={customer}
+                labelOptions={labelOptions}
+                onAdd={handleAddLabel}
+              />
             );
           case 'updatedAt':
             return <span>{customer.updatedAt ? formatDate(customer.updatedAt) : '-'}</span>;
