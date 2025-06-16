@@ -100,10 +100,12 @@ const LabelSelector = ({
   customer,
   labelOptions,
   onAdd,
+  onRemove,
 }: {
   customer: Customer;
   labelOptions: string[];
   onAdd: (customer: Customer, label: string) => void;
+  onRemove: (customer: Customer, label: string) => void;
 }) => {
   const [input, setInput] = useState('');
 
@@ -118,12 +120,34 @@ const LabelSelector = ({
   return (
     <LabelMenu>
       <LabelMenuTrigger asChild>
-        <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
+        <div
+          className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'
+          onClick={(e) => {
+            // Only open dropdown if not clicking the remove button
+            if ((e.target as HTMLElement).tagName !== 'BUTTON') {
+              e.preventDefault();
+            }
+          }}
+        >
           {customer.labels && customer.labels.length > 0 ? (
             customer.labels.map((l) => {
               return (
-                <Badge key={l} variant='secondary' className='mb-0.5'>
-                  {l}
+                <Badge
+                  key={l}
+                  variant='secondary'
+                  className='mb-0.5 group relative px-2.5 transition-[padding,background] duration-150 ease-in-out hover:pr-7'
+                >
+                  <span className='truncate block'>{l}</span>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onRemove(customer, l);
+                    }}
+                    className='absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 inline-flex items-center justify-center opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity duration-150 ease-in-out text-muted-foreground'
+                  >
+                    ×
+                  </button>
                 </Badge>
               );
             })
@@ -255,10 +279,24 @@ export default function CustomersPage() {
     },
   });
 
+  const removeLabelMutation = useMutation({
+    mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
+      // Send a request to remove the label
+      await newRequest.delete(`/clients/${customerId}/labels/${encodeURIComponent(label)}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
+  });
+
   const handleAddLabel = (customer: Customer, label: string) => {
     if (!customer.labels?.includes(label)) {
       addLabelMutation.mutate({ customerId: customer._id, label });
     }
+  };
+
+  const handleRemoveLabel = (customer: Customer, label: string) => {
+    removeLabelMutation.mutate({ customerId: customer._id, label });
   };
 
   const handleCreateLabel = (customer: Customer) => {
@@ -299,6 +337,7 @@ export default function CustomersPage() {
                 customer={customer}
                 labelOptions={labelOptions}
                 onAdd={handleAddLabel}
+                onRemove={handleRemoveLabel}
               />
             );
           case 'updatedAt':
