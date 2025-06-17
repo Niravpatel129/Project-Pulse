@@ -22,7 +22,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { newRequest } from '@/utils/newRequest';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
-import { Calendar, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
+import { Calendar, MoreHorizontal, Plus, Tag, Ticket, User, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiFilter as FilterIcon, FiSidebar, FiX } from 'react-icons/fi';
@@ -512,279 +512,310 @@ export default function CustomersPage() {
           <Plus className='w-4 h-4 mr-2' /> Add Customer
         </Button>
       </div>
-
-      {/* Summary Cards */}
-      <div className='px-4 pt-4'>
-        <div className='flex gap-2 sm:gap-4 mb-4'>
-          <div className='w-[calc(25%-6px)] min-w-0'>
-            <SummaryCard
-              label='Total'
-              count={totalCustomers}
-              onClick={() => {
-                return removeFilter('status');
-              }}
-              active={!activeFilters.status}
-            />
-          </div>
-          <div className='w-[calc(25%-6px)] min-w-0'>
-            <SummaryCard
-              label='Active'
-              count={activeCustomers}
-              onClick={() => {
-                return handleFilterChange('status', 'active');
-              }}
-              active={activeFilters.status === 'active'}
-            />
-          </div>
-          <div className='w-[calc(25%-6px)] min-w-0'>
-            <SummaryCard
-              label='Inactive'
-              count={inactiveCustomers}
-              onClick={() => {
-                return handleFilterChange('status', 'inactive');
-              }}
-              active={activeFilters.status === 'inactive'}
-            />
-          </div>
-          <div className='w-[calc(25%-6px)] min-w-0'>
-            <SummaryCard
-              label='New This Month'
-              count={newThisMonth}
-              onClick={() => {
-                return handleFilterChange('createdDate', 'this_month');
-              }}
-              active={activeFilters.createdDate === 'this_month'}
-            />
+      <div className='p-4'>
+        {/* Summary Cards */}
+        <div className=''>
+          <div className='flex gap-2 sm:gap-4 mb-4'>
+            <div className='w-[calc(25%-6px)] min-w-0'>
+              <SummaryCard
+                label='Total'
+                count={totalCustomers}
+                onClick={() => {
+                  return removeFilter('status');
+                }}
+                active={!activeFilters.status}
+              />
+            </div>
+            <div className='w-[calc(25%-6px)] min-w-0'>
+              <SummaryCard
+                label='Active'
+                count={activeCustomers}
+                onClick={() => {
+                  return handleFilterChange('status', 'active');
+                }}
+                active={activeFilters.status === 'active'}
+              />
+            </div>
+            <div className='w-[calc(25%-6px)] min-w-0'>
+              <SummaryCard
+                label='Inactive'
+                count={inactiveCustomers}
+                onClick={() => {
+                  return handleFilterChange('status', 'inactive');
+                }}
+                active={activeFilters.status === 'inactive'}
+              />
+            </div>
+            <div className='w-[calc(25%-6px)] min-w-0'>
+              <SummaryCard
+                label='New This Month'
+                count={newThisMonth}
+                onClick={() => {
+                  return handleFilterChange('createdDate', 'this_month');
+                }}
+                active={activeFilters.createdDate === 'this_month'}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Controls */}
-      <div className='px-4 flex items-center justify-between mb-4'>
-        <div className='flex items-center gap-2'>
-          <div className='relative flex items-center max-w-xs w-full'>
-            <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
-            <Input
-              className='rounded-none pl-7 pr-10 border-slate-100 dark:border-[#232428]'
-              placeholder='Search or filter'
-              value={searchQuery}
-              onChange={(e) => {
-                return setSearchQuery(e.target.value);
-              }}
-            />
+        <div className='flex items-center justify-between w-full'>
+          <div className='flex items-center gap-1 mb-4 h-9 w-full'>
+            <div className='relative flex items-center max-w-xs w-full'>
+              <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
+              <Input
+                className='rounded-none pl-7 pr-10 border-slate-100 dark:border-[#232428]'
+                placeholder='Search or filter'
+                value={searchQuery}
+                onChange={(e) => {
+                  return setSearchQuery(e.target.value);
+                }}
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type='button'
+                    className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none'
+                    aria-label='Filter'
+                  >
+                    <VscListFilter className='w-4 h-4' />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className='text-xs w-[240px]'>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Calendar className='mr-2 w-4 h-4' /> Due Date
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('createdDate', 'today');
+                        }}
+                      >
+                        Today
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('createdDate', 'this_week');
+                        }}
+                      >
+                        This Week
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('createdDate', 'this_month');
+                        }}
+                      >
+                        This Month
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('createdDate', 'this_year');
+                        }}
+                      >
+                        This Year
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <User className='mr-2 w-4 h-4' /> Customer
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('labels', 'all');
+                        }}
+                      >
+                        All Customers
+                      </DropdownMenuItem>
+                      {customersList &&
+                        Array.from(
+                          new Set(
+                            customersList
+                              .map((inv) => {
+                                return inv.user?.name;
+                              })
+                              .filter((name): name is string => {
+                                return Boolean(name);
+                              }),
+                          ),
+                        ).map((name: string) => {
+                          return (
+                            <DropdownMenuItem
+                              key={name}
+                              onClick={() => {
+                                return handleFilterChange('labels', String(name));
+                              }}
+                            >
+                              {String(name)}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Ticket className='mr-2 w-4 h-4' /> Status
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'active');
+                        }}
+                      >
+                        Paid
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'unpaid');
+                        }}
+                      >
+                        Unpaid
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'overdue');
+                        }}
+                      >
+                        Overdue
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'draft');
+                        }}
+                      >
+                        Draft
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleFilterChange('status', 'cancelled');
+                        }}
+                      >
+                        Cancelled
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Active Filters */}
+            <div className='flex items-center gap-2 h-full'>
+              {Object.entries(activeFilters).map(([type, value]) => {
+                return (
+                  <div
+                    key={`${type}-${value}`}
+                    className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors dark:bg-[#1c1c1c] dark:border'
+                    onClick={() => {
+                      return removeFilter(type as 'createdDate' | 'labels' | 'status');
+                    }}
+                  >
+                    <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
+                    <span className='text-xs group-hover:text-[#878787] font-medium'>
+                      {type === 'dueDate' && value === 'today' && 'Due Today'}
+                      {type === 'dueDate' && value === 'this_week' && 'Due This Week'}
+                      {type === 'dueDate' && value === 'this_month' && 'Due This Month'}
+                      {type === 'dueDate' && value === 'this_year' && 'Due This Year'}
+                      {type === 'customer' && value === 'all' && 'All Customers'}
+                      {type === 'customer' && value !== 'all' && `Customer: ${value}`}
+                      {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className='flex items-center gap-2'>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  type='button'
-                  className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none'
-                  aria-label='Filter'
-                >
-                  <VscListFilter className='w-4 h-4' />
-                </button>
+                <Button className='w-9 h-9 p-0' variant='outline'>
+                  <FilterIcon className='w-4 h-4' />
+                  <span className='sr-only'>Filter</span>
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className='text-xs w-[240px]'>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Calendar className='mr-2 w-4 h-4' /> Created Date
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
+              <DropdownMenuContent align='end' className='w-48'>
+                <DropdownMenuItem className='font-medium text-sm text-muted-foreground'>
+                  Visible Columns
+                </DropdownMenuItem>
+                {Object.entries(visibleColumns).map(([column, isVisible]) => {
+                  return (
                     <DropdownMenuItem
-                      onClick={() => {
-                        return handleFilterChange('createdDate', 'today');
+                      key={column}
+                      className='flex items-center gap-2'
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        toggleColumn(column);
                       }}
                     >
-                      Today
+                      <Checkbox
+                        checked={isVisible}
+                        onCheckedChange={() => {
+                          return toggleColumn(column);
+                        }}
+                      />
+                      <span>{column}</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleFilterChange('createdDate', 'this_week');
-                      }}
-                    >
-                      This Week
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleFilterChange('createdDate', 'this_month');
-                      }}
-                    >
-                      This Month
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleFilterChange('createdDate', 'this_year');
-                      }}
-                    >
-                      This Year
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Tag className='mr-2 w-4 h-4' /> Labels
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {Array.from(
-                      new Set(
-                        customersList
-                          .flatMap((c) => {
-                            return c.labels || [];
-                          })
-                          .filter(Boolean),
-                      ),
-                    ).map((label) => {
-                      return (
-                        <DropdownMenuItem
-                          key={label}
-                          onClick={() => {
-                            return handleFilterChange('labels', label);
-                          }}
-                        >
-                          {label}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <User className='mr-2 w-4 h-4' /> Status
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleFilterChange('status', 'active');
-                      }}
-                    >
-                      Active
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleFilterChange('status', 'inactive');
-                      }}
-                    >
-                      Inactive
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
+                  );
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          {/* Active Filters */}
-          <div className='flex items-center gap-2 h-full'>
-            {Object.entries(activeFilters).map(([type, value]) => {
-              return (
-                <div
-                  key={`${type}-${value}`}
-                  className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors dark:bg-[#1c1c1c] dark:border'
-                  onClick={() => {
-                    return removeFilter(type as 'status' | 'createdDate' | 'labels');
-                  }}
-                >
-                  <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
-                  <span className='text-xs group-hover:text-[#878787] font-medium'>
-                    {type === 'createdDate' && value === 'today' && 'Created Today'}
-                    {type === 'createdDate' && value === 'this_week' && 'Created This Week'}
-                    {type === 'createdDate' && value === 'this_month' && 'Created This Month'}
-                    {type === 'createdDate' && value === 'this_year' && 'Created This Year'}
-                    {type === 'labels' && `Label: ${value}`}
-                    {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
         </div>
 
-        <div className='flex items-center gap-2'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className='w-9 h-9 p-0' variant='outline'>
-                <FilterIcon className='w-4 h-4' />
-                <span className='sr-only'>Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-48'>
-              <DropdownMenuItem className='font-medium text-sm text-muted-foreground'>
-                Visible Columns
-              </DropdownMenuItem>
-              {Object.entries(visibleColumns).map(([column, isVisible]) => {
-                return (
-                  <DropdownMenuItem
-                    key={column}
-                    className='flex items-center gap-2'
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      toggleColumn(column);
-                    }}
-                  >
-                    <Checkbox
-                      checked={isVisible}
-                      onCheckedChange={() => {
-                        return toggleColumn(column);
-                      }}
-                    />
-                    <span>{column}</span>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Table */}
+        <div className='flex-1 overflow-auto'>
+          <DataTable
+            data={customersList}
+            columns={columns}
+            visibleColumns={visibleColumns}
+            selectedItem={selectedCustomer}
+            onSelectItem={setSelectedCustomer}
+            isLoading={isLoading}
+            emptyState={{
+              title: 'No customers found',
+              description:
+                "You haven't created any customers yet.\nGo ahead and create your first one.",
+              buttonText: 'Create customer',
+              onButtonClick: () => {
+                return setAddDialogOpen(true);
+              },
+            }}
+            columnOrder={columnOrder}
+            onColumnOrderChange={setColumnOrder}
+          />
+          {/* Infinite scroll observer */}
+          <div ref={observerTarget} className='h-4' />
         </div>
-      </div>
 
-      {/* Table */}
-      <div className='flex-1 overflow-auto px-4'>
-        <DataTable
-          data={customersList}
-          columns={columns}
-          visibleColumns={visibleColumns}
-          selectedItem={selectedCustomer}
-          onSelectItem={setSelectedCustomer}
-          isLoading={isLoading}
-          emptyState={{
-            title: 'No customers found',
-            description:
-              "You haven't created any customers yet.\nGo ahead and create your first one.",
-            buttonText: 'Create customer',
-            onButtonClick: () => {
-              return setAddDialogOpen(true);
-            },
+        {/* Mobile Preview Sheet */}
+        {isMobile && selectedCustomer && (
+          <Sheet
+            open={!!selectedCustomer}
+            onOpenChange={() => {
+              return setSelectedCustomer(null);
+            }}
+          >
+            <SheetContent side='bottom' className='h-[80vh]'>
+              <SheetHeader>
+                <SheetTitle>Customer Details</SheetTitle>
+              </SheetHeader>
+              {/* Add customer preview content here */}
+            </SheetContent>
+          </Sheet>
+        )}
+
+        <AddCustomerDialog
+          open={addDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          initialData={editingCustomer}
+          onEdit={(updatedCustomer) => {
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            setAddDialogOpen(false);
+            setEditingCustomer(null);
           }}
-          columnOrder={columnOrder}
-          onColumnOrderChange={setColumnOrder}
         />
-        {/* Infinite scroll observer */}
-        <div ref={observerTarget} className='h-4' />
       </div>
-
-      {/* Mobile Preview Sheet */}
-      {isMobile && selectedCustomer && (
-        <Sheet
-          open={!!selectedCustomer}
-          onOpenChange={() => {
-            return setSelectedCustomer(null);
-          }}
-        >
-          <SheetContent side='bottom' className='h-[80vh]'>
-            <SheetHeader>
-              <SheetTitle>Customer Details</SheetTitle>
-            </SheetHeader>
-            {/* Add customer preview content here */}
-          </SheetContent>
-        </Sheet>
-      )}
-
-      <AddCustomerDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        initialData={editingCustomer}
-        onEdit={(updatedCustomer) => {
-          queryClient.invalidateQueries({ queryKey: ['customers'] });
-          setAddDialogOpen(false);
-          setEditingCustomer(null);
-        }}
-      />
     </div>
   );
 }
