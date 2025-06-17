@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -24,6 +23,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { ColumnDef } from '@tanstack/react-table';
 import { Calendar, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiFilter as FilterIcon, FiSidebar, FiX } from 'react-icons/fi';
 import { VscListFilter, VscSearch } from 'react-icons/vsc';
@@ -189,8 +189,8 @@ const LabelSelector = ({
 
 export default function CustomersPage() {
   const { toggleSidebar } = useSidebar();
+  const router = useRouter();
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [activeFilters, setActiveFilters] = useState<{
     createdDate?: string;
     labels?: string;
@@ -302,18 +302,6 @@ export default function CustomersPage() {
       }
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
-
-  // Update selectedCustomer when customers data changes
-  useEffect(() => {
-    if (selectedCustomer && customersList) {
-      const updatedCustomer = customersList.find((c: any) => {
-        return c._id === selectedCustomer._id;
-      });
-      if (updatedCustomer) {
-        setSelectedCustomer(updatedCustomer);
-      }
-    }
-  }, [customersList, selectedCustomer]);
 
   const handleFilterChange = (type: 'createdDate' | 'labels', value: string) => {
     setActiveFilters((prev) => {
@@ -878,8 +866,6 @@ export default function CustomersPage() {
             data={customersList}
             columns={columns}
             visibleColumns={visibleColumns}
-            selectedItem={selectedCustomer}
-            onSelectItem={setSelectedCustomer}
             isLoading={isLoading}
             emptyState={{
               title: 'No customers found',
@@ -892,27 +878,13 @@ export default function CustomersPage() {
             }}
             columnOrder={columnOrder}
             onColumnOrderChange={setColumnOrder}
+            onSelectItem={(customer) => {
+              return router.push(`/dashboard/customers/${customer._id}`);
+            }}
           />
           {/* Infinite scroll observer */}
           <div ref={observerTarget} className='h-4' />
         </div>
-
-        {/* Mobile Preview Sheet */}
-        {isMobile && selectedCustomer && (
-          <Sheet
-            open={!!selectedCustomer}
-            onOpenChange={() => {
-              return setSelectedCustomer(null);
-            }}
-          >
-            <SheetContent side='bottom' className='h-[80vh]'>
-              <SheetHeader>
-                <SheetTitle>Customer Details</SheetTitle>
-              </SheetHeader>
-              {/* Add customer preview content here */}
-            </SheetContent>
-          </Sheet>
-        )}
 
         <AddCustomerDialog
           open={addDialogOpen}
