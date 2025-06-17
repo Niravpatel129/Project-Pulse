@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Column, DataTable } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/data-table-advanced';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -11,8 +11,9 @@ import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
+import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
-import { FileClock, MoreHorizontal, Trash, X } from 'lucide-react';
+import { MoreHorizontal, Trash, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface LeadForm {
@@ -187,19 +188,25 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
     });
   }, [submissionsData, formIdFilter]);
 
-  const columns: Column<EnhancedFormSubmission>[] = useMemo(() => {
+  const columns: ColumnDef<EnhancedFormSubmission>[] = useMemo(() => {
     return [
       {
-        key: 'selection',
-        header: (
-          <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} aria-label='Select all' />
-        ),
-        cell: (submission) => {
+        id: 'selection',
+        header: () => {
           return (
             <Checkbox
-              checked={selectedSubmissions[submission._id] || false}
+              checked={selectAll}
+              onCheckedChange={handleSelectAll}
+              aria-label='Select all'
+            />
+          );
+        },
+        cell: ({ row }) => {
+          return (
+            <Checkbox
+              checked={selectedSubmissions[row.original._id] || false}
               onCheckedChange={(checked) => {
-                toggleSubmission(submission._id, !!checked);
+                toggleSubmission(row.original._id, !!checked);
               }}
               onClick={(e) => {
                 return e.stopPropagation();
@@ -208,40 +215,57 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
             />
           );
         },
+        meta: {
+          className: 'w-[40px]',
+        },
       },
       {
-        key: 'formTitle',
+        id: 'formTitle',
+        accessorKey: 'formTitle',
         header: 'Form',
-        cell: (submission) => {
-          return <div className='font-medium'>{submission.formTitle}</div>;
+        cell: ({ row }) => {
+          return <div className='font-medium'>{row.getValue('formTitle')}</div>;
         },
-        sortable: true,
+        meta: {
+          className: 'w-[200px]',
+        },
       },
       {
-        key: 'clientName',
+        id: 'clientName',
+        accessorKey: 'clientName',
         header: 'Name',
-        cell: (submission) => {
-          return <div>{submission.clientName || 'N/A'}</div>;
+        cell: ({ row }) => {
+          return <div>{row.getValue('clientName') || 'N/A'}</div>;
         },
-        sortable: true,
+        meta: {
+          className: 'w-[200px]',
+        },
       },
       {
-        key: 'clientEmail',
+        id: 'clientEmail',
+        accessorKey: 'clientEmail',
         header: 'Email',
-        cell: (submission) => {
-          return <div>{submission.clientEmail || 'N/A'}</div>;
+        cell: ({ row }) => {
+          return <div>{row.getValue('clientEmail') || 'N/A'}</div>;
         },
-        sortable: true,
+        meta: {
+          className: 'w-[200px]',
+        },
       },
       {
-        key: 'submittedAt',
+        id: 'submittedAt',
+        accessorKey: 'submittedAt',
         header: 'Submitted',
-        cell: (submission) => {
+        cell: ({ row }) => {
           return (
-            <div>{formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}</div>
+            <div>
+              {formatDistanceToNow(new Date(row.getValue('submittedAt')), { addSuffix: true })}
+            </div>
           );
         },
-        sortable: true,
+        meta: {
+          className: 'w-[200px]',
+        },
       },
     ];
   }, [selectAll, selectedSubmissions]);
@@ -347,12 +371,9 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
           </Popover>
         )}
       </div>
-      <DataTable
-        data={submissions || []}
+      <DataTable<EnhancedFormSubmission>
+        data={submissions}
         columns={columns}
-        keyExtractor={(row) => {
-          return row._id;
-        }}
         searchable
         searchPlaceholder='Search submissions...'
         searchKeys={['formTitle', 'clientName', 'clientEmail']}
@@ -363,24 +384,20 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
           setDialogOpen(true);
         }}
         emptyState={
-          <div className='py-8 text-center'>
-            <FileClock className='mx-auto h-12 w-12 text-muted-foreground mb-4' />
-            {formIdFilter ? (
-              <>
-                <p className='text-muted-foreground'>No submissions found for this form</p>
-                <p className='text-sm text-muted-foreground mt-1'>
-                  Try removing filters or check back later when the form receives submissions.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className='text-muted-foreground'>No submissions found</p>
-                <p className='text-sm text-muted-foreground mt-1'>
-                  When users submit your forms, they will appear here.
-                </p>
-              </>
-            )}
-          </div>
+          formIdFilter
+            ? {
+                title: 'No submissions found for this form',
+                description:
+                  'Try removing filters or check back later when the form receives submissions.',
+                buttonText: 'Clear Filters',
+                onButtonClick: () => {},
+              }
+            : {
+                title: 'No submissions found',
+                description: 'When users submit your forms, they will appear here.',
+                buttonText: 'Create Form',
+                onButtonClick: () => {},
+              }
         }
       />
 
