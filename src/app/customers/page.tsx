@@ -27,6 +27,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiFilter as FilterIcon, FiSidebar, FiX } from 'react-icons/fi';
 import { VscListFilter, VscSearch } from 'react-icons/vsc';
+import { toast } from 'sonner';
 
 interface Customer {
   _id: string;
@@ -387,9 +388,31 @@ export default function CustomersPage() {
             return <span>{formatDate(customer.createdAt)}</span>;
           case 'actions':
             return (
-              <Button variant='ghost' size='icon' className='h-8 w-8 p-0'>
-                <MoreHorizontal className='h-4 w-4' />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='ghost' size='icon' className='h-8 w-8 p-0'>
+                    <MoreHorizontal className='h-4 w-4' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return handleEditCustomer(customer);
+                    }}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return handleDeleteCustomer(customer);
+                    }}
+                    className='text-red-600 dark:text-red-400'
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             );
           default:
             return null;
@@ -490,6 +513,31 @@ export default function CustomersPage() {
 
   const handleRemoveLabel = (customer: Customer, label: string) => {
     removeLabelMutation.mutate({ customerId: customer._id, label });
+  };
+
+  // Add delete mutation
+  const deleteCustomerMutation = useMutation({
+    mutationFn: async (customerId: string) => {
+      await newRequest.delete(`/clients/${customerId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete customer');
+    },
+  });
+
+  const handleDeleteCustomer = (customer: Customer) => {
+    if (window.confirm('Are you sure you want to delete this customer?')) {
+      deleteCustomerMutation.mutate(customer._id);
+    }
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setAddDialogOpen(true);
   };
 
   return (
