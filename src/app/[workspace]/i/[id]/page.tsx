@@ -107,7 +107,7 @@ const formatCurrency = (
 
 const InvoicePage = () => {
   const [showPayment, setShowPayment] = useState(false);
-  const [paymentType, setPaymentType] = useState<'deposit' | 'full'>('deposit');
+  const [paymentType, setPaymentType] = useState<'deposit' | 'full'>('full');
   const params = useParams();
   const invoiceId = params.id as string;
 
@@ -603,7 +603,7 @@ const InvoicePage = () => {
                           {invoice.status === 'partially_paid'
                             ? 'Remaining Amount Due'
                             : paymentType === 'deposit' && invoice.settings?.deposit?.enabled
-                            ? 'Deposit Amount Due'
+                            ? 'Deposit Amount'
                             : 'Total Amount Due'}
                         </p>
                       </div>
