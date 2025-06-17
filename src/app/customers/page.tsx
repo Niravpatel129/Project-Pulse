@@ -8,9 +8,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input as DropdownInput, Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/components/ui/sidebar';
 import {
   Table,
@@ -20,10 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useClients } from '@/hooks/useClients';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   flexRender,
   getCoreRowModel,
@@ -31,10 +35,11 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Loader2, MoreHorizontal, Plus, Tag, UserRound } from 'lucide-react';
+import { Calendar, Loader2, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useState } from 'react';
-import { FiSidebar } from 'react-icons/fi';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FiFilter as FilterIcon, FiSidebar, FiX } from 'react-icons/fi';
+import { VscListFilter, VscSearch } from 'react-icons/vsc';
 
 interface Customer {
   _id: string;
@@ -81,7 +86,7 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-// Lazy-load the (large) dialog so it only mounts when actually opened.
+// Lazy-load the dialog
 const AddCustomerDialog = dynamic<any>(
   () => {
     return import('@/app/customers/components/AddCustomerDialog').then((m) => {
@@ -115,7 +120,12 @@ const LabelSelector = ({
   };
 
   return (
-    <div className='relative'>
+    <div
+      className='relative'
+      onClick={(e) => {
+        return e.stopPropagation();
+      }}
+    >
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <div className='flex items-center gap-1 flex-wrap max-w-[200px] cursor-pointer'>
@@ -126,9 +136,6 @@ const LabelSelector = ({
                     key={l}
                     variant='secondary'
                     className='mb-0.5 group relative px-2.5 transition-[padding,background] duration-150 ease-in-out hover:pr-7'
-                    onClick={(e) => {
-                      return e.stopPropagation();
-                    }}
                   >
                     <span className='truncate block'>{l}</span>
                     <button
@@ -152,7 +159,7 @@ const LabelSelector = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent className='w-56' align='start'>
           <div className='px-2 py-2'>
-            <DropdownInput
+            <Input
               placeholder='Create or search'
               value={input}
               onChange={(e) => {
@@ -202,9 +209,14 @@ const LabelSelector = ({
 
 export default function CustomersPage() {
   const { toggleSidebar } = useSidebar();
-  const { clients: rawClients, isLoading } = useClients();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [activeFilters, setActiveFilters] = useState<{
+    createdDate?: string;
+    labels?: string;
+    status?: string;
+  }>({});
+  const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [visibleColumns, setVisibleColumns] = useLocalStorage('customer-visible-columns', {
@@ -217,154 +229,122 @@ export default function CustomersPage() {
     Created: true,
     Actions: true,
   });
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const [customersList, setCustomersList] = useState<any[]>([]);
 
-  const customers: Customer[] = useMemo(() => {
-    return rawClients.map((c: any) => {
+  const {
+    data: customersData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['customers', activeFilters, searchQuery],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await newRequest.get('/clients', {
+        params: {
+          page: pageParam,
+          limit: 10,
+          ...activeFilters,
+          search: searchQuery,
+        },
+      });
       return {
-        _id: c._id,
-        user: c.user,
-        phone: c.phone,
-        isActive: c.isActive,
-        createdAt: c.createdAt,
-        updatedAt: c.updatedAt,
-        labels: c.labels,
-      } as Customer;
-    });
-  }, [rawClients]);
+        data: response.data.data,
+        success: response.data.success,
+        message: response.data.message,
+      };
+    },
+    getNextPageParam: () => {
+      return undefined;
+    }, // Disable pagination for now
+    initialPageParam: 1,
+  });
 
-  // Derived counts and filtered list are memoized to avoid expensive recalculations
-  const { totalCustomers, activeCustomers, inactiveCustomers, filteredCustomers } = useMemo(() => {
-    const total = customers.length;
-    const active = customers.filter((c) => {
+  // Update customersList when new data arrives
+  useEffect(() => {
+    if (customersData?.pages) {
+      const allCustomers = customersData.pages.flatMap((page) => {
+        return page.data || [];
+      });
+      setCustomersList(allCustomers);
+    }
+  }, [customersData?.pages]);
+
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 },
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
+
+  // Update selectedCustomer when customers data changes
+  useEffect(() => {
+    if (selectedCustomer && customersList) {
+      const updatedCustomer = customersList.find((c: any) => {
+        return c._id === selectedCustomer._id;
+      });
+      if (updatedCustomer) {
+        setSelectedCustomer(updatedCustomer);
+      }
+    }
+  }, [customersList, selectedCustomer]);
+
+  const handleFilterChange = (type: 'createdDate' | 'labels' | 'status', value: string) => {
+    setActiveFilters((prev) => {
+      return {
+        ...prev,
+        [type]: value,
+      };
+    });
+  };
+
+  const removeFilter = (type: 'createdDate' | 'labels' | 'status') => {
+    setActiveFilters((prev) => {
+      const newFilters = { ...prev };
+      delete newFilters[type];
+      return newFilters;
+    });
+  };
+
+  const toggleColumn = (column: string) => {
+    setVisibleColumns((prev) => {
+      return { ...prev, [column]: !prev[column] };
+    });
+  };
+
+  // Calculate customer statistics
+  const { totalCustomers, activeCustomers, inactiveCustomers } = useMemo(() => {
+    const total = customersList.length;
+    const active = customersList.filter((c) => {
       return c.isActive;
     }).length;
     const inactive = total - active;
-
-    const list = customers.filter((c) => {
-      const q = search.toLowerCase();
-      const matchesSearch =
-        c.user.name.toLowerCase().includes(q) || c.user.email?.toLowerCase().includes(q);
-      const matchesStatus =
-        statusFilter === 'all' || (statusFilter === 'active' ? c.isActive : !c.isActive);
-      return matchesSearch && matchesStatus;
-    });
 
     return {
       totalCustomers: total,
       activeCustomers: active,
       inactiveCustomers: inactive,
-      filteredCustomers: list,
-    } as const;
-  }, [customers, search, statusFilter]);
-
-  const queryClient = useQueryClient();
-
-  // Collect label options from existing customers
-  const [labelOptions, setLabelOptions] = useState<string[]>([]);
-
-  useEffect(() => {
-    const allLabels = new Set<string>();
-    rawClients.forEach((c: any) => {
-      (c.labels || []).forEach((l: string) => {
-        return allLabels.add(l);
-      });
-    });
-    setLabelOptions(Array.from(allLabels));
-  }, [rawClients]);
-
-  const addLabelMutation = useMutation({
-    mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
-      await newRequest.patch(`/clients/${customerId}/labels`, { labels: [label] });
-    },
-    onMutate: async ({ customerId, label }) => {
-      await queryClient.cancelQueries({ queryKey: ['clients'] });
-
-      // Snapshot the previous value
-      const previousData = queryClient.getQueryData(['clients']);
-
-      // Optimistically update the client
-      queryClient.setQueryData(['clients'], (old: any) => {
-        const oldData = old?.data || [];
-        return {
-          ...old,
-          data: oldData.map((client: any) => {
-            if (client._id === customerId) {
-              return {
-                ...client,
-                labels: [...(client.labels || []), label],
-              };
-            }
-            return client;
-          }),
-        };
-      });
-
-      return { previousData };
-    },
-    onError: (err, { customerId, label }, context) => {
-      queryClient.setQueryData(['clients'], context?.previousData);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-    },
-  });
-
-  const removeLabelMutation = useMutation({
-    mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
-      await newRequest.delete(`/clients/${customerId}/labels/${encodeURIComponent(label)}`);
-    },
-    onMutate: async ({ customerId, label }) => {
-      await queryClient.cancelQueries({ queryKey: ['clients'] });
-
-      const previousData = queryClient.getQueryData(['clients']);
-
-      queryClient.setQueryData(['clients'], (old: any) => {
-        const oldData = old?.data || [];
-        return {
-          ...old,
-          data: oldData.map((client: any) => {
-            if (client._id === customerId) {
-              return {
-                ...client,
-                labels: (client.labels || []).filter((l) => {
-                  return l !== label;
-                }),
-              };
-            }
-            return client;
-          }),
-        };
-      });
-
-      return { previousData };
-    },
-    onError: (err, { customerId, label }, context) => {
-      queryClient.setQueryData(['clients'], context?.previousData);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-    },
-  });
-
-  const handleAddLabel = (customer: Customer, label: string) => {
-    if (!customer.labels?.includes(label)) {
-      addLabelMutation.mutate({ customerId: customer._id, label });
-    }
-  };
-
-  const handleRemoveLabel = (customer: Customer, label: string) => {
-    removeLabelMutation.mutate({ customerId: customer._id, label });
-  };
-
-  const handleCreateLabel = (customer: Customer) => {
-    const newLabel = prompt('New label name');
-    if (newLabel) {
-      setLabelOptions((prev) => {
-        return prev.includes(newLabel) ? prev : [...prev, newLabel];
-      });
-      handleAddLabel(customer, newLabel);
-    }
-  };
+    };
+  }, [customersList]);
 
   const columns = TABLE_HEADERS.map((header) => {
     return {
@@ -417,7 +397,7 @@ export default function CustomersPage() {
   });
 
   const table = useReactTable({
-    data: filteredCustomers,
+    data: customersList,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -425,10 +405,105 @@ export default function CustomersPage() {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const toggleColumn = (column: string) => {
-    setVisibleColumns((prev) => {
-      return { ...prev, [column]: !prev[column] };
+  const labelOptions = useMemo(() => {
+    const allLabels = new Set<string>();
+    customersList.forEach((c: any) => {
+      (c.labels || []).forEach((l: string) => {
+        return allLabels.add(l);
+      });
     });
+    return Array.from(allLabels);
+  }, [customersList]);
+
+  const addLabelMutation = useMutation({
+    mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
+      await newRequest.patch(`/clients/${customerId}/labels`, { labels: [label] });
+    },
+    onMutate: async ({ customerId, label }) => {
+      await queryClient.cancelQueries({ queryKey: ['customers'] });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['customers']);
+
+      // Optimistically update the customer
+      queryClient.setQueryData(['customers'], (old: any) => {
+        const oldData = old?.data || [];
+        return {
+          ...old,
+          data: oldData.map((customer: any) => {
+            if (customer._id === customerId) {
+              return {
+                ...customer,
+                labels: [...(customer.labels || []), label],
+              };
+            }
+            return customer;
+          }),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, { customerId, label }, context) => {
+      queryClient.setQueryData(['customers'], context?.previousData);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+  });
+
+  const removeLabelMutation = useMutation({
+    mutationFn: async ({ customerId, label }: { customerId: string; label: string }) => {
+      await newRequest.delete(`/clients/${customerId}/labels/${encodeURIComponent(label)}`);
+    },
+    onMutate: async ({ customerId, label }) => {
+      await queryClient.cancelQueries({ queryKey: ['customers'] });
+
+      const previousData = queryClient.getQueryData(['customers']);
+
+      queryClient.setQueryData(['customers'], (old: any) => {
+        const oldData = old?.data || [];
+        return {
+          ...old,
+          data: oldData.map((customer: any) => {
+            if (customer._id === customerId) {
+              return {
+                ...customer,
+                labels: (customer.labels || []).filter((l) => {
+                  return l !== label;
+                }),
+              };
+            }
+            return customer;
+          }),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, { customerId, label }, context) => {
+      queryClient.setQueryData(['customers'], context?.previousData);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+  });
+
+  const handleAddLabel = (customer: Customer, label: string) => {
+    if (!customer.labels?.includes(label)) {
+      addLabelMutation.mutate({ customerId: customer._id, label });
+    }
+  };
+
+  const handleRemoveLabel = (customer: Customer, label: string) => {
+    removeLabelMutation.mutate({ customerId: customer._id, label });
+  };
+
+  const handleCreateLabel = (customer: Customer) => {
+    const newLabel = prompt('New label name');
+    if (newLabel && !labelOptions.includes(newLabel)) {
+      handleAddLabel(customer, newLabel);
+    }
   };
 
   return (
@@ -456,79 +531,205 @@ export default function CustomersPage() {
       {/* Summary Cards */}
       <div className='px-4 pt-4'>
         <div className='grid grid-cols-3 gap-2 sm:gap-4 mb-6'>
-          <SummaryCard label='Total' count={totalCustomers} />
-          <SummaryCard label='Active' count={activeCustomers} />
-          <SummaryCard label='Inactive' count={inactiveCustomers} />
+          <SummaryCard
+            label='Total'
+            count={totalCustomers}
+            onClick={() => {
+              return removeFilter('status');
+            }}
+            active={!activeFilters.status}
+          />
+          <SummaryCard
+            label='Active'
+            count={activeCustomers}
+            onClick={() => {
+              return handleFilterChange('status', 'active');
+            }}
+            active={activeFilters.status === 'active'}
+          />
+          <SummaryCard
+            label='Inactive'
+            count={inactiveCustomers}
+            onClick={() => {
+              return handleFilterChange('status', 'inactive');
+            }}
+            active={activeFilters.status === 'inactive'}
+          />
         </div>
       </div>
 
       {/* Controls */}
-      <div className='px-4 flex items-center gap-2 mb-4'>
-        <div className='relative w-full max-w-xs'>
-          <Input
-            placeholder='Search customers...'
-            className='pl-9'
-            value={search}
-            onChange={(e) => {
-              return setSearch(e.target.value);
-            }}
-          />
-          <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'>
-            <svg
-              width='14'
-              height='14'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-            >
-              <circle cx='11' cy='11' r='8' />
-              <line x1='21' y1='21' x2='16.65' y2='16.65' />
-            </svg>
-          </span>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='outline' size='icon' className='w-9 h-9'>
-              <svg
-                width='16'
-                height='16'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                viewBox='0 0 24 24'
-              >
-                <path d='M4 4h16v2H4zm2 6h12v2H6zm4 6h4v2h-4z' />
-              </svg>
-              <span className='sr-only'>Columns</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-48'>
-            <DropdownMenuItem className='font-medium text-sm text-muted-foreground'>
-              Visible Columns
-            </DropdownMenuItem>
-            {Object.entries(visibleColumns).map(([column, isVisible]) => {
+      <div className='px-4 flex items-center justify-between mb-4'>
+        <div className='flex items-center gap-2'>
+          <div className='relative flex items-center max-w-xs w-full'>
+            <VscSearch className='w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8b8b8b]' />
+            <Input
+              className='rounded-none pl-7 pr-10 border-slate-100 dark:border-[#232428]'
+              placeholder='Search or filter'
+              value={searchQuery}
+              onChange={(e) => {
+                return setSearchQuery(e.target.value);
+              }}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type='button'
+                  className='absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none'
+                  aria-label='Filter'
+                >
+                  <VscListFilter className='w-4 h-4' />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className='text-xs w-[240px]'>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Calendar className='mr-2 w-4 h-4' /> Created Date
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleFilterChange('createdDate', 'today');
+                      }}
+                    >
+                      Today
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleFilterChange('createdDate', 'this_week');
+                      }}
+                    >
+                      This Week
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleFilterChange('createdDate', 'this_month');
+                      }}
+                    >
+                      This Month
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleFilterChange('createdDate', 'this_year');
+                      }}
+                    >
+                      This Year
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Tag className='mr-2 w-4 h-4' /> Labels
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {Array.from(
+                      new Set(
+                        customersList
+                          .flatMap((c) => {
+                            return c.labels || [];
+                          })
+                          .filter(Boolean),
+                      ),
+                    ).map((label) => {
+                      return (
+                        <DropdownMenuItem
+                          key={label}
+                          onClick={() => {
+                            return handleFilterChange('labels', label);
+                          }}
+                        >
+                          {label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <User className='mr-2 w-4 h-4' /> Status
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleFilterChange('status', 'active');
+                      }}
+                    >
+                      Active
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleFilterChange('status', 'inactive');
+                      }}
+                    >
+                      Inactive
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Active Filters */}
+          <div className='flex items-center gap-2 h-full'>
+            {Object.entries(activeFilters).map(([type, value]) => {
               return (
-                <DropdownMenuItem
-                  key={column}
-                  className='flex items-center gap-2'
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    toggleColumn(column);
+                <div
+                  key={`${type}-${value}`}
+                  className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors dark:bg-[#1c1c1c] dark:border'
+                  onClick={() => {
+                    return removeFilter(type as 'status' | 'createdDate' | 'labels');
                   }}
                 >
-                  <Checkbox
-                    checked={isVisible}
-                    onCheckedChange={() => {
-                      return toggleColumn(column);
-                    }}
-                  />
-                  <span>{column}</span>
-                </DropdownMenuItem>
+                  <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
+                  <span className='text-xs group-hover:text-[#878787] font-medium'>
+                    {type === 'createdDate' && value === 'today' && 'Created Today'}
+                    {type === 'createdDate' && value === 'this_week' && 'Created This Week'}
+                    {type === 'createdDate' && value === 'this_month' && 'Created This Month'}
+                    {type === 'createdDate' && value === 'this_year' && 'Created This Year'}
+                    {type === 'labels' && `Label: ${value}`}
+                    {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
+                  </span>
+                </div>
               );
             })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </div>
+        </div>
+
+        <div className='flex items-center gap-2'>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className='w-9 h-9 p-0' variant='outline'>
+                <FilterIcon className='w-4 h-4' />
+                <span className='sr-only'>Filter</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' className='w-48'>
+              <DropdownMenuItem className='font-medium text-sm text-muted-foreground'>
+                Visible Columns
+              </DropdownMenuItem>
+              {Object.entries(visibleColumns).map(([column, isVisible]) => {
+                return (
+                  <DropdownMenuItem
+                    key={column}
+                    className='flex items-center gap-2'
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      toggleColumn(column);
+                    }}
+                  >
+                    <Checkbox
+                      checked={isVisible}
+                      onCheckedChange={() => {
+                        return toggleColumn(column);
+                      }}
+                    />
+                    <span>{column}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Table */}
@@ -537,7 +738,7 @@ export default function CustomersPage() {
           <div className='flex items-center justify-center h-40'>
             <Loader2 className='w-6 h-6 animate-spin text-muted-foreground' />
           </div>
-        ) : filteredCustomers.length === 0 ? (
+        ) : customersList.length === 0 ? (
           <div className='flex flex-col items-center justify-center h-40 text-muted-foreground'>
             No customers found
           </div>
@@ -547,12 +748,7 @@ export default function CustomersPage() {
               <TableHeader>
                 <TableRow className='bg-muted/50'>
                   {table.getHeaderGroups()[0].headers.map((header) => {
-                    if (
-                      !visibleColumns[
-                        header.column.id.charAt(0).toUpperCase() + header.column.id.slice(1)
-                      ]
-                    )
-                      return null;
+                    if (!visibleColumns[header.column.columnDef.header as string]) return null;
                     return (
                       <TableHead
                         key={header.id}
@@ -567,18 +763,26 @@ export default function CustomersPage() {
               <TableBody>
                 {table.getRowModel().rows.map((row) => {
                   return (
-                    <TableRow key={row.id} className='divide-x divide-muted-foreground/10'>
+                    <TableRow
+                      key={row.id}
+                      className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
+                        selectedCustomer?._id === row.original._id
+                          ? 'bg-slate-50 dark:bg-[#232428]'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        return setSelectedCustomer(row.original);
+                      }}
+                    >
                       {row.getVisibleCells().map((cell) => {
-                        if (
-                          !visibleColumns[
-                            cell.column.id.charAt(0).toUpperCase() + cell.column.id.slice(1)
-                          ]
-                        )
-                          return null;
+                        if (!visibleColumns[cell.column.columnDef.header as string]) return null;
                         return (
                           <TableCell
                             key={cell.id}
-                            className={(cell.column.columnDef.meta as any).className}
+                            className={
+                              (cell.column.columnDef.meta as { className?: string } | undefined)
+                                ?.className
+                            }
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
@@ -589,20 +793,64 @@ export default function CustomersPage() {
                 })}
               </TableBody>
             </Table>
+            {/* Infinite scroll observer */}
+            <div ref={observerTarget} className='h-4' />
           </div>
         )}
       </div>
 
-      <AddCustomerDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+      {/* Mobile Preview Sheet */}
+      {isMobile && selectedCustomer && (
+        <Sheet
+          open={!!selectedCustomer}
+          onOpenChange={() => {
+            return setSelectedCustomer(null);
+          }}
+        >
+          <SheetContent side='bottom' className='h-[80vh]'>
+            <SheetHeader>
+              <SheetTitle>Customer Details</SheetTitle>
+            </SheetHeader>
+            {/* Add customer preview content here */}
+          </SheetContent>
+        </Sheet>
+      )}
+
+      <AddCustomerDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        initialData={editingCustomer}
+        onEdit={(updatedCustomer) => {
+          queryClient.invalidateQueries({ queryKey: ['customers'] });
+          setAddDialogOpen(false);
+          setEditingCustomer(null);
+        }}
+      />
     </div>
   );
 }
 
-function SummaryCard({ label, count }: { label: string; count: number }) {
+function SummaryCard({
+  label,
+  count,
+  onClick,
+  active,
+}: {
+  label: string;
+  count: number;
+  onClick?: () => void;
+  active?: boolean;
+}) {
   return (
-    <div className='border bg-background text-card-foreground rounded-lg h-[100px] flex flex-col justify-center px-4'>
+    <button
+      type='button'
+      onClick={onClick}
+      className={`border bg-background text-card-foreground rounded-lg h-[100px] flex flex-col justify-center px-4 transition-colors ${
+        active ? 'border-primary' : ''
+      }`}
+    >
       <p className='text-sm text-muted-foreground'>{label}</p>
       <p className='text-2xl font-mono font-medium'>{count.toLocaleString()}</p>
-    </div>
+    </button>
   );
 }
