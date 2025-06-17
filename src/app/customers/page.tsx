@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DataTable } from '@/components/ui/data-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,26 +17,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSidebar } from '@/components/ui/sidebar';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { newRequest } from '@/utils/newRequest';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Calendar, Loader2, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Calendar, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiFilter as FilterIcon, FiSidebar, FiX } from 'react-icons/fi';
@@ -218,7 +205,6 @@ export default function CustomersPage() {
   }>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [visibleColumns, setVisibleColumns] = useLocalStorage('customer-visible-columns', {
     Name: true,
     Email: true,
@@ -229,6 +215,12 @@ export default function CustomersPage() {
     Created: true,
     Actions: true,
   });
+  const [columnOrder, setColumnOrder] = useLocalStorage(
+    'customer-column-order',
+    TABLE_HEADERS.map((header) => {
+      return header.id;
+    }),
+  );
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -393,16 +385,7 @@ export default function CustomersPage() {
             return null;
         }
       },
-    };
-  });
-
-  const table = useReactTable({
-    data: customersList,
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    } as ColumnDef<Customer>;
   });
 
   const labelOptions = useMemo(() => {
@@ -497,13 +480,6 @@ export default function CustomersPage() {
 
   const handleRemoveLabel = (customer: Customer, label: string) => {
     removeLabelMutation.mutate({ customerId: customer._id, label });
-  };
-
-  const handleCreateLabel = (customer: Customer) => {
-    const newLabel = prompt('New label name');
-    if (newLabel && !labelOptions.includes(newLabel)) {
-      handleAddLabel(customer, newLabel);
-    }
   };
 
   return (
@@ -734,69 +710,27 @@ export default function CustomersPage() {
 
       {/* Table */}
       <div className='flex-1 overflow-auto px-4'>
-        {isLoading ? (
-          <div className='flex items-center justify-center h-40'>
-            <Loader2 className='w-6 h-6 animate-spin text-muted-foreground' />
-          </div>
-        ) : customersList.length === 0 ? (
-          <div className='flex flex-col items-center justify-center h-40 text-muted-foreground'>
-            No customers found
-          </div>
-        ) : (
-          <div>
-            <Table>
-              <TableHeader>
-                <TableRow className='bg-muted/50'>
-                  {table.getHeaderGroups()[0].headers.map((header) => {
-                    if (!visibleColumns[header.column.columnDef.header as string]) return null;
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className={(header.column.columnDef.meta as any).className}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => {
-                  return (
-                    <TableRow
-                      key={row.id}
-                      className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
-                        selectedCustomer?._id === row.original._id
-                          ? 'bg-slate-50 dark:bg-[#232428]'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        return setSelectedCustomer(row.original);
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => {
-                        if (!visibleColumns[cell.column.columnDef.header as string]) return null;
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className={
-                              (cell.column.columnDef.meta as { className?: string } | undefined)
-                                ?.className
-                            }
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            {/* Infinite scroll observer */}
-            <div ref={observerTarget} className='h-4' />
-          </div>
-        )}
+        <DataTable
+          data={customersList}
+          columns={columns}
+          visibleColumns={visibleColumns}
+          selectedItem={selectedCustomer}
+          onSelectItem={setSelectedCustomer}
+          isLoading={isLoading}
+          emptyState={{
+            title: 'No customers found',
+            description:
+              "You haven't created any customers yet.\nGo ahead and create your first one.",
+            buttonText: 'Create customer',
+            onButtonClick: () => {
+              return setAddDialogOpen(true);
+            },
+          }}
+          columnOrder={columnOrder}
+          onColumnOrderChange={setColumnOrder}
+        />
+        {/* Infinite scroll observer */}
+        <div ref={observerTarget} className='h-4' />
       </div>
 
       {/* Mobile Preview Sheet */}

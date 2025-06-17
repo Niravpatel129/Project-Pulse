@@ -1,47 +1,61 @@
 import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
 import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/ui/data-table';
 import { DateTooltip } from '@/components/ui/date-tooltip';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import {
-  DndContext,
-  DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
-import {
-  SortableContext,
-  arrayMove,
-  horizontalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  SortingState,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import InvoicePreviewActions from './InvoicePreviewActions';
 
-interface ColumnMeta {
-  className?: string;
+interface Invoice {
+  _id: string;
+  invoiceNumber: string;
+  status: string;
+  dueDate?: string;
+  customer?: {
+    id: {
+      _id: string;
+      user: {
+        name: string;
+        email: string;
+      };
+      contact?: {
+        firstName?: string;
+        lastName?: string;
+      };
+      phone?: string;
+      mobile?: string;
+      fax?: string;
+      tollFree?: string;
+      taxId?: string;
+      accountNumber?: string;
+      address?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        zip?: string;
+      };
+      shippingAddress?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        zip?: string;
+      };
+      website?: string;
+      internalNotes?: string;
+      customFields?: Record<string, any>;
+      isActive: boolean;
+    };
+  };
+  totals?: {
+    total: number;
+  };
+  currency: string;
+  issueDate?: string;
 }
 
 const TABLE_HEADERS = [
@@ -112,44 +126,6 @@ function getStatusBadge(status: string) {
   );
 }
 
-export const InvoiceSkeleton = () => {
-  return (
-    <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
-      <table className='min-w-full text-sm'>
-        <thead className='!font-normal'>
-          <tr className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428]'>
-            {TABLE_HEADERS.map((header, index) => {
-              return (
-                <th
-                  key={index}
-                  className={`${header.className} text-left text-[#121212] dark:text-slate-300  tracking-wide font-light`}
-                >
-                  {header.label}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody className='divide-y divide-slate-100 dark:divide-[#232428]'>
-          {[...Array(5)].map((_, index) => {
-            return (
-              <tr key={index} className='h-[57px] divide-x divide-slate-100 dark:divide-[#232428]'>
-                {TABLE_HEADERS.map((header, cellIndex) => {
-                  return (
-                    <td key={cellIndex} className={header.className}>
-                      <Skeleton className='h-4 w-24' />
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
 interface InvoiceTableProps {
   invoices: Invoice[];
   selectedInvoice: Invoice | null;
@@ -162,81 +138,6 @@ interface InvoiceTableProps {
   visibleColumns: Record<string, boolean>;
   onTakePayment?: (invoice: Invoice) => void;
 }
-
-interface Invoice {
-  _id: string;
-  invoiceNumber: string;
-  status: string;
-  dueDate?: string;
-  customer?: {
-    id: {
-      _id: string;
-      user: {
-        name: string;
-        email: string;
-      };
-      contact?: {
-        firstName?: string;
-        lastName?: string;
-      };
-      phone?: string;
-      mobile?: string;
-      fax?: string;
-      tollFree?: string;
-      taxId?: string;
-      accountNumber?: string;
-      address?: {
-        street?: string;
-        city?: string;
-        state?: string;
-        country?: string;
-        zip?: string;
-      };
-      shippingAddress?: {
-        street?: string;
-        city?: string;
-        state?: string;
-        country?: string;
-        zip?: string;
-      };
-      website?: string;
-      internalNotes?: string;
-      customFields?: Record<string, any>;
-      isActive: boolean;
-    };
-  };
-  totals?: {
-    total: number;
-  };
-  currency: string;
-  issueDate?: string;
-}
-
-const DraggableHeader = ({ header, column }: { header: any; column: any }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: column.id,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.8 : 1,
-    position: 'relative' as const,
-    zIndex: isDragging ? 1 : 0,
-  };
-
-  return (
-    <TableHead
-      ref={setNodeRef}
-      style={style}
-      className={`${header.column.columnDef.meta?.className} text-left text-[#121212] dark:text-slate-300 tracking-wide font-medium cursor-grab active:cursor-grabbing py-[18px]`}
-      {...attributes}
-      {...listeners}
-    >
-      {flexRender(header.column.columnDef.header, header.getContext())}
-    </TableHead>
-  );
-};
 
 export const InvoiceTable = ({
   invoices,
@@ -252,7 +153,6 @@ export const InvoiceTable = ({
 }: InvoiceTableProps) => {
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [columnOrder, setColumnOrder] = useLocalStorage(
     'invoice-column-order',
     TABLE_HEADERS.map((header) => {
@@ -261,14 +161,12 @@ export const InvoiceTable = ({
   );
   const queryClient = useQueryClient();
 
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
-
   const columns = TABLE_HEADERS.map((header) => {
     return {
       id: header.id,
       accessorKey: header.id,
       header: header.label,
-      meta: { className: header.className } as ColumnMeta,
+      meta: { className: header.className },
       cell: ({ row }: { row: { original: Invoice } }) => {
         const invoice = row.original;
         switch (header.id) {
@@ -349,36 +247,8 @@ export const InvoiceTable = ({
             return null;
         }
       },
-    };
+    } as ColumnDef<Invoice>;
   });
-
-  const table = useReactTable({
-    data: invoices,
-    columns,
-    state: {
-      sorting,
-      columnOrder,
-    },
-    onSortingChange: setSorting,
-    onColumnOrderChange: setColumnOrder,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (active.id !== over?.id) {
-      setColumnOrder((columns) => {
-        const oldIndex = columns.indexOf(active.id as string);
-        const newIndex = columns.indexOf(over?.id as string);
-        return arrayMove(columns, oldIndex, newIndex);
-      });
-    }
-  };
-
-  if (isLoading) {
-    return <InvoiceSkeleton />;
-  }
 
   if (invoices.length === 0) {
     return (
@@ -402,65 +272,25 @@ export const InvoiceTable = ({
   }
 
   return (
-    <div className='overflow-x-auto rounded-lg border border-slate-100 dark:border-[#232428] shadow-sm'>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToHorizontalAxis]}
-      >
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => {
-              return (
-                <TableRow
-                  key={headerGroup.id}
-                  className='divide-x divide-slate-100 dark:divide-[#232428] border-b border-slate-100 dark:border-[#232428] dark:bg-[#232428] !font-normal'
-                >
-                  <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                    {headerGroup.headers.map((header) => {
-                      if (!visibleColumns[header.column.columnDef.header as string]) return null;
-                      return (
-                        <DraggableHeader key={header.id} header={header} column={header.column} />
-                      );
-                    })}
-                  </SortableContext>
-                </TableRow>
-              );
-            })}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => {
-              return (
-                <TableRow
-                  key={row.id}
-                  className={`h-[57px] divide-x divide-slate-100 dark:divide-[#232428] cursor-pointer transition-colors duration-150 hover:bg-slate-50/50 dark:hover:bg-[#232428] ${
-                    selectedInvoice?._id === row.original._id ? 'bg-slate-50 dark:bg-[#232428]' : ''
-                  }`}
-                  onClick={() => {
-                    return setSelectedInvoice(row.original);
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    if (!visibleColumns[cell.column.columnDef.header as string]) return null;
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        className={
-                          (cell.column.columnDef.meta as { className?: string } | undefined)
-                            ?.className
-                        }
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </DndContext>
+    <>
+      <DataTable
+        data={invoices}
+        columns={columns}
+        visibleColumns={visibleColumns}
+        selectedItem={selectedInvoice}
+        onSelectItem={setSelectedInvoice}
+        isLoading={isLoading}
+        emptyState={{
+          title: 'No invoices',
+          description: "You haven't created any invoices yet.\nGo ahead and create your first one.",
+          buttonText: 'Create invoice',
+          onButtonClick: () => {
+            return setEditingInvoice({} as any);
+          },
+        }}
+        columnOrder={columnOrder}
+        onColumnOrderChange={setColumnOrder}
+      />
       <AddCustomerDialog
         open={isEditCustomerDialogOpen}
         onOpenChange={setIsEditCustomerDialogOpen}
@@ -482,6 +312,6 @@ export const InvoiceTable = ({
           setEditingCustomer(null);
         }}
       />
-    </div>
+    </>
   );
 };
