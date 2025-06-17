@@ -1,18 +1,12 @@
 'use client';
+import NewTable from '@/components/NewTable/NewTable';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { FiSidebar } from 'react-icons/fi';
+import { TbLabelImportantFilled, TbMail } from 'react-icons/tb';
 
 // Fake email data
 const FAKE_EMAILS = [
@@ -72,6 +66,7 @@ const CustomerDetailsPage = () => {
 
   return (
     <div>
+      {/* Header */}
       <div className='flex items-center justify-between px-4 pb-2 pt-3 border-b border-[#E4E4E7] dark:border-[#232428] bg-background'>
         <div className='flex items-center gap-2'>
           <Button variant='ghost' size='icon' onClick={toggleSidebar}>
@@ -80,33 +75,23 @@ const CustomerDetailsPage = () => {
           <h1 className='text-lg font-semibold'>{customer?.user.name || 'Customer'}</h1>
         </div>
       </div>
-
-      <div className='p-4'>
-        <div className='rounded-lg border bg-card h-[250px] overflow-hidden'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Preview</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {FAKE_EMAILS.map((email) => {
-                return (
-                  <TableRow key={email.id}>
-                    <TableCell className='font-medium'>{email.subject}</TableCell>
-                    <TableCell>{formatDate(email.date)}</TableCell>
-                    <TableCell>{email.status}</TableCell>
-                    <TableCell className='text-muted-foreground truncate max-w-[400px]'>
-                      {email.snippet}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+      {/* Content */}
+      <div className='flex flex-col gap-4 p-3'>
+        <div className='p-4'>
+          <h2 className='text-lg font-bold mb-2 flex items-center gap-2'>
+            <TbMail /> Customer Emails
+          </h2>
+          <div className=' overflow-hidden'>
+            <NewTable />
+          </div>
+        </div>
+        <div className='p-4'>
+          <h2 className='text-lg font-bold mb-2 flex items-center gap-2'>
+            <TbLabelImportantFilled /> Customer Invoices
+          </h2>
+          <div className=' overflow-hidden'>
+            <NewTable />
+          </div>
         </div>
       </div>
     </div>
