@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Column, DataTable } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/data-table-advanced';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
+import type { ColumnDef } from '@tanstack/react-table';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, ExternalLink, Eye, FileEdit, FilePlus, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -56,12 +57,13 @@ export default function LeadFormsTable() {
   const { leadForms, isLoading, error, deleteLeadForm } = useLeadForms();
   const pathname = usePathname();
 
-  const columns: Column<LeadForm>[] = useMemo(() => {
+  const columns: ColumnDef<LeadForm>[] = useMemo(() => {
     return [
       {
-        key: 'title',
+        accessorKey: 'title',
         header: 'Form Title',
-        cell: (form) => {
+        cell: ({ row }) => {
+          const form = row.original;
           return (
             <div className='font-medium'>
               <Link href={`/leads/form/${form._id}`} className='hover:underline'>
@@ -70,13 +72,12 @@ export default function LeadFormsTable() {
             </div>
           );
         },
-        sortable: true,
       },
-
       {
-        key: 'submissions',
+        accessorKey: 'submissions',
         header: 'Submissions',
-        cell: (form) => {
+        cell: ({ row }) => {
+          const form = row.original;
           return (
             <Link
               href={`${pathname}/submissions?form=${form._id}`}
@@ -88,24 +89,24 @@ export default function LeadFormsTable() {
             </Link>
           );
         },
-        sortable: true,
       },
       {
-        key: 'createdAt',
+        accessorKey: 'createdAt',
         header: 'Created',
-        cell: (form) => {
+        cell: ({ row }) => {
+          const form = row.original;
           return (
             <motion.div className='text-sm' initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {formatDate(form.createdAt)}
             </motion.div>
           );
         },
-        sortable: true,
       },
       {
-        key: 'createdBy',
+        accessorKey: 'createdBy',
         header: 'Created By',
-        cell: (form) => {
+        cell: ({ row }) => {
+          const form = row.original;
           return (
             <motion.div className='text-sm' initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {form.createdBy?.name || 'Unknown'}
@@ -114,9 +115,10 @@ export default function LeadFormsTable() {
         },
       },
       {
-        key: 'share',
+        id: 'share',
         header: 'Share',
-        cell: (form) => {
+        cell: ({ row }) => {
+          const form = row.original;
           const shareUrl = `${
             process.env.NEXT_PUBLIC_APP_URL || window.location.origin
           }/portal/lead/${form._id}`;
@@ -153,9 +155,10 @@ export default function LeadFormsTable() {
         },
       },
       {
-        key: 'actions',
+        id: 'actions',
         header: 'Actions',
-        cell: (form) => {
+        cell: ({ row }) => {
+          const form = row.original;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -234,27 +237,22 @@ export default function LeadFormsTable() {
           <DataTable
             data={leadForms}
             columns={columns}
-            keyExtractor={(row) => {
-              return row._id;
-            }}
+            visibleColumns={{}}
+            columnOrder={[]}
+            onColumnOrderChange={() => {}}
             searchable
             searchPlaceholder='Search forms...'
             searchKeys={['title', 'description']}
             pagination
             pageSize={10}
-            emptyState={
-              <motion.div
-                className='py-8 text-center'
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <p className='text-muted-foreground'>No lead forms found</p>
-                <Button variant='outline' className='mt-4' asChild>
-                  <Link href='/leads/form/new'>Create your first form</Link>
-                </Button>
-              </motion.div>
-            }
+            emptyState={{
+              title: 'No lead forms found',
+              description: 'Create your first form to get started',
+              buttonText: 'Create your first form',
+              onButtonClick: () => {
+                return (window.location.href = '/leads/form/new');
+              },
+            }}
           />
         </motion.div>
       </AnimatePresence>
