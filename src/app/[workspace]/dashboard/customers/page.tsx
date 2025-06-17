@@ -194,6 +194,7 @@ export default function CustomersPage() {
   const [activeFilters, setActiveFilters] = useState<{
     createdDate?: string;
     labels?: string;
+    status?: string;
   }>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -255,6 +256,7 @@ export default function CustomersPage() {
           limit: 10,
           ...activeFilters,
           search: searchQuery,
+          status: activeFilters.status,
         },
       });
       return {
@@ -315,6 +317,14 @@ export default function CustomersPage() {
 
   const handleFilterChange = (type: 'createdDate' | 'labels', value: string) => {
     setActiveFilters((prev) => {
+      if (type === 'createdDate' && (value === 'active' || value === 'inactive')) {
+        // Use status filter for active/inactive
+        return {
+          ...prev,
+          status: value,
+          [type]: undefined,
+        };
+      }
       return {
         ...prev,
         [type]: value,
@@ -322,7 +332,7 @@ export default function CustomersPage() {
     });
   };
 
-  const removeFilter = (type: 'createdDate' | 'labels') => {
+  const removeFilter = (type: 'createdDate' | 'labels' | 'status') => {
     setActiveFilters((prev) => {
       const newFilters = { ...prev };
       delete newFilters[type];
@@ -340,9 +350,11 @@ export default function CustomersPage() {
   const { totalCustomers, activeCustomers, inactiveCustomers, newThisMonth } = useMemo(() => {
     const total = customersList.length;
     const active = customersList.filter((c) => {
-      return c.isActive;
+      return c.status === 'active';
     }).length;
-    const inactive = total - active;
+    const inactive = customersList.filter((c) => {
+      return c.status === 'inactive';
+    }).length;
 
     // Calculate new customers this month
     const now = new Date();
@@ -804,7 +816,7 @@ export default function CustomersPage() {
                     key={`${type}-${value}`}
                     className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors dark:bg-[#1c1c1c] dark:border'
                     onClick={() => {
-                      return removeFilter(type as 'createdDate' | 'labels');
+                      return removeFilter(type as 'createdDate' | 'labels' | 'status');
                     }}
                   >
                     <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
