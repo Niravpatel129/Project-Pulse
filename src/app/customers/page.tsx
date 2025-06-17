@@ -324,17 +324,26 @@ export default function CustomersPage() {
   };
 
   // Calculate customer statistics
-  const { totalCustomers, activeCustomers, inactiveCustomers } = useMemo(() => {
+  const { totalCustomers, activeCustomers, inactiveCustomers, newThisMonth } = useMemo(() => {
     const total = customersList.length;
     const active = customersList.filter((c) => {
       return c.isActive;
     }).length;
     const inactive = total - active;
 
+    // Calculate new customers this month
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const newCustomers = customersList.filter((c) => {
+      const createdAt = new Date(c.createdAt);
+      return createdAt >= firstDayOfMonth;
+    }).length;
+
     return {
       totalCustomers: total,
       activeCustomers: active,
       inactiveCustomers: inactive,
+      newThisMonth: newCustomers,
     };
   }, [customersList]);
 
@@ -506,31 +515,47 @@ export default function CustomersPage() {
 
       {/* Summary Cards */}
       <div className='px-4 pt-4'>
-        <div className='grid grid-cols-3 gap-2 sm:gap-4 mb-6'>
-          <SummaryCard
-            label='Total'
-            count={totalCustomers}
-            onClick={() => {
-              return removeFilter('status');
-            }}
-            active={!activeFilters.status}
-          />
-          <SummaryCard
-            label='Active'
-            count={activeCustomers}
-            onClick={() => {
-              return handleFilterChange('status', 'active');
-            }}
-            active={activeFilters.status === 'active'}
-          />
-          <SummaryCard
-            label='Inactive'
-            count={inactiveCustomers}
-            onClick={() => {
-              return handleFilterChange('status', 'inactive');
-            }}
-            active={activeFilters.status === 'inactive'}
-          />
+        <div className='flex gap-2 sm:gap-4 mb-4'>
+          <div className='w-[calc(25%-6px)] min-w-0'>
+            <SummaryCard
+              label='Total'
+              count={totalCustomers}
+              onClick={() => {
+                return removeFilter('status');
+              }}
+              active={!activeFilters.status}
+            />
+          </div>
+          <div className='w-[calc(25%-6px)] min-w-0'>
+            <SummaryCard
+              label='Active'
+              count={activeCustomers}
+              onClick={() => {
+                return handleFilterChange('status', 'active');
+              }}
+              active={activeFilters.status === 'active'}
+            />
+          </div>
+          <div className='w-[calc(25%-6px)] min-w-0'>
+            <SummaryCard
+              label='Inactive'
+              count={inactiveCustomers}
+              onClick={() => {
+                return handleFilterChange('status', 'inactive');
+              }}
+              active={activeFilters.status === 'inactive'}
+            />
+          </div>
+          <div className='w-[calc(25%-6px)] min-w-0'>
+            <SummaryCard
+              label='New This Month'
+              count={newThisMonth}
+              onClick={() => {
+                return handleFilterChange('createdDate', 'this_month');
+              }}
+              active={activeFilters.createdDate === 'this_month'}
+            />
+          </div>
         </div>
       </div>
 
@@ -776,15 +801,22 @@ function SummaryCard({
   active?: boolean;
 }) {
   return (
-    <button
-      type='button'
-      onClick={onClick}
-      className={`border bg-background text-card-foreground rounded-lg h-[100px] flex flex-col justify-center px-4 transition-colors ${
-        active ? 'border-primary' : ''
-      }`}
-    >
-      <p className='text-sm text-muted-foreground'>{label}</p>
-      <p className='text-2xl font-mono font-medium'>{count.toLocaleString()}</p>
+    <button type='button' onClick={onClick} className='text-left w-full h-full'>
+      <div className='border bg-background text-card-foreground rounded-lg h-full pb-6'>
+        <div className='flex flex-col space-y-1.5 p-4 sm:p-6 pb-1 sm:pb-2 relative'>
+          <h3 className='tracking-tight mb-1 sm:mb-2 font-mono font-medium text-xl sm:text-2xl'>
+            {count.toLocaleString()}
+          </h3>
+        </div>
+        <div className='px-4 md:px-6'>
+          <div className='flex flex-col gap-1 sm:gap-2'>
+            <div className='text-sm sm:text-base'>{label}</div>
+            <div className='text-xs sm:text-sm text-muted-foreground'>
+              {count === 1 ? 'customer' : 'customers'}
+            </div>
+          </div>
+        </div>
+      </div>
     </button>
   );
 }
