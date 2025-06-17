@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Invoice {
   _id: string;
@@ -108,6 +109,7 @@ const formatCurrency = (
 const InvoicePage = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [paymentType, setPaymentType] = useState<'deposit' | 'full'>('full');
+  const [isDownloading, setIsDownloading] = useState(false);
   const params = useParams();
   const invoiceId = params.id as string;
 
@@ -735,6 +737,8 @@ const InvoicePage = () => {
                 <TooltipTrigger asChild>
                   <button
                     onClick={async () => {
+                      if (isDownloading) return;
+                      setIsDownloading(true);
                       try {
                         const response = await newRequest.get(`/invoices2/${invoiceId}/download`, {
                           responseType: 'blob',
@@ -748,39 +752,47 @@ const InvoicePage = () => {
                         // Create a URL for the blob
                         const url = window.URL.createObjectURL(pdfBlob);
 
-                        // Open PDF in new window
-                        const printWindow = window.open(url, '_blank');
+                        // Create a temporary link and trigger download
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `invoice-${invoice?.invoiceNumber || 'download'}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
 
-                        // Wait for the PDF to load then print
-                        if (printWindow) {
-                          printWindow.onload = () => {
-                            printWindow.print();
-                          };
-                        }
-
-                        // Clean up the URL object after printing
+                        // Clean up the URL object
                         setTimeout(() => {
                           window.URL.revokeObjectURL(url);
                         }, 1000);
+
+                        toast.success('Invoice downloaded successfully');
                       } catch (error) {
-                        console.error('Error printing PDF:', error);
+                        console.error('Error downloading PDF:', error);
+                        toast.error('Failed to download invoice');
+                      } finally {
+                        setIsDownloading(false);
                       }
                     }}
+                    disabled={isDownloading}
                     className='inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-[#f2efee] hover:text-accent-foreground rounded-full size-8 text-black'
                   >
-                    <svg
-                      stroke='currentColor'
-                      fill='currentColor'
-                      strokeWidth='0'
-                      viewBox='0 0 24 24'
-                      className='size-[18px]'
-                      height='1em'
-                      width='1em'
-                      xmlns='http://www.w3.org/2000/svg'
-                    >
-                      <path fill='none' d='M0 0h24v24H0z'></path>
-                      <path d='M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zm-1-4-1.41-1.41L13 12.17V4h-2v8.17L8.41 9.59 7 11l5 5 5-5z'></path>
-                    </svg>
+                    {isDownloading ? (
+                      <div className='animate-spin rounded-full size-[18px] border-2 border-gray-300 border-t-black' />
+                    ) : (
+                      <svg
+                        stroke='currentColor'
+                        fill='currentColor'
+                        strokeWidth='0'
+                        viewBox='0 0 24 24'
+                        className='size-[18px]'
+                        height='1em'
+                        width='1em'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path fill='none' d='M0 0h24v24H0z'></path>
+                        <path d='M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zm-1-4-1.41-1.41L13 12.17V4h-2v8.17L8.41 9.59 7 11l5 5 5-5z'></path>
+                      </svg>
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
