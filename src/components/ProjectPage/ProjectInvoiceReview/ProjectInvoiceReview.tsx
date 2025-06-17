@@ -1,8 +1,9 @@
-import { Column, DataTable } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/data-table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
+import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { CalendarIcon, Clock3Icon, FileCheckIcon, Package2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -145,27 +146,29 @@ export default function ProjectInvoiceReview() {
     { id: 'status3', title: 'Done', color: '#86efac', order: 2 },
   ];
 
-  const columns: Column<InvoiceItem>[] = [
+  const columns: ColumnDef<InvoiceItem>[] = [
     {
-      key: 'name',
+      id: 'name',
+      accessorKey: 'name',
       header: 'Name',
-      cell: (item) => {
-        return <span className='font-medium'>{item.name}</span>;
+      cell: ({ row }) => {
+        return <span className='font-medium'>{row.getValue('name')}</span>;
       },
-      sortable: true,
     },
     {
-      key: 'description',
+      id: 'description',
+      accessorKey: 'description',
       header: 'Description',
-      cell: (item) => {
-        return item.description || '-';
+      cell: ({ row }) => {
+        return row.getValue('description') || '-';
       },
     },
     {
-      key: 'itemType',
+      id: 'itemType',
+      accessorKey: 'itemType',
       header: 'Type of Item',
-      cell: (item) => {
-        return item.itemType === 'task' ? (
+      cell: ({ row }) => {
+        return row.getValue('itemType') === 'task' ? (
           <span className='px-2 py-1 bg-red-100 text-red-800 text-xs rounded'>Task</span>
         ) : (
           <span className='px-2 py-1 bg-green-100 text-green-800 text-xs rounded'>Deliverable</span>
@@ -173,21 +176,23 @@ export default function ProjectInvoiceReview() {
       },
     },
     {
-      key: 'date',
+      id: 'date',
+      accessorKey: 'date',
       header: 'Date',
-      cell: (item) => {
-        return item.date;
+      cell: ({ row }) => {
+        return row.getValue('date');
       },
-      sortable: true,
     },
     {
-      key: 'labels',
+      id: 'labels',
+      accessorKey: 'labels',
       header: 'Labels',
-      cell: (item) => {
+      cell: ({ row }) => {
+        const labels = row.getValue('labels') as string[];
         return (
           <div className='flex flex-wrap gap-1'>
-            {item.labels && item.labels.length > 0
-              ? item.labels.map((label, idx) => {
+            {labels && labels.length > 0
+              ? labels.map((label, idx) => {
                   return (
                     <span key={idx} className='px-2 py-1 bg-gray-100 text-xs rounded'>
                       {label}
@@ -200,12 +205,14 @@ export default function ProjectInvoiceReview() {
       },
     },
     {
-      key: 'price',
+      id: 'price',
+      accessorKey: 'price',
       header: 'Price',
-      cell: (item) => {
-        return `$${item.price.toFixed(2)} x ${item.quantity}`;
+      cell: ({ row }) => {
+        const price = row.getValue('price') as number;
+        const quantity = row.original.quantity;
+        return `$${price.toFixed(2)} x ${quantity}`;
       },
-      sortable: true,
     },
   ];
 
@@ -273,18 +280,25 @@ export default function ProjectInvoiceReview() {
             <h2 className='text-xl font-medium text-gray-900 mb-4'>Invoice Items</h2>
 
             {/* Option 1: Using DataTable component with full features */}
-            <DataTable
+            <DataTable<InvoiceItem>
               data={invoiceData.invoice.selectedItems}
               columns={columns}
-              keyExtractor={(item) => {
-                return item._id;
+              visibleColumns={Object.fromEntries(
+                columns.map((col) => {
+                  return [col.header as string, true];
+                }),
+              )}
+              columnOrder={columns.map((col) => {
+                return col.id as string;
+              })}
+              onColumnOrderChange={() => {}}
+              emptyState={{
+                title: 'No Invoice Items',
+                description: 'No invoice items found',
+                buttonText: 'Add Item',
+                onButtonClick: () => {},
               }}
-              searchKeys={['name', 'description', 'type']}
-              emptyState={
-                <div className='py-8 text-center text-gray-500'>No invoice items found</div>
-              }
-              onRowClick={handleRowClick}
-              className='hover:cursor-pointer'
+              onSelectItem={handleRowClick}
             />
           </div>
         ) : (
