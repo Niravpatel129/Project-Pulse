@@ -1,6 +1,6 @@
 'use client';
 
-import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
+import { AddCustomerDialog } from '@/app/[workspace]/dashboard/customers/components/AddCustomerDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useClients } from '@/hooks/useClients';

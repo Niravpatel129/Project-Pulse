@@ -1,4 +1,4 @@
-import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
+import { AddCustomerDialog } from '@/app/[workspace]/dashboard/customers/components/AddCustomerDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

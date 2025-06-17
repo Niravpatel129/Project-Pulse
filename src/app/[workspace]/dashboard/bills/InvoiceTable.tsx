@@ -1,4 +1,4 @@
-import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
+import { AddCustomerDialog } from '@/app/[workspace]/dashboard/customers/components/AddCustomerDialog';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { DateTooltip } from '@/components/ui/date-tooltip';

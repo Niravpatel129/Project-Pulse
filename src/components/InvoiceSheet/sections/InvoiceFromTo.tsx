@@ -1,4 +1,4 @@
-import { AddCustomerDialog } from '@/app/customers/components/AddCustomerDialog';
+import { AddCustomerDialog } from '@/app/[workspace]/dashboard/customers/components/AddCustomerDialog';
 import {
   Command,
   CommandEmpty,
