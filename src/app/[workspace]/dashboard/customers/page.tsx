@@ -879,7 +879,11 @@ export default function CustomersPage() {
             columnOrder={columnOrder}
             onColumnOrderChange={setColumnOrder}
             onSelectItem={(customer) => {
-              return router.push(`/dashboard/customers/${customer._id}`);
+              // on dev only
+              if (process.env.NODE_ENV === 'development') {
+                return router.push(`/dashboard/customers/${customer._id}`);
+              }
+              return;
             }}
           />
           {/* Infinite scroll observer */}
