@@ -40,6 +40,7 @@ interface Customer {
   createdAt: string;
   updatedAt?: string;
   labels?: string[];
+  totalSpent: number;
 }
 
 const TABLE_HEADERS = [
@@ -61,14 +62,14 @@ function formatDate(date: string) {
   });
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ customer }: { customer: Customer }) {
   return (
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        customer.totalSpent > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
       }`}
     >
-      {active ? 'Active' : 'Inactive'}
+      {customer.totalSpent > 0 ? `$${customer.totalSpent.toLocaleString()}` : 'No Revenue'}
     </span>
   );
 }
@@ -324,12 +325,12 @@ export default function CustomersPage() {
   };
 
   // Calculate customer statistics
-  const { totalCustomers, activeCustomers, inactiveCustomers, newThisMonth } = useMemo(() => {
+  const { totalCustomers, revenueGenerating, nonRevenueGenerating, newThisMonth } = useMemo(() => {
     const total = customersList.length;
-    const active = customersList.filter((c) => {
-      return c.isActive;
+    const withRevenue = customersList.filter((c) => {
+      return c.totalSpent > 0;
     }).length;
-    const inactive = total - active;
+    const noRevenue = total - withRevenue;
 
     // Calculate new customers this month
     const now = new Date();
@@ -341,8 +342,8 @@ export default function CustomersPage() {
 
     return {
       totalCustomers: total,
-      activeCustomers: active,
-      inactiveCustomers: inactive,
+      revenueGenerating: withRevenue,
+      nonRevenueGenerating: noRevenue,
       newThisMonth: newCustomers,
     };
   }, [customersList]);
@@ -381,7 +382,7 @@ export default function CustomersPage() {
           case 'updatedAt':
             return <span>{customer.updatedAt ? formatDate(customer.updatedAt) : '-'}</span>;
           case 'status':
-            return <StatusBadge active={customer.isActive} />;
+            return <StatusBadge customer={customer} />;
           case 'createdAt':
             return <span>{formatDate(customer.createdAt)}</span>;
           case 'actions':
@@ -528,22 +529,22 @@ export default function CustomersPage() {
             </div>
             <div className='w-[calc(25%-6px)] min-w-0'>
               <SummaryCard
-                label='Active'
-                count={activeCustomers}
+                label='Revenue Generating'
+                count={revenueGenerating}
                 onClick={() => {
-                  return handleFilterChange('status', 'active');
+                  return handleFilterChange('status', 'revenue');
                 }}
-                active={activeFilters.status === 'active'}
+                active={activeFilters.status === 'revenue'}
               />
             </div>
             <div className='w-[calc(25%-6px)] min-w-0'>
               <SummaryCard
-                label='Inactive'
-                count={inactiveCustomers}
+                label='No Revenue'
+                count={nonRevenueGenerating}
                 onClick={() => {
-                  return handleFilterChange('status', 'inactive');
+                  return handleFilterChange('status', 'no_revenue');
                 }}
-                active={activeFilters.status === 'inactive'}
+                active={activeFilters.status === 'no_revenue'}
               />
             </div>
             <div className='w-[calc(25%-6px)] min-w-0'>
