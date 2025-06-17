@@ -843,7 +843,7 @@ function SummaryCard({
         <div className='px-4 md:px-6'>
           <div className='flex flex-col gap-1 sm:gap-2'>
             <div className='text-sm sm:text-base'>{label}</div>
-            <div className='text-xs sm:text-sm text-muted-foreground'>
+            <div className='text-xs sm:text-sm text-muted-foreground pb-[5px]'>
               {count === 1 ? 'customer' : 'customers'}
             </div>
           </div>
