@@ -22,7 +22,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { newRequest } from '@/utils/newRequest';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
-import { Calendar, MoreHorizontal, Plus, Tag, Ticket, User, UserRound } from 'lucide-react';
+import { Calendar, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiFilter as FilterIcon, FiSidebar, FiX } from 'react-icons/fi';
@@ -42,15 +42,16 @@ interface Customer {
   updatedAt?: string;
   labels?: string[];
   totalSpent: number;
+  status: string;
 }
 
 const TABLE_HEADERS = [
   { id: 'name', label: 'Name', className: 'px-4 py-3 w-[220px]' },
   { id: 'email', label: 'Email', className: 'px-4 py-3 w-[250px]' },
+  { id: 'status', label: 'Status', className: 'px-4 py-3 w-[140px]' },
   { id: 'phone', label: 'Phone', className: 'px-4 py-3 w-[180px]' },
   { id: 'labels', label: 'Labels', className: 'px-4 py-3 w-[220px]' },
   { id: 'updatedAt', label: 'Updated', className: 'px-4 py-3 w-[180px]' },
-  { id: 'status', label: 'Status', className: 'px-4 py-3 w-[120px]' },
   { id: 'createdAt', label: 'Created', className: 'px-4 py-3 w-[180px]' },
   { id: 'actions', label: 'Actions', className: 'px-4 py-3 w-[80px]' },
 ];
@@ -61,18 +62,6 @@ function formatDate(date: string) {
     month: 'short',
     day: 'numeric',
   });
-}
-
-function StatusBadge({ customer }: { customer: Customer }) {
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        customer.totalSpent > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-      }`}
-    >
-      {customer.totalSpent > 0 ? `$${customer.totalSpent.toLocaleString()}` : 'No Revenue'}
-    </span>
-  );
 }
 
 // Lazy-load the dialog
@@ -205,31 +194,50 @@ export default function CustomersPage() {
   const [activeFilters, setActiveFilters] = useState<{
     createdDate?: string;
     labels?: string;
-    status?: string;
   }>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const [customersList, setCustomersList] = useState<any[]>([]);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Add status update mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ customerId, status }: { customerId: string; status: string }) => {
+      await newRequest.patch(`/clients/${customerId}`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer status updated');
+    },
+    onError: () => {
+      toast.error('Failed to update customer status');
+    },
+  });
+
+  const handleStatusChange = (customer: Customer, newStatus: string) => {
+    updateStatusMutation.mutate({ customerId: customer._id, status: newStatus });
+  };
+
   const [visibleColumns, setVisibleColumns] = useLocalStorage('customer-visible-columns', {
     Name: true,
     Email: true,
+    Status: true,
     Phone: true,
     Labels: true,
     Updated: true,
-    Status: true,
     Created: true,
     Actions: true,
   });
+
   const [columnOrder, setColumnOrder] = useLocalStorage(
     'customer-column-order',
     TABLE_HEADERS.map((header) => {
       return header.id;
     }),
   );
-  const queryClient = useQueryClient();
-  const isMobile = useIsMobile();
-  const observerTarget = useRef<HTMLDivElement>(null);
-  const [customersList, setCustomersList] = useState<any[]>([]);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const {
     data: customersData,
@@ -305,7 +313,7 @@ export default function CustomersPage() {
     }
   }, [customersList, selectedCustomer]);
 
-  const handleFilterChange = (type: 'createdDate' | 'labels' | 'status', value: string) => {
+  const handleFilterChange = (type: 'createdDate' | 'labels', value: string) => {
     setActiveFilters((prev) => {
       return {
         ...prev,
@@ -314,7 +322,7 @@ export default function CustomersPage() {
     });
   };
 
-  const removeFilter = (type: 'createdDate' | 'labels' | 'status') => {
+  const removeFilter = (type: 'createdDate' | 'labels') => {
     setActiveFilters((prev) => {
       const newFilters = { ...prev };
       delete newFilters[type];
@@ -329,12 +337,12 @@ export default function CustomersPage() {
   };
 
   // Calculate customer statistics
-  const { totalCustomers, revenueGenerating, nonRevenueGenerating, newThisMonth } = useMemo(() => {
+  const { totalCustomers, activeCustomers, inactiveCustomers, newThisMonth } = useMemo(() => {
     const total = customersList.length;
-    const withRevenue = customersList.filter((c) => {
-      return c.totalSpent > 0;
+    const active = customersList.filter((c) => {
+      return c.isActive;
     }).length;
-    const noRevenue = total - withRevenue;
+    const inactive = total - active;
 
     // Calculate new customers this month
     const now = new Date();
@@ -346,8 +354,8 @@ export default function CustomersPage() {
 
     return {
       totalCustomers: total,
-      revenueGenerating: withRevenue,
-      nonRevenueGenerating: noRevenue,
+      activeCustomers: active,
+      inactiveCustomers: inactive,
       newThisMonth: newCustomers,
     };
   }, [customersList]);
@@ -372,6 +380,44 @@ export default function CustomersPage() {
             );
           case 'email':
             return <span className='truncate'>{customer.user.email || '-'}</span>;
+          case 'status':
+            return (
+              <div
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={customer.status === 'active' ? 'default' : 'secondary'}
+                      size='sm'
+                      className='h-7 px-2 min-w-[90px]'
+                    >
+                      <span className='capitalize'>{customer.status || 'inactive'}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='start'>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleStatusChange(customer, 'active');
+                      }}
+                      className='capitalize'
+                    >
+                      Active
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleStatusChange(customer, 'inactive');
+                      }}
+                      className='capitalize'
+                    >
+                      Inactive
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            );
           case 'phone':
             return <span>{customer.phone || '-'}</span>;
           case 'labels':
@@ -385,8 +431,6 @@ export default function CustomersPage() {
             );
           case 'updatedAt':
             return <span>{customer.updatedAt ? formatDate(customer.updatedAt) : '-'}</span>;
-          case 'status':
-            return <StatusBadge customer={customer} />;
           case 'createdAt':
             return <span>{formatDate(customer.createdAt)}</span>;
           case 'actions':
@@ -586,29 +630,29 @@ export default function CustomersPage() {
                 label='Total'
                 count={totalCustomers}
                 onClick={() => {
-                  return removeFilter('status');
+                  return removeFilter('createdDate');
                 }}
-                active={!activeFilters.status}
+                active={!activeFilters.createdDate}
               />
             </div>
             <div className='w-[calc(25%-6px)] min-w-0'>
               <SummaryCard
-                label='Revenue Generating'
-                count={revenueGenerating}
+                label='Active'
+                count={activeCustomers}
                 onClick={() => {
-                  return handleFilterChange('status', 'revenue');
+                  return handleFilterChange('createdDate', 'active');
                 }}
-                active={activeFilters.status === 'revenue'}
+                active={activeFilters.createdDate === 'active'}
               />
             </div>
             <div className='w-[calc(25%-6px)] min-w-0'>
               <SummaryCard
-                label='No Revenue'
-                count={nonRevenueGenerating}
+                label='Inactive'
+                count={inactiveCustomers}
                 onClick={() => {
-                  return handleFilterChange('status', 'no_revenue');
+                  return handleFilterChange('createdDate', 'inactive');
                 }}
-                active={activeFilters.status === 'no_revenue'}
+                active={activeFilters.createdDate === 'inactive'}
               />
             </div>
             <div className='w-[calc(25%-6px)] min-w-0'>
@@ -720,44 +764,27 @@ export default function CustomersPage() {
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Ticket className='mr-2 w-4 h-4' /> Status
-                    </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       <DropdownMenuItem
                         onClick={() => {
-                          return handleFilterChange('status', 'active');
+                          return handleFilterChange('createdDate', 'active');
                         }}
                       >
-                        Paid
+                        Active
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return handleFilterChange('status', 'unpaid');
+                          return handleFilterChange('createdDate', 'inactive');
                         }}
                       >
-                        Unpaid
+                        Inactive
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return handleFilterChange('status', 'overdue');
+                          return handleFilterChange('createdDate', 'this_month');
                         }}
                       >
-                        Overdue
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'draft');
-                        }}
-                      >
-                        Draft
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return handleFilterChange('status', 'cancelled');
-                        }}
-                      >
-                        Cancelled
+                        New This Month
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
@@ -773,18 +800,19 @@ export default function CustomersPage() {
                     key={`${type}-${value}`}
                     className='bg-[#e5e4e0] rounded-none text-[#878787] p-2 text-sm cursor-pointer group flex items-center gap-1 h-full hover:bg-[#d4d3cf] transition-colors dark:bg-[#1c1c1c] dark:border'
                     onClick={() => {
-                      return removeFilter(type as 'createdDate' | 'labels' | 'status');
+                      return removeFilter(type as 'createdDate' | 'labels');
                     }}
                   >
                     <FiX className='w-0 h-4 group-hover:w-4 transition-all duration-300' />
                     <span className='text-xs group-hover:text-[#878787] font-medium'>
-                      {type === 'dueDate' && value === 'today' && 'Due Today'}
-                      {type === 'dueDate' && value === 'this_week' && 'Due This Week'}
-                      {type === 'dueDate' && value === 'this_month' && 'Due This Month'}
-                      {type === 'dueDate' && value === 'this_year' && 'Due This Year'}
+                      {type === 'createdDate' && value === 'today' && 'Due Today'}
+                      {type === 'createdDate' && value === 'this_week' && 'Due This Week'}
+                      {type === 'createdDate' && value === 'this_month' && 'New This Month'}
+                      {type === 'createdDate' && value === 'this_year' && 'Due This Year'}
+                      {type === 'createdDate' && value === 'active' && 'Active Customers'}
+                      {type === 'createdDate' && value === 'inactive' && 'Inactive Customers'}
                       {type === 'customer' && value === 'all' && 'All Customers'}
                       {type === 'customer' && value !== 'all' && `Customer: ${value}`}
-                      {type === 'status' && value.charAt(0).toUpperCase() + value.slice(1)}
                     </span>
                   </div>
                 );
