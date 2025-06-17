@@ -390,9 +390,13 @@ export default function CustomersPage() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant={customer.status === 'active' ? 'default' : 'secondary'}
+                      variant='outline'
                       size='sm'
-                      className='h-7 px-2 min-w-[90px]'
+                      className={`h-6 px-2 min-w-[80px] text-xs border ${
+                        customer.status === 'active'
+                          ? 'border-zinc-100 bg-zinc-50/50 text-zinc-400 hover:bg-zinc-50 dark:bg-zinc-900/20 dark:border-zinc-800/50 dark:text-zinc-500'
+                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900/30 dark:border-zinc-800 dark:text-zinc-400'
+                      }`}
                     >
                       <span className='capitalize'>{customer.status || 'inactive'}</span>
                     </Button>
