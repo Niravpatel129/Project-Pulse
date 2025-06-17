@@ -229,6 +229,7 @@ export default function CustomersPage() {
   const isMobile = useIsMobile();
   const observerTarget = useRef<HTMLDivElement>(null);
   const [customersList, setCustomersList] = useState<any[]>([]);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const {
     data: customersData,
@@ -390,31 +391,44 @@ export default function CustomersPage() {
             return <span>{formatDate(customer.createdAt)}</span>;
           case 'actions':
             return (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-8 w-8 p-0'>
-                    <MoreHorizontal className='h-4 w-4' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      return handleEditCustomer(customer);
-                    }}
-                  >
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      return handleDeleteCustomer(customer);
-                    }}
-                    className='text-red-600 dark:text-red-400'
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                <DropdownMenu
+                  open={openDropdownId === customer._id}
+                  onOpenChange={(open) => {
+                    return setOpenDropdownId(open ? customer._id : null);
+                  }}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='ghost' size='icon' className='h-8 w-8 p-0'>
+                      <MoreHorizontal className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setOpenDropdownId(null);
+                        handleEditCustomer(customer);
+                      }}
+                    >
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setOpenDropdownId(null);
+                        handleDeleteCustomer(customer);
+                      }}
+                      className='text-red-600 dark:text-red-400'
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             );
           default:
             return null;
