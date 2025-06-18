@@ -1,7 +1,7 @@
 import Providers from '@/components/Providers';
 import { DynamicFavicon } from '@/components/shared/DynamicFavicon';
 import { Toaster } from '@/components/ui/toaster';
-import { DEV_CONFIG, getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
+import { getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
 import { cn } from '@/lib/utils';
 import { CMSSettings } from '@/types/cms';
 import { fetchCMSSettings } from '@/utils/cms';
@@ -176,7 +176,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
     // Fallback to mock data in development if available
     if (process.env.NODE_ENV === 'development') {
-      const workspaceSlug = isSubdomain ? subdomain : DEV_CONFIG.defaultWorkspace;
+      // In development, always try to map domain to workspace
+      // For www.printscala.com, we want to use 'printscala' workspace
+      const workspaceSlug = 'printscala'; // Default for development
+
+      // Check if we have mock data for this workspace
       if (hasMockWorkspace(workspaceSlug)) {
         console.log(`[DEV] Using mock data for workspace: ${workspaceSlug}`);
         const mockData = getMockWorkspace(workspaceSlug);
