@@ -618,6 +618,8 @@ export const printscala: WorkspaceCMSData = {
                   'Industry-Specific Keywords',
                   '24-48 Hour Turnaround',
                 ],
+                backgroundImage:
+                  'https://cdna.artstation.com/p/assets/images/images/054/944/206/large/chill-jazz-coffee-4k-cozy-coffee-shop.jpg?1665735454',
               },
               {
                 icon: '🎯',
@@ -629,6 +631,8 @@ export const printscala: WorkspaceCMSData = {
                   'Industry Research',
                   'Career Path Planning',
                 ],
+                backgroundImage:
+                  'https://images.unsplash.com/photo-1560264280-88b68371db39?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d29ya3BsYWNlfGVufDB8fDB8fHww',
               },
               {
                 icon: '📈',
@@ -640,6 +644,8 @@ export const printscala: WorkspaceCMSData = {
                   'Strategic Achievements',
                   'Board-Ready Format',
                 ],
+                backgroundImage:
+                  'https://img.freepik.com/free-photo/empty-room-with-chairs-desks_23-2149008873.jpg?semt=ais_hybrid&w=740',
               },
             ],
           },

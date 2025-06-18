@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
       'cdn.prod.website-files.com',
       'hebbkx1anhila5yf.public.blob.vercel-storage.com',
       'i.postimg.cc',
+      'cdn.b12.io',
+      'cdna.artstation.com',
+      'images.unsplash.com',
     ],
   },
   async headers() {

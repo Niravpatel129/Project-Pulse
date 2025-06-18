@@ -11,6 +11,7 @@ interface Service {
   features: string[];
   link?: string;
   price?: string;
+  backgroundImage?: string;
 }
 
 interface ServiceSectionProps {
@@ -49,7 +50,7 @@ export default function ServiceSection({
   const [activeTab, setActiveTab] = useState(0);
   const [progress, setProgress] = useState(0);
   const autoSwitchInterval = useRef<NodeJS.Timeout | null>(null);
-  const PROGRESS_DURATION = 5000; // 5 seconds per tab
+  const PROGRESS_DURATION = 10000; // 5 seconds per tab
 
   useEffect(() => {
     // Start auto-switching
@@ -258,7 +259,10 @@ export default function ServiceSection({
             <Image
               width={1000}
               height={1000}
-              src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/gen-images/public/images/restaurant-blurred-bg-aN2fnA4yLMGweDLJTwWhghbSeI49SI.png'
+              src={
+                currentService.backgroundImage ||
+                'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/gen-images/public/images/restaurant-blurred-bg-aN2fnA4yLMGweDLJTwWhghbSeI49SI.png'
+              }
               alt='Abstract restaurant background'
               className='absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none'
               style={{ zIndex: 0 }}
