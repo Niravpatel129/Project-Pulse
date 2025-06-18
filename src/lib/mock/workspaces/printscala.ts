@@ -434,6 +434,18 @@ export const printscala: WorkspaceCMSData = {
                     required: true,
                   },
                   {
+                    name: 'files',
+                    label: 'Upload your current resume (optional)',
+                    type: 'file',
+                    required: false,
+                    accept: '.pdf,.doc,.docx,.txt',
+                    multiple: true,
+                    maxSize: 5,
+                    maxFiles: 3,
+                    description:
+                      'Upload your current resume so we can review it and provide better suggestions. PDF, DOC, DOCX, or TXT files only.',
+                  },
+                  {
                     name: 'message',
                     label: 'Message',
                     type: 'textarea',

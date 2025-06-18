@@ -41,11 +41,17 @@ type Service = {
 type FormField = {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'textarea' | 'date' | 'time' | 'checkbox';
+  type: 'text' | 'email' | 'tel' | 'textarea' | 'date' | 'time' | 'checkbox' | 'file';
   placeholder?: string;
   required: boolean;
   rows?: number;
   showWhen?: string;
+  // File-specific properties
+  accept?: string;
+  multiple?: boolean;
+  maxSize?: number; // in MB
+  maxFiles?: number;
+  description?: string;
 };
 
 type FormConfig = {
@@ -115,6 +121,169 @@ const itemVariants = {
   },
 } as const;
 
+// File Upload Component
+const FileUploadField = ({
+  field,
+  files,
+  onChange,
+  variant = 'default',
+}: {
+  field: FormField;
+  files: File[];
+  onChange: (name: string, files: File[]) => void;
+  variant?: 'default' | 'callback';
+}) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = React.useState(false);
+
+  const handleFileSelect = (selectedFiles: FileList | null) => {
+    if (!selectedFiles) return;
+
+    const newFiles = Array.from(selectedFiles);
+    const maxSize = field.maxSize || 10; // Default 10MB
+    const maxFiles = field.maxFiles || (field.multiple ? 5 : 1);
+
+    // Validate file size
+    const validFiles = newFiles.filter((file) => {
+      const sizeInMB = file.size / (1024 * 1024);
+      return sizeInMB <= maxSize;
+    });
+
+    // Limit number of files
+    const finalFiles = field.multiple
+      ? [...files, ...validFiles].slice(0, maxFiles)
+      : validFiles.slice(0, 1);
+
+    onChange(field.name, finalFiles);
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = files.filter((_, i) => {
+      return i !== index;
+    });
+    onChange(field.name, newFiles);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragIn = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleDragOut = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const labelClassName =
+    variant === 'callback'
+      ? 'block text-sm font-medium text-gray-700'
+      : 'block text-sm font-medium mb-1.5';
+
+  return (
+    <div className={variant === 'callback' ? 'space-y-2' : ''}>
+      <label className={labelClassName}>{field.label}</label>
+
+      {field.description && <p className='text-sm text-gray-500 mb-2'>{field.description}</p>}
+
+      {/* Upload Area */}
+      <div
+        className={`
+          border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200
+          ${
+            dragOver
+              ? 'border-black bg-gray-50'
+              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+          }
+        `}
+        onDragEnter={handleDragIn}
+        onDragLeave={handleDragOut}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => {
+          return fileInputRef.current?.click();
+        }}
+      >
+        <div className='space-y-2'>
+          <div className='text-4xl text-gray-400'>📄</div>
+          <div>
+            <p className='text-sm font-medium text-gray-700'>Click to upload or drag and drop</p>
+            <p className='text-xs text-gray-500'>
+              {field.accept ? `Accepted: ${field.accept}` : 'Any file type'}
+              {field.maxSize && ` • Max ${field.maxSize}MB`}
+              {field.multiple && ` • Up to ${field.maxFiles || 5} files`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type='file'
+        accept={field.accept}
+        multiple={field.multiple}
+        onChange={(e) => {
+          return handleFileSelect(e.target.files);
+        }}
+        className='hidden'
+      />
+
+      {/* File List */}
+      {files.length > 0 && (
+        <div className='space-y-2 mt-3'>
+          {files.map((file, index) => {
+            return (
+              <div
+                key={`${file.name}-${index}`}
+                className='flex items-center justify-between p-2 bg-gray-50 rounded border'
+              >
+                <div className='flex items-center space-x-2 flex-1 min-w-0'>
+                  <span className='text-lg'>📄</span>
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-medium text-gray-900 truncate'>{file.name}</p>
+                    <p className='text-xs text-gray-500'>{formatFileSize(file.size)}</p>
+                  </div>
+                </div>
+                <button
+                  type='button'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(index);
+                  }}
+                  className='text-red-500 hover:text-red-700 text-sm font-medium ml-2'
+                >
+                  Remove
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Common Components
 const DynamicFormField = ({
   field,
@@ -144,6 +313,17 @@ const DynamicFormField = ({
     variant === 'callback'
       ? 'block text-sm font-medium text-gray-700'
       : 'block text-sm font-medium mb-1.5';
+
+  if (field.type === 'file') {
+    return (
+      <FileUploadField
+        field={field}
+        files={(value as File[]) || []}
+        onChange={onChange}
+        variant={variant}
+      />
+    );
+  }
 
   if (field.type === 'textarea') {
     return (
@@ -352,6 +532,7 @@ export default function OnboardingSheet({
     phone: '',
     message: '',
     consent: false,
+    files: [] as File[],
   });
   const [submitted, setSubmitted] = React.useState(false);
   const [callbackSchedule, setCallbackSchedule] = React.useState<CallbackSchedule>({
@@ -407,6 +588,18 @@ export default function OnboardingSheet({
             type: 'tel' as const,
             placeholder: '555-555-5555',
             required: true,
+          },
+          {
+            name: 'files',
+            label: 'Upload your current resume (optional)',
+            type: 'file' as const,
+            required: false,
+            accept: '.pdf,.doc,.docx,.txt',
+            multiple: true,
+            maxSize: 5,
+            maxFiles: 3,
+            description:
+              'Upload your current resume so we can review it and provide better suggestions.',
           },
           {
             name: 'message',
@@ -515,7 +708,7 @@ export default function OnboardingSheet({
         setSelectedService(null);
         setAdditionalSelectedServices([]);
         setAdditionalNotes('');
-        setContactForm({ name: '', email: '', phone: '', message: '', consent: false });
+        setContactForm({ name: '', email: '', phone: '', message: '', consent: false, files: [] });
         setSubmitted(false);
         setCallbackSchedule({ date: '', time: '', name: '', phone: '', notes: '', isASAP: true });
       }, 300); // Match this with the animation duration
@@ -546,14 +739,49 @@ export default function OnboardingSheet({
     if (loading) return;
     setLoading(true);
     try {
-      await newRequest.post('/public/inbound', {
-        cmsEmail: cmsData?.settings?.contact?.email,
-        type: 'contact',
-        selectedService,
-        additionalServices: additionalSelectedServices,
-        additionalNotes,
-        contactForm,
-      });
+      // Check if we have files to upload
+      const hasFiles = contactForm.files && contactForm.files.length > 0;
+
+      if (hasFiles) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+
+        // Add form fields
+        formData.append('cmsEmail', cmsData?.settings?.contact?.email || '');
+        formData.append('type', 'contact');
+        formData.append('selectedService', selectedService || '');
+        formData.append('additionalServices', JSON.stringify(additionalSelectedServices));
+        formData.append('additionalNotes', additionalNotes);
+
+        // Add contact form data (excluding files)
+        Object.entries(contactForm).forEach(([key, value]) => {
+          if (key !== 'files') {
+            formData.append(`contactForm[${key}]`, String(value));
+          }
+        });
+
+        // Add files
+        contactForm.files.forEach((file, index) => {
+          formData.append(`files[${index}]`, file);
+        });
+
+        await newRequest.post('/public/inbound', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Use regular JSON for submissions without files
+        await newRequest.post('/public/inbound', {
+          cmsEmail: cmsData?.settings?.contact?.email,
+          type: 'contact',
+          selectedService,
+          additionalServices: additionalSelectedServices,
+          additionalNotes,
+          contactForm,
+        });
+      }
+
       setSubmitted(true);
     } catch (error) {
       console.error('Error submitting contact form:', error);
@@ -1083,21 +1311,29 @@ export default function OnboardingSheet({
               disabled={
                 loading ||
                 !contactFormConfig.fields.every((field) => {
-                  return (
-                    !field.required ||
-                    (contactForm[field.name as keyof typeof contactForm] &&
-                      String(contactForm[field.name as keyof typeof contactForm]).trim() !== '')
-                  );
+                  if (!field.required) return true;
+
+                  const value = contactForm[field.name as keyof typeof contactForm];
+
+                  if (field.type === 'file') {
+                    return Array.isArray(value) && value.length > 0;
+                  }
+
+                  return value && String(value).trim() !== '';
                 }) ||
                 (contactFormConfig.consentField?.required && !contactForm.consent)
               }
               className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 ${
                 contactFormConfig.fields.every((field) => {
-                  return (
-                    !field.required ||
-                    (contactForm[field.name as keyof typeof contactForm] &&
-                      String(contactForm[field.name as keyof typeof contactForm]).trim() !== '')
-                  );
+                  if (!field.required) return true;
+
+                  const value = contactForm[field.name as keyof typeof contactForm];
+
+                  if (field.type === 'file') {
+                    return Array.isArray(value) && value.length > 0;
+                  }
+
+                  return value && String(value).trim() !== '';
                 }) &&
                 (!contactFormConfig.consentField?.required || contactForm.consent)
                   ? 'opacity-100 translate-y-0 pointer-events-auto'
