@@ -8,7 +8,7 @@ import SectionHeader from './SectionHeader';
 interface Client {
   name: string;
   profession?: string;
-  logo: string;
+  backgroundImage: string;
   result?: string;
 }
 
@@ -166,11 +166,11 @@ const ClientCard = memo(function ClientCard({
         <div className='absolute inset-0 overflow-hidden'>
           {/* Background Image */}
           <Image
-            src={client.logo}
+            src={client.backgroundImage}
             alt={`${client.name}'s logo`}
             fill
             unoptimized
-            className='object-cover transition-transform duration-700 ease-out group-hover:scale-110'
+            className='object-cover transition-transform duration-700 ease-out scale-110 group-hover:scale-100'
             onError={onImageError}
           />
           {/* Overlay for better text readability */}
