@@ -101,7 +101,9 @@ export const RecipientSelector = ({
                 return (
                   <SelectItem key={participant._id} value={participant.email || ''}>
                     <Avatar className='size-5'>
-                      <AvatarImage src={participant.avatar || ''} alt={participant.name} />
+                      {participant.avatar ? (
+                        <AvatarImage src={participant.avatar} alt={participant.name} />
+                      ) : null}
                       <AvatarFallback className='text-xs'>
                         {participant.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>

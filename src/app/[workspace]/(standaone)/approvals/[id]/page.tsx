@@ -711,7 +711,9 @@ export default function ApprovalRequestPage() {
                           </TimelineTitle>
                           <TimelineIndicator className='bg-primary/10 group-data-completed/timeline-item:bg-primary group-data-completed/timeline-item:text-primary-foreground flex size-6 items-center justify-center border-none group-data-[orientation=vertical]/timeline:-left-7'>
                             <Avatar className='size-6'>
-                              <AvatarImage src={item.image} alt={item.title} />
+                              {item.image ? (
+                                <AvatarImage src={item.image} alt={item.title} />
+                              ) : null}
                               <AvatarFallback>{item.title ? item.title[0] : '?'}</AvatarFallback>
                             </Avatar>
                           </TimelineIndicator>

@@ -213,7 +213,9 @@ export function Navigation() {
                     className='relative h-10 w-10 p-0 overflow-visible focus:bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0'
                   >
                     <Avatar className='h-8 w-8'>
-                      <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
+                      {user?.avatar ? (
+                        <AvatarImage src={user.avatar} alt={user?.name || 'User'} />
+                      ) : null}
                       <AvatarFallback className='bg-white text-xs text-[#484848]'>
                         <CiUser className='h-4 w-4' />
                         <VscChevronDown className='h-4 w-4' />
