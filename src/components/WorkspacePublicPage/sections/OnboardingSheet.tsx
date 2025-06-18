@@ -116,6 +116,87 @@ const itemVariants = {
 } as const;
 
 // Common Components
+const DynamicFormField = ({
+  field,
+  value,
+  onChange,
+  formData,
+  variant = 'default',
+}: {
+  field: FormField;
+  value: any;
+  onChange: (name: string, value: any) => void;
+  formData?: any;
+  variant?: 'default' | 'callback';
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const newValue =
+      field.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+    onChange(field.name, newValue);
+  };
+
+  const inputClassName =
+    variant === 'callback'
+      ? 'w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
+      : 'w-full border rounded p-2.5 text-base';
+
+  const labelClassName =
+    variant === 'callback'
+      ? 'block text-sm font-medium text-gray-700'
+      : 'block text-sm font-medium mb-1.5';
+
+  if (field.type === 'textarea') {
+    return (
+      <div className={variant === 'callback' ? 'space-y-2' : ''}>
+        <label className={labelClassName}>{field.label}</label>
+        <textarea
+          className={`${inputClassName} ${
+            field.rows ? `min-h-[${field.rows * 25}px]` : 'min-h-[100px]'
+          }`}
+          placeholder={field.placeholder}
+          value={value || ''}
+          onChange={handleChange}
+          required={field.required}
+          rows={field.rows || 4}
+        />
+      </div>
+    );
+  }
+
+  if (field.type === 'checkbox') {
+    return (
+      <div className='flex items-start gap-2'>
+        <input
+          type='checkbox'
+          id={field.name}
+          checked={value || false}
+          onChange={handleChange}
+          required={field.required}
+          className='mt-1'
+        />
+        <label htmlFor={field.name} className='text-sm'>
+          {field.label}
+        </label>
+      </div>
+    );
+  }
+
+  return (
+    <div className={variant === 'callback' ? 'space-y-2' : ''}>
+      <label className={labelClassName}>{field.label}</label>
+      <input
+        className={inputClassName}
+        placeholder={field.placeholder}
+        type={field.type}
+        value={value || ''}
+        onChange={handleChange}
+        required={field.required}
+        min={field.type === 'date' ? new Date().toISOString().split('T')[0] : undefined}
+      />
+    </div>
+  );
+};
+
 const PriceTag = ({
   price,
   isSelected,
@@ -286,20 +367,123 @@ export default function OnboardingSheet({
   const { cmsData } = useWorkspaceCMS();
   const [loading, setLoading] = React.useState(false);
 
-  // Get services from CMS data
-  const services = React.useMemo(() => {
+  // Get services and form configurations from CMS data
+  const { services, contactFormConfig, callbackFormConfig, callNowConfig } = React.useMemo(() => {
     const onboardingSection = (cmsData?.pages?.home as any)?.sections?.find((section: any) => {
       return section.type === 'onboardingServiceSection';
     });
-    return (
-      (onboardingSection?.data?.services as Service[]) || [
+
+    const sectionData = onboardingSection?.data;
+
+    return {
+      services: (sectionData?.services as Service[]) || [
         // Fallback services if not found in CMS
         { name: 'Professional Resume Writing', price: '$99', subtitle: '2-3 business days' },
         { name: 'Same-Day Rush Service', price: '$49', subtitle: 'Delivered today' },
         { name: 'Specialized Industries', price: '$129', subtitle: '1 session' },
         { name: 'Free Consulting', price: 'Free', subtitle: '20 mins' },
-      ]
-    );
+      ],
+      contactFormConfig: (sectionData?.forms?.contactForm as FormConfig) || {
+        title: 'Contact Details',
+        description: 'Please provide your contact information.',
+        fields: [
+          {
+            name: 'name',
+            label: 'Name *',
+            type: 'text' as const,
+            placeholder: 'Jane Smith',
+            required: true,
+          },
+          {
+            name: 'email',
+            label: 'Email address *',
+            type: 'email' as const,
+            placeholder: 'email@website.com',
+            required: true,
+          },
+          {
+            name: 'phone',
+            label: 'Phone number *',
+            type: 'tel' as const,
+            placeholder: '555-555-5555',
+            required: true,
+          },
+          {
+            name: 'message',
+            label: 'Message',
+            type: 'textarea' as const,
+            placeholder: 'Your message here...',
+            required: false,
+            rows: 4,
+          },
+        ],
+        consentField: {
+          name: 'consent',
+          label: 'I allow this website to store my submission so they can respond to my inquiry. *',
+          required: true,
+        },
+      },
+      callbackFormConfig: (sectionData?.forms?.callbackForm as FormConfig) || {
+        title: 'Schedule a Callback',
+        description: 'Choose a time that works for you.',
+        fields: [
+          {
+            name: 'name',
+            label: 'Your Name *',
+            type: 'text' as const,
+            placeholder: 'Jane Smith',
+            required: true,
+          },
+          {
+            name: 'phone',
+            label: 'Phone Number *',
+            type: 'tel' as const,
+            placeholder: '555-555-5555',
+            required: true,
+          },
+          {
+            name: 'date',
+            label: 'Preferred Date *',
+            type: 'date' as const,
+            required: true,
+            showWhen: 'scheduled',
+          },
+          {
+            name: 'time',
+            label: 'Preferred Time *',
+            type: 'time' as const,
+            required: true,
+            showWhen: 'scheduled',
+          },
+          {
+            name: 'notes',
+            label: 'Additional Notes',
+            type: 'textarea' as const,
+            placeholder: "Any specific topics you'd like to discuss?",
+            required: false,
+            rows: 4,
+          },
+        ],
+        timingOptions: [
+          {
+            value: 'asap',
+            label: 'ASAP',
+            description: 'We will call you back as soon as possible',
+          },
+          {
+            value: 'scheduled',
+            label: 'Schedule',
+            description: 'Choose a specific time for your callback',
+          },
+        ],
+      },
+      callNowConfig: sectionData?.forms?.callNowSection || {
+        title: 'Call Now',
+        description: 'Get immediate assistance from our team',
+        buttonText: 'Start Call',
+        icon: 'phone',
+      },
+    };
   }, [cmsData]);
 
   const handleServiceSelect = React.useCallback(
@@ -640,81 +824,36 @@ export default function OnboardingSheet({
                       </div>
                     )}
                     <div className='space-y-4'>
-                      <div>
-                        <label className='block text-sm font-medium mb-1.5'>Name *</label>
-                        <input
-                          className='w-full border rounded p-2.5 text-base'
-                          placeholder='Jane Smith'
-                          value={contactForm.name}
-                          onChange={(e) => {
-                            return setContactForm((f) => {
-                              return { ...f, name: e.target.value };
+                      {contactFormConfig.fields.map((field) => {
+                        return (
+                          <DynamicFormField
+                            key={field.name}
+                            field={field}
+                            value={contactForm[field.name as keyof typeof contactForm]}
+                            onChange={(name, value) => {
+                              setContactForm((f) => {
+                                return { ...f, [name]: value };
+                              });
+                            }}
+                            formData={contactForm}
+                          />
+                        );
+                      })}
+                      {contactFormConfig.consentField && (
+                        <DynamicFormField
+                          field={{
+                            ...contactFormConfig.consentField,
+                            type: 'checkbox',
+                          }}
+                          value={contactForm.consent}
+                          onChange={(name, value) => {
+                            setContactForm((f) => {
+                              return { ...f, [name]: value };
                             });
                           }}
-                          required
+                          formData={contactForm}
                         />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium mb-1.5'>Email address *</label>
-                        <input
-                          className='w-full border rounded p-2.5 text-base'
-                          placeholder='email@website.com'
-                          type='email'
-                          value={contactForm.email}
-                          onChange={(e) => {
-                            return setContactForm((f) => {
-                              return { ...f, email: e.target.value };
-                            });
-                          }}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium mb-1.5'>Phone number *</label>
-                        <input
-                          className='w-full border rounded p-2.5 text-base'
-                          placeholder='555-555-5555'
-                          type='tel'
-                          value={contactForm.phone}
-                          onChange={(e) => {
-                            return setContactForm((f) => {
-                              return { ...f, phone: e.target.value };
-                            });
-                          }}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium mb-1.5'>Message</label>
-                        <textarea
-                          className='w-full border rounded p-2.5 text-base min-h-[100px]'
-                          placeholder='Your message here...'
-                          value={contactForm.message}
-                          onChange={(e) => {
-                            return setContactForm((f) => {
-                              return { ...f, message: e.target.value };
-                            });
-                          }}
-                        />
-                      </div>
-                      <div className='flex items-start gap-2'>
-                        <input
-                          type='checkbox'
-                          id='consent'
-                          checked={contactForm.consent}
-                          onChange={(e) => {
-                            return setContactForm((f) => {
-                              return { ...f, consent: e.target.checked };
-                            });
-                          }}
-                          required
-                          className='mt-1'
-                        />
-                        <label htmlFor='consent' className='text-sm'>
-                          I allow this website to store my submission so they can respond to my
-                          inquiry. *
-                        </label>
-                      </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -752,9 +891,9 @@ export default function OnboardingSheet({
                             </svg>
                           </div>
                           <div className='flex-grow'>
-                            <h3 className='text-lg font-semibold mb-1'>Call Now</h3>
+                            <h3 className='text-lg font-semibold mb-1'>{callNowConfig.title}</h3>
                             <p className='text-muted-foreground text-sm'>
-                              Get immediate assistance from our team
+                              {callNowConfig.description}
                             </p>
                           </div>
                           <Button
@@ -770,7 +909,7 @@ export default function OnboardingSheet({
                               }
                             }}
                           >
-                            Start Call
+                            {callNowConfig.buttonText}
                           </Button>
                         </div>
                       </div>
@@ -804,143 +943,94 @@ export default function OnboardingSheet({
                             </svg>
                           </div>
                           <div>
-                            <h3 className='text-lg font-semibold mb-1'>Schedule a Callback</h3>
+                            <h3 className='text-lg font-semibold mb-1'>
+                              {callbackFormConfig.title}
+                            </h3>
                             <p className='text-muted-foreground text-sm'>
-                              Choose a time that works for you
+                              {callbackFormConfig.description}
                             </p>
                           </div>
                         </div>
 
                         <div className='space-y-4'>
-                          <div className='flex items-center gap-4 justify-between p-4 bg-gray-50 rounded-lg'>
-                            <div className='flex flex-col gap-1'>
-                              <h4 className='font-medium text-base'>Callback Timing</h4>
-                              <p className='text-sm text-muted-foreground'>
-                                {callbackSchedule.isASAP
-                                  ? 'We will call you back as soon as possible'
-                                  : 'Choose a specific time for your callback'}
-                              </p>
-                            </div>
-                            <div className='flex items-center gap-2'>
-                              <button
-                                type='button'
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 ${
-                                  callbackSchedule.isASAP
-                                    ? 'bg-black text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                                }`}
-                                onClick={() => {
-                                  return setCallbackSchedule((prev) => {
-                                    return { ...prev, isASAP: true };
-                                  });
-                                }}
-                              >
-                                ASAP
-                              </button>
-                              <button
-                                type='button'
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 ${
-                                  !callbackSchedule.isASAP
-                                    ? 'bg-black text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                                }`}
-                                onClick={() => {
-                                  return setCallbackSchedule((prev) => {
-                                    return { ...prev, isASAP: false };
-                                  });
-                                }}
-                              >
-                                Schedule
-                              </button>
-                            </div>
-                          </div>
-
-                          {!callbackSchedule.isASAP && (
-                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                              <div className='space-y-2'>
-                                <label className='block text-sm font-medium text-gray-700'>
-                                  Preferred Date *
-                                </label>
-                                <input
-                                  type='date'
-                                  className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                                  value={callbackSchedule.date}
-                                  onChange={(e) => {
-                                    return setCallbackSchedule((prev) => {
-                                      return { ...prev, date: e.target.value };
-                                    });
-                                  }}
-                                  min={new Date().toISOString().split('T')[0]}
-                                  required
-                                />
+                          {callbackFormConfig.timingOptions && (
+                            <div className='flex items-center gap-4 justify-between p-4 bg-gray-50 rounded-lg'>
+                              <div className='flex flex-col gap-1'>
+                                <h4 className='font-medium text-base'>Callback Timing</h4>
+                                <p className='text-sm text-muted-foreground'>
+                                  {callbackSchedule.isASAP
+                                    ? callbackFormConfig.timingOptions.find((opt) => {
+                                        return opt.value === 'asap';
+                                      })?.description
+                                    : callbackFormConfig.timingOptions.find((opt) => {
+                                        return opt.value === 'scheduled';
+                                      })?.description}
+                                </p>
                               </div>
-                              <div className='space-y-2'>
-                                <label className='block text-sm font-medium text-gray-700'>
-                                  Preferred Time *
-                                </label>
-                                <input
-                                  type='time'
-                                  className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                                  value={callbackSchedule.time}
-                                  onChange={(e) => {
-                                    return setCallbackSchedule((prev) => {
-                                      return { ...prev, time: e.target.value };
-                                    });
-                                  }}
-                                  required
-                                />
+                              <div className='flex items-center gap-2'>
+                                {callbackFormConfig.timingOptions.map((option) => {
+                                  return (
+                                    <button
+                                      key={option.value}
+                                      type='button'
+                                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 ${
+                                        (option.value === 'asap' && callbackSchedule.isASAP) ||
+                                        (option.value === 'scheduled' && !callbackSchedule.isASAP)
+                                          ? 'bg-black text-white'
+                                          : 'bg-white text-gray-600 hover:bg-gray-100'
+                                      }`}
+                                      onClick={() => {
+                                        setCallbackSchedule((prev) => {
+                                          return {
+                                            ...prev,
+                                            isASAP: option.value === 'asap',
+                                          };
+                                        });
+                                      }}
+                                    >
+                                      {option.label}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}
 
-                          <div className='space-y-2'>
-                            <label className='block text-sm font-medium text-gray-700'>
-                              Your Name *
-                            </label>
-                            <input
-                              type='text'
-                              className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                              placeholder='Jane Smith'
-                              value={callbackSchedule.name}
-                              onChange={(e) => {
-                                return setCallbackSchedule((prev) => {
-                                  return { ...prev, name: e.target.value };
-                                });
-                              }}
-                              required
-                            />
-                          </div>
-                          <div className='space-y-2'>
-                            <label className='block text-sm font-medium text-gray-700'>
-                              Phone Number *
-                            </label>
-                            <input
-                              type='tel'
-                              className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 text-base'
-                              placeholder='555-555-5555'
-                              value={callbackSchedule.phone}
-                              onChange={(e) => {
-                                return setCallbackSchedule((prev) => {
-                                  return { ...prev, phone: e.target.value };
-                                });
-                              }}
-                              required
-                            />
-                          </div>
-                          <div className='space-y-2'>
-                            <label className='block text-sm font-medium text-gray-700'>
-                              Additional Notes
-                            </label>
-                            <textarea
-                              className='w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 min-h-[100px] text-base'
-                              placeholder="Any specific topics you'd like to discuss?"
-                              value={callbackSchedule.notes}
-                              onChange={(e) => {
-                                return setCallbackSchedule((prev) => {
-                                  return { ...prev, notes: e.target.value };
-                                });
-                              }}
-                            />
+                          <div className='space-y-4'>
+                            {callbackFormConfig.fields.map((field) => {
+                              // Handle conditional fields
+                              if (field.showWhen === 'scheduled' && callbackSchedule.isASAP) {
+                                return null;
+                              }
+
+                              return (
+                                <div
+                                  key={field.name}
+                                  className={
+                                    field.type === 'date' || field.type === 'time'
+                                      ? 'space-y-2'
+                                      : ''
+                                  }
+                                >
+                                  <DynamicFormField
+                                    field={{
+                                      ...field,
+                                      label: field.label,
+                                    }}
+                                    value={
+                                      callbackSchedule[field.name as keyof typeof callbackSchedule]
+                                    }
+                                    onChange={(name, value) => {
+                                      setCallbackSchedule((prev) => {
+                                        return { ...prev, [name]: value };
+                                      });
+                                    }}
+                                    formData={callbackSchedule}
+                                    variant='callback'
+                                  />
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -992,13 +1082,24 @@ export default function OnboardingSheet({
               onClick={handleContactSubmit}
               disabled={
                 loading ||
-                !contactForm.name ||
-                !contactForm.email ||
-                !contactForm.phone ||
-                !contactForm.consent
+                !contactFormConfig.fields.every((field) => {
+                  return (
+                    !field.required ||
+                    (contactForm[field.name as keyof typeof contactForm] &&
+                      String(contactForm[field.name as keyof typeof contactForm]).trim() !== '')
+                  );
+                }) ||
+                (contactFormConfig.consentField?.required && !contactForm.consent)
               }
               className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 ${
-                contactForm.name && contactForm.email && contactForm.phone && contactForm.consent
+                contactFormConfig.fields.every((field) => {
+                  return (
+                    !field.required ||
+                    (contactForm[field.name as keyof typeof contactForm] &&
+                      String(contactForm[field.name as keyof typeof contactForm]).trim() !== '')
+                  );
+                }) &&
+                (!contactFormConfig.consentField?.required || contactForm.consent)
                   ? 'opacity-100 translate-y-0 pointer-events-auto'
                   : 'opacity-0 translate-y-1 pointer-events-none'
               }`}
@@ -1016,14 +1117,34 @@ export default function OnboardingSheet({
               onClick={handleCallbackSubmit}
               disabled={
                 loading ||
-                !callbackSchedule.name ||
-                !callbackSchedule.phone ||
-                (!callbackSchedule.isASAP && (!callbackSchedule.date || !callbackSchedule.time))
+                !callbackFormConfig.fields.every((field) => {
+                  // Skip conditional fields when not applicable
+                  if (field.showWhen === 'scheduled' && callbackSchedule.isASAP) {
+                    return true;
+                  }
+                  return (
+                    !field.required ||
+                    (callbackSchedule[field.name as keyof typeof callbackSchedule] &&
+                      String(
+                        callbackSchedule[field.name as keyof typeof callbackSchedule],
+                      ).trim() !== '')
+                  );
+                })
               }
               className={`w-full min-h-[50px] rounded-full bg-black hover:bg-black/80 ${
-                callbackSchedule.name &&
-                callbackSchedule.phone &&
-                (callbackSchedule.isASAP || (callbackSchedule.date && callbackSchedule.time))
+                callbackFormConfig.fields.every((field) => {
+                  // Skip conditional fields when not applicable
+                  if (field.showWhen === 'scheduled' && callbackSchedule.isASAP) {
+                    return true;
+                  }
+                  return (
+                    !field.required ||
+                    (callbackSchedule[field.name as keyof typeof callbackSchedule] &&
+                      String(
+                        callbackSchedule[field.name as keyof typeof callbackSchedule],
+                      ).trim() !== '')
+                  );
+                })
                   ? 'opacity-100 translate-y-0 pointer-events-auto'
                   : 'opacity-0 translate-y-1 pointer-events-none'
               }`}
@@ -1074,8 +1195,8 @@ export default function OnboardingSheet({
                 {step === 0
                   ? 'Choose a Service'
                   : step === 1
-                  ? 'Contact Details'
-                  : 'Schedule a Callback'}
+                  ? contactFormConfig.title
+                  : callbackFormConfig.title}
               </SheetTitle>
             </div>
             <button
