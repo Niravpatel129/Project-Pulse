@@ -127,10 +127,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = headersList.get('host') || '';
   const hostname = host.split(':')[0];
 
-  // Use similar logic to useGetWorkspaceFromUrl.ts
-  const domain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
-  const subdomain = domain.split('.')[0];
-  const isSubdomain = domain !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
+  // In development, treat localhost as printscala workspace
+  let domain: string;
+  let subdomain: string;
+  let isSubdomain: boolean;
+
+  if (process.env.NODE_ENV === 'development' && hostname === 'localhost') {
+    // Force localhost to act as printscala workspace
+    domain = 'printscala.com';
+    subdomain = 'printscala';
+    isSubdomain = true;
+  } else {
+    // Use similar logic to useGetWorkspaceFromUrl.ts
+    domain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
+    subdomain = domain.split('.')[0];
+    isSubdomain = domain !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
+  }
 
   // Always use the default logo here; client will update favicon if needed
   const logoUrl = '/favicon.ico';
@@ -176,9 +188,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
     // Fallback to mock data in development if available
     if (process.env.NODE_ENV === 'development') {
-      // In development, always try to map domain to workspace
-      // For www.printscala.com, we want to use 'printscala' workspace
-      const workspaceSlug = 'printscala'; // Default for development
+      // Use the subdomain we determined above, or default to printscala
+      const workspaceSlug = subdomain === 'www' ? 'printscala' : subdomain;
 
       // Check if we have mock data for this workspace
       if (hasMockWorkspace(workspaceSlug)) {
@@ -285,12 +296,20 @@ export default async function RootLayout({
   const headersList = await headers();
   const host = headersList.get('host') || '';
   const hostname = host.split(':')[0];
-  const clientDomain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
-  const clientSubdomain = clientDomain.split('.')[0];
-  const isClientSubdomain =
-    clientDomain !== 'localhost' && clientSubdomain !== 'www' && clientSubdomain !== 'hour-block';
 
-  const subdomain: string | null = isClientSubdomain ? clientSubdomain : null;
+  // In development, always treat localhost as printscala workspace
+  let subdomain: string | null = null;
+  if (process.env.NODE_ENV === 'development' && hostname === 'localhost') {
+    subdomain = 'printscala'; // Force printscala workspace for localhost in development
+    console.log('[Layout] Localhost detected, forcing subdomain to:', subdomain);
+  } else {
+    const clientDomain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
+    const clientSubdomain = clientDomain.split('.')[0];
+    const isClientSubdomain =
+      clientDomain !== 'localhost' && clientSubdomain !== 'www' && clientSubdomain !== 'hour-block';
+    subdomain = isClientSubdomain ? clientSubdomain : null;
+    console.log('[Layout] Non-localhost, hostname:', hostname, 'subdomain:', subdomain);
+  }
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
