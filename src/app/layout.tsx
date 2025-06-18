@@ -3,6 +3,7 @@ import { DynamicFavicon } from '@/components/shared/DynamicFavicon';
 import { Toaster } from '@/components/ui/toaster';
 import { DEV_CONFIG, getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
 import { cn } from '@/lib/utils';
+import { CMSSettings } from '@/types/cms';
 import { fetchCMSSettings } from '@/utils/cms';
 import { newRequest } from '@/utils/newRequest';
 import { Metadata, Viewport } from 'next';
@@ -22,6 +23,103 @@ const workspaceColors = {
   finance: '#00A3E0',
   default: '#0066FF',
 };
+
+// Helper function to generate metadata from CMS settings
+function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): Metadata {
+  const seo = settings.seo || {};
+  const favicons = settings.favicons || {};
+
+  return {
+    title: {
+      template: seo.ogSiteName ? `%s | ${seo.ogSiteName}` : '%s | Hour Block',
+      default: seo.ogTitle || settings.siteName || workspaceName,
+    },
+    description:
+      seo.ogDescription || settings.siteDescription || 'Professional services and solutions',
+    keywords: seo.keywords || [],
+    authors: seo.author ? [{ name: seo.author }] : [{ name: 'Hour Block Team' }],
+    creator: seo.author || 'Hour Block',
+    publisher: seo.ogSiteName || 'Hour Block',
+    applicationName: seo.applicationName || settings.siteName || workspaceName,
+    robots: seo.robots || 'index, follow',
+    formatDetection: {
+      telephone: false,
+    },
+    metadataBase: new URL(seo.canonical || 'https://hourblock.com'),
+    alternates: {
+      canonical: seo.canonical || '/',
+    },
+    manifest: seo.manifestPath || '/manifest.json',
+    openGraph: {
+      title: seo.ogTitle || settings.siteName || workspaceName,
+      description:
+        seo.ogDescription || settings.siteDescription || 'Professional services and solutions',
+      url: seo.ogUrl || 'https://hourblock.com',
+      siteName: seo.ogSiteName || settings.siteName || 'Hour Block',
+      locale: 'en_US',
+      type: (seo.ogType as any) || 'website',
+      images: seo.ogImage
+        ? [
+            {
+              url: seo.ogImage.url,
+              width: seo.ogImage.width || 1200,
+              height: seo.ogImage.height || 630,
+              alt: seo.ogImage.alt || `${settings.siteName} - Professional Services`,
+            },
+          ]
+        : [
+            {
+              url: '/og-image-home.jpg',
+              width: 1200,
+              height: 630,
+              alt: 'Hour Block Project Management',
+            },
+          ],
+    },
+    twitter: {
+      card: seo.twitterCard || 'summary_large_image',
+      title: seo.twitterTitle || seo.ogTitle || settings.siteName || workspaceName,
+      description:
+        seo.twitterDescription ||
+        seo.ogDescription ||
+        settings.siteDescription ||
+        'Professional services and solutions',
+      creator: seo.twitterCreator,
+      site: seo.twitterSite,
+      images: seo.twitterImage ? [seo.twitterImage.url] : ['/og-image-home.jpg'],
+    },
+    icons: {
+      icon: settings.favicon?.url || favicons.icon32 || '/favicon.ico',
+      shortcut: favicons.icon16 || '/favicon-16x16.png',
+      apple: favicons.appleTouchIcon || '/apple-touch-icon.png',
+      other: [
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '32x32',
+          url: favicons.icon32 || '/favicon-32x32.png',
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '16x16',
+          url: favicons.icon16 || '/favicon-16x16.png',
+        },
+        {
+          rel: 'mask-icon',
+          url: favicons.safariPinnedTab || '/safari-pinned-tab.svg',
+          color: seo.themeColor || settings.theme?.primaryColor || '#0070f3',
+        },
+      ],
+    },
+    other: {
+      'theme-color': seo.themeColor || settings.theme?.primaryColor || '#0070f3',
+      'msapplication-TileColor':
+        seo.msapplicationTileColor || settings.theme?.primaryColor || '#0070f3',
+      'msapplication-TileImage': favicons.msapplicationTileImage || '/mstile-144x144.png',
+    },
+  };
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get the hostname from the request headers
@@ -67,6 +165,9 @@ export async function generateMetadata(): Promise<Metadata> {
     if (settings) {
       appName = settings.siteName || workspaceName;
       siteDescription = settings.siteDescription || siteDescription;
+
+      // Use comprehensive metadata from CMS settings if available
+      return generateMetadataFromCMS(settings, workspaceName);
     } else {
       appName = workspaceName;
     }
@@ -80,8 +181,8 @@ export async function generateMetadata(): Promise<Metadata> {
         console.log(`[DEV] Using mock data for workspace: ${workspaceSlug}`);
         const mockData = getMockWorkspace(workspaceSlug);
         if (mockData) {
-          appName = mockData.settings.siteName || workspaceSlug;
-          siteDescription = mockData.settings.siteDescription || siteDescription;
+          // Use comprehensive metadata from mock CMS settings if available
+          return generateMetadataFromCMS(mockData.settings, workspaceSlug);
         }
       }
     }
@@ -171,20 +272,21 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get subdomain on client side for DynamicFavicon
-  let subdomain: string | null = null;
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const sd = hostname.split('.')[0];
-    if (hostname !== 'localhost' && sd !== 'www' && sd !== 'hour-block') {
-      subdomain = sd;
-    }
-  }
+  // Get subdomain for DynamicFavicon using the same logic as metadata
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const hostname = host.split(':')[0];
+  const clientDomain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
+  const clientSubdomain = clientDomain.split('.')[0];
+  const isClientSubdomain =
+    clientDomain !== 'localhost' && clientSubdomain !== 'www' && clientSubdomain !== 'hour-block';
+
+  const subdomain: string | null = isClientSubdomain ? clientSubdomain : null;
   return (
     <html lang='en' suppressHydrationWarning>
       <head>

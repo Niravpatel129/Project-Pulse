@@ -118,6 +118,36 @@ export interface CMSSettings {
     secondaryColor?: string;
     fontFamily?: string;
   };
+  // Extended SEO and metadata fields
+  seo?: {
+    keywords?: string[];
+    author?: string;
+    robots?: string;
+    canonical?: string;
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImage?: CMSMedia;
+    ogUrl?: string;
+    ogSiteName?: string;
+    ogType?: string;
+    twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
+    twitterTitle?: string;
+    twitterDescription?: string;
+    twitterImage?: CMSMedia;
+    twitterCreator?: string;
+    twitterSite?: string;
+    applicationName?: string;
+    themeColor?: string;
+    msapplicationTileColor?: string;
+    manifestPath?: string;
+  };
+  favicons?: {
+    icon16?: string;
+    icon32?: string;
+    appleTouchIcon?: string;
+    safariPinnedTab?: string;
+    msapplicationTileImage?: string;
+  };
 }
 
 export interface CMSContent {
