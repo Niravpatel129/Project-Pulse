@@ -176,87 +176,87 @@ export const printscala: WorkspaceCMSData = {
             clients: [
               {
                 name: 'Sarah M.',
-                profession: 'Personal Support Worker',
+                service: 'Personal Support Worker Resume Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/e5ccff4e-3505-11f0-9373-0242ac110002-png-regular_image.png',
-                result: 'Landed 4 interviews within 2 weeks',
+                note: 'Resume delivered in under 24 hours',
               },
               {
                 name: 'Ahmed K.',
-                profession: 'Security Guard',
+                service: 'Resume + Cover Letter Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/d3e1d87c-3505-11f0-9fc5-0242ac110002-png-regular_image.png',
-                result: 'Got hired at premium security firm',
+                note: 'Tailored documents, turned around quickly',
               },
               {
                 name: 'Maria L.',
-                profession: 'Customer Service Rep',
+                service: 'Resume Review + Rewrite',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/d87b36f8-3505-11f0-90c8-0242ac110002-png-regular_image.png',
-                result: '3 job offers in first month',
+                note: 'Same-day delivery',
               },
               {
                 name: 'David T.',
-                profession: 'Warehouse Associate',
+                service: 'Resume Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/ef2e746e-3505-11f0-952b-0242ac110002-png-regular_image.png',
-                result: '40% salary increase at new job',
+                note: 'Ready in less than 24 hours',
               },
               {
                 name: 'Jennifer C.',
-                profession: 'Office Administrator',
+                service: 'Resume + Cover Letter',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/eb1775f6-3505-11f0-bd01-0242ac110002-png-regular_image.png',
-                result: 'Promoted to supervisor role',
+                note: 'Polished and delivered the next morning',
               },
               {
                 name: 'Raj P.',
-                profession: 'Forklift Operator',
+                service: 'Resume Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/cf0d8102-3505-11f0-8b6b-0242ac110002-png-regular_image.png',
-                result: 'Landed dream job at FedEx',
+                note: 'Delivered same day',
               },
               {
                 name: 'Lisa W.',
-                profession: 'Receptionist',
+                service: 'Resume + Cover Letter Editing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/fa897088-3506-11f0-8135-0242ac110002-png-regular_image.png',
-                result: '5 interviews in 3 weeks',
+                note: 'Quick turnaround with formatting support',
               },
               {
                 name: 'Carlos M.',
-                profession: 'Maintenance Tech',
+                service: 'Resume Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/71b25d40-3e27-11f0-8423-0242ac110002-png-regular_image.png',
-                result: 'Got into tech apprenticeship',
+                note: 'Delivered in less than a day',
               },
               {
                 name: 'Priya S.',
-                profession: 'Registered Nurse',
+                service: 'Resume + Cover Letter',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/a2b25ed8-4276-11f0-911d-0242ac110002-png-regular_image.png',
-                result: 'Hired at Toronto General Hospital',
+                note: 'Professional documents delivered same day',
               },
               {
                 name: 'Michael T.',
-                profession: 'Truck Driver',
+                service: 'Resume Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/a7faf134-4276-11f0-911d-0242ac110002-png-regular_image.png',
-                result: 'Secured long-haul position',
+                note: 'Completed in just a few hours',
               },
               {
                 name: 'Jessica R.',
-                profession: 'Data Entry Clerk',
+                service: 'Resume Review + Optimization',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/3fdbd5e0-4277-11f0-bf73-0242ac110002-png-regular_image.png',
-                result: 'Remote work opportunity found',
+                note: 'Fast, professional turnaround',
               },
               {
                 name: 'Hassan A.',
-                profession: 'Food Service Worker',
+                service: 'Resume Writing',
                 backgroundImage:
                   'https://cdn.b12.io/client_media/U8Bv6gQC/ad9a99c0-46c5-11f0-b441-0242ac110002-png-regular_image.png',
-                result: 'Became restaurant supervisor',
+                note: 'Completed by the next day',
               },
             ],
           },

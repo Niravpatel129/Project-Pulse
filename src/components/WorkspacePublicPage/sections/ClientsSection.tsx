@@ -7,9 +7,9 @@ import SectionHeader from './SectionHeader';
 
 interface Client {
   name: string;
-  profession?: string;
+  service?: string;
   backgroundImage: string;
-  result?: string;
+  note?: string;
 }
 
 interface ClientsSectionProps {
@@ -187,16 +187,16 @@ const ClientCard = memo(function ClientCard({
           {/* Top Left - Name and Profession */}
           <div className='space-y-1'>
             <h3 className='text-xl font-bold text-white drop-shadow-lg'>{client.name}</h3>
-            {client.profession && (
-              <p className='text-sm text-white/90 drop-shadow-md'>{client.profession}</p>
+            {client.service && (
+              <p className='text-sm text-white/90 drop-shadow-md'>{client.service}</p>
             )}
           </div>
 
           {/* Bottom - Results */}
-          {client.result && (
+          {client.note && (
             <div className=''>
               <p className='text-xl font-semibold text-white drop-shadow-lg leading-relaxed'>
-                {client.result}
+                {client.note}
               </p>
             </div>
           )}
@@ -214,8 +214,8 @@ const ClientCard = memo(function ClientCard({
       >
         <div className='text-white text-center'>
           <h3 className='text-2xl font-bold mb-4'>{client.name}</h3>
-          {client.profession && <p className='text-lg mb-6'>{client.profession}</p>}
-          {client.result && <p className='text-xl font-semibold'>{client.result}</p>}
+          {client.service && <p className='text-lg mb-6'>{client.service}</p>}
+          {client.note && <p className='text-xl font-semibold'>{client.note}</p>}
         </div>
       </motion.div>
     </motion.div>
