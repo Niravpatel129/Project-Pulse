@@ -28,8 +28,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const host = headersList.get('host') || '';
   const hostname = host.split(':')[0];
-  const subdomain = hostname.split('.')[0];
-  const isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
+
+  // Use similar logic to useGetWorkspaceFromUrl.ts
+  const domain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
+  const subdomain = domain.split('.')[0];
+  const isSubdomain = domain !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
 
   // Always use the default logo here; client will update favicon if needed
   const logoUrl = '/favicon.ico';
@@ -43,68 +46,48 @@ export async function generateMetadata(): Promise<Metadata> {
   let siteDescription =
     'Streamline your workflows, manage projects, and collaborate with your team effectively using Hour Block.';
 
-  // Handle development mode on localhost
-  if (process.env.NODE_ENV === 'development' && hostname === 'localhost') {
-    // Use default mock workspace in development
-    const workspaceSlug = DEV_CONFIG.defaultWorkspace;
-    console.log(`[DEV] Using default mock workspace: ${workspaceSlug}`);
-    const mockData = getMockWorkspace(workspaceSlug);
-    if (mockData) {
-      appName = mockData.settings.siteName || workspaceSlug;
-      siteDescription = mockData.settings.siteDescription || siteDescription;
+  // Try to fetch workspace data for any domain (similar to useGetWorkspaceFromUrl logic)
+  try {
+    console.log(
+      `[Metadata] Attempting to fetch workspace for domain: ${domain}, subdomain: ${subdomain}`,
+    );
+
+    const response = await newRequest.get(`/workspaces/url`, {
+      params: {
+        domain,
+        subdomain,
+      },
+    });
+
+    const workspaceName = response.data.data.name;
+    console.log(`[Metadata] Found workspace: ${workspaceName}`);
+
+    // Then fetch CMS settings for the workspace
+    const settings = await fetchCMSSettings(workspaceName);
+    if (settings) {
+      appName = settings.siteName || workspaceName;
+      siteDescription = settings.siteDescription || siteDescription;
     } else {
-      appName = workspaceSlug;
+      appName = workspaceName;
     }
-  }
-  // Handle custom subdomains
-  else if (isSubdomain) {
-    try {
-      // In development, use mock data if available
-      if (process.env.NODE_ENV === 'development') {
-        const workspaceSlug = subdomain;
-        if (hasMockWorkspace(workspaceSlug)) {
-          console.log(`[DEV] Using mock data for workspace: ${workspaceSlug}`);
-          const mockData = getMockWorkspace(workspaceSlug);
-          if (mockData) {
-            appName = mockData.settings.siteName || workspaceSlug;
-            siteDescription = mockData.settings.siteDescription || siteDescription;
-          } else {
-            appName = workspaceSlug;
-          }
-        } else {
-          // Fallback to default mock workspace in development
-          console.log(`[DEV] Using default mock workspace: ${DEV_CONFIG.defaultWorkspace}`);
-          const defaultMockData = getMockWorkspace(DEV_CONFIG.defaultWorkspace);
-          if (defaultMockData) {
-            appName = defaultMockData.settings.siteName || DEV_CONFIG.defaultWorkspace;
-            siteDescription = defaultMockData.settings.siteDescription || siteDescription;
-          } else {
-            appName = DEV_CONFIG.defaultWorkspace;
-          }
-        }
-      } else {
-        // Production: get workspace data from API
-        const domain = hostname;
-        const response = await newRequest.get(`/workspaces/url`, {
-          params: {
-            domain,
-            subdomain,
-          },
-        });
+  } catch (error) {
+    console.log(`[Metadata] No workspace found for domain ${domain}, using defaults:`, error);
 
-        const workspaceName = response.data.data.name;
-
-        // Then fetch CMS settings for the workspace
-        const settings = await fetchCMSSettings(workspaceName);
-        if (settings) {
-          appName = settings.siteName || workspaceName;
-          siteDescription = settings.siteDescription || siteDescription;
-        } else {
-          appName = workspaceName;
+    // Fallback to mock data in development if available
+    if (process.env.NODE_ENV === 'development') {
+      const workspaceSlug = isSubdomain ? subdomain : DEV_CONFIG.defaultWorkspace;
+      if (hasMockWorkspace(workspaceSlug)) {
+        console.log(`[DEV] Using mock data for workspace: ${workspaceSlug}`);
+        const mockData = getMockWorkspace(workspaceSlug);
+        if (mockData) {
+          appName = mockData.settings.siteName || workspaceSlug;
+          siteDescription = mockData.settings.siteDescription || siteDescription;
         }
       }
-    } catch (error) {
-      console.error(`Error fetching workspace data for ${subdomain}:`, error);
+    }
+
+    // If we still don't have custom data and it's a subdomain, use subdomain as name
+    if (isSubdomain && appName === 'Hour Block') {
       appName = subdomain;
     }
   }
