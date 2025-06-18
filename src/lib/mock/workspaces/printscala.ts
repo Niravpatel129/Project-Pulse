@@ -348,6 +348,41 @@ export const printscala: WorkspaceCMSData = {
           data: {
             description:
               "Answer a few quick questions and we'll guide you to the right service. At the end, you'll get a personalized contact form based on your choices. All in a clean, right-side sheet (shadcn).",
+            services: [
+              {
+                name: 'Professional Resume Writing',
+                price: '$99',
+                subtitle: '2-3 business days',
+                description:
+                  'Get a professionally written resume that highlights your skills and experience.',
+                features: [
+                  'ATS-Optimized Format',
+                  'Industry-Specific Keywords',
+                  '24-48 Hour Turnaround',
+                ],
+              },
+              {
+                name: 'Same-Day Rush Service',
+                price: '$49',
+                subtitle: 'Delivered today',
+                description: 'Emergency resume service for urgent job applications.',
+                features: ['Same Day Delivery', 'Priority Queue', 'Express Review'],
+              },
+              {
+                name: 'Specialized Industries',
+                price: '$129',
+                subtitle: '1 session',
+                description: 'Industry-specific resume writing with expert consultation.',
+                features: ['Industry Expert Review', 'Specialized Keywords', 'Custom Formatting'],
+              },
+              {
+                name: 'Free Consulting',
+                price: 'Free',
+                subtitle: '20 mins',
+                description: 'Free consultation to assess your resume needs.',
+                features: ['Resume Review', 'Career Advice', 'Service Recommendations'],
+              },
+            ],
             steps: [
               {
                 id: 'role',

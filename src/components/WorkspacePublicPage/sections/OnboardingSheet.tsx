@@ -34,15 +34,9 @@ type Service = {
   name: string;
   price: string;
   subtitle: string;
+  description?: string;
+  features?: string[];
 };
-
-// Constants
-const services: Service[] = [
-  { name: 'Professional Resume Writing', price: '$99', subtitle: '2-3 business days' },
-  { name: 'Same-Day Rush Service', price: '$49', subtitle: 'Delivered today' },
-  { name: 'Specialized Industries', price: '$129', subtitle: '1 session' },
-  { name: 'Free Consulting', price: 'Free', subtitle: '20 mins' },
-];
 
 // Add animation variants
 const containerVariants = {
@@ -193,9 +187,11 @@ const ServiceCard = ({
 const CartSummary = ({
   selectedService,
   additionalServices,
+  services,
 }: {
   selectedService: string | null;
   additionalServices: string[];
+  services: Service[];
 }) => {
   const allServices = [selectedService, ...additionalServices].filter(Boolean);
   const total = allServices.reduce((sum, serviceName) => {
@@ -264,6 +260,22 @@ export default function OnboardingSheet({
   const { cmsData } = useWorkspaceCMS();
   const [loading, setLoading] = React.useState(false);
 
+  // Get services from CMS data
+  const services = React.useMemo(() => {
+    const onboardingSection = (cmsData?.pages?.home as any)?.sections?.find((section: any) => {
+      return section.type === 'onboardingServiceSection';
+    });
+    return (
+      (onboardingSection?.data?.services as Service[]) || [
+        // Fallback services if not found in CMS
+        { name: 'Professional Resume Writing', price: '$99', subtitle: '2-3 business days' },
+        { name: 'Same-Day Rush Service', price: '$49', subtitle: 'Delivered today' },
+        { name: 'Specialized Industries', price: '$129', subtitle: '1 session' },
+        { name: 'Free Consulting', price: 'Free', subtitle: '20 mins' },
+      ]
+    );
+  }, [cmsData]);
+
   const handleServiceSelect = React.useCallback(
     (serviceName: string) => {
       if (!isAnimating) {
@@ -304,7 +316,8 @@ export default function OnboardingSheet({
     }
   }, [open]);
 
-  const getPrimaryButtonText = () => {
+  // Memoize the button text to only update when it actually changes
+  const buttonText = React.useMemo(() => {
     if (!selectedService) return 'Continue';
     const total = [selectedService, ...additionalSelectedServices]
       .filter(Boolean)
@@ -316,12 +329,7 @@ export default function OnboardingSheet({
         return sum + (service.price === 'Free' ? 0 : parseInt(service.price.replace('$', '')));
       }, 0);
     return `View Order $${total}`;
-  };
-
-  // Memoize the button text to only update when it actually changes
-  const buttonText = React.useMemo(() => {
-    return getPrimaryButtonText();
-  }, [selectedService, additionalSelectedServices]);
+  }, [selectedService, additionalSelectedServices, services]);
 
   // Helper to submit the contact form (step 1)
   const handleContactSubmit = async () => {
