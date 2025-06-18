@@ -145,23 +145,23 @@ export const printscala: WorkspaceCMSData = {
             team: [
               {
                 name: 'Ajay Bajwa',
-                role: 'Founder, Resume Writer',
+                role: 'Founder, Resume Expert',
                 image: 'https://i.ibb.co/gZJJ0vkm/Chat-GPT-Image-Jun-18-2025-05-07-54-PM.png',
               },
               {
-                name: 'Chandler Rigs',
-                role: 'Co-Founder, Architect',
-                image: 'https://i.ibb.co/d4Lq8Q4t/Chat-GPT-Image-Jun-18-2025-05-10-16-PM.png',
+                name: 'Clara Ericson',
+                role: 'Co-Founder, Employment Consultant',
+                image: 'https://i.ibb.co/gZtNF2QL/Chat-GPT-Image-Jun-18-2025-05-23-21-PM.png',
               },
               {
-                name: 'Isabella Rodriguez',
-                role: 'Architect',
-                image: 'https://i.postimg.cc/mrR8sf7p/a4.avif',
+                name: 'Joeri van der Heijden',
+                role: 'Employment Consultant, Resume Expert',
+                image: 'https://i.ibb.co/HfZ9XnBj/Chat-GPT-Image-Jun-18-2025-05-23-52-PM.png',
               },
               {
                 name: 'Ava Wilson',
-                role: '3D Artist',
-                image: 'https://i.postimg.cc/mrR8sf7p/a4.avif',
+                role: 'Employment Consultant, Resume Expert',
+                image: 'https://i.ibb.co/XZ56k1rx/Chat-GPT-Image-Jun-18-2025-05-24-20-PM.png',
               },
             ],
           },
