@@ -2,7 +2,7 @@
 
 import { motion, useAnimationControls, useInView } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SectionHeader from './SectionHeader';
 
 interface Client {
@@ -20,7 +20,7 @@ interface ClientsSectionProps {
   sectionNumber?: string;
 }
 
-export default function ClientsSection({
+const ClientsSection = memo(function ClientsSection({
   title,
   subtitle,
   clients = [],
@@ -34,7 +34,13 @@ export default function ClientsSection({
   const clickTimeouts = useRef<{ [key: number]: NodeJS.Timeout }>({});
   const clickCounts = useRef<{ [key: number]: number }>({});
 
-  const handleClick = (index: number) => {
+  // Memoize duplicated clients array to prevent recreation on every render
+  const duplicatedClients = useMemo(() => {
+    return [...clients, ...clients];
+  }, [clients]);
+
+  // Memoize the handleClick function to prevent recreation on every render
+  const handleClick = useCallback((index: number) => {
     clickCounts.current[index] = (clickCounts.current[index] || 0) + 1;
 
     // Clear existing timeout
@@ -55,7 +61,12 @@ export default function ClientsSection({
       }
       clickCounts.current[index] = 0;
     }, 300); // 300ms window for triple click
-  };
+  }, []);
+
+  // Memoize the image error handler
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.style.display = 'none';
+  }, []);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -66,26 +77,28 @@ export default function ClientsSection({
     };
   }, []);
 
+  // Memoize animation configuration
+  const animationConfig = useMemo(() => {
+    return {
+      x: [0, -50 * clients.length],
+      transition: {
+        x: {
+          repeat: Infinity,
+          repeatType: 'loop' as const,
+          duration: 20,
+          ease: 'linear' as const,
+        },
+      },
+    };
+  }, [clients.length]);
+
   useEffect(() => {
     if (isInView) {
-      controls.start({
-        x: [0, -50 * clients.length],
-        transition: {
-          x: {
-            repeat: Infinity,
-            repeatType: 'loop',
-            duration: 20,
-            ease: 'linear',
-          },
-        },
-      });
+      controls.start(animationConfig);
     } else {
       controls.stop();
     }
-  }, [isInView, controls, clients.length]);
-
-  // Duplicate clients for seamless infinite scroll
-  const duplicatedClients = [...clients, ...clients];
+  }, [isInView, controls, animationConfig]);
 
   return (
     <section id={id} className='py-16 bg-white'>
@@ -98,86 +111,115 @@ export default function ClientsSection({
         <motion.div animate={controls} className='flex gap-6 px-6'>
           {duplicatedClients.map((client, index) => {
             return (
-              <motion.div
+              <ClientCard
                 key={`${client.name}-${index}`}
-                className='relative w-[368px] h-[480px] rounded-xl overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0 cursor-pointer'
-                style={{ perspective: '1000px' }}
-                onClick={() => {
-                  return handleClick(index);
-                }}
-                animate={{
-                  rotateX: flippedIndices.includes(index) ? 180 : 0,
-                }}
-                transition={{ duration: 0.6, ease: 'easeInOut' }}
-              >
-                {/* Front of card */}
-                <motion.div
-                  className='absolute inset-0 w-full h-full'
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  {/* Background Image Container */}
-                  <div className='absolute inset-0 overflow-hidden'>
-                    {/* Background Image */}
-                    <Image
-                      src={client.logo}
-                      alt={`${client.name}'s logo`}
-                      fill
-                      unoptimized
-                      className='object-cover transition-transform duration-700 ease-out group-hover:scale-110'
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                    {/* Overlay for better text readability */}
-                    <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 group-hover:from-black/50 group-hover:to-black/70 transition-all duration-300'></div>
-                  </div>
-
-                  {/* Fallback when image doesn't load */}
-                  <div className='absolute inset-0 bg-gradient-to-br from-gray-500 to-white-600 opacity-80'>
-                    <div className='absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 group-hover:from-black/30 group-hover:to-black/50 transition-all duration-300'></div>
-                  </div>
-
-                  {/* Content */}
-                  <div className='relative h-full flex flex-col justify-between p-6 text-white z-10'>
-                    {/* Top Left - Name and Profession */}
-                    <div className='space-y-1'>
-                      <h3 className='text-xl font-bold text-white drop-shadow-lg'>{client.name}</h3>
-                      {client.profession && (
-                        <p className='text-sm text-white/90 drop-shadow-md'>{client.profession}</p>
-                      )}
-                    </div>
-
-                    {/* Bottom - Results */}
-                    {client.result && (
-                      <div className=''>
-                        <p className='text-xl font-semibold text-white drop-shadow-lg leading-relaxed'>
-                          {client.result}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-
-                {/* Back of card */}
-                <motion.div
-                  className='absolute inset-0 w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 p-6 flex items-center justify-center'
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    rotateX: 180,
-                    transform: 'rotateX(180deg)',
-                  }}
-                >
-                  <div className='text-white text-center'>
-                    <h3 className='text-2xl font-bold mb-4'>{client.name}</h3>
-                    {client.profession && <p className='text-lg mb-6'>{client.profession}</p>}
-                    {client.result && <p className='text-xl font-semibold'>{client.result}</p>}
-                  </div>
-                </motion.div>
-              </motion.div>
+                client={client}
+                index={index}
+                isFlipped={flippedIndices.includes(index)}
+                onClick={handleClick}
+                onImageError={handleImageError}
+              />
             );
           })}
         </motion.div>
       </div>
     </section>
   );
+});
+
+// Extract ClientCard as a separate memoized component to prevent unnecessary re-renders
+interface ClientCardProps {
+  client: Client;
+  index: number;
+  isFlipped: boolean;
+  onClick: (index: number) => void;
+  onImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
 }
+
+const ClientCard = memo(function ClientCard({
+  client,
+  index,
+  isFlipped,
+  onClick,
+  onImageError,
+}: ClientCardProps) {
+  const handleClick = useCallback(() => {
+    onClick(index);
+  }, [onClick, index]);
+
+  return (
+    <motion.div
+      className='relative w-[368px] h-[480px] rounded-xl overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0 cursor-pointer'
+      style={{ perspective: '1000px' }}
+      onClick={handleClick}
+      animate={{
+        rotateX: isFlipped ? 180 : 0,
+      }}
+      transition={{ duration: 0.6, ease: 'easeInOut' }}
+    >
+      {/* Front of card */}
+      <motion.div
+        className='absolute inset-0 w-full h-full'
+        style={{ backfaceVisibility: 'hidden' }}
+      >
+        {/* Background Image Container */}
+        <div className='absolute inset-0 overflow-hidden'>
+          {/* Background Image */}
+          <Image
+            src={client.logo}
+            alt={`${client.name}'s logo`}
+            fill
+            unoptimized
+            className='object-cover transition-transform duration-700 ease-out group-hover:scale-110'
+            onError={onImageError}
+          />
+          {/* Overlay for better text readability */}
+          <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 group-hover:from-black/50 group-hover:to-black/70 transition-all duration-300'></div>
+        </div>
+
+        {/* Fallback when image doesn't load */}
+        <div className='absolute inset-0 bg-gradient-to-br from-gray-500 to-white-600 opacity-80'>
+          <div className='absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 group-hover:from-black/30 group-hover:to-black/50 transition-all duration-300'></div>
+        </div>
+
+        {/* Content */}
+        <div className='relative h-full flex flex-col justify-between p-6 text-white z-10'>
+          {/* Top Left - Name and Profession */}
+          <div className='space-y-1'>
+            <h3 className='text-xl font-bold text-white drop-shadow-lg'>{client.name}</h3>
+            {client.profession && (
+              <p className='text-sm text-white/90 drop-shadow-md'>{client.profession}</p>
+            )}
+          </div>
+
+          {/* Bottom - Results */}
+          {client.result && (
+            <div className=''>
+              <p className='text-xl font-semibold text-white drop-shadow-lg leading-relaxed'>
+                {client.result}
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Back of card */}
+      <motion.div
+        className='absolute inset-0 w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 p-6 flex items-center justify-center'
+        style={{
+          backfaceVisibility: 'hidden',
+          rotateX: 180,
+          transform: 'rotateX(180deg)',
+        }}
+      >
+        <div className='text-white text-center'>
+          <h3 className='text-2xl font-bold mb-4'>{client.name}</h3>
+          {client.profession && <p className='text-lg mb-6'>{client.profession}</p>}
+          {client.result && <p className='text-xl font-semibold'>{client.result}</p>}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+});
+
+export default ClientsSection;

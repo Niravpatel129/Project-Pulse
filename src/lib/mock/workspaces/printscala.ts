@@ -705,7 +705,7 @@ export const printscala: WorkspaceCMSData = {
             data: {
               contact: {
                 phone: '437 774 3721',
-                email: 'toronto@gtaresumebuilder.com',
+                email: 'mrmapletv@gmail.com',
                 serviceAreas: [
                   'Downtown Toronto',
                   'North York',
@@ -834,7 +834,7 @@ export const printscala: WorkspaceCMSData = {
             data: {
               contact: {
                 phone: '437 774 3721',
-                email: 'brampton@gtaresumebuilder.com',
+                email: 'mrmapletv@gmail.com',
                 address: '1495 Sandalwood Pkwy E, Brampton, ON L6R 1T2',
                 serviceAreas: [
                   'Downtown Brampton',
