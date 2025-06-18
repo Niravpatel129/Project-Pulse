@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 /**
  * Dynamic manifest.json generator for workspace subdomains
  */
-export function GET(request, { params }) {
-  const workspace = params.workspace;
+export async function GET(request, { params }) {
+  const workspace = await params.workspace;
 
   // Generate a dynamic manifest for this specific workspace
   const manifest = {
