@@ -407,32 +407,108 @@ export const printscala: WorkspaceCMSData = {
                 options: ['Entry Level', 'Mid Level', 'Senior/Management'],
               },
             ],
-            contactForm: {
-              dynamic: true,
-              description:
-                'The contact form at the end adapts to your answers (e.g., asks for certifications if Healthcare, or license if Security/Logistics).',
-              baseFields: [
-                { label: 'Full Name', type: 'text', required: true },
-                { label: 'Email', type: 'email', required: true },
-                { label: 'Phone', type: 'tel', required: false },
-              ],
-              dynamicFields: [
-                {
-                  dependsOn: 'role',
-                  value: 'Healthcare (e.g. PSW, Nurse)',
-                  fields: [{ label: 'Healthcare Certifications', type: 'text', required: false }],
+            forms: {
+              contactForm: {
+                title: 'Contact Details',
+                description: 'Please provide your contact information so we can reach you.',
+                fields: [
+                  {
+                    name: 'name',
+                    label: 'Name *',
+                    type: 'text',
+                    placeholder: 'Jane Smith',
+                    required: true,
+                  },
+                  {
+                    name: 'email',
+                    label: 'Email address *',
+                    type: 'email',
+                    placeholder: 'email@website.com',
+                    required: true,
+                  },
+                  {
+                    name: 'phone',
+                    label: 'Phone number *',
+                    type: 'tel',
+                    placeholder: '555-555-5555',
+                    required: true,
+                  },
+                  {
+                    name: 'message',
+                    label: 'Message',
+                    type: 'textarea',
+                    placeholder: 'Your message here...',
+                    required: false,
+                    rows: 4,
+                  },
+                ],
+                consentField: {
+                  name: 'consent',
+                  label:
+                    'I allow this website to store my submission so they can respond to my inquiry. *',
+                  required: true,
                 },
-                {
-                  dependsOn: 'role',
-                  value: 'Security',
-                  fields: [{ label: 'Security License Number', type: 'text', required: false }],
-                },
-                {
-                  dependsOn: 'role',
-                  value: 'Warehouse/Logistics',
-                  fields: [{ label: 'Forklift License', type: 'text', required: false }],
-                },
-              ],
+              },
+              callbackForm: {
+                title: 'Schedule a Callback',
+                description: 'Choose a time that works for you or request an immediate callback.',
+                timingOptions: [
+                  {
+                    value: 'asap',
+                    label: 'ASAP',
+                    description: 'We will call you back as soon as possible',
+                  },
+                  {
+                    value: 'scheduled',
+                    label: 'Schedule',
+                    description: 'Choose a specific time for your callback',
+                  },
+                ],
+                fields: [
+                  {
+                    name: 'name',
+                    label: 'Your Name *',
+                    type: 'text',
+                    placeholder: 'Jane Smith',
+                    required: true,
+                  },
+                  {
+                    name: 'phone',
+                    label: 'Phone Number *',
+                    type: 'tel',
+                    placeholder: '555-555-5555',
+                    required: true,
+                  },
+                  {
+                    name: 'date',
+                    label: 'Preferred Date *',
+                    type: 'date',
+                    required: true,
+                    showWhen: 'scheduled',
+                  },
+                  {
+                    name: 'time',
+                    label: 'Preferred Time *',
+                    type: 'time',
+                    required: true,
+                    showWhen: 'scheduled',
+                  },
+                  {
+                    name: 'notes',
+                    label: 'Additional Notes',
+                    type: 'textarea',
+                    placeholder: "Any specific topics you'd like to discuss?",
+                    required: false,
+                    rows: 4,
+                  },
+                ],
+              },
+              callNowSection: {
+                title: 'Call Now',
+                description: 'Get immediate assistance from our team',
+                buttonText: 'Start Call',
+                icon: 'phone',
+              },
             },
             sheet: {
               position: 'right',

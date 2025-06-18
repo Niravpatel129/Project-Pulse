@@ -21,7 +21,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { newRequest } from '@/utils/newRequest';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
-import { Calendar, MoreHorizontal, Plus, Tag, User, UserRound } from 'lucide-react';
+import { Calendar, MoreHorizontal, Plus, Tag, User } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -372,9 +372,6 @@ export default function CustomersPage() {
           case 'name':
             return (
               <div className='flex items-center gap-2 max-w-[220px]'>
-                <div className='w-8 h-8 rounded-full bg-muted flex items-center justify-center'>
-                  <UserRound className='w-4 h-4 text-muted-foreground' />
-                </div>
                 <span className='font-medium truncate'>{customer.user.name}</span>
               </div>
             );

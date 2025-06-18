@@ -38,6 +38,32 @@ type Service = {
   features?: string[];
 };
 
+type FormField = {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'textarea' | 'date' | 'time' | 'checkbox';
+  placeholder?: string;
+  required: boolean;
+  rows?: number;
+  showWhen?: string;
+};
+
+type FormConfig = {
+  title: string;
+  description: string;
+  fields: FormField[];
+  consentField?: {
+    name: string;
+    label: string;
+    required: boolean;
+  };
+  timingOptions?: Array<{
+    value: string;
+    label: string;
+    description: string;
+  }>;
+};
+
 // Add animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
