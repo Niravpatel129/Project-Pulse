@@ -21,6 +21,9 @@ export default function WhatsAppWidget() {
         position: absolute !important;
         left: -9999px !important;
       }
+      .eapps-widget-toolbar {
+        display: none !important;
+      }
     `;
     document.head.appendChild(style);
 

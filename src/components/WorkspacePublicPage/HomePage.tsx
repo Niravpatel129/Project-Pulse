@@ -343,7 +343,7 @@ export default function HomePage() {
 
   return (
     <div
-      className='workspace-public-page min-h-screen w-full bg-[#f5f4f0]'
+      className='workspace-public-page min-h-screen w-full bg-[#f5f4f0] overflow-x-hidden'
       style={{ scrollBehavior: 'smooth' }}
     >
       {/* Cursor Ring */}
