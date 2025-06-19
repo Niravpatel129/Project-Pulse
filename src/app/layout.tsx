@@ -89,7 +89,7 @@ function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): 
       images: seo.twitterImage ? [seo.twitterImage.url] : ['/og-image-home.jpg'],
     },
     icons: {
-      icon: settings.favicon?.url || favicons.icon32 || '/favicon.ico',
+      icon: 'https://i.ibb.co/B5k7ydqP/Chat-GPT-Image-Jun-18-2025-10-41-36-PM.png',
       shortcut: favicons.icon16 || '/favicon-16x16.png',
       apple: favicons.appleTouchIcon || '/apple-touch-icon.png',
       other: [
@@ -248,7 +248,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ['/og-image-home.jpg'],
     },
     icons: {
-      // icon: logoUrl,
+      icon: '/favicon.ico',
       shortcut: '/favicon-16x16.png',
       apple: '/apple-touch-icon.png',
       other: [
