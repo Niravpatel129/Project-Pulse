@@ -52,17 +52,8 @@ export function PaymentIntegrations({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditingShop, setIsEditingShop] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState<string | null>(null);
-
-  // Mock data - replace with actual data from your backend
-  const [shopInfo, setShopInfo] = useState<ShopInfo>({
-    name: 'Lightspeed Shop',
-    address: '1326 Maguire Ave., Montreal, QC, CAN, G1T 1Z3',
-    status: 'inactive',
-    gatewayStatus: 'incomplete',
-  });
 
   const [terminals, setTerminals] = useState<Terminal[]>([
     {
@@ -117,108 +108,6 @@ export function PaymentIntegrations({
     }
   };
 
-  const handleTestConnection = async (terminalId: string) => {
-    setIsTestingConnection(terminalId);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 1000);
-      });
-      toast({
-        title: 'Success',
-        description: 'Terminal connection test successful',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Terminal connection test failed',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsTestingConnection(null);
-    }
-  };
-
-  const handleDeleteTerminal = async (terminalId: string) => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 500);
-      });
-      setTerminals(
-        terminals.filter((t) => {
-          return t.id !== terminalId;
-        }),
-      );
-      toast({
-        title: 'Success',
-        description: 'Terminal deleted successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete terminal',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleAddTerminal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTerminal.name || !newTerminal.model || !newTerminal.serial) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 500);
-      });
-      const newTerminalWithId = {
-        ...newTerminal,
-        id: Math.random().toString(36).substr(2, 9),
-      };
-      setTerminals([...terminals, newTerminalWithId]);
-      setNewTerminal({ name: '', model: '', serial: '' });
-      toast({
-        title: 'Success',
-        description: 'Terminal added successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to add terminal',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleUpdateShopInfo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 500);
-      });
-      setIsEditingShop(false);
-      toast({
-        title: 'Success',
-        description: 'Shop information updated successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update shop information',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const getStatusColor = (status: string | undefined) => {
     switch (status) {
       case 'active':
@@ -259,7 +148,8 @@ export function PaymentIntegrations({
               <Tooltip>
                 <TooltipTrigger asChild>
                   {(stripeStatus?.status === 'active' ||
-                    stripeStatus?.status === 'requirements.past_due') &&
+                    stripeStatus?.status === 'requirements.past_due' ||
+                    stripeStatus?.status === 'requirements.pending_verification') &&
                   stripeStatus?.detailsSubmitted ? (
                     <Badge className='bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1'>
                       <FiCheck className='h-3 w-3' />
@@ -289,7 +179,8 @@ export function PaymentIntegrations({
                 </div>
                 <div>
                   {(stripeStatus?.status === 'active' ||
-                    stripeStatus?.status === 'requirements.past_due') &&
+                    stripeStatus?.status === 'requirements.past_due' ||
+                    stripeStatus?.status === 'requirements.pending_verification') &&
                   stripeStatus?.detailsSubmitted ? (
                     <div className='space-y-2'>
                       <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>
@@ -340,7 +231,8 @@ export function PaymentIntegrations({
               </div>
 
               {(stripeStatus?.status === 'active' ||
-                stripeStatus?.status === 'requirements.past_due') &&
+                stripeStatus?.status === 'requirements.past_due' ||
+                stripeStatus?.status === 'requirements.pending_verification') &&
               stripeStatus?.detailsSubmitted ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
