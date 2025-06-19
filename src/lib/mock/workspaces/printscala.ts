@@ -100,6 +100,13 @@ export const printscala: WorkspaceCMSData = {
       mimeType: 'image/png',
       size: 0,
     },
+    customWidgets: {
+      whatsappChat: {
+        enabled: true,
+        script: 'https://static.elfsight.com/platform/platform.js',
+        widgetId: 'elfsight-app-9da90527-cd22-486d-894a-7915ab684563',
+      },
+    },
   },
   navigation: [
     { id: '1', label: 'Home', url: '/', target: '_self', order: 1 },

@@ -148,6 +148,13 @@ export interface CMSSettings {
     safariPinnedTab?: string;
     msapplicationTileImage?: string;
   };
+  customWidgets?: {
+    whatsappChat?: {
+      enabled?: boolean;
+      script?: string;
+      widgetId?: string;
+    };
+  };
 }
 
 export interface CMSContent {

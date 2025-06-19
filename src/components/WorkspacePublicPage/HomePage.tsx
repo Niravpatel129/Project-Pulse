@@ -4,6 +4,7 @@ import { useWorkspaceCMS } from '@/contexts/WorkspaceCMSContext';
 import '@/styles/workspace-public.css';
 import { motion } from 'framer-motion';
 import React from 'react';
+import WhatsAppWidget from '../WhatsAppWidget';
 import {
   ClientsSection,
   ContactSection,
@@ -454,6 +455,7 @@ export default function HomePage() {
           })?.data.buttons || []
         }
       />
+      <WhatsAppWidget />
     </div>
   );
 }
