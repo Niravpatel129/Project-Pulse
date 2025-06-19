@@ -418,7 +418,7 @@ export const printscala: WorkspaceCMSData = {
             services: [
               {
                 name: 'Professional Resume Writing',
-                price: '$99',
+                price: '$50',
                 subtitle: '2-3 business days',
                 description:
                   'Get a professionally written resume that highlights your skills and experience.',
@@ -429,24 +429,25 @@ export const printscala: WorkspaceCMSData = {
                 ],
               },
               {
-                name: 'Same-Day Rush Service',
-                price: '$49',
-                subtitle: 'Delivered today',
-                description: 'Emergency resume service for urgent job applications.',
-                features: ['Same Day Delivery', 'Priority Queue', 'Express Review'],
+                name: 'Cover Letter Writing',
+                price: '$25',
+                subtitle: '1-2 business days',
+                description: 'Professional cover letters tailored to your target position.',
+                features: ['Custom Content', 'Company Research', 'ATS-Friendly Format'],
               },
               {
-                name: 'Specialized Industries',
-                price: '$129',
-                subtitle: '1 session',
-                description: 'Industry-specific resume writing with expert consultation.',
-                features: ['Industry Expert Review', 'Specialized Keywords', 'Custom Formatting'],
+                name: 'LinkedIn Profile Optimization',
+                price: '$55',
+                subtitle: '1 business day',
+                description:
+                  'Optimize your LinkedIn profile to attract recruiters and opportunities.',
+                features: ['Profile Enhancement', 'Keyword Optimization', 'Professional Headline'],
               },
               {
                 name: 'Free Consulting',
                 price: 'Free',
-                subtitle: '20 mins',
-                description: 'Free consultation to assess your resume needs.',
+                subtitle: '20-40 mins',
+                description: 'Free consultation to assess your career needs.',
                 features: ['Resume Review', 'Career Advice', 'Service Recommendations'],
               },
             ],
