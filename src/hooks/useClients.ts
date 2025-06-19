@@ -31,6 +31,7 @@ export function useClients() {
     queryKey: ['clients'],
     queryFn: async () => {
       try {
+        console.log('🚀 fetching clients');
         const response = await newRequest.get('/clients');
         return response.data;
       } catch (err) {

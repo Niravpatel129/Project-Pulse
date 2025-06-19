@@ -196,7 +196,7 @@ export function AddCustomerDialog({
     },
   });
 
-  const handleCreateCustomer = () => {
+  const handleCreateCustomer = async () => {
     if (!newCustomer.name) return;
 
     const clientData = {
@@ -219,10 +219,13 @@ export function AddCustomerDialog({
     };
 
     if (initialData) {
-      updateClientMutation.mutate(clientData);
+      await updateClientMutation.mutate(clientData);
     } else {
-      createClientMutation.mutate(clientData);
+      await createClientMutation.mutate(clientData);
     }
+
+    // invalidate the clients query
+    queryClient.invalidateQueries({ queryKey: ['clients'] });
   };
 
   return (
