@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube } from 'react-icons/fa';
+import { FaInstagram, FaLinkedin, FaTiktok, FaWhatsapp, FaYoutube } from 'react-icons/fa';
 
 interface Contact {
   email: string;
@@ -126,7 +126,7 @@ export default function FooterSection({
                       transition={{ type: 'spring', stiffness: 400, damping: 10 }}
                       className='text-[#222222] hover:text-gray-900 transition-colors'
                     >
-                      <FaFacebook size={24} />
+                      <FaTiktok size={24} />
                     </motion.a>
                   )}
                   {socials.YouTube && (
@@ -140,6 +140,19 @@ export default function FooterSection({
                       className='text-[#222222] hover:text-gray-900 transition-colors'
                     >
                       <FaYoutube size={24} />
+                    </motion.a>
+                  )}
+                  {socials.Whatsapp && (
+                    <motion.a
+                      href={socials.Whatsapp}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      aria-label='Whatsapp'
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                      className='text-[#222222] hover:text-gray-900 transition-colors'
+                    >
+                      <FaWhatsapp size={24} />
                     </motion.a>
                   )}
                 </div>

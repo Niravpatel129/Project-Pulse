@@ -672,7 +672,7 @@ export const resumaster: WorkspaceCMSData = {
             },
             socials: {
               IG: 'https://instagram.com/resumaster.co',
-              Tiktok: 'https://tiktok.com/resumaster.co',
+              Tiktok: 'https://tiktok.com/@resumaster.co',
               YouTube: 'https://youtube.com/ResuMasterOfficial',
             },
             tagline: 'Building success through innovation and dedication.',
