@@ -42,7 +42,7 @@ export const resumaster: WorkspaceCMSData = {
       author: 'GTA Resume Builder Team',
       robots: 'index, follow',
       canonical: 'https://www.gtaresumebuilder.com',
-      ogTitle: 'GTA Resume Builder - Professional Resume Writing Services in Toronto & GTA',
+      ogTitle: 'ResuMaster - Professional Resume Writing Services in Toronto & GTA',
       ogDescription:
         'Get hired faster with professionally written resumes. Serving Toronto, Brampton & the entire GTA. ATS-optimized resumes that get interviews. Free consultation available.',
       ogImage: {
