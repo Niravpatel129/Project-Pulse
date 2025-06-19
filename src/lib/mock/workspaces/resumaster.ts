@@ -270,6 +270,65 @@ export const resumaster: WorkspaceCMSData = {
           },
         },
         {
+          id: 'gallery-1',
+          type: 'gallerySection',
+          title: 'Recent Work Samples',
+          subtitle: 'Browse through our recent resume and document samples',
+          order: 4.5,
+          data: {
+            screenshots: [
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/e5ccff4e-3505-11f0-9373-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 1',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/d3e1d87c-3505-11f0-9fc5-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 2',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/d87b36f8-3505-11f0-90c8-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 3',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/ef2e746e-3505-11f0-952b-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 4',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/eb1775f6-3505-11f0-bd01-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 5',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/cf0d8102-3505-11f0-8b6b-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 6',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/fa897088-3506-11f0-8135-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 7',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/71b25d40-3e27-11f0-8423-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 8',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/a2b25ed8-4276-11f0-911d-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 9',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/a7faf134-4276-11f0-911d-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 10',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/3fdbd5e0-4277-11f0-bf73-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 11',
+              },
+              {
+                src: 'https://cdn.b12.io/client_media/U8Bv6gQC/ad9a99c0-46c5-11f0-b441-0242ac110002-png-regular_image.png',
+                alt: 'Resume sample 12',
+              },
+            ],
+          },
+        },
+        {
           id: 'google-reviews-1',
           type: 'googleReviewsSection',
           title: "See why we're rated #1 in the business",
@@ -564,7 +623,8 @@ export const resumaster: WorkspaceCMSData = {
                   },
                   {
                     name: 'files',
-                    label: 'Upload your current resume (optional)',
+                    label:
+                      'Got a resume already? Upload it and we’ll create a fresh, standout version for you',
                     type: 'file',
                     required: false,
                     accept: '.pdf,.doc,.docx,.txt',
