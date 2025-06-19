@@ -701,7 +701,7 @@ export function AddCustomerDialog({
           <Button
             onClick={handleCreateCustomer}
             disabled={!newCustomer.name || createClientMutation.isPending}
-            className='bg-[#0891B2] dark:bg-[#8b5df8] hover:bg-[#0891B2]/90 dark:hover:bg-[#7c3aed] text-white'
+            className='bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90'
           >
             {createClientMutation.isPending ? (
               <Loader2 className='w-4 h-4 mr-2 animate-spin' />

@@ -196,10 +196,19 @@ export const InvoiceTable = ({
           case 'customer':
             return (
               <div className='flex flex-col max-w-[250px]'>
-                <span className='text-[#121212] dark:text-white font-medium text-left truncate'>
+                <span
+                  className='text-[#121212] dark:text-white font-medium text-left truncate hover:underline cursor-pointer'
+                  onClick={(e) => {
+                    if (invoice.customer?.id) {
+                      e.stopPropagation();
+                      setEditingCustomer(invoice.customer?.id);
+                      setIsEditCustomerDialogOpen(true);
+                    }
+                  }}
+                >
                   {invoice.customer?.id?.user?.name || '-'}
                 </span>
-                <span className='text-xs text-muted-foreground truncate'>
+                <span className='text-xs text-muted-foreground truncate cursor-pointer'>
                   {invoice.customer?.id?.user?.email || '-'}
                 </span>
               </div>
