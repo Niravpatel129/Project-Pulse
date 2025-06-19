@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube } from 'react-icons/fa';
 
 interface Contact {
   email: string;
@@ -103,9 +103,9 @@ export default function FooterSection({
                       <FaLinkedin size={24} />
                     </motion.a>
                   )}
-                  {socials.instagram && (
+                  {socials.IG && (
                     <motion.a
-                      href={socials.instagram}
+                      href={socials.IG}
                       target='_blank'
                       rel='noopener noreferrer'
                       aria-label='Instagram'
@@ -116,9 +116,9 @@ export default function FooterSection({
                       <FaInstagram size={24} />
                     </motion.a>
                   )}
-                  {socials.facebook && (
+                  {socials.Tiktok && (
                     <motion.a
-                      href={socials.facebook}
+                      href={socials.Tiktok}
                       target='_blank'
                       rel='noopener noreferrer'
                       aria-label='Facebook'
@@ -127,6 +127,19 @@ export default function FooterSection({
                       className='text-[#222222] hover:text-gray-900 transition-colors'
                     >
                       <FaFacebook size={24} />
+                    </motion.a>
+                  )}
+                  {socials.YouTube && (
+                    <motion.a
+                      href={socials.YouTube}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      aria-label='YouTube'
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                      className='text-[#222222] hover:text-gray-900 transition-colors'
+                    >
+                      <FaYoutube size={24} />
                     </motion.a>
                   )}
                 </div>
