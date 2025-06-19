@@ -38,9 +38,11 @@ interface HeroSectionProps {
 const AnimatedText = ({
   text,
   className,
+  animationType = 'word', // 'letter' or 'word'
 }: {
   text: string | React.ReactNode;
   className?: string;
+  animationType?: 'letter' | 'word';
 }) => {
   const [isScrambled, setIsScrambled] = useState(false);
   const clickCount = useRef(0);
@@ -55,6 +57,38 @@ const AnimatedText = ({
     : '';
 
   if (!textContent) return null;
+
+  // Function to break text into lines based on word count or character length
+  const breakIntoLines = (text: string) => {
+    const words = text.split(' ');
+    const lines: string[][] = [];
+    let currentLine: string[] = [];
+    let currentLength = 0;
+    const maxLineLength = 40; // Adjust this value to control line breaks
+
+    words.forEach((word) => {
+      // If adding this word would exceed the line length, start a new line
+      if (currentLength + word.length + 1 > maxLineLength && currentLine.length > 0) {
+        lines.push([...currentLine]);
+        currentLine = [word];
+        currentLength = word.length;
+      } else {
+        currentLine.push(word);
+        currentLength += word.length + (currentLine.length > 1 ? 1 : 0); // +1 for space
+      }
+    });
+
+    // Add the last line if it has content
+    if (currentLine.length > 0) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  };
+
+  const lines = breakIntoLines(textContent);
+  const totalWords = lines.flat().length;
+  const totalChars = textContent.length;
 
   const handleClick = () => {
     clickCount.current += 1;
@@ -72,8 +106,9 @@ const AnimatedText = ({
     // If 4 clicks within 1 second
     if (clickCount.current === 4) {
       setIsScrambled(true);
-      // Generate random positions for each letter
-      const newPositions = textContent.split('').map(() => {
+      // Generate random positions for each element (word or letter)
+      const elementCount = animationType === 'letter' ? totalChars : totalWords;
+      const newPositions = Array.from({ length: elementCount }, () => {
         return {
           x: (Math.random() - 0.5) * 200,
           y: (Math.random() - 0.5) * 200,
@@ -89,6 +124,78 @@ const AnimatedText = ({
     }
   };
 
+  // Letter-by-letter animation with smart line breaks
+  if (animationType === 'letter') {
+    let charIndex = 0;
+
+    return (
+      <motion.h1
+        className={className}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        onClick={handleClick}
+      >
+        {lines.map((line, lineIndex) => {
+          return (
+            <div key={lineIndex} className='block'>
+              {line.map((word, wordIndex) => {
+                return (
+                  <span
+                    key={`${lineIndex}-${wordIndex}`}
+                    className='inline-block mr-2 md:mr-4 lg:mr-6'
+                  >
+                    {word.split('').map((char, letterIndex) => {
+                      const currentCharIndex = charIndex++;
+                      return (
+                        <motion.span
+                          key={`${lineIndex}-${wordIndex}-${letterIndex}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{
+                            delay: currentCharIndex * 0.03,
+                            duration: 0.3,
+                            type: 'spring',
+                            stiffness: 200,
+                          }}
+                          className='inline-block'
+                          drag
+                          dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+                          dragElastic={0.7}
+                          whileDrag={{ scale: 1.2, rotate: 5 }}
+                          animate={
+                            isScrambled
+                              ? {
+                                  x: positions[currentCharIndex]?.x || 0,
+                                  y: positions[currentCharIndex]?.y || 0,
+                                  rotate: Math.random() * 360,
+                                  scale: 1.2,
+                                }
+                              : {
+                                  x: 0,
+                                  y: 0,
+                                  rotate: 0,
+                                  scale: 1,
+                                }
+                          }
+                        >
+                          {char}
+                        </motion.span>
+                      );
+                    })}
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })}
+      </motion.h1>
+    );
+  }
+
+  // Word-by-word animation with smart line breaks
   return (
     <motion.h1
       className={className}
@@ -98,47 +205,49 @@ const AnimatedText = ({
       transition={{ duration: 0.5 }}
       onClick={handleClick}
     >
-      {textContent.split('').map((char, index) => {
-        // Preserve spaces with proper width
-        if (char === ' ') {
-          return <span key={index} className='inline-block w-2 md:w-4 lg:w-6' />;
-        }
-
+      {lines.map((line, lineIndex) => {
         return (
-          <motion.span
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{
-              delay: index * 0.03,
-              duration: 0.3,
-              type: 'spring',
-              stiffness: 200,
-            }}
-            className='inline-block'
-            drag
-            dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
-            dragElastic={0.7}
-            whileDrag={{ scale: 1.2, rotate: 5 }}
-            animate={
-              isScrambled
-                ? {
-                    x: positions[index]?.x || 0,
-                    y: positions[index]?.y || 0,
-                    rotate: Math.random() * 360,
-                    scale: 1.2,
+          <div key={lineIndex} className='block'>
+            {line.map((word, wordIndex) => {
+              const globalIndex = lines.slice(0, lineIndex).flat().length + wordIndex;
+              return (
+                <motion.span
+                  key={`${lineIndex}-${wordIndex}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    delay: globalIndex * 0.1,
+                    duration: 0.3,
+                    type: 'spring',
+                    stiffness: 200,
+                  }}
+                  className='inline-block mr-2 md:mr-4 lg:mr-6'
+                  drag
+                  dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+                  dragElastic={0.7}
+                  whileDrag={{ scale: 1.2, rotate: 5 }}
+                  animate={
+                    isScrambled
+                      ? {
+                          x: positions[globalIndex]?.x || 0,
+                          y: positions[globalIndex]?.y || 0,
+                          rotate: Math.random() * 360,
+                          scale: 1.2,
+                        }
+                      : {
+                          x: 0,
+                          y: 0,
+                          rotate: 0,
+                          scale: 1,
+                        }
                   }
-                : {
-                    x: 0,
-                    y: 0,
-                    rotate: 0,
-                    scale: 1,
-                  }
-            }
-          >
-            {char}
-          </motion.span>
+                >
+                  {word}
+                </motion.span>
+              );
+            })}
+          </div>
         );
       })}
     </motion.h1>
@@ -419,6 +528,7 @@ export default function HeroSection({
               <AnimatedText
                 text={title}
                 className='text-4xl md:text-6xl lg:text-[120px] font-bold leading-tight text-left flex flex-wrap'
+                animationType='letter' // Change to 'word' for word-by-word animation
               />
             )}
 
