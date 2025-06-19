@@ -14,7 +14,7 @@ export default function WhatsAppWidget() {
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      .FloatingWindow__Container-sc-ef30a58d-0.fJiePE a {
+      [class*="FloatingWindow__Container-"] a {
         display: none !important;
         pointer-events: none !important;
         opacity: 0 !important;
@@ -29,7 +29,7 @@ export default function WhatsAppWidget() {
 
     // Function to remove anchor tags from the widget
     const removeAnchorTags = () => {
-      const container = document.querySelector('.FloatingWindow__Container-sc-ef30a58d-0.fJiePE');
+      const container = document.querySelector('[class*="FloatingWindow__Container-"]');
       if (container) {
         const anchorTags = container.querySelectorAll('a');
         anchorTags.forEach((anchor) => {
@@ -38,14 +38,24 @@ export default function WhatsAppWidget() {
       }
     };
 
+    // Also remove the toolbar if it exists
+    const removeToolbar = () => {
+      const toolbar = document.querySelector('.eapps-widget-toolbar');
+      if (toolbar) {
+        toolbar.remove();
+      }
+    };
+
     // Try to remove anchor tags periodically until the widget loads
     const interval = setInterval(() => {
       removeAnchorTags();
+      removeToolbar();
     }, 1000);
 
     // Also try after a delay to catch late-loading elements
     const timeout = setTimeout(() => {
       removeAnchorTags();
+      removeToolbar();
       clearInterval(interval);
     }, 10000);
 
@@ -72,14 +82,18 @@ export default function WhatsAppWidget() {
         onLoad={() => {
           // Also try to remove anchor tags after script loads
           setTimeout(() => {
-            const container = document.querySelector(
-              '.FloatingWindow__Container-sc-ef30a58d-0.fJiePE',
-            );
+            const container = document.querySelector('[class*="FloatingWindow__Container-"]');
             if (container) {
               const anchorTags = container.querySelectorAll('a');
               anchorTags.forEach((anchor) => {
                 anchor.remove();
               });
+            }
+
+            // Remove toolbar as well
+            const toolbar = document.querySelector('.eapps-widget-toolbar');
+            if (toolbar) {
+              toolbar.remove();
             }
           }, 2000);
         }}
