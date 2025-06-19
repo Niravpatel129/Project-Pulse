@@ -1,0 +1,948 @@
+import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
+
+export const resumaster: WorkspaceCMSData = {
+  workspace: 'resumaster',
+  settings: {
+    siteName: 'GTA Resume Builder',
+    siteDescription:
+      'Professional Resume Writing That Gets Interviews - Trusted by 100+ Across the Greater Toronto Area',
+    theme: {
+      content: {
+        primary: '#181f1f',
+      },
+      primaryColor: '#015bf8',
+      secondaryColor: '#DC2626',
+    },
+    contact: {
+      email: 'niravpatelp129@gmail.com',
+      phone: 'tel:4377743721',
+    },
+    socialMedia: {
+      linkedin: 'https://linkedin.com/company/gta-resume-builder',
+      instagram: 'https://instagram.com/gtaresumebuilder',
+      facebook: 'https://facebook.com/gtaresumebuilder',
+    },
+    seo: {
+      keywords: [
+        'resume writing services',
+        'professional resume writer',
+        'Toronto resume services',
+        'Brampton resume writing',
+        'GTA resume builder',
+        'career services',
+        'job search help',
+        'resume optimization',
+        'ATS resume',
+        'cover letter writing',
+        'LinkedIn profile optimization',
+        'career coaching Toronto',
+        'resume writing near me',
+        'professional CV writing',
+      ],
+      author: 'GTA Resume Builder Team',
+      robots: 'index, follow',
+      canonical: 'https://www.gtaresumebuilder.com',
+      ogTitle: 'GTA Resume Builder - Professional Resume Writing Services in Toronto & GTA',
+      ogDescription:
+        'Get hired faster with professionally written resumes. Serving Toronto, Brampton & the entire GTA. ATS-optimized resumes that get interviews. Free consultation available.',
+      ogImage: {
+        id: 'og-image-resume',
+        url: 'https://i.ibb.co/PstSQt37/11a.png',
+        alt: 'GTA Resume Builder - Professional Resume Writing Services',
+        width: 1200,
+        height: 630,
+        mimeType: 'image/jpeg',
+        size: 0,
+      },
+      ogUrl: 'https://www.gtaresumebuilder.com',
+      ogSiteName: 'GTA Resume Builder',
+      ogType: 'website',
+      twitterCard: 'summary_large_image',
+      twitterTitle: 'GTA Resume Builder - Professional Resume Writing Services',
+      twitterDescription:
+        'Get hired faster with professionally written resumes. Serving Toronto, Brampton & the entire GTA. ATS-optimized resumes that get interviews.',
+      twitterImage: {
+        id: 'twitter-image-resume',
+        url: '/images/gta-resume-builder-twitter.jpg',
+        alt: 'GTA Resume Builder - Professional Resume Writing Services',
+        width: 1200,
+        height: 675,
+        mimeType: 'image/jpeg',
+        size: 0,
+      },
+      twitterCreator: '@GTAResumeBuilder',
+      twitterSite: '@GTAResumeBuilder',
+      applicationName: 'GTA Resume Builder',
+      themeColor: '#015bf8',
+      msapplicationTileColor: '#015bf8',
+      manifestPath: '/api/manifest/resumaster',
+    },
+    favicons: {
+      icon16: 'https://i.ibb.co/Df4SfvF9/11111.png',
+      icon32: 'https://i.ibb.co/Df4SfvF9/11111.png',
+      appleTouchIcon: 'https://i.ibb.co/Df4SfvF9/11111.png',
+      safariPinnedTab: 'https://i.ibb.co/Df4SfvF9/11111.png',
+      msapplicationTileImage: 'https://i.ibb.co/Df4SfvF9/11111.png',
+    },
+    favicon: {
+      id: 'resumaster-favicon',
+      url: 'https://i.ibb.co/Df4SfvF9/11111.png',
+      alt: 'GTA Resume Builder Favicon',
+      mimeType: 'image/x-icon',
+      size: 0,
+    },
+    logo: {
+      id: 'resumaster-logo',
+      url: 'https://i.ibb.co/Df4SfvF9/11111.png',
+      alt: 'GTA Resume Builder Logo',
+      width: 200,
+      height: 50,
+      mimeType: 'image/png',
+      size: 0,
+    },
+    customWidgets: {
+      whatsappChat: {
+        enabled: true,
+        script: 'https://static.elfsight.com/platform/platform.js',
+        widgetId: 'elfsight-app-9da90527-cd22-486d-894a-7915ab684563',
+      },
+    },
+  },
+  navigation: [
+    { id: '1', label: 'Home', url: '/', target: '_self', order: 1 },
+    { id: '2', label: 'Services', url: '#services', target: '_self', order: 2 },
+    { id: '3', label: 'Toronto', url: '/locations/toronto', target: '_self', order: 3 },
+    { id: '4', label: 'Brampton', url: '/locations/brampton', target: '_self', order: 4 },
+    { id: '5', label: 'Contact', url: '#contact', target: '_self', order: 5 },
+  ],
+  pages: {
+    home: {
+      id: 'home',
+      slug: 'home',
+      title: 'GTA Resume Builder - Professional Resume Writing Services',
+      content: '',
+      status: 'published',
+      updatedAt: new Date().toISOString(),
+      type: 'home',
+      template: 'landing',
+      sections: [
+        {
+          id: 'hero-1',
+          type: 'heroSection',
+          title: 'Professional Resumes.',
+          subtitle: 'We build resumes that get you interviews, starting with a free consultation.',
+          order: 1,
+          variant: 'default',
+          data: {
+            buttonText: 'Get Started',
+            buttonAction: 'openOnboardingSheet',
+            backgroundImage: '/images/resume-hero-bg.jpg',
+            buttons: [{ type: 'callOrText', text: 'Get Started', url: 'tel:4377743721' }],
+          },
+        },
+        {
+          id: 'team-1',
+          type: 'teamSection',
+          title: 'Our team',
+          subtitle:
+            'We craft solutions that amplify key characteristics, achieving a harmonious balance of function and intent. Through careful analysis and collaborative engagement, our spaces transcend the conventional.',
+          order: 3,
+          data: {
+            buttonText: 'Read more',
+            team: [
+              {
+                name: 'Ajay Bajwa',
+                role: 'Founder, Resume Expert',
+                image: 'https://i.ibb.co/gZJJ0vkm/Chat-GPT-Image-Jun-18-2025-05-07-54-PM.png',
+              },
+              {
+                name: 'Clara Ericson',
+                role: 'Co-Founder, Employment Consultant',
+                image: 'https://i.ibb.co/gZtNF2QL/Chat-GPT-Image-Jun-18-2025-05-23-21-PM.png',
+              },
+              {
+                name: 'Joeri van der Heijden',
+                role: 'Employment Consultant, Resume Expert',
+                image: 'https://i.ibb.co/HfZ9XnBj/Chat-GPT-Image-Jun-18-2025-05-23-52-PM.png',
+              },
+              {
+                name: 'Ava Wilson',
+                role: 'Employment Consultant, Resume Expert',
+                image: 'https://i.ibb.co/XZ56k1rx/Chat-GPT-Image-Jun-18-2025-05-24-20-PM.png',
+              },
+            ],
+          },
+        },
+        {
+          id: 'clients-1',
+          type: 'clientsSection',
+          title: 'Client Success',
+          subtitle: 'Results that Speak for Themselves - Land Interviews Within Weeks',
+          order: 4,
+          data: {
+            clients: [
+              {
+                name: 'New Client',
+                service: 'Personal Support Worker Resume Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/e5ccff4e-3505-11f0-9373-0242ac110002-png-regular_image.png',
+                note: 'Resume delivered in under 24 hours',
+              },
+              {
+                name: 'New Client',
+                service: 'Resume + Cover Letter Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/d3e1d87c-3505-11f0-9fc5-0242ac110002-png-regular_image.png',
+                note: 'Tailored documents, turned around quickly',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume Review + Rewrite',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/d87b36f8-3505-11f0-90c8-0242ac110002-png-regular_image.png',
+                note: 'Same-day delivery',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/ef2e746e-3505-11f0-952b-0242ac110002-png-regular_image.png',
+                note: 'Ready in less than 24 hours',
+              },
+              {
+                name: 'New Client',
+                service: 'Resume + Cover Letter',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/eb1775f6-3505-11f0-bd01-0242ac110002-png-regular_image.png',
+                note: 'Polished and delivered the next morning',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/cf0d8102-3505-11f0-8b6b-0242ac110002-png-regular_image.png',
+                note: 'Delivered same day',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume + Cover Letter Editing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/fa897088-3506-11f0-8135-0242ac110002-png-regular_image.png',
+                note: 'Quick turnaround with formatting support',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/71b25d40-3e27-11f0-8423-0242ac110002-png-regular_image.png',
+                note: 'Delivered in less than a day',
+              },
+              {
+                name: 'New Client',
+                service: 'Resume + Cover Letter',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/a2b25ed8-4276-11f0-911d-0242ac110002-png-regular_image.png',
+                note: 'Professional documents delivered same day',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/a7faf134-4276-11f0-911d-0242ac110002-png-regular_image.png',
+                note: 'Completed in just a few hours',
+              },
+              {
+                name: 'Returning Client',
+                service: 'Resume Review + Optimization',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/3fdbd5e0-4277-11f0-bf73-0242ac110002-png-regular_image.png',
+                note: 'Fast, professional turnaround',
+              },
+              {
+                name: 'First Time Client',
+                service: 'Resume Writing',
+                backgroundImage:
+                  'https://cdn.b12.io/client_media/U8Bv6gQC/ad9a99c0-46c5-11f0-b441-0242ac110002-png-regular_image.png',
+                note: 'Completed by the next day',
+              },
+            ],
+          },
+        },
+        {
+          id: 'google-reviews-1',
+          type: 'googleReviewsSection',
+          title: "See why we're rated #1 in the business",
+          subtitle:
+            'Real Google Reviews from Real Clients - Trusted by 100+ Professionals Across the GTA',
+          order: 5,
+          variant: 'default',
+          data: {
+            reviews: [
+              {
+                id: '1',
+                author: 'Harman Brar',
+                rating: 5,
+                text: 'Ajay went above and beyond to help me not just fix up my resume, but really tailor it to the kind of roles I was aiming for. He was super knowledgeable, gave me great advice, and took the time to understand my goals. What stood out most was his attention to detail and personalized approach.',
+                date: '2024-01-15',
+                profession: 'Professional',
+                avatar: '👨‍💼',
+                source: 'google',
+              },
+              {
+                id: '2',
+                author: 'Tayyab',
+                rating: 5,
+                text: 'Ajay from GTA Resume builder provided outstanding support during my job search. I am based in Vaughan, Ontario, and had been applying for positions for several months with my previous resume, with limited success. Ajay demonstrated exceptional expertise and helped me create a compelling resume.',
+                date: '2024-01-10',
+                profession: 'Job Seeker',
+                avatar: '👨‍💻',
+                source: 'google',
+              },
+              {
+                id: '3',
+                author: 'Anmol Gill',
+                rating: 5,
+                text: 'Ajay did a fantastic job creating my resume and cover letter. He was professional, detail-oriented, and understood exactly how to present my skills and experience. The final result was polished, tailored, and exceeded my expectations. Highly recommend his services!',
+                date: '2024-01-08',
+                profession: 'Professional',
+                avatar: '👨‍💼',
+                source: 'google',
+              },
+              {
+                id: '4',
+                author: 'A Kaur',
+                rating: 5,
+                text: 'Very professional, knowledgeable and trustworthy. He made resume on time and within a day. He is amazing and truly values his clients time and ensures they get exactly what they need. Definitely recommend GtaResume builder!!! Within a week I got multiple interviews.',
+                date: '2024-01-05',
+                profession: 'Job Seeker',
+                avatar: '👩‍💼',
+                source: 'google',
+              },
+              {
+                id: '5',
+                author: 'Alex Ramos',
+                rating: 5,
+                text: 'I am incredibly grateful for the help I received in crafting my resume. "AJ" went above and beyond to ensure every detail was polished and professional. Their expertise in formatting, word choice, and tailoring the resume to my desired role was exceptional.',
+                date: '2024-01-03',
+                profession: 'Professional',
+                avatar: '👨‍💼',
+                source: 'google',
+              },
+              {
+                id: '6',
+                author: 'Ty Bussi',
+                rating: 5,
+                text: 'Ajay, was very helpful, efficient, and super friendly to work with; I called around to a few resume building agencies for quotes, however GTA Resume Builder offered the best price, turn around time, and customer experience. I really appreciated the personalized service.',
+                date: '2024-01-01',
+                profession: 'Job Seeker',
+                avatar: '👨‍💻',
+                source: 'google',
+              },
+              {
+                id: '7',
+                author: 'Juan',
+                rating: 5,
+                text: 'AJ was very helpful to answer all my questions and flexible, did a very well done professional resume, it helped me get interviews and job offers at a couple of companies and ended up choosing a job, he was very caring and gave me a reasonable price got the job well done',
+                date: '2024-01-01',
+                profession: 'Professional',
+                avatar: '👨‍💼',
+                source: 'google',
+              },
+              {
+                id: '8',
+                author: 'A. M',
+                rating: 5,
+                text: 'Ajay was amazing! He made a fantastic resume for me! I have got several interviews already. Highly recommend him',
+                date: '2024-01-01',
+                profession: 'Job Seeker',
+                avatar: '👨‍💼',
+                source: 'google',
+              },
+              {
+                id: '9',
+                author: 'Amita Patel',
+                rating: 5,
+                text: 'Ajay is very professional person he make my resume very good 👍 I highly recommend if someone want to make new resume or want to change anything on old resume he help and guide proper way. Thank you Ajay for your help.',
+                date: '2024-01-01',
+                profession: 'Professional',
+                avatar: '👩‍💼',
+                source: 'google',
+              },
+              {
+                id: '10',
+                author: 'Niranjini Sumynthan',
+                rating: 5,
+                text: 'He is very patient to listen what we are saying, easy to work with him, he made me 3 resume and cover letters every things very good. He likes his job.',
+                date: '2024-01-01',
+                profession: 'Job Seeker',
+                avatar: '👩‍💻',
+                source: 'google',
+              },
+              {
+                id: '11',
+                author: 'kulbir kaur',
+                rating: 5,
+                text: 'I got your number from Google and was not sure what to expect but I am extremely happy with the service. You are very efficient and helpful to answer all questions and flexible. Really made a very well done professional resume. Thank you so much 🙏',
+                date: '2024-01-01',
+                profession: 'Professional',
+                avatar: '👩‍💼',
+                source: 'google',
+              },
+              {
+                id: '12',
+                author: 'Alex Vernazza',
+                rating: 5,
+                text: 'I got the number of Google and was not sure what to expect but I was extremely happy with the service. I was on a tight deadline to submit the resume and it was professionally done within 24 hours. Excellent cover letter and resume at a fair price. It help me get the job. Would certainly recommend. Thank you',
+                date: '2024-01-01',
+                profession: 'Professional',
+                avatar: '👨‍💼',
+                source: 'google',
+              },
+            ],
+            showGoogleBadge: true,
+            averageRating: 5.0,
+            totalReviews: 127,
+          },
+        },
+
+        {
+          id: 'onboarding-services-1',
+          type: 'onboardingServiceSection',
+          title: 'Start Your Resume in Minutes',
+          subtitle: 'Interactive onboarding to match you with the perfect resume service',
+          order: 7,
+          variant: 'onboarding',
+          data: {
+            description:
+              "Answer a few quick questions and we'll guide you to the right service. At the end, you'll get a personalized contact form based on your choices. All in a clean, right-side sheet (shadcn).",
+            services: [
+              {
+                name: 'Professional Resume Writing',
+                price: '$50',
+                subtitle: '2-3 business days',
+                description:
+                  'Get a professionally written resume that highlights your skills and experience.',
+                features: [
+                  'ATS-Optimized Format',
+                  'Industry-Specific Keywords',
+                  '24-48 Hour Turnaround',
+                ],
+              },
+              {
+                name: 'Cover Letter Writing',
+                price: '$25',
+                subtitle: '1-2 business days',
+                description: 'Professional cover letters tailored to your target position.',
+                features: ['Custom Content', 'Company Research', 'ATS-Friendly Format'],
+              },
+              {
+                name: 'LinkedIn Profile Optimization',
+                price: '$55',
+                subtitle: '1 business day',
+                description:
+                  'Optimize your LinkedIn profile to attract recruiters and opportunities.',
+                features: ['Profile Enhancement', 'Keyword Optimization', 'Professional Headline'],
+              },
+              {
+                name: 'Free Consulting',
+                price: 'Free',
+                subtitle: '20-40 mins',
+                description: 'Free consultation to assess your career needs.',
+                features: ['Resume Review', 'Career Advice', 'Service Recommendations'],
+              },
+            ],
+            steps: [
+              {
+                id: 'role',
+                question: 'What type of role are you applying for?',
+                options: [
+                  'Healthcare (e.g. PSW, Nurse)',
+                  'Security',
+                  'Warehouse/Logistics',
+                  'Office/Admin',
+                  'Customer Service',
+                  'Other',
+                ],
+              },
+              {
+                id: 'urgency',
+                question: 'How soon do you need your resume?',
+                options: ['Within 24 hours', '2-3 days', 'Flexible'],
+              },
+              {
+                id: 'experience',
+                question: 'What is your experience level?',
+                options: ['Entry Level', 'Mid Level', 'Senior/Management'],
+              },
+            ],
+            forms: {
+              contactForm: {
+                title: 'Contact Details',
+                description: 'Please provide your contact information so we can reach you.',
+                fields: [
+                  {
+                    name: 'name',
+                    label: 'Name *',
+                    type: 'text',
+                    placeholder: 'Jane Smith',
+                    required: true,
+                  },
+                  {
+                    name: 'email',
+                    label: 'Email address *',
+                    type: 'email',
+                    placeholder: 'email@website.com',
+                    required: true,
+                  },
+                  {
+                    name: 'phone',
+                    label: 'Phone number *',
+                    type: 'tel',
+                    placeholder: '555-555-5555',
+                    required: true,
+                  },
+                  {
+                    name: 'files',
+                    label: 'Upload your current resume (optional)',
+                    type: 'file',
+                    required: false,
+                    accept: '.pdf,.doc,.docx,.txt',
+                    multiple: true,
+                    maxSize: 5,
+                    maxFiles: 3,
+                    description:
+                      'Upload your current resume so we can review it and provide better suggestions. PDF, DOC, DOCX, or TXT files only.',
+                  },
+                  {
+                    name: 'message',
+                    label: 'Message',
+                    type: 'textarea',
+                    placeholder: 'Your message here...',
+                    required: false,
+                    rows: 4,
+                  },
+                ],
+                consentField: {
+                  name: 'consent',
+                  label:
+                    'I allow this website to store my submission so they can respond to my inquiry. *',
+                  required: true,
+                },
+              },
+              callbackForm: {
+                title: 'Schedule a Callback',
+                description: 'Choose a time that works for you or request an immediate callback.',
+                timingOptions: [
+                  {
+                    value: 'asap',
+                    label: 'ASAP',
+                    description: 'We will call you back as soon as possible',
+                  },
+                  {
+                    value: 'scheduled',
+                    label: 'Schedule',
+                    description: 'Choose a specific time for your callback',
+                  },
+                ],
+                fields: [
+                  {
+                    name: 'name',
+                    label: 'Your Name *',
+                    type: 'text',
+                    placeholder: 'Jane Smith',
+                    required: true,
+                  },
+                  {
+                    name: 'phone',
+                    label: 'Phone Number *',
+                    type: 'tel',
+                    placeholder: '555-555-5555',
+                    required: true,
+                  },
+                  {
+                    name: 'date',
+                    label: 'Preferred Date *',
+                    type: 'date',
+                    required: true,
+                    showWhen: 'scheduled',
+                  },
+                  {
+                    name: 'time',
+                    label: 'Preferred Time *',
+                    type: 'time',
+                    required: true,
+                    showWhen: 'scheduled',
+                  },
+                  {
+                    name: 'notes',
+                    label: 'Additional Notes',
+                    type: 'textarea',
+                    placeholder: "Any specific topics you'd like to discuss?",
+                    required: false,
+                    rows: 4,
+                  },
+                ],
+              },
+              callNowSection: {
+                title: 'Call Now',
+                description: 'Get immediate assistance from our team',
+                buttonText: 'Start Call',
+                icon: 'phone',
+              },
+            },
+            sheet: {
+              position: 'right',
+              style: 'shadcn',
+            },
+          },
+        },
+        {
+          id: 'instagram-1',
+          type: 'instagramSection',
+          title: 'Follow Our Journey',
+          subtitle: 'See our latest projects and behind-the-scenes moments',
+          order: 9,
+          data: {
+            instagramUrl: 'https://www.instagram.com/resumaster.co',
+          },
+        },
+        {
+          id: 'services-1',
+          type: 'serviceSection',
+          title: 'Professional Resume Writing Services',
+          subtitle: 'Expert resume writing tailored to your industry and career goals',
+          order: 9,
+          variant: 'default',
+          columns: 3,
+          data: {
+            services: [
+              {
+                icon: '📝',
+                title: 'Professional Resume Writing',
+                description:
+                  'Get a professionally written resume that highlights your skills and experience.',
+                features: [
+                  'ATS-Optimized Format',
+                  'Industry-Specific Keywords',
+                  '24-48 Hour Turnaround',
+                ],
+                backgroundImage:
+                  'https://cdna.artstation.com/p/assets/images/images/054/944/206/large/chill-jazz-coffee-4k-cozy-coffee-shop.jpg?1665735454',
+              },
+              {
+                icon: '🎯',
+                title: 'Career Change Resumes',
+                description:
+                  'Transition smoothly to a new industry with a resume that emphasizes transferable skills.',
+                features: [
+                  'Transferable Skills Focus',
+                  'Industry Research',
+                  'Career Path Planning',
+                ],
+                backgroundImage:
+                  'https://images.unsplash.com/photo-1560264280-88b68371db39?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d29ya3BsYWNlfGVufDB8fDB8fHww',
+              },
+              {
+                icon: '📈',
+                title: 'Executive Resume Writing',
+                description:
+                  'Stand out in senior-level positions with an executive resume that showcases leadership.',
+                features: [
+                  'Leadership Highlighting',
+                  'Strategic Achievements',
+                  'Board-Ready Format',
+                ],
+                backgroundImage:
+                  'https://img.freepik.com/free-photo/empty-room-with-chairs-desks_23-2149008873.jpg?semt=ais_hybrid&w=740',
+              },
+            ],
+          },
+        },
+        {
+          id: 'footer-1',
+          type: 'footerSection',
+          title: 'Get Started Today!',
+          subtitle: "Ready to land your dream job? Let's craft your winning resume",
+          order: 10,
+          data: {
+            contact: {
+              email: 'niravpatelp129@gmail.com',
+              phone: '437 774 3721 (Call or Text)',
+              address: '1495 Sandalwood Pkwy E, Brampton, ON L6R 1T2',
+            },
+            socials: {
+              IG: 'https://instagram.com/resumaster.co',
+              Tiktok: 'https://tiktok.com/resumaster.co',
+              YouTube: 'https://youtube.com/ResuMasterOfficial',
+            },
+            tagline: 'Building success through innovation and dedication.',
+            ctaButtonText: 'Get Started',
+          },
+        },
+      ],
+    } as EnhancedCMSPage,
+    locations: {
+      toronto: {
+        id: 'toronto',
+        slug: 'toronto',
+        title: 'Professional Resume Writing Services in Toronto',
+        content: '',
+        status: 'published',
+        updatedAt: new Date().toISOString(),
+        type: 'location',
+        template: 'default',
+        locationData: {
+          city: 'Toronto',
+          province: 'Ontario',
+          coordinates: { lat: 43.6532, lng: -79.3832 },
+          serviceAreas: ['Downtown Toronto', 'North York', 'Scarborough', 'Etobicoke'],
+          specificServices: [
+            'Healthcare Resume Writing',
+            'Tech Resume Writing',
+            'Finance Resume Writing',
+          ],
+        },
+        sections: [
+          {
+            id: 'location-hero-1',
+            type: 'heroSection',
+            title: 'Professional Resume Writing Services in Toronto',
+            subtitle:
+              "Land Your Dream Job in Canada's Largest City - Expert Resume Writing for Toronto Professionals",
+            order: 1,
+            variant: 'location',
+            data: {
+              buttonText: 'Get Your Toronto Resume Today',
+              buttonUrl: 'tel:4377743721',
+              backgroundImage: '/images/toronto-skyline.jpg',
+              highlights: [
+                'Serving Downtown, North York, Scarborough & Etobicoke',
+                'Expert in Toronto Job Market Trends',
+                'ATS-Compliant for Major Toronto Employers',
+              ],
+            },
+          },
+          {
+            id: 'location-services-1',
+            type: 'serviceSection',
+            title: 'Toronto-Specific Resume Services',
+            subtitle: 'Tailored for the Toronto job market and major employers in the GTA',
+            order: 2,
+            variant: 'location',
+            columns: 3,
+            data: {
+              services: [
+                {
+                  icon: '🏢',
+                  title: 'Corporate Resume Writing',
+                  description:
+                    'Perfect for Bay Street financial firms, corporate headquarters, and professional services.',
+                  features: [
+                    'Executive Level Resumes',
+                    'Financial Sector Focus',
+                    'Corporate Formatting',
+                  ],
+                },
+                {
+                  icon: '🏥',
+                  title: 'Healthcare Professional Resumes',
+                  description:
+                    "Specialized resumes for Toronto's major hospitals and healthcare networks.",
+                  features: [
+                    'Hospital Network Ready',
+                    'Ontario Health Standards',
+                    'Certification Highlighting',
+                  ],
+                },
+                {
+                  icon: '💻',
+                  title: 'Tech Industry Resumes',
+                  description:
+                    "For Toronto's booming tech sector including startups and major tech companies.",
+                  features: [
+                    'Startup Ready Format',
+                    'Tech Skills Highlighting',
+                    'Portfolio Integration',
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            id: 'location-contact-1',
+            type: 'contactSection',
+            title: 'Contact Us in Toronto',
+            subtitle: "Ready to advance your career in Toronto? Let's get started today.",
+            order: 4,
+            variant: 'location',
+            layout: 'split',
+            data: {
+              contact: {
+                phone: '437 774 3721',
+                email: 'mrmapletv@gmail.com',
+                serviceAreas: [
+                  'Downtown Toronto',
+                  'North York',
+                  'Scarborough',
+                  'Etobicoke',
+                  'York',
+                  'East York',
+                ],
+              },
+              testimonials: [
+                {
+                  text: 'Got interviews at 3 major Bay Street firms within 2 weeks of getting my resume. Absolutely worth it!',
+                  author: 'Michael Chen',
+                  position: 'Financial Analyst, Toronto',
+                  avatar: '👨‍💼',
+                  rating: 5,
+                },
+                {
+                  text: 'As a nurse looking to switch hospitals in Toronto, this resume got me interviews at SickKids and UHN immediately.',
+                  author: 'Sarah Johnson',
+                  position: 'Registered Nurse, Toronto',
+                  avatar: '👩‍⚕️',
+                  rating: 5,
+                },
+              ],
+              ctaHeading: 'Ready to Get Started?',
+              ctaParagraph:
+                'Get your professional resume today and start landing interviews next week.',
+              mobileCTAHeading: 'Join Our Success Stories',
+              mobileCTAParagraph: 'Ready to be our next success story? Get started today!',
+            },
+          },
+        ],
+      } as EnhancedCMSPage,
+      brampton: {
+        id: 'brampton',
+        slug: 'brampton',
+        title: 'Professional Resume Writing Services in Brampton',
+        content: '',
+        status: 'published',
+        updatedAt: new Date().toISOString(),
+        type: 'location',
+        template: 'default',
+        locationData: {
+          city: 'Brampton',
+          province: 'Ontario',
+          coordinates: { lat: 43.7315, lng: -79.7624 },
+          serviceAreas: ['Downtown Brampton', 'Bramalea', 'Heart Lake', 'Churchville'],
+          specificServices: [
+            'Manufacturing Resume Writing',
+            'Logistics Resume Writing',
+            'Healthcare Resume Writing',
+          ],
+        },
+        sections: [
+          {
+            id: 'location-hero-1',
+            type: 'heroSection',
+            title: 'Professional Resume Writing Services in Brampton',
+            subtitle:
+              "Expert Resume Writing for Brampton's Growing Job Market - Manufacturing, Logistics & More",
+            order: 1,
+            variant: 'location',
+            data: {
+              buttonText: 'Get Your Brampton Resume Today',
+              buttonUrl: 'tel:4377743721',
+              backgroundImage: '/images/brampton-city.jpg',
+              highlights: [
+                'Located Right in Brampton - 1495 Sandalwood Pkwy E',
+                'Expert in Local Manufacturing & Logistics Jobs',
+                'Serving All Brampton Neighborhoods',
+              ],
+            },
+          },
+          {
+            id: 'location-services-1',
+            type: 'serviceSection',
+            title: 'Brampton-Focused Resume Services',
+            subtitle:
+              "Tailored for Brampton's key industries: manufacturing, logistics, and healthcare",
+            order: 2,
+            variant: 'location',
+            columns: 3,
+            data: {
+              services: [
+                {
+                  icon: '🏭',
+                  title: 'Manufacturing Resume Writing',
+                  description:
+                    "Perfect for Brampton's major manufacturing employers and industrial companies.",
+                  features: [
+                    'Safety Certification Focus',
+                    'Production Experience',
+                    'Quality Control Skills',
+                  ],
+                },
+                {
+                  icon: '🚛',
+                  title: 'Logistics & Transportation',
+                  description:
+                    "Specialized resumes for Brampton's logistics hub and transportation companies.",
+                  features: [
+                    'CDL & License Highlighting',
+                    'Supply Chain Focus',
+                    'Warehouse Operations',
+                  ],
+                },
+                {
+                  icon: '🏥',
+                  title: 'Healthcare Support Roles',
+                  description:
+                    'For healthcare support roles at Brampton Civic Hospital and local clinics.',
+                  features: ['PSW Certification', 'Patient Care Focus', 'Medical Administration'],
+                },
+              ],
+            },
+          },
+          {
+            id: 'location-contact-1',
+            type: 'contactSection',
+            title: 'Visit Our Brampton Office',
+            subtitle: 'Conveniently located in Brampton to serve you better.',
+            order: 3,
+            variant: 'location',
+            layout: 'split',
+            data: {
+              contact: {
+                phone: '437 774 3721',
+                email: 'mrmapletv@gmail.com',
+                address: '1495 Sandalwood Pkwy E, Brampton, ON L6R 1T2',
+                serviceAreas: [
+                  'Downtown Brampton',
+                  'Bramalea',
+                  'Heart Lake',
+                  'Churchville',
+                  'Caledon',
+                ],
+              },
+              testimonials: [
+                {
+                  text: 'Working in manufacturing for years, I needed a resume that showed my skills properly. Got 2 interviews within a week!',
+                  author: 'Raj Patel',
+                  position: 'Production Supervisor, Brampton',
+                  avatar: '👨‍🔧',
+                  rating: 5,
+                },
+                {
+                  text: 'As a new PSW graduate, this resume helped me land my first job at Brampton Civic Hospital quickly.',
+                  author: 'Maria Santos',
+                  position: 'Personal Support Worker, Brampton',
+                  avatar: '👩‍⚕️',
+                  rating: 5,
+                },
+              ],
+              ctaHeading: 'Ready to Get Started?',
+              ctaParagraph:
+                'Get your professional resume today and start landing interviews next week.',
+              mobileCTAHeading: 'Join Our Success Stories',
+              mobileCTAParagraph: 'Ready to be our next success story? Get started today!',
+            },
+          },
+        ],
+      } as EnhancedCMSPage,
+    },
+  },
+};
