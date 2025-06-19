@@ -48,6 +48,7 @@ export function PaymentIntegrations({
   connectStripe,
   disconnectStripe,
 }: PaymentIntegrationsProps) {
+  console.log('🚀 stripeStatus:', stripeStatus);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
