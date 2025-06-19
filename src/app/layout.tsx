@@ -28,7 +28,6 @@ const workspaceColors = {
 function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): Metadata {
   const seo = settings.seo || {};
   const favicons = settings.favicons || {};
-  console.log('🚀 favicons:', favicons);
 
   return {
     title: {
@@ -144,9 +143,6 @@ export async function generateMetadata(): Promise<Metadata> {
     subdomain = domain.split('.')[0];
     isSubdomain = domain !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
   }
-
-  // Always use the default logo here; client will update favicon if needed
-  const logoUrl = '/favicon.ico';
 
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
