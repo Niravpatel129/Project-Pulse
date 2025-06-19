@@ -257,8 +257,9 @@ export function PaymentIntegrations({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {stripeStatus?.status === 'active' ||
-                  stripeStatus?.status === 'requirements.past_due' ? (
+                  {(stripeStatus?.status === 'active' ||
+                    stripeStatus?.status === 'requirements.past_due') &&
+                  stripeStatus?.detailsSubmitted ? (
                     <Badge className='bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1'>
                       <FiCheck className='h-3 w-3' />
                       Connected
@@ -286,8 +287,9 @@ export function PaymentIntegrations({
                   <FiCreditCard className='h-6 w-6 text-purple-600' />
                 </div>
                 <div>
-                  {stripeStatus?.status === 'active' ||
-                  stripeStatus?.status === 'requirements.past_due' ? (
+                  {(stripeStatus?.status === 'active' ||
+                    stripeStatus?.status === 'requirements.past_due') &&
+                  stripeStatus?.detailsSubmitted ? (
                     <div className='space-y-2'>
                       <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>
                         Stripe Account Connected
@@ -336,8 +338,9 @@ export function PaymentIntegrations({
                 </div>
               </div>
 
-              {stripeStatus?.status === 'active' ||
-              stripeStatus?.status === 'requirements.past_due' ? (
+              {(stripeStatus?.status === 'active' ||
+                stripeStatus?.status === 'requirements.past_due') &&
+              stripeStatus?.detailsSubmitted ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
