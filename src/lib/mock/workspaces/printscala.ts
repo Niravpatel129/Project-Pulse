@@ -663,9 +663,6 @@ export const printscala: WorkspaceCMSData = {
               address: '1495 Sandalwood Pkwy E, Brampton, ON L6R 1T2',
             },
             socials: {
-              // linkedin: 'https://linkedin.com/company/gta-resume-builder',
-              // instagram: 'https://instagram.com/gtaresumebuilder',
-              // facebook: 'https://facebook.com/gtaresumebuilder',
               IG: 'https://instagram.com/resumaster.co',
               Tiktok: 'https://tiktok.com/resumaster.co',
               YouTube: 'https://youtube.com/ResuMasterOfficial',
