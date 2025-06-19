@@ -84,7 +84,7 @@ export function PaymentIntegrations({
       await connectStripe();
       toast({
         title: 'Success',
-        description: 'Successfully connected to Stripe',
+        description: 'Redirecting to Stripe...',
       });
     } catch (error) {
       toast({
