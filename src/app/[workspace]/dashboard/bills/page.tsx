@@ -511,8 +511,10 @@ const Bills = () => {
             selectedInvoice={selectedInvoice}
             setSelectedInvoice={setSelectedInvoice}
             setEditingInvoice={setEditingInvoice}
-            onMarkAsPaid={(invoiceId, paymentDate) => {
-              markAsPaidMutation.mutate({ invoiceId, paymentDate });
+            onMarkAsPaid={async (invoiceId, paymentDate) => {
+              await markAsPaidMutation.mutate({ invoiceId, paymentDate });
+
+              toast.success('Invoice marked as paid');
             }}
             onCancel={(invoiceId) => {
               setPendingAction({
@@ -563,8 +565,9 @@ const Bills = () => {
               selectedInvoice={selectedInvoice}
               setSelectedInvoice={setSelectedInvoice}
               setEditingInvoice={setEditingInvoice}
-              onMarkAsPaid={(invoiceId, paymentDate) => {
-                markAsPaidMutation.mutate({ invoiceId, paymentDate });
+              onMarkAsPaid={async (invoiceId, paymentDate) => {
+                await markAsPaidMutation.mutate({ invoiceId, paymentDate });
+                toast.success('Invoice marked as paid');
               }}
               onCancel={(invoiceId) => {
                 setPendingAction({
