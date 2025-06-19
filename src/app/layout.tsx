@@ -90,7 +90,7 @@ function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): 
       images: seo.twitterImage ? [seo.twitterImage.url] : ['/og-image-home.jpg'],
     },
     icons: {
-      icon: 'https://i.ibb.co/1tfTHZYj/android-chrome-512x512.png',
+      icon: settings.favicon?.url || favicons.icon32 || '/favicon.ico',
       shortcut: favicons.icon16 || '/favicon-16x16.png',
       apple: favicons.appleTouchIcon || '/apple-touch-icon.png',
       other: [
