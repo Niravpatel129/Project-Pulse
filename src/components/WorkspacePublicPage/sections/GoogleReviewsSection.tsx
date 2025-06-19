@@ -108,9 +108,9 @@ export default function GoogleReviewsSection({
         <div className='relative mt-10 md:mt-20'>
           <motion.div
             ref={ref}
-            variants={isMobile ? {} : containerVariants}
-            initial={isMobile ? false : 'hidden'}
-            animate={isMobile ? false : isInView ? 'visible' : 'hidden'}
+            variants={containerVariants}
+            initial={isMobile ? 'visible' : 'hidden'}
+            animate={isMobile ? 'visible' : isInView ? 'visible' : 'hidden'}
             className='hp-reviews_grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10'
           >
             {reviews.map((review, idx) => {
@@ -119,7 +119,7 @@ export default function GoogleReviewsSection({
               return (
                 <motion.div
                   key={review.id}
-                  variants={isMobile ? {} : itemVariants}
+                  variants={itemVariants}
                   className={
                     `hp-reviews_item bg-white rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 w-full` +
                     (isMiddle ? ' lg:mt-[-40px] lg:mb-8 ' : '')
