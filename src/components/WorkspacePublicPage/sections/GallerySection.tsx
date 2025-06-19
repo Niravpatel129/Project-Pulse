@@ -60,7 +60,7 @@ const GallerySection = memo(function GallerySection({
         x: {
           repeat: Infinity,
           repeatType: 'loop' as const,
-          duration: 30,
+          duration: 80,
           ease: 'linear' as const,
         },
       },
