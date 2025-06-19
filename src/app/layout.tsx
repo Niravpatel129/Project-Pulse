@@ -28,6 +28,7 @@ const workspaceColors = {
 function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): Metadata {
   const seo = settings.seo || {};
   const favicons = settings.favicons || {};
+  console.log('🚀 favicons:', favicons);
 
   return {
     title: {
@@ -89,7 +90,7 @@ function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): 
       images: seo.twitterImage ? [seo.twitterImage.url] : ['/og-image-home.jpg'],
     },
     icons: {
-      icon: settings.favicon?.url || favicons.icon32 || '/favicon.ico',
+      icon: 'https://i.ibb.co/1tfTHZYj/android-chrome-512x512.png',
       shortcut: favicons.icon16 || '/favicon-16x16.png',
       apple: favicons.appleTouchIcon || '/apple-touch-icon.png',
       other: [
@@ -251,7 +252,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ['/og-image-home.jpg'],
     },
     icons: {
-      icon: logoUrl,
+      // icon: logoUrl,
       shortcut: '/favicon-16x16.png',
       apple: '/apple-touch-icon.png',
       other: [
