@@ -78,11 +78,11 @@ export function useStripeInvoice2Payment({ invoiceId, currency }: UseStripeInvoi
         }
       } catch (error) {
         setPaymentStatus('select');
-        toast({
-          title: 'Error',
-          description: 'Failed to create payment intent. Please try again.',
-          variant: 'destructive',
-        });
+        // toast({
+        //   title: 'Error',
+        //   description: 'Failed to create payment intent. Please try again.',
+        //   variant: 'destructive',
+        // });
       } finally {
         setIsLoading(false);
       }
