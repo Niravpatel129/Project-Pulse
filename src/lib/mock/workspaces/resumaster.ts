@@ -3,7 +3,7 @@ import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
 export const resumaster: WorkspaceCMSData = {
   workspace: 'resumaster',
   settings: {
-    siteName: 'GTA Resume Builder',
+    siteName: 'ResuMaster',
     siteDescription:
       'Professional Resume Writing That Gets Interviews - Trusted by 100+ Across the Greater Toronto Area',
     theme: {
