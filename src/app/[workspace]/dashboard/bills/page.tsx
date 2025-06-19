@@ -512,9 +512,8 @@ const Bills = () => {
             setSelectedInvoice={setSelectedInvoice}
             setEditingInvoice={setEditingInvoice}
             onMarkAsPaid={async (invoiceId, paymentDate) => {
-              await markAsPaidMutation.mutate({ invoiceId, paymentDate });
-
               toast.success('Invoice marked as paid');
+              await markAsPaidMutation.mutate({ invoiceId, paymentDate });
             }}
             onCancel={(invoiceId) => {
               setPendingAction({
