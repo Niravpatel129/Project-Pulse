@@ -1,5 +1,4 @@
 import Providers from '@/components/Providers';
-import { DynamicFavicon } from '@/components/shared/DynamicFavicon';
 import { Toaster } from '@/components/ui/toaster';
 import { getMockWorkspace, hasMockWorkspace } from '@/lib/mock';
 import { cn } from '@/lib/utils';
@@ -89,7 +88,7 @@ function generateMetadataFromCMS(settings: CMSSettings, workspaceName: string): 
       images: seo.twitterImage ? [seo.twitterImage.url] : ['/og-image-home.jpg'],
     },
     icons: {
-      icon: 'https://i.ibb.co/B5k7ydqP/Chat-GPT-Image-Jun-18-2025-10-41-36-PM.png',
+      icon: favicons.icon32 || '/favicon-32x32.png',
       shortcut: favicons.icon16 || '/favicon-16x16.png',
       apple: favicons.appleTouchIcon || '/apple-touch-icon.png',
       other: [
@@ -366,7 +365,7 @@ export default async function RootLayout({
             }
           `}
         </Script>
-        <DynamicFavicon subdomain={subdomain} />
+        {/* <DynamicFavicon subdomain={subdomain} /> */}
       </head>
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
         <Providers>
