@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
@@ -44,6 +45,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [readerId, setReaderId] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
   const { workspace: workspaceParam } = useParams();
+  const queryClient = useQueryClient();
 
   const fetchPOSReaders = async () => {
     setIsLoadingReaders(true);
@@ -144,6 +146,10 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
       setWorkspace((prev) => {
         return prev ? { ...prev, stripeConnected: false, stripeAccountId: undefined } : prev;
       });
+
+      // Invalidate Stripe-related queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['stripe-account-status'] });
+      queryClient.invalidateQueries({ queryKey: ['workspace'] });
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to disconnect Stripe'));
       throw err;

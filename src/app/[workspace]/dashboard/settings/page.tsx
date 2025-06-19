@@ -30,7 +30,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AtSign, Edit, ImageIcon, Loader2, Mail, Settings, Users, XCircle } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -85,6 +85,8 @@ interface GmailStatus {
 
 export default function SettingsPage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('general');
   const [workspaceName, setWorkspaceName] = useState('');
@@ -112,7 +114,13 @@ export default function SettingsPage() {
   const { data: stripeStatus } = useQuery({
     queryKey: ['stripe-account-status'],
     queryFn: async () => {
-      const response = await newRequest.get('/stripe/connect/account-status');
+      // pass refreshUrl and redirectUrl
+      const response = await newRequest.get('/stripe/connect/account-status', {
+        params: {
+          refreshUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
+          redirectUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
+        },
+      });
       return response.data.data;
     },
   });
@@ -432,6 +440,11 @@ export default function SettingsPage() {
       return newRequest.delete(`/workspaces/email-integrations/${id}`);
     },
     onSuccess: (_, id) => {
+      // Invalidate relevant queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['email-integrations'] });
+      queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+
+      // Update local state as well for immediate feedback
       setEmailIntegrations(
         emailIntegrations.filter((e) => {
           return e.id !== id;
@@ -593,6 +606,28 @@ export default function SettingsPage() {
     setLogoFile(null);
   };
 
+  // Initialize activeTab from URL query parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      // Map payment-integrations to integrations for backward compatibility
+      const mappedTab = tabParam === 'payment-integrations' ? 'integrations' : tabParam;
+      // Only set if it's a valid tab
+      const validTabs = ['general', 'team', 'email', 'integrations'];
+      if (validTabs.includes(mappedTab)) {
+        setActiveTab(mappedTab);
+      }
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    const currentPath = window.location.pathname;
+    const newUrl = `${currentPath}?tab=${newTab}`;
+    router.push(newUrl, { scroll: false });
+  };
+
   return (
     <div className='bg-background dark:bg-[#141414] pb-10 w-full'>
       <div className='container mx-auto py-8 px-4 max-w-6xl '>
@@ -607,7 +642,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className='space-y-6'>
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <TabsList className='bg-muted/50 dark:bg-[#232323]/50'>
               <TabsTrigger
