@@ -20,3 +20,5 @@ export { default as TeamSection } from './TeamSection';
 export { default as SectionHeader } from './SectionHeader';
 
 export { default as InstagramSection } from './InstagramSection';
+
+export { default as GallerySection } from './GallerySection';

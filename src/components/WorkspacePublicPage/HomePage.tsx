@@ -9,6 +9,7 @@ import {
   ClientsSection,
   ContactSection,
   FooterSection,
+  GallerySection,
   GoogleReviewsSection,
   HeroSection,
   InstagramSection,
@@ -244,6 +245,17 @@ export default function HomePage() {
             title={section.title}
             subtitle={section.subtitle}
             clients={section.data.clients}
+            sectionNumber={section.sectionNumber}
+          />
+        );
+      case 'gallerySection':
+        return (
+          <GallerySection
+            key={section.id}
+            id={sectionId}
+            title={section.title}
+            subtitle={section.subtitle}
+            screenshots={section.data.screenshots}
             sectionNumber={section.sectionNumber}
           />
         );

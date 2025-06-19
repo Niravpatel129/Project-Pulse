@@ -55,7 +55,7 @@ const GallerySection = memo(function GallerySection({
   // Memoize animation configuration
   const animationConfig = useMemo(() => {
     return {
-      x: [0, -320 * screenshots.length],
+      x: [0, -424 * screenshots.length], // 400px width + 24px gap
       transition: {
         x: {
           repeat: Infinity,
@@ -171,13 +171,16 @@ const ScreenshotCard = memo(function ScreenshotCard({
 
   return (
     <motion.div
-      className='relative w-[300px] h-[200px] rounded-lg overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0 cursor-pointer bg-white'
+      className='relative w-[400px] h-[280px] rounded-lg overflow-hidden group hover:shadow-xl transition-all duration-300 flex-shrink-0 cursor-pointer bg-white'
       onClick={handleClick}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
+      {/* Screenshot frame effect */}
+      <div className='absolute inset-0 rounded-lg bg-white shadow-lg z-0'></div>
+
       {/* Screenshot Container with subtle border */}
-      <div className='absolute inset-2 rounded-md overflow-hidden border border-gray-200'>
+      <div className='absolute inset-2 rounded-md overflow-hidden border border-gray-200 z-10'>
         <Image
           src={screenshot.src}
           alt={screenshot.alt}
@@ -187,21 +190,18 @@ const ScreenshotCard = memo(function ScreenshotCard({
         />
 
         {/* Subtle overlay on hover */}
-        <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300'></div>
+        <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 z-20'></div>
       </div>
-
-      {/* Screenshot frame effect */}
-      <div className='absolute inset-0 rounded-lg bg-white shadow-lg'></div>
 
       {/* Title overlay */}
       {screenshot.title && (
-        <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3'>
+        <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 z-30'>
           <p className='text-white text-sm font-medium truncate'>{screenshot.title}</p>
         </div>
       )}
 
       {/* Hover indicator */}
-      <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+      <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30'>
         <div className='bg-white/90 rounded-full p-1'>
           <svg
             className='w-4 h-4 text-gray-700'
