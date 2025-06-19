@@ -130,7 +130,8 @@ export const resumaster: WorkspaceCMSData = {
           id: 'hero-1',
           type: 'heroSection',
           title: 'Professional Resumes.',
-          subtitle: 'We build resumes that get you interviews, starting with a free consultation.',
+          subtitle:
+            'Transform your career with ATS-optimized resumes that land interviews. Expert writers, proven results.',
           order: 1,
           variant: 'default',
           data: {
