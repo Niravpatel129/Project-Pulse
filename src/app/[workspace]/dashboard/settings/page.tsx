@@ -348,6 +348,15 @@ export default function SettingsPage() {
     }
   }, [gmailStatus, lastAuthAttempt, pollingInterval]);
 
+  // Effect to start polling when adding email
+  useEffect(() => {
+    if (isAddingEmail) {
+      console.log('Starting polling because isAddingEmail is true');
+      setLastAuthAttempt(Date.now());
+      startPollingGmailStatus();
+    }
+  }, [isAddingEmail]);
+
   // Effect to check for recent auth attempts when page loads
   useEffect(() => {
     const checkRecentAuth = async () => {

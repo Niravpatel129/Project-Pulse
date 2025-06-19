@@ -186,10 +186,6 @@ const Bills = () => {
     return sum + (inv.totals?.total || 0);
   }, 0);
 
-  const onRefresh = () => {
-    // Add any additional refresh logic here if needed
-  };
-
   const handleConfirmAction = () => {
     if (!pendingAction) return;
 
