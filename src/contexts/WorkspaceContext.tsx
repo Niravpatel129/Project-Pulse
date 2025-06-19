@@ -52,7 +52,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     try {
       const response = await newRequest.get('/pos/readers');
       setPosReaders(response.data.data || []);
-      setReaderId(response.data.data[0]?.readerId || 'tmr_GEIKoAySImfx6N');
+      setReaderId(response.data.data[0]?.readerId || null);
     } catch (err) {
       console.error('Error fetching POS readers:', err);
     } finally {

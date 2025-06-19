@@ -34,6 +34,7 @@ const InvoicePreviewActions = ({
   onTakePayment,
 }: InvoicePreviewActionsProps) => {
   const { readerId } = useWorkspace();
+  console.log('🚀 readerId:', readerId);
   const { mutate: createPaymentIntent, isPending: isCreatingPaymentIntent } = usePosPaymentIntent();
 
   const handleDownload = async () => {
