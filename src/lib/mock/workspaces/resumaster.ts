@@ -3,7 +3,7 @@ import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
 export const resumaster: WorkspaceCMSData = {
   workspace: 'resumaster',
   settings: {
-    siteName: 'ResuMaster',
+    siteName: 'Resu Master',
     siteDescription:
       'Professional Resume Writing That Gets Interviews - Trusted by 100+ Across the Greater Toronto Area',
     theme: {
@@ -42,7 +42,7 @@ export const resumaster: WorkspaceCMSData = {
       author: 'GTA Resume Builder Team',
       robots: 'index, follow',
       canonical: 'https://www.gtaresumebuilder.com',
-      ogTitle: 'ResuMaster - Professional Resume Writing Services in Toronto & GTA',
+      ogTitle: 'Resu Master - Professional Resume Writing Services in Toronto & GTA',
       ogDescription:
         'Get hired faster with professionally written resumes. Serving Toronto, Brampton & the entire GTA. ATS-optimized resumes that get interviews. Free consultation available.',
       ogImage: {
