@@ -111,7 +111,10 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const connectStripe = async () => {
     try {
       // Create Stripe Express account and get onboarding URL
-      const response = await newRequest.post('/stripe/connect/create-account');
+      const response = await newRequest.post('/stripe/connect/create-account', {
+        refreshUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
+        redirectUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
+      });
 
       if (!response.data.success || !response.data.data.onboardingUrl) {
         throw new Error('Failed to create Stripe account');

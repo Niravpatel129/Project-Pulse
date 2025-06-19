@@ -16,7 +16,10 @@ export default function StripeRefresh() {
     const refreshOnboarding = async () => {
       try {
         // Get a new onboarding URL
-        const response = await newRequest.post('/stripe/connect/create-account');
+        const response = await newRequest.post('/stripe/connect/create-account', {
+          refreshUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
+          redirectUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
+        });
 
         if (!response.data.success || !response.data.data.onboardingUrl) {
           throw new Error('Failed to refresh Stripe onboarding session');

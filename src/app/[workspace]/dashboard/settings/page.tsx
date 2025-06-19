@@ -115,12 +115,8 @@ export default function SettingsPage() {
     queryKey: ['stripe-account-status'],
     queryFn: async () => {
       // pass refreshUrl and redirectUrl
-      const response = await newRequest.get('/stripe/connect/account-status', {
-        params: {
-          refreshUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
-          redirectUrl: window.location.origin + '/dashboard/settings?tab=payment-integrations',
-        },
-      });
+      const response = await newRequest.get('/stripe/connect/account-status');
+
       return response.data.data;
     },
   });
