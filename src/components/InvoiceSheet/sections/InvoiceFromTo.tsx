@@ -41,7 +41,6 @@ const InvoiceFromTo = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toTextareaRef = useRef<HTMLTextAreaElement>(null);
   const { clients } = useClients();
-  console.log('🚀 clients:', clients);
 
   useEffect(() => {
     if (toAddress) {
