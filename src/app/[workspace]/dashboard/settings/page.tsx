@@ -141,7 +141,6 @@ export default function SettingsPage() {
     },
     enabled: !!params.workspace,
   });
-  console.log('🚀 workspaceData:', workspaceData);
 
   // Initialize form with current workspace data
   useEffect(() => {
@@ -284,143 +283,134 @@ export default function SettingsPage() {
   );
   const [newEmail, setNewEmail] = useState('');
 
-  // Add polling function
-  const [isConnectingGmail, setIsConnectingGmail] = useState(false);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
-  const [lastAuthAttempt, setLastAuthAttempt] = useState<number | null>(null);
+  // Gmail OAuth flow state
+  const [isAwaitingGoogleAuth, setIsAwaitingGoogleAuth] = useState(false);
 
-  // Add polling function
-  const startPollingGmailStatus = () => {
-    // Clear any existing polling
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-    }
-
-    // Start new polling
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
-    }, 2000); // Poll every 2 seconds
-
-    setPollingInterval(interval);
-
-    // Stop polling after 30 seconds (15 attempts)
-    setTimeout(() => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-      }
-    }, 30000);
-  };
-
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
-
-  // Fetch Gmail status with polling logic
+  // Fetch Gmail status with React Query's built-in polling
   const { data: gmailStatus } = useQuery<GmailStatus>({
     queryKey: ['gmail-status'],
     queryFn: async () => {
       const response = await newRequest.get('/gmail/status');
       return response.data;
     },
+    // Use React Query's built-in polling when we're awaiting Google OAuth response
+    refetchInterval: (query) => {
+      const data = query.state.data as GmailStatus | undefined;
+
+      // Poll every 2 seconds when we're awaiting Google OAuth response
+      if (isAwaitingGoogleAuth) {
+        return 2000;
+      }
+
+      // Check if we have recent incomplete integrations (fallback)
+      if (
+        data?.integrations?.some((integration) => {
+          return !integration.isActive || integration.isExpired;
+        })
+      ) {
+        return 5000; // Poll less frequently for expired integrations
+      }
+
+      // Stop polling when everything is connected or no active process
+      return false;
+    },
+    refetchIntervalInBackground: false, // Don't poll in background
   });
 
-  // Effect to handle Gmail status updates
-  useEffect(() => {
-    if (gmailStatus && lastAuthAttempt) {
-      // If we have a recent auth attempt and the status shows connected,
-      // we can stop polling
-      if (gmailStatus.connected) {
-        const timeSinceAuth = Date.now() - lastAuthAttempt;
-        if (timeSinceAuth < 30000) {
-          // Within 30 seconds
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
+  // Handle Gmail auth success
+  const handleGmailAuthSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
+    setIsAddingEmail(false);
+    setIsAwaitingGoogleAuth(false);
+    toast.success('Gmail account connected successfully');
+  };
+
+  // Start Gmail OAuth flow
+  const startGmailOAuth = () => {
+    setIsAwaitingGoogleAuth(true);
+
+    // Gmail integration logic
+    const width = 600;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    newRequest
+      .get('/gmail/auth-url')
+      .then((response) => {
+        let authUrl = response.data.authUrl;
+        if (authUrl) {
+          const url = new URL(authUrl);
+          if (!url.searchParams.has('response_type')) {
+            url.searchParams.append('response_type', 'code');
           }
+          if (!url.searchParams.has('state')) {
+            url.searchParams.append('state', 'gmail_auth');
+          }
+          if (!url.searchParams.has('redirect_uri')) {
+            url.searchParams.append(
+              'redirect_uri',
+              'https://www.hourblock.com/sync/google/callback',
+            );
+          }
+          authUrl = url.toString();
+
+          const popup = window.open(
+            authUrl,
+            'gmailAuth',
+            `width=${width},height=${height},left=${left},top=${top}`,
+          );
+
+          // Set up message listener for communication from the popup
+          const messageHandler = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+
+            if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
+              window.removeEventListener('message', messageHandler);
+              handleGmailAuthSuccess();
+            }
+
+            if (event.data?.type === 'GMAIL_AUTH_ERROR') {
+              window.removeEventListener('message', messageHandler);
+              console.error('Gmail auth error:', event.data.error);
+              setIsAwaitingGoogleAuth(false);
+              toast.error('Failed to connect Gmail account');
+            }
+          };
+
+          window.addEventListener('message', messageHandler);
+
+          // Check if popup was closed manually
+          const checkPopupClosed = setInterval(() => {
+            if (popup?.closed) {
+              clearInterval(checkPopupClosed);
+              window.removeEventListener('message', messageHandler);
+              setIsAwaitingGoogleAuth(false);
+            }
+          }, 500);
         }
-      }
-    }
-  }, [gmailStatus, lastAuthAttempt, pollingInterval]);
+      })
+      .catch((error) => {
+        console.error('Failed to get auth URL:', error);
+        setIsAwaitingGoogleAuth(false);
+        toast.error('Failed to start Gmail connection');
+      });
+  };
 
-  // Effect to start polling when adding email
+  // Add visibility change event listener to refresh when returning to tab
   useEffect(() => {
-    if (isAddingEmail) {
-      console.log('Starting polling because isAddingEmail is true');
-      setLastAuthAttempt(Date.now());
-      startPollingGmailStatus();
-    }
-  }, [isAddingEmail]);
-
-  // Effect to check for recent auth attempts when page loads
-  useEffect(() => {
-    const checkRecentAuth = async () => {
-      try {
-        const response = await newRequest.get('/gmail/status');
-        const data = response.data as GmailStatus;
-
-        // If we have integrations but they're not connected yet,
-        // this might indicate a recent auth attempt
-        if (data.integrations?.length > 0 && !data.connected) {
-          setLastAuthAttempt(Date.now());
-          startPollingGmailStatus();
-        }
-      } catch (error) {
-        console.error('Failed to check Gmail status:', error);
-      }
-    };
-
-    checkRecentAuth();
-
-    // Add visibility change event listener
     const handleVisibilityChange = () => {
-      console.log('visibility change', document.visibilityState);
       if (document.visibilityState === 'visible') {
-        console.log('window became visible');
         queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
       }
     };
 
-    console.log('Setting up visibility change listener');
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Cleanup
     return () => {
-      console.log('Cleaning up visibility change listener');
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [queryClient]);
-
-  // Update the GMAIL_AUTH_SUCCESS handler in both places
-  const handleGmailAuthSuccess = () => {
-    setLastAuthAttempt(Date.now());
-    queryClient.invalidateQueries({ queryKey: ['gmail-status'] });
-    queryClient.invalidateQueries({ queryKey: ['email-integrations'] });
-    startPollingGmailStatus();
-    setIsAddingEmail(false);
-    setIsConnectingGmail(false);
-    toast.success('Gmail account connected successfully');
-  };
-
-  // Fetch email integrations
-  const { data: emailIntegrationsData } = useQuery<EmailIntegration[]>({
-    queryKey: ['email-integrations'],
-    queryFn: async () => {
-      const response = await newRequest.get(`/workspaces/email-integrations`);
-      return response.data;
-    },
-  });
-
-  useEffect(() => {
-    if (emailIntegrationsData) {
-      setEmailIntegrations(emailIntegrationsData);
-    }
-  }, [emailIntegrationsData]);
 
   // Add custom email mutation
   const addCustomEmailMutation = useMutation({
@@ -1182,79 +1172,10 @@ export default function SettingsPage() {
                                 <Button
                                   variant='outline'
                                   size='sm'
-                                  onClick={() => {
-                                    setIsConnectingGmail(true);
-                                    setIsAddingEmail(false);
-                                    // Gmail integration logic
-                                    const width = 600;
-                                    const height = 600;
-                                    const left = window.screenX + (window.outerWidth - width) / 2;
-                                    const top = window.screenY + (window.outerHeight - height) / 2;
-
-                                    newRequest
-                                      .get('/gmail/auth-url')
-                                      .then((response) => {
-                                        let authUrl = response.data.authUrl;
-                                        if (authUrl) {
-                                          const url = new URL(authUrl);
-                                          if (!url.searchParams.has('response_type')) {
-                                            url.searchParams.append('response_type', 'code');
-                                          }
-                                          if (!url.searchParams.has('state')) {
-                                            url.searchParams.append('state', 'gmail_auth');
-                                          }
-                                          if (!url.searchParams.has('redirect_uri')) {
-                                            url.searchParams.append(
-                                              'redirect_uri',
-                                              'https://www.hourblock.com/sync/google/callback',
-                                            );
-                                          }
-                                          authUrl = url.toString();
-
-                                          const popup = window.open(
-                                            authUrl,
-                                            'gmailAuth',
-                                            `width=${width},height=${height},left=${left},top=${top}`,
-                                          );
-
-                                          // Set up message listener for communication from the popup
-                                          const messageHandler = (event: MessageEvent) => {
-                                            if (event.origin !== window.location.origin) return;
-
-                                            if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
-                                              window.removeEventListener('message', messageHandler);
-                                              handleGmailAuthSuccess();
-                                            }
-
-                                            if (event.data?.type === 'GMAIL_AUTH_ERROR') {
-                                              window.removeEventListener('message', messageHandler);
-                                              console.error('Gmail auth error:', event.data.error);
-                                              setIsConnectingGmail(false);
-                                              toast.error('Failed to connect Gmail account');
-                                            }
-                                          };
-
-                                          window.addEventListener('message', messageHandler);
-
-                                          // Check if popup was closed manually
-                                          const checkPopupClosed = setInterval(() => {
-                                            if (popup?.closed) {
-                                              clearInterval(checkPopupClosed);
-                                              window.removeEventListener('message', messageHandler);
-                                              setIsConnectingGmail(false);
-                                            }
-                                          }, 500);
-                                        }
-                                      })
-                                      .catch((error) => {
-                                        console.error('Failed to get auth URL:', error);
-                                        setIsConnectingGmail(false);
-                                        toast.error('Failed to start Gmail connection');
-                                      });
-                                  }}
+                                  onClick={startGmailOAuth}
                                   className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
                                 >
-                                  {isConnectingGmail ? (
+                                  {isAwaitingGoogleAuth ? (
                                     <>
                                       <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                                       Connecting...
@@ -1542,74 +1463,8 @@ export default function SettingsPage() {
               onClick={() => {
                 console.log('selectedIntegrationType', selectedIntegrationType);
                 if (selectedIntegrationType === 'gmail') {
-                  setIsConnectingGmail(true);
+                  startGmailOAuth();
                   setIsAddingEmail(false);
-                  // Gmail integration logic
-                  const width = 600;
-                  const height = 600;
-                  const left = window.screenX + (window.outerWidth - width) / 2;
-                  const top = window.screenY + (window.outerHeight - height) / 2;
-
-                  newRequest
-                    .get('/gmail/auth-url')
-                    .then((response) => {
-                      let authUrl = response.data.authUrl;
-                      if (authUrl) {
-                        const url = new URL(authUrl);
-                        if (!url.searchParams.has('response_type')) {
-                          url.searchParams.append('response_type', 'code');
-                        }
-                        if (!url.searchParams.has('state')) {
-                          url.searchParams.append('state', 'gmail_auth');
-                        }
-                        if (!url.searchParams.has('redirect_uri')) {
-                          url.searchParams.append(
-                            'redirect_uri',
-                            'https://www.hourblock.com/sync/google/callback',
-                          );
-                        }
-                        authUrl = url.toString();
-
-                        const popup = window.open(
-                          authUrl,
-                          'gmailAuth',
-                          `width=${width},height=${height},left=${left},top=${top}`,
-                        );
-
-                        // Set up message listener for communication from the popup
-                        const messageHandler = (event: MessageEvent) => {
-                          if (event.origin !== window.location.origin) return;
-
-                          if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
-                            window.removeEventListener('message', messageHandler);
-                            handleGmailAuthSuccess();
-                          }
-
-                          if (event.data?.type === 'GMAIL_AUTH_ERROR') {
-                            window.removeEventListener('message', messageHandler);
-                            console.error('Gmail auth error:', event.data.error);
-                            setIsConnectingGmail(false);
-                            toast.error('Failed to connect Gmail account');
-                          }
-                        };
-
-                        window.addEventListener('message', messageHandler);
-
-                        // Check if popup was closed manually
-                        const checkPopupClosed = setInterval(() => {
-                          if (popup?.closed) {
-                            clearInterval(checkPopupClosed);
-                            window.removeEventListener('message', messageHandler);
-                            setIsConnectingGmail(false);
-                          }
-                        }, 500);
-                      }
-                    })
-                    .catch((error) => {
-                      console.error('Failed to get auth URL:', error);
-                      setIsConnectingGmail(false);
-                      toast.error('Failed to start Gmail connection');
-                    });
                 } else {
                   addCustomEmailMutation.mutate(newEmail);
                 }
@@ -1617,12 +1472,12 @@ export default function SettingsPage() {
               disabled={
                 (selectedIntegrationType === 'custom' && !newEmail.trim()) ||
                 addCustomEmailMutation.isPending ||
-                isConnectingGmail
+                isAwaitingGoogleAuth
               }
               className='bg-black hover:bg-black/90 text-white'
             >
               {selectedIntegrationType === 'gmail' ? (
-                isConnectingGmail ? (
+                isAwaitingGoogleAuth ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     Connecting...
