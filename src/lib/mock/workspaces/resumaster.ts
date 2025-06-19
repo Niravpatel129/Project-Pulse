@@ -14,7 +14,7 @@ export const resumaster: WorkspaceCMSData = {
       secondaryColor: '#DC2626',
     },
     contact: {
-      email: 'niravpatelp129@gmail.com',
+      email: 'gtaresumebuilder@gmail.com',
       phone: 'tel:4377743721',
     },
     socialMedia: {
@@ -666,7 +666,7 @@ export const resumaster: WorkspaceCMSData = {
           order: 10,
           data: {
             contact: {
-              email: 'niravpatelp129@gmail.com',
+              email: 'gtaresumebuilder@gmail.com',
               phone: '437 774 3721 (Call or Text)',
               address: '1495 Sandalwood Pkwy E, Brampton, ON L6R 1T2',
             },
