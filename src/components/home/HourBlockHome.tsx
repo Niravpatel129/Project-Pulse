@@ -60,9 +60,9 @@ export default function HourBlockHome() {
               <SheetTrigger asChild>
                 <Button
                   size='lg'
-                  className='w-full sm:w-auto bg-[#fff] text-[#000] hover:bg-[#f0f0f0] text-[17px] font-[400] tracking-[-0.022em] px-8 py-6 h-auto'
+                  className='w-full sm:w-auto bg-[#fff] text-[#000] hover:bg-[#f0f0f0] text-[17px] font-[400] tracking-[-0.022em] px-6 py-3 h-auto'
                 >
-                  Get Started
+                  Get In Touch
                   <ArrowRight className='ml-2 h-4 w-4' />
                 </Button>
               </SheetTrigger>
