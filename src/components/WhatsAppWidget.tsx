@@ -24,6 +24,19 @@ export default function WhatsAppWidget() {
       .eapps-widget-toolbar {
         display: none !important;
       }
+      /* Ensure the widget container doesn't take up any height */
+      [data-elfsight-app-lazy] {
+        position: fixed !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: visible !important;
+        z-index: 9999 !important;
+        pointer-events: none !important;
+      }
+      /* Allow pointer events on the actual widget content */
+      [data-elfsight-app-lazy] > * {
+        pointer-events: auto !important;
+      }
     `;
     document.head.appendChild(style);
 
