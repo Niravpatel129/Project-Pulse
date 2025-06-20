@@ -27,7 +27,8 @@ export interface CMSPageSection {
     | 'outcomesSection'
     | 'storySection'
     | 'googleReviewsSection'
-    | 'footerSection';
+    | 'footerSection'
+    | 'heroSectionV2';
   title?: string;
   subtitle?: string;
   order: number;

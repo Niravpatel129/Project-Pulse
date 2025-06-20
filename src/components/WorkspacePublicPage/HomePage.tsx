@@ -18,6 +18,7 @@ import {
   StorySection,
   TeamSection,
 } from './sections';
+import HeroSectionV2 from './sections/Heros/HeroSectionV2';
 import OnboardingSheet from './sections/OnboardingSheet';
 
 export default function HomePage() {
@@ -117,6 +118,8 @@ export default function HomePage() {
     switch (section.type) {
       case 'heroSection':
         return 'Home';
+      case 'heroSectionV2':
+        return 'Home';
       case 'serviceSection':
         return 'Services';
       case 'storySection':
@@ -204,6 +207,8 @@ export default function HomePage() {
             {...commonProps}
           />
         );
+      case 'heroSectionV2':
+        return <HeroSectionV2 key={section.id} id={sectionId} />;
       case 'serviceSection':
         return (
           <ServiceSection
