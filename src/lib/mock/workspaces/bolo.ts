@@ -56,6 +56,12 @@ export const bolo: WorkspaceCMSData = {
             buttons: [{ type: 'callOrText', text: 'Get Started', url: 'tel:4377743721' }],
           },
         },
+        {
+          id: 'trusted-1',
+          type: 'trustedSection',
+          title: 'Trusted by 100+ Across the Greater Toronto Area',
+          order: 2,
+        },
       ],
     } as EnhancedCMSPage,
     locations: {

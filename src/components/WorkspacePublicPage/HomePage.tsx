@@ -20,6 +20,7 @@ import {
 } from './sections';
 import HeroSectionV2 from './sections/Heros/HeroSectionV2';
 import OnboardingSheet from './sections/OnboardingSheet';
+import TrustedSection from './sections/Trusted/TrustedSection';
 
 export default function HomePage() {
   const { cmsData, pageData } = useWorkspaceCMS();
@@ -209,6 +210,8 @@ export default function HomePage() {
         );
       case 'heroSectionV2':
         return <HeroSectionV2 key={section.id} id={sectionId} />;
+      case 'trustedSection':
+        return <TrustedSection key={section.id} id={sectionId} />;
       case 'serviceSection':
         return (
           <ServiceSection
