@@ -1440,7 +1440,7 @@ export default function OnboardingSheet({
                 setPreviousStep(step);
                 setStep(2);
               }}
-              className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-sm'
+              className='border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 transition px-4 py-2 rounded shadow-none font-medium text-xs md:text-sm'
               style={{ minHeight: 36 }}
             >
               📞 Skip and Call Us
