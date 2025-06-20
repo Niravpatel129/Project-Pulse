@@ -38,7 +38,14 @@ export default function TrustedSection({ id }: { id: string }) {
       <div className='flex flex-wrap gap-4 justify-between items-center'>
         {trustedBrands.map((brand) => {
           return (
-            <Image key={brand.alt} src={brand.image} alt={brand.alt} width={100} height={100} />
+            <Image
+              key={brand.alt}
+              src={brand.image}
+              alt={brand.alt}
+              width={120}
+              height={60}
+              className='w-[120px] h-[60px] object-contain transition-all duration-300'
+            />
           );
         })}
       </div>
