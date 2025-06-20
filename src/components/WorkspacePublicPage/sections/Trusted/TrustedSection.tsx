@@ -34,11 +34,11 @@ export default function TrustedSection({ id }: { id: string }) {
     },
   ];
   return (
-    <div className='min-h-[50vh] px-1 md:px-10 lg:px-24 py-14'>
-      <div className='text-2xl text-[#111213] mb-10 text-center'>
+    <div className='min-h-[50vh] px-6 md:px-10 lg:px-24 py-10 md:py-14'>
+      <div className='text-xl md:text-2xl text-[#111213] mb-8 md:mb-10 text-center'>
         Trusted by ambitious brands everywhere.
       </div>
-      <div className='flex flex-wrap gap-4 justify-between items-center'>
+      <div className='flex flex-wrap gap-6 md:gap-4 justify-center md:justify-between items-center'>
         {trustedBrands.map((brand) => {
           return (
             <Image
@@ -47,12 +47,14 @@ export default function TrustedSection({ id }: { id: string }) {
               alt={brand.alt}
               width={120}
               height={60}
-              className='w-[120px] h-[60px] object-contain transition-all duration-300'
+              className='w-[100px] h-[50px] md:w-[120px] md:h-[60px] object-contain transition-all duration-300'
             />
           );
         })}
       </div>
-      <div className='mt-4 text-lg text-[#111213] mb-10 text-center'>We’re ready when you are.</div>
+      <div className='mt-6 md:mt-4 text-base md:text-lg text-[#111213] mb-8 md:mb-10 text-center'>
+        We&apos;re ready when you are.
+      </div>
     </div>
   );
 }
