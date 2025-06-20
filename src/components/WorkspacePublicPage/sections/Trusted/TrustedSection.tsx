@@ -34,7 +34,10 @@ export default function TrustedSection({ id }: { id: string }) {
     },
   ];
   return (
-    <div className='min-h-[50vh] px-1 md:px-10 lg:px-24 py-10'>
+    <div className='min-h-[50vh] px-1 md:px-10 lg:px-24 py-14'>
+      <div className='text-2xl text-[#111213] mb-10 text-center'>
+        Trusted by ambitious brands everywhere.
+      </div>
       <div className='flex flex-wrap gap-4 justify-between items-center'>
         {trustedBrands.map((brand) => {
           return (
@@ -49,6 +52,7 @@ export default function TrustedSection({ id }: { id: string }) {
           );
         })}
       </div>
+      <div className='mt-4 text-lg text-[#111213] mb-10 text-center'>We’re ready when you are.</div>
     </div>
   );
 }
