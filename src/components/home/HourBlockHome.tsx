@@ -62,7 +62,7 @@ export default function HourBlockHome() {
                   size='lg'
                   className='w-full sm:w-auto bg-[#fff] text-[#000] hover:bg-[#f0f0f0] text-[17px] font-[400] tracking-[-0.022em] px-6 py-3 h-auto'
                 >
-                  Get In Touch
+                  Contact Us
                   <ArrowRight className='ml-2 h-4 w-4' />
                 </Button>
               </SheetTrigger>
