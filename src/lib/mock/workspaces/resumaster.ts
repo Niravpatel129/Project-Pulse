@@ -177,7 +177,7 @@ export const resumaster: WorkspaceCMSData = {
         {
           id: 'gallery-1',
           type: 'gallerySection',
-          title: 'Recent Work Samples',
+          title: 'What our clients say',
           subtitle: 'Browse through our recent resume and document samples',
           order: 4.5,
           data: {
