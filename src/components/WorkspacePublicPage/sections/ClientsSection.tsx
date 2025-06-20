@@ -165,14 +165,16 @@ const ClientCard = memo(function ClientCard({
         {/* Background Image Container */}
         <div className='absolute inset-0 overflow-hidden'>
           {/* Background Image */}
-          <Image
-            src={client.backgroundImage}
-            alt={`${client.name}'s logo`}
-            fill
-            unoptimized
-            className='object-cover transition-transform duration-700 ease-out scale-110 group-hover:scale-100'
-            onError={onImageError}
-          />
+          {client.backgroundImage && (
+            <Image
+              src={client.backgroundImage}
+              alt={`${client.name}'s logo`}
+              fill
+              unoptimized
+              className='object-cover transition-transform duration-700 ease-out scale-110 group-hover:scale-100'
+              onError={onImageError}
+            />
+          )}
           {/* Overlay for better text readability */}
           <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 group-hover:from-black/50 group-hover:to-black/70 transition-all duration-300'></div>
         </div>

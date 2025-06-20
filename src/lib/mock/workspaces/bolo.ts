@@ -1,6 +1,6 @@
 import { EnhancedCMSPage, WorkspaceCMSData } from '@/lib/cms';
 
-export const bolocreate: WorkspaceCMSData = {
+export const bolo: WorkspaceCMSData = {
   workspace: 'bolocreate',
   settings: {
     siteName: 'Bolo',

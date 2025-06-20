@@ -26,7 +26,7 @@ const useGetWorkspaceFromUrl = () => {
       try {
         const locationSlug = searchParams.get('locationSlug');
         const domain =
-          process.env.NODE_ENV === 'development' ? 'www.printscala.com' : window.location.hostname;
+          process.env.NODE_ENV === 'development' ? 'www.bolocreate.com' : window.location.hostname;
         const subdomain = domain.split('.')[0];
 
         const response = await newRequest.get(`/workspaces/url`, {

@@ -133,12 +133,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (process.env.NODE_ENV === 'development' && hostname === 'localhost') {
     // Force localhost to act as printscala workspace
-    domain = 'printscala.com';
-    subdomain = 'printscala';
+    domain = 'bolocreate.com';
+    subdomain = 'bolocreate';
     isSubdomain = true;
   } else {
     // Use similar logic to useGetWorkspaceFromUrl.ts
-    domain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
+    domain = process.env.NODE_ENV === 'development' ? 'www.bolocreate.com' : hostname;
     subdomain = domain.split('.')[0];
     isSubdomain = domain !== 'localhost' && subdomain !== 'www' && subdomain !== 'hour-block';
   }
@@ -185,7 +185,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // Fallback to mock data in development if available
     if (process.env.NODE_ENV === 'development') {
       // Use the subdomain we determined above, or default to printscala
-      const workspaceSlug = subdomain === 'www' ? 'printscala' : subdomain;
+      const workspaceSlug = subdomain === 'www' ? 'bolocreate' : subdomain;
 
       // Check if we have mock data for this workspace
       if (hasMockWorkspace(workspaceSlug)) {
@@ -296,7 +296,7 @@ export default async function RootLayout({
   // In development, always treat localhost as printscala workspace
   let subdomain: string | null = null;
   if (process.env.NODE_ENV === 'development' && hostname === 'localhost') {
-    subdomain = 'printscala'; // Force printscala workspace for localhost in development
+    subdomain = 'bolocreate'; // Force printscala workspace for localhost in development
     console.log('[Layout] Localhost detected, forcing subdomain to:', subdomain);
   } else {
     const clientDomain = process.env.NODE_ENV === 'development' ? 'www.printscala.com' : hostname;
