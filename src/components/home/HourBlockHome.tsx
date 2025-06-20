@@ -51,8 +51,8 @@ export default function HourBlockHome() {
             <span className='text-[#86868b] font-[400]'>Simplified.</span>
           </h1>
           <p className='text-[24px] text-[#86868b] mb-12 max-w-[600px] mx-auto leading-[1.47059] font-[400] tracking-[-0.009em]'>
-            Whether you&apos;re a freelancer, agency, or enterprise, we help you manage time better.
-            No more missed deadlines, no more scheduling headaches.
+            We Consult the back-end of your business. We help your digital presence grow, your
+            backend infrastructure scale, and your business operations run smoothly.
           </p>
 
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
