@@ -1,6 +1,6 @@
 // Generic, configurable sections
 export { default as ContactSection } from './ContactSection';
-export { default as HeroSection } from './HeroSection';
+export { default as HeroSection } from './Heros/HeroSection';
 export { default as ServiceSection } from './ServiceSection';
 
 // Specialized sections
@@ -22,3 +22,5 @@ export { default as SectionHeader } from './SectionHeader';
 export { default as InstagramSection } from './InstagramSection';
 
 export { default as GallerySection } from './GallerySection';
+
+export { default as HeroSectionV2 } from './Heros/HeroSectionV2';
