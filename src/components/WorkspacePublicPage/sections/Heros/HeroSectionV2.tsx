@@ -64,11 +64,25 @@ export default function HeroSectionV2({ id }: { id: string }) {
           Create Now
         </button>
         <div className='flex flex-col items-center justify-center text-white text-xl gap-4 font-medium mt-8'>
-          <div className='hover:underline cursor-pointer'>
+          <a href='tel:+18443212656' className='hover:underline cursor-pointer'>
             1 (844) 321 <span className='font-extrabold'>BOLO</span>
-          </div>
-          <div className='hover:underline cursor-pointer'>hello@bolocreate.com</div>
-          <div className='hover:underline cursor-pointer'>3883 Nashua Drive, #9</div>
+          </a>
+          <a
+            href='mailto:hello@bolocreate.com'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='hover:underline cursor-pointer'
+          >
+            hello@bolocreate.com
+          </a>
+          <a
+            href='https://maps.google.com/?q=3883+Nashua+Drive+%239'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='hover:underline cursor-pointer'
+          >
+            3883 Nashua Drive, #9
+          </a>
         </div>
       </div>
     </div>
