@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export default function ProductsCarousel({ id }: { id: string }) {
   const cardComponents = [
     {
@@ -43,13 +45,19 @@ export default function ProductsCarousel({ id }: { id: string }) {
             return (
               <div
                 key={card.title}
-                className='flex-shrink-0 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300
+                className='flex-shrink-0 bg-white rounded-lg shadow-lg hover:shadow-xl duration-300
                           w-[280px] h-[380px] sm:w-[320px] sm:h-[420px] md:w-[360px] md:h-[460px] lg:w-[400px] lg:h-[500px]
-                          border border-gray-200 overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform'
+                          border border-gray-200 overflow-hidden cursor-pointer hover:scale-[1.02] transition-all'
               >
                 {/* Image Section */}
                 <div className='relative w-full h-full bg-gray-100'>
-                  <img src={card.image} alt={card.title} className='w-full h-full object-cover' />
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    className='object-cover'
+                    sizes='(max-width: 640px) 280px, (max-width: 768px) 320px, (max-width: 1024px) 360px, 400px'
+                  />
                 </div>
               </div>
             );
