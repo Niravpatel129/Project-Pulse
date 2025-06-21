@@ -3,24 +3,24 @@ import Image from 'next/image';
 export default function ProductsCarousel({ id }: { id: string }) {
   const cardComponents = [
     {
-      title: 'Product 1',
+      title: 'Custom Apparel',
       image:
         'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
     },
     {
-      title: 'Product 2',
+      title: 'Event Signage',
       image:
-        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
+        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fbolo%2Fimage%20(1).png?alt=media&token=a0437c28-7c4a-42fa-945b-6c654fd335d2',
     },
     {
-      title: 'Product 3',
+      title: 'Business Essentials',
       image:
-        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
+        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fbolo%2Fimage%20(2).png?alt=media&token=bc11d389-8123-4cce-98a3-0a72196ca00c',
     },
     {
-      title: 'Product 4',
+      title: 'Decor',
       image:
-        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
+        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fbolo%2Fimage%20(3).png?alt=media&token=ce4b535e-1364-4dd4-b3ac-cdab59dbee24',
     },
   ];
 
@@ -31,7 +31,7 @@ export default function ProductsCarousel({ id }: { id: string }) {
       </div>
 
       {/* Carousel Container */}
-      <div className='overflow-x-auto'>
+      <div className='overflow-x-auto scrollbar-hide'>
         <div className='flex gap-6 pb-4' style={{ minWidth: 'fit-content' }}>
           {cardComponents.map((card, index) => {
             return (
@@ -39,7 +39,7 @@ export default function ProductsCarousel({ id }: { id: string }) {
                 key={card.title}
                 className='flex-shrink-0 bg-white rounded-lg shadow-lg hover:shadow-xl duration-300
                           w-[280px] h-[380px] sm:w-[320px] sm:h-[420px] md:w-[360px] md:h-[460px] lg:w-[400px] lg:h-[500px]
-                          border border-gray-200 overflow-hidden cursor-pointer transition-all'
+                          border border-gray-200 overflow-hidden cursor-pointer transition-all '
               >
                 {/* Image Section */}
                 <div className='relative w-full h-full bg-gray-100'>
@@ -56,7 +56,9 @@ export default function ProductsCarousel({ id }: { id: string }) {
 
                   {/* Text Content - Top Left */}
                   <div className='absolute top-4 left-4 text-white'>
-                    <h3 className='text-lg font-semibold mb-1'>{card.title}</h3>
+                    <h3 className='text-4xl font-semibold mb-1 max-w-[200px] text-left'>
+                      {card.title}
+                    </h3>
                   </div>
 
                   {/* Button - Bottom Right */}
