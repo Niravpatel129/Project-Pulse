@@ -26,3 +26,5 @@ export { default as GallerySection } from './GallerySection';
 export { default as HeroSectionV2 } from './Heros/HeroSectionV2';
 
 export { default as TrustedSection } from './Trusted/TrustedSection';
+
+export { default as ProductsCarousel } from './ProductsCarousel/ProductsCarousel';

@@ -20,6 +20,7 @@ import {
 } from './sections';
 import HeroSectionV2 from './sections/Heros/HeroSectionV2';
 import OnboardingSheet from './sections/OnboardingSheet';
+import ProductsCarousel from './sections/ProductsCarousel/ProductsCarousel';
 import TrustedSection from './sections/Trusted/TrustedSection';
 
 export default function HomePage() {
@@ -210,6 +211,8 @@ export default function HomePage() {
         );
       case 'heroSectionV2':
         return <HeroSectionV2 key={section.id} id={sectionId} />;
+      case 'productsCarouselSection':
+        return <ProductsCarousel key={section.id} id={sectionId} />;
       case 'trustedSection':
         return <TrustedSection key={section.id} id={sectionId} />;
       case 'serviceSection':

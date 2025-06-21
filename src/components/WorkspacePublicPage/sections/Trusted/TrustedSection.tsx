@@ -34,7 +34,7 @@ export default function TrustedSection({ id }: { id: string }) {
     },
   ];
   return (
-    <div className='min-h-[50vh] px-6 md:px-10 lg:px-24 py-10 md:py-14'>
+    <div className='min-h-[50vh] px-6 md:px-10 lg:px-24 pt-24 md:pb-2'>
       <div className='text-xl md:text-2xl text-[#111213] mb-8 md:mb-10 text-center'>
         Trusted by ambitious brands everywhere.
       </div>
@@ -52,7 +52,7 @@ export default function TrustedSection({ id }: { id: string }) {
           );
         })}
       </div>
-      <div className='mt-6 md:mt-4 text-base md:text-lg text-[#111213] mb-8 md:mb-10 text-center'>
+      <div className='mt-6 md:mt-4 text-base md:text-lg text-[#111213] text-center'>
         We&apos;re ready when you are.
       </div>
     </div>

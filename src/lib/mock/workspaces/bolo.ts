@@ -62,6 +62,12 @@ export const bolo: WorkspaceCMSData = {
           title: 'Trusted by 100+ Across the Greater Toronto Area',
           order: 2,
         },
+        {
+          id: 'products-carousel-1',
+          type: 'productsCarouselSection',
+          title: 'Products',
+          order: 3,
+        },
       ],
     } as EnhancedCMSPage,
     locations: {
