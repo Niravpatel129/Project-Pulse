@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { ContactForm } from '../contact/ContactForm';
 
 export default function HourBlockHome() {
+  // TODO: Add a form to the home page
   const [isOpen, setIsOpen] = useState(false);
 
   return (
