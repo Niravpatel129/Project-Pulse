@@ -22,24 +22,35 @@ export default function ProductsCarousel({ id }: { id: string }) {
       image:
         'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fbolo%2Fimage%20(3).png?alt=media&token=ce4b535e-1364-4dd4-b3ac-cdab59dbee24',
     },
+    {
+      title: 'Large Format',
+      image:
+        'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
+    },
   ];
 
   return (
-    <div className='min-h-[50vh] px-6 md:px-10 lg:px-24 py-10 md:py-14'>
-      <div className='mb-8'>
+    <div className='min-h-[50vh] py-10 md:py-14'>
+      {/* Title Section - Respects left padding */}
+      <div className='pl-6 md:pl-10 lg:pl-24 mb-8'>
         <h2 className='text-2xl md:text-3xl font-medium text-left mb-3'>Products</h2>
       </div>
 
-      {/* Carousel Container */}
+      {/* Carousel Container - Full width, breaks out of padding */}
       <div className='overflow-x-auto scrollbar-hide'>
         <div className='flex gap-6 pb-4' style={{ minWidth: 'fit-content' }}>
           {cardComponents.map((card, index) => {
+            const isFirst = index === 0;
+            const isLast = index === cardComponents.length - 1;
+
             return (
               <div
                 key={card.title}
-                className='flex-shrink-0 bg-white rounded-lg shadow-lg hover:shadow-xl duration-300
+                className={`flex-shrink-0 bg-white rounded-lg shadow-lg hover:shadow-xl duration-300
                           w-[280px] h-[380px] sm:w-[320px] sm:h-[420px] md:w-[360px] md:h-[460px] lg:w-[400px] lg:h-[500px]
-                          border border-gray-200 overflow-hidden cursor-pointer transition-all '
+                          border border-gray-200 overflow-hidden cursor-pointer transition-all
+                          ${isFirst ? 'ml-6 md:ml-10 lg:ml-24' : ''}
+                          ${isLast ? 'mr-6 md:mr-10 lg:mr-24' : ''}`}
               >
                 {/* Image Section */}
                 <div className='relative w-full h-full bg-gray-100'>
