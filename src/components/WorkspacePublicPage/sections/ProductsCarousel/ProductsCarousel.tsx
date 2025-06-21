@@ -4,31 +4,23 @@ export default function ProductsCarousel({ id }: { id: string }) {
   const cardComponents = [
     {
       title: 'Product 1',
-      description: 'High-quality product with amazing features and benefits',
       image:
         'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
-      price: '$99.99',
     },
     {
       title: 'Product 2',
-      description: 'Another excellent product that customers love',
       image:
         'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
-      price: '$149.99',
     },
     {
       title: 'Product 3',
-      description: 'Premium product with exceptional quality',
       image:
         'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
-      price: '$199.99',
     },
     {
       title: 'Product 4',
-      description: 'Innovative solution for modern needs',
       image:
         'https://firebasestorage.googleapis.com/v0/b/pulse-20181.firebasestorage.app/o/manual%2Fimage.png?alt=media&token=0eaaf4a0-e29f-49b3-b7de-646aca3241b7',
-      price: '$249.99',
     },
   ];
 
@@ -47,7 +39,7 @@ export default function ProductsCarousel({ id }: { id: string }) {
                 key={card.title}
                 className='flex-shrink-0 bg-white rounded-lg shadow-lg hover:shadow-xl duration-300
                           w-[280px] h-[380px] sm:w-[320px] sm:h-[420px] md:w-[360px] md:h-[460px] lg:w-[400px] lg:h-[500px]
-                          border border-gray-200 overflow-hidden cursor-pointer hover:scale-[1.02] transition-all'
+                          border border-gray-200 overflow-hidden cursor-pointer transition-all'
               >
                 {/* Image Section */}
                 <div className='relative w-full h-full bg-gray-100'>
@@ -55,9 +47,22 @@ export default function ProductsCarousel({ id }: { id: string }) {
                     src={card.image}
                     alt={card.title}
                     fill
-                    className='object-cover'
+                    className='object-cover hover:scale-110 transition-transform duration-300'
                     sizes='(max-width: 640px) 280px, (max-width: 768px) 320px, (max-width: 1024px) 360px, 400px'
                   />
+
+                  {/* Black Overlay */}
+                  <div className='absolute inset-0 bg-black/30'></div>
+
+                  {/* Text Content - Top Left */}
+                  <div className='absolute top-4 left-4 text-white'>
+                    <h3 className='text-lg font-semibold mb-1'>{card.title}</h3>
+                  </div>
+
+                  {/* Button - Bottom Right */}
+                  <button className='absolute bottom-4 right-4 bg-white text-black px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors'>
+                    Create Now
+                  </button>
                 </div>
               </div>
             );
